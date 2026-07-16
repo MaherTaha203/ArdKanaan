@@ -6,7 +6,7 @@
 | Title | Engineering Workflow |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Depends on | GOV-001, GOV-003, GOV-004, GOV-007, GOV-008, GOV-009 |
 | Referenced by | RDM-001, GOV-007, GOV-008, GOV-009 |
 
@@ -19,7 +19,8 @@ same for every phase.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ 1. OPEN      previous phase FROZEN → declare phase open │
+│ 1. OPEN      previous phase FROZEN + gates passed +     │
+│              explicit Owner authorization (GOV-011 §2)  │
 │ 2. DECIDE    record phase-shaping choices as ADRs       │
 │ 3. AUTHOR    write phase documents (status: DRAFT)      │
 │ 4. REGISTER  add every document to IDX-001              │

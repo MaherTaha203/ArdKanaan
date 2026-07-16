@@ -6,7 +6,7 @@
 | Title | Repository Governance |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 2.0.0 |
+| Version | 2.1.0 |
 | Depends on | GOV-000 |
 | Referenced by | IDX-001, GOV-002…GOV-009, RDM-001, ADR-0001, ADR-0002, ADR-0006 |
 
@@ -58,8 +58,10 @@ ADR-0001 and re-running all quality gates for all frozen phases.
 
 ## 5. Phase discipline
 
-1. Phases execute strictly in the order defined in RDM-001. No phase may open before
-   the previous phase is FROZEN.
+1. Phases execute strictly in the order defined in the Master Engineering
+   Roadmap (GOV-011) — the only legal execution sequence — tracked in RDM-001.
+   A phase may begin only when the previous phase is FROZEN, all quality gates
+   passed, and the Owner has explicitly authorized it (GOV-011 §2).
 2. Each RESERVED directory (`docs/product/`, `docs/business/`, `docs/ux/`,
    `docs/data/`, `docs/components/`, `docs/screens/`) may receive content only when
    its phase opens.
@@ -99,3 +101,6 @@ configurability beyond the stated business model) must be **rejected** at review
 3. Repository health is measured, not assumed: the Repository Health dashboard
    (GOV-009) is refreshed at every phase close, and any 🔴 indicator blocks the
    opening of the next phase.
+4. The Master Engineering Roadmap (GOV-011) is the only legal execution
+   sequence; conflicting instructions in future conversations lose to it unless
+   the Owner explicitly changes it (GOV-011 §4).

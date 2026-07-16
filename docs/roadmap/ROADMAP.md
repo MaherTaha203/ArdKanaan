@@ -6,16 +6,22 @@
 | Title | Phase Roadmap |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.2.0 |
-| Depends on | GOV-000, GOV-001, GOV-003, GOV-005 |
+| Version | 1.3.0 |
+| Depends on | GOV-000, GOV-001, GOV-003, GOV-005, GOV-011 |
 
 ---
 
 ## 1. Pipeline overview
 
+**This document is the LIVING status tracker, subordinate to the Master
+Engineering Roadmap (GOV-011) — the only legal execution sequence. On any
+divergence, GOV-011 wins and this document is repaired (ADR-0011 §4).**
+
 Phases execute strictly in order. Every phase ends with all eight quality gates
-(GOV-003) passing and an audit report in `docs/audits/phase-N/`. Implementation
-steps are forbidden until Phases 1–6 are all FROZEN (“documentation freeze”).
+(GOV-003) passing and an audit report in `docs/audits/phase-N/`; a phase opens
+only under the universal phase-entry law (GOV-011 §2: previous phase frozen, all
+gates passed, explicit Owner authorization). Implementation steps are forbidden
+until Phases 1–6 are all FROZEN (“documentation freeze”).
 
 ## 2. Documentation track
 

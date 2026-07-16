@@ -155,6 +155,26 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   carry *signals* about other unknowns — log them on those unknowns without
   closing them (AI-11).
 
+### LES-008 — Execution sequence must be law, not convention
+
+- **Observation:** After several sequence events (interview reorder, V1 scope
+  reduction), the Owner elevated the execution sequence from a LIVING status
+  tracker (RDM-001) into governance law (GOV-011) with a universal three-condition
+  phase-entry rule and an explicit conflict-resolution clause: the roadmap beats
+  any future conversational instruction unless the Owner changes it.
+- **Engineering lesson:** In a long-running, multi-session project, anything that
+  lives only in conversation or in a mutable tracker will eventually be reordered
+  ad hoc; sequence discipline holds only when the sequence itself is a frozen,
+  citable document with a conflict rule.
+- **Reason:** Sessions come and go (and AI sessions restart); the roadmap is the
+  contract that survives them.
+- **Impact:** Positive — every future session now has one authoritative answer to
+  "what comes next and may I start it?" (No: not without previous-phase freeze,
+  all gates passed, and explicit Owner authorization.)
+- **Future guidance:** Check GOV-011 before opening any work; when an instruction
+  conflicts with it, record the conflict and wait (GOV-011 §4, GOV-007 §5);
+  status lives in RDM-001, law lives in GOV-011 — never blur the two.
+
 ---
 
 ## 4. Maintenance rules
@@ -163,4 +183,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-008**.
+3. Next available lesson number: **LES-009**.

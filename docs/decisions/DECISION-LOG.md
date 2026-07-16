@@ -37,8 +37,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0008](ADR-0008-session-1-owner-decisions.md) | Session 1 Owner Decisions: Compensation, Rounding, Entitlement, Balances | 1A | ACCEPTED (D1 scope partially superseded by ADR-0009) | — |
 | [ADR-0009](ADR-0009-v1-percentage-only-compensation.md) | V1 Scope: Percentage-Only Compensation | 1A | ACCEPTED | ADR-0008 (partial: D1) |
 | [ADR-0010](ADR-0010-operations-is-a-system-activity-view.md) | Operations Is a System Activity View | 1A | ACCEPTED | — |
+| [ADR-0011](ADR-0011-master-engineering-roadmap.md) | Master Engineering Roadmap as Governance Law | 0 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0011**.
+Next available ADR number: **ADR-0012**.
 
 ## 4. Maintenance rules
 

@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.5.0 |
+| Version | 1.6.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -61,7 +61,8 @@ Gate 8 (Repository Integrity) violation.
 | GOV-007 | `docs/governance/GOV-007_AI_EXECUTION_PROTOCOL.md` | AI Execution Protocol | FROZEN |
 | GOV-008 | `docs/governance/GOV-008_ENGINEERING_MEMORY.md` | Engineering Memory | LIVING |
 | GOV-009 | `docs/governance/GOV-009_REPOSITORY_HEALTH.md` | Repository Health | LIVING |
-| RDM-001 | `docs/roadmap/ROADMAP.md` | Phase Roadmap | LIVING |
+| GOV-011 | `docs/governance/GOV-011_MASTER_ENGINEERING_ROADMAP.md` | Master Engineering Roadmap | FROZEN |
+| RDM-001 | `docs/roadmap/ROADMAP.md` | Phase Roadmap (status tracker, subordinate to GOV-011) | LIVING |
 | DEC-000 | `docs/decisions/DECISION-LOG.md` | Decision Log | LIVING |
 | ADR-0001 | `docs/decisions/ADR-0001-documentation-first-pipeline.md` | Documentation-First Pipeline | ACCEPTED |
 | ADR-0002 | `docs/decisions/ADR-0002-repository-structure.md` | Repository Structure & Taxonomy | ACCEPTED |
@@ -74,6 +75,8 @@ Gate 8 (Repository Integrity) violation.
 | TPL-003 | `docs/templates/AUDIT-TEMPLATE.md` | Audit Report Template | LIVING |
 | AUD-P0-001 | `docs/audits/phase-0/AUDIT-P0-REPOSITORY.md` | Phase 0 Repository Audit Report | FROZEN |
 | AUD-P0-002 | `docs/audits/phase-0/AUDIT-P0-EXTENSION.md` | Phase 0 Governance Platform Extension Audit Report | FROZEN |
+| ADR-0011 | `docs/decisions/ADR-0011-master-engineering-roadmap.md` | Master Engineering Roadmap as Governance Law | ACCEPTED |
+| AUD-P0-003 | `docs/audits/phase-0/AUDIT-P0-ROADMAP.md` | Phase 0 Master Roadmap Audit Report | FROZEN |
 
 ### 2.1a Phase 1A — Domain Discovery
 
