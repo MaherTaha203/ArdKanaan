@@ -1,0 +1,12 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor artifacts
+.idea/
+.vscode/
+*.swp
+*~
+
+# NOTE (GOV-001 §3): no dependency or build entries belong here before
+# documentation freeze — their appearance would itself signal a Gate 8 violation.
