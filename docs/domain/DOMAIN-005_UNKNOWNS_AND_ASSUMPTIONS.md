@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -81,7 +81,31 @@ the affected documents are amended instead.
 | ASM-002 | The 1000 → 700/300 example generalizes to proportional (percentage) policies, e.g. 70/30. | UNK-002 | AWAITING CONFIRMATION |
 | ASM-003 | Paying a teacher reduces that teacher's balance by the paid amount. | UNK-008 | AWAITING CONFIRMATION |
 
-## 6. Register discipline
+## 6. Interview workshop plan (Phase 1A.1)
+
+Unknowns are resolved through focused interview sessions with the owner — one
+business area per session, 3–6 questions each, general → specific, never asking a
+question that depends on an unanswered one. Sessions are ordered so foundational
+areas (how money splits and accrues) come before dependent areas (refunds,
+corrections, the meaning of "operations").
+
+| Session | Business area | Unknowns targeted | Status |
+|---|---|---|---|
+| 1 | Revenue Distribution & Balances | UNK-002, UNK-020 (+ ASM-002) | **ASKED — awaiting owner answers** |
+| 2 | Student Payments & Receipt Vouchers | UNK-004 (+ UNK-010, UNK-011, UNK-012, UNK-014) | pending |
+| 3 | Teacher Payments | UNK-008 (+ UNK-019, UNK-021, ASM-003) | pending |
+| 4 | Expenses & Payment Vouchers | UNK-009, UNK-015 | pending |
+| 5 | Refunds, Cancellations & Corrections | UNK-006, UNK-007 | pending (depends on Sessions 1–3) |
+| 6 | Operations & Account Statements | UNK-001, UNK-013 | pending (depends on Sessions 1–4) |
+| 7 | Training Programs | UNK-016, UNK-005, UNK-003 | pending |
+
+Each completed session updates: DOM-002, DOM-003, DOM-004, this register (unknowns
+marked `RESOLVED (date): answer`), IDX-001 statuses if needed, cross-references,
+GOV-009, GOV-008 (if a permanent lesson emerged), and the phase audit trail —
+per the Consistency Rule (GOV-001 §6). Answers that remain uncertain keep their
+unknown OPEN (AI-11) — nothing is closed by inference.
+
+## 7. Register discipline
 
 1. Unknown IDs are permanent; a resolved unknown is marked
    `RESOLVED (YYYY-MM-DD): <owner's answer>` in place — never deleted (mirrors
