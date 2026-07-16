@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D1–D6), DOM-001 |
+| Version | 2.1.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -101,23 +101,22 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Purpose:** the agreement that determines the teacher's compensation for a
   program and thereby how each receipt divides into teacher share and center
   share (F-06, F-07).
-- **Responsibility:** supplying the split automatically applied at receipt time,
-  according to one of the owner's **compensation models** (DR-013): percentage of
-  each receipt (most common), fixed amount per student, fixed amount per program,
-  fixed monthly amount, or a custom agreement. The model set stays extensible
-  without changing the business model (ADR-0008 D1).
+- **Responsibility:** supplying the split automatically applied at receipt time.
+  In Version 1 the policy is always a **percentage split** (DR-013, ADR-0009): a
+  teacher percentage and a center percentage that always sum to 100%. Other
+  compensation models are postponed Future Considerations (→ DOM-004 §Future
+  considerations) and are not part of this entity in V1.
 - **Relationships:** belongs to the Training Program — exactly one policy per
   program, never to the teacher directly; one teacher's programs may each carry
-  different policies (ADR-0008 D2). Rounding is never the policy's concern — it
-  belongs to the currency (DR-014).
+  different percentages (ADR-0008 D2). Rounding is never the policy's concern —
+  it belongs to the currency (DR-014).
 - **Lifecycle:** may change over time — but past vouchers keep the split that was
   applied (F-07). What triggers a change and who agrees to it → UNK-003.
-- **Owns:** the definition of the compensation model and its parameters.
+- **Owns:** the definition of the percentage split (teacher % + center % = 100%).
 - **Never owns:** the recorded splits inside vouchers — those belong to the
   vouchers permanently (F-07); rounding rules (currency-owned, DR-014).
-- **Example:** English → 70% to the teacher; Mathematics → 60%; Robotics → fixed
-  amount per student (owner's examples, ADR-0008 D2). Exact per-receipt semantics
-  of the non-percentage models → UNK-024.
+- **Example:** English → Teacher 70% / Center 30%; Mathematics → Teacher 60% /
+  Center 40% (owner's examples, ADR-0008 D2 as scoped by ADR-0009).
 
 ## 7. Receipt Voucher (سند قبض)
 

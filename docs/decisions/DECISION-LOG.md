@@ -34,9 +34,10 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0005](ADR-0005-documentation-language.md) | Documentation Language | 0 | ACCEPTED | — |
 | [ADR-0006](ADR-0006-phase-0-governance-platform-extension.md) | Phase 0 Governance Platform Extension | 0 | ACCEPTED | — |
 | [ADR-0007](ADR-0007-phase-1a-domain-discovery.md) | Phase 1A: Domain Discovery | 1A | ACCEPTED | — |
-| [ADR-0008](ADR-0008-session-1-owner-decisions.md) | Session 1 Owner Decisions: Compensation, Rounding, Entitlement, Balances | 1A | ACCEPTED | — |
+| [ADR-0008](ADR-0008-session-1-owner-decisions.md) | Session 1 Owner Decisions: Compensation, Rounding, Entitlement, Balances | 1A | ACCEPTED (D1 scope partially superseded by ADR-0009) | — |
+| [ADR-0009](ADR-0009-v1-percentage-only-compensation.md) | V1 Scope: Percentage-Only Compensation | 1A | ACCEPTED | ADR-0008 (partial: D1) |
 
-Next available ADR number: **ADR-0009**.
+Next available ADR number: **ADR-0010**.
 
 ## 4. Maintenance rules
 

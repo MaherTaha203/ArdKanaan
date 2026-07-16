@@ -7,7 +7,7 @@
 | Phase | 1A |
 | Status | ACCEPTED |
 | Supersedes | — |
-| Superseded by | — |
+| Superseded by | ADR-0009 (partially: D1's active multi-model scope; D2–D6 remain in force) |
 
 ## Context
 

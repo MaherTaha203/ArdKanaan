@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.1.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D1–D6) |
+| Version | 1.2.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -56,15 +56,14 @@ Students/Payers ──payment for a program──►  ┌───────�
    (F-06).
 2. **The split:** at the moment a receipt is posted, the money is divided between
    a **teacher share** and a **center share** according to the program's **revenue
-   distribution policy** (F-07). Policies follow one of the owner's compensation
-   models — percentage of each receipt (most common), fixed per student, fixed
-   per program, fixed monthly, or custom agreement (ADR-0008 D1; per-model
-   semantics → UNK-024). Example given by the owner: receipt 1000 → teacher 700,
-   center 300. The split is computed automatically — never by hand (F-08) — the
-   teacher's entitlement begins at that same moment (ADR-0008 D4), rounding
-   follows the currency's own rules, never custom logic (ADR-0008 D3), and the
-   applied split is preserved inside that voucher forever, even if the policy
-   later changes (F-07).
+   distribution policy** (F-07). In Version 1 every policy is a **percentage
+   split** summing to 100% (DR-013, ADR-0009); other compensation models are
+   postponed Future Considerations (→ DOM-004). Example given by the owner:
+   receipt 1000 at 70/30 → teacher 700, center 300. The split is computed
+   automatically — never by hand (F-08) — the teacher's entitlement begins at
+   that same moment (ADR-0008 D4), rounding follows the currency's own rules,
+   never custom logic (ADR-0008 D3), and the applied split is preserved inside
+   that voucher forever, even if the policy later changes (F-07).
 3. **Money out:** outgoing money is recorded as **payment vouchers (سند صرف)**
    (F-05). What categories of outgoing money exist, and whether paying a teacher
    their accumulated share is itself a payment voucher, is not yet stated →

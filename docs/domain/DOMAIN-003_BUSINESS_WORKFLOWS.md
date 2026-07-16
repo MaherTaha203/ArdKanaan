@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.1.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D1–D6), DOM-001, DOM-002 |
+| Version | 1.2.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -49,16 +49,16 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 
 - **Trigger:** occurs automatically as part of WF-02 — never a separate manual
   step (F-07, F-08).
-- **Inputs:** receipt amount; the program's revenue distribution policy (one of
-  the five compensation models, DR-013).
+- **Inputs:** receipt amount; the program's percentage policy (teacher % +
+  center % = 100%, DR-013).
 - **Business rules:** DR-003 (one policy per program), DR-005 (automatic
-  calculation), DR-006 (permanence of the applied split), DR-013 (compensation
-  models), DR-014 (rounding is currency-owned: exact decimals stored when the
-  currency supports them, otherwise official currency rounding — never custom
-  logic).
+  calculation), DR-006 (permanence of the applied split), DR-013 (V1: percentage
+  of posted receipts, summing to 100%), DR-014 (rounding is currency-owned: exact
+  decimals stored when the currency supports them, otherwise official currency
+  rounding — never custom logic).
 - **Outputs:** teacher share and center share, both recorded inside the voucher.
-- **Exceptional cases:** per-receipt semantics under non-percentage models (fixed
-  per student / per program / monthly / custom) → UNK-024.
+- **Exceptional cases:** none identified in V1 — percentages not summing to 100%
+  are invalid (DR-013); rounding is fully governed by DR-014.
 
 ## WF-04 — Teacher balance changes — *PARTIAL*
 

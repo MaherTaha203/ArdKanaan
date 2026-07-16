@@ -113,6 +113,26 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   terminology immediately when the owner refines vocabulary, and never treat a
   rejected assumption as wasted work — its rejection is itself a captured rule.
 
+### LES-006 — Scope reduction is a valid way to close unknowns
+
+- **Observation:** UNK-024 (per-model money semantics, HIGH) was closed without
+  ever being answered: the owner's V1 scope decision (ADR-0009) removed the
+  models that created it. The pending interview session 1-FU was withdrawn.
+- **Engineering lesson:** An unknown can be resolved by answering it OR by
+  descoping the reality that raised it; both are legitimate, but a descope must
+  record the postponed scope explicitly (Future Considerations) so it is neither
+  forgotten nor half-remembered as an active rule.
+- **Reason:** Simplicity is a stated project value (M-08, F-09) — after seeing
+  the question load the multi-model design created, the owner cut V1 back to the
+  one model that covers the common case.
+- **Impact:** Positive — the entire V1 distribution area now has zero open
+  questions; HIGH unknowns dropped 7 → 6 with no invention.
+- **Future guidance:** When a scope decision arrives, sweep the unknown register
+  for every unknown that exists only because of the removed scope and close them
+  as "mooted by scope", citing the ADR; withdraw any pending interview questions
+  about the removed scope; and keep the exploratory decision trail intact
+  (supersede ADRs partially, never rewrite them).
+
 ---
 
 ## 4. Maintenance rules
@@ -121,4 +141,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-006**.
+3. Next available lesson number: **LES-007**.

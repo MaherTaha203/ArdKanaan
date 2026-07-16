@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.1.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D1–D6), DOM-001, DOM-002, DOM-003 |
+| Version | 2.0.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -44,8 +44,8 @@ no duplicates.
   (→ F-06, F-08)
 - **Dependencies:** DR-002.
 - **Possible exceptions:** none stated.
-- **Unknown status:** ~~policy form and scope~~ RESOLVED by D1/D2 (→ DR-013);
-  how/when a policy changes → UNK-003.
+- **Unknown status:** ~~policy form and scope~~ RESOLVED by D2 and the V1 scope
+  decision (→ DR-013, ADR-0009); how/when a policy changes → UNK-003.
 
 ### DR-004 — Every receipt belongs to exactly one program
 - **Description:** Money received is recorded as a receipt voucher tied to exactly
@@ -64,8 +64,7 @@ no duplicates.
   example: 1000 → 700 teacher / 300 center)
 - **Dependencies:** DR-003, DR-004.
 - **Possible exceptions:** none — this rule is absolute.
-- **Unknown status:** ~~rounding~~ RESOLVED by D3 (→ DR-014); how non-percentage
-  compensation models map onto a receipt's stored split → UNK-024.
+- **Unknown status:** ~~rounding~~ RESOLVED by D3 (→ DR-014).
 
 ### DR-006 — The applied split is stored in the voucher permanently
 - **Description:** Each receipt voucher permanently holds the split that was
@@ -101,8 +100,7 @@ no duplicates.
 - **Dependencies:** DR-005, DR-006, DR-007, DR-008, DR-015.
 - **Possible exceptions:** unknown.
 - **Unknown status:** ~~accrual timing~~ RESOLVED by D4 (→ DR-015); negative
-  balances/advances → UNK-008; departing teachers → UNK-019; accrual of
-  non-receipt-based models (fixed monthly) → UNK-024.
+  balances/advances → UNK-008; departing teachers → UNK-019.
 
 ### DR-010 — Center balances are derived quantities
 - **Description:** The center-side balances (Cash Balance, Center Net Balance,
@@ -132,19 +130,18 @@ no duplicates.
 - **Unknown status:** whether any deductions from teacher shares exist (fees,
   penalties) → UNK-021.
 
-### DR-013 — Teacher compensation follows one of the owner's compensation models
-- **Description:** A program's distribution policy uses one of these compensation
-  models: percentage of each receipt (most common), fixed amount per student,
-  fixed amount per training program, fixed monthly amount, or a custom agreement
-  defined by the owner. The model set must remain extensible for future models
-  without changing the business model.
-- **Reason:** The owner's real agreements with teachers take these varied forms.
-  (→ Owner decision D1, ADR-0008; example D2: English → 70%, Mathematics → 60%,
-  Robotics → fixed per student)
-- **Dependencies:** DR-003.
-- **Possible exceptions:** none — "custom agreement" is itself the escape hatch.
-- **Unknown status:** how each non-percentage model maps onto per-receipt splits
-  and entitlement accrual → UNK-024.
+### DR-013 — V1 compensation is a percentage of posted receipts
+- **Description:** In Version 1, every program's distribution policy is a
+  **percentage split** of each posted receipt: a teacher percentage and a center
+  percentage that MUST always sum to exactly 100%. No other compensation model is
+  valid in V1.
+- **Reason:** The owner's strategic V1 scope decision after architectural review.
+  (→ ADR-0009; examples: English → Teacher 70% / Center 30%, Mathematics →
+  Teacher 60% / Center 40%)
+- **Dependencies:** DR-003, DR-005.
+- **Possible exceptions:** none — percentages that do not sum to 100% are
+  invalid.
+- **Unknown status:** —
 
 ### DR-014 — Rounding belongs exclusively to the currency
 - **Description:** Distribution rules never define rounding. If the currency
@@ -164,8 +161,7 @@ no duplicates.
   the owner's later cash decision. (→ Owner decision D4, ADR-0008)
 - **Dependencies:** DR-005, DR-006, DR-012.
 - **Possible exceptions:** none stated.
-- **Unknown status:** entitlement accrual for non-receipt-based models (fixed
-  monthly) → UNK-024.
+- **Unknown status:** —
 
 ### DR-016 — Three balances, never merged
 - **Description:** The business distinguishes three balances that must never be
@@ -190,4 +186,23 @@ no duplicates.
   step. (→ Owner decision D6, ADR-0008; F-07, F-08)
 - **Dependencies:** DR-005, DR-006, DR-015, DR-016.
 - **Possible exceptions:** none stated.
-- **Unknown status:** the three effects under non-percentage models → UNK-024.
+- **Unknown status:** —
+
+---
+
+## Future considerations — NOT part of Version 1
+
+The following compensation models were raised during Session 1 (ADR-0008 D1) and
+**postponed — not cancelled — by the owner's V1 scope decision (ADR-0009)**. They
+are recorded here only so they are not forgotten or re-invented. They are NOT
+active business rules, have NO workflows, generate NO interview questions, and
+NOTHING in V1 may depend on them:
+
+- Fixed amount per student
+- Fixed amount per training program
+- Fixed monthly salary
+- Custom compensation agreements defined by the owner
+
+Reintroducing any of them is a future-version decision requiring its own ADR and
+its own domain discovery of per-receipt money semantics (the questions formerly
+tracked as UNK-024).

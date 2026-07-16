@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.3.0 |
+| Version | 1.4.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -32,14 +32,14 @@ correctly without the owner's answers.
 | ID | Missing fact | Why it matters | Blocks |
 |---|---|---|---|
 | UNK-001 | **What is an "Operation" (عملية)?** F-05 lists Operations as a core entity but never defines them. Candidate readings for the owner to confirm or reject: (a) any recorded money movement (receipt or payment) viewed as one ledger line; (b) a broader event log including non-money actions; (c) a synonym for vouchers collectively. | A core entity cannot remain undefined; statements likely display "operations". | Entity model, statements (DOM-002 §9, §10) |
-| UNK-002 | **RESOLVED (2026-07-16, ADR-0008 D1–D3):** compensation is not percentage-only — five models (percentage of receipt, fixed per student, fixed per program, fixed monthly, custom agreement), extensible; the policy belongs to the program (one per program, one teacher may have many programs each with its own policy); rounding is owned exclusively by the currency definition (exact decimals stored when supported, otherwise official currency rounding). → DR-013, DR-014. Residual precision gap spun off as UNK-024. | The split calculation is the heart of the system (F-07). | resolved |
+| UNK-002 | **RESOLVED (2026-07-16, ADR-0008 D1–D3; V1 scope reduced by ADR-0009):** the policy belongs to the program (one per program, one teacher may have many programs each with its own policy); rounding is owned exclusively by the currency definition (exact decimals stored when supported, otherwise official currency rounding). Session 1 initially opened five compensation models; the owner's V1 scope decision (ADR-0009) then fixed **percentage-of-posted-receipts as the ONLY V1 model** (teacher % + center % = 100%), postponing the rest as Future Considerations (→ DOM-004). → DR-013 v2, DR-014. | The split calculation is the heart of the system (F-07). | resolved |
 | UNK-004 | **Partial payments and installments.** Can a student pay a program fee across several payments? Can one payment cover several programs or several students? Is overpayment possible? | Determines what a receipt voucher represents and how program income is tracked. | DR-004, WF-02 |
 | UNK-006 | **Refunds.** Do refunds happen in this business? If money is returned after the split was stored (and possibly after the teacher was paid), how does the business handle the teacher's share and the center's share? | Money can flow backwards; DR-006 makes stored splits permanent, so the business's real practice must be captured, not guessed. | WF-07, DR-006, DR-009, DR-010 |
 | UNK-007 | **Cancellation and corrections.** Can a wrongly recorded voucher be cancelled or corrected? What mistakes actually occur (wrong amount, wrong program, wrong payer)? What trace must a correction leave? | Every real bookkeeping practice needs a correction path that respects DR-006. | WF-08, WF-09, DR-006 |
 | UNK-008 | **Teacher payment mechanics.** How and when are teachers paid what they are owed — on demand, on schedule, in full or partially? Are advances (paying before it is owed) possible, creating negative balances? | Defines the decrease side of teacher balances. | WF-05, DR-009 |
 | UNK-009 | **Payment voucher scope and categories.** What kinds of outgoing money exist? Is a teacher payout recorded as a payment voucher? What categories of center expenses exist (rent, supplies, salaries…)? | Defines the payment voucher entity and expense recording. | DR-008, WF-05, WF-06 |
 | UNK-020 | **RESOLVED (2026-07-16, ADR-0008 D4–D6):** teacher entitlement begins immediately when a receipt voucher is posted (a teacher receivable is created; entitlement and payment are two different business events). Three balances exist and must never be merged: Cash Balance (all cash held, e.g. 1000), Teacher Payables (owed to teachers, e.g. 700), Center Net Balance (the center's earned share, e.g. 300); every posted receipt automatically increases all three (business ledger, not an accounting journal). → DR-015, DR-016, DR-017. | Determines the exact meaning of the most-read numbers in the system. | resolved |
-| UNK-024 | **Per-receipt semantics of non-percentage compensation models.** Under fixed-per-student, fixed-per-program, fixed-monthly, or custom agreements: what teacher share (if any) does each posted receipt store (DR-006), and how/when does the teacher's entitlement accrue for models not tied to receipts (D4 ties entitlement to posting — what does a fixed monthly amount post against)? How do the three ledger effects (DR-017) apply? | The five models (DR-013) must each have exact money semantics before Product Constitution can specify calculations. | DR-013, DR-015, DR-017, WF-02, WF-03 |
+| UNK-024 | **RESOLVED (2026-07-16, ADR-0009 — closed by V1 scope reduction, not by answers):** this unknown existed solely for the non-percentage compensation models, which the owner postponed out of Version 1. V1's only model (percentage of posted receipts, DR-013 v2) has fully defined money semantics. The per-model questions are archived in DOM-004 §Future considerations for any future version that reintroduces those models. Interview session 1-FU withdrawn. | The five models needed exact money semantics — no longer applicable in V1. | resolved |
 
 ## 3. Unknowns — MEDIUM priority
 
@@ -93,7 +93,7 @@ corrections, the meaning of "operations").
 | Session | Business area | Unknowns targeted | Status |
 |---|---|---|---|
 | 1 | Revenue Distribution & Balances | UNK-002, UNK-020 (+ ASM-002) | **COMPLETE** — answers recorded as ADR-0008 (D1–D6); UNK-002/UNK-020 resolved, ASM-002 rejected, UNK-024 opened |
-| 1-FU | Session 1 follow-up: per-model money semantics | UNK-024 | **ASKED — awaiting owner answers** |
+| 1-FU | Session 1 follow-up: per-model money semantics | UNK-024 | **WITHDRAWN** — mooted by the V1 percentage-only scope decision (ADR-0009) |
 | 2 | Student Payments & Receipt Vouchers | UNK-004 (+ UNK-010, UNK-011, UNK-012, UNK-014) | pending |
 | 3 | Teacher Payments | UNK-008 (+ UNK-019, UNK-021, ASM-003) | pending |
 | 4 | Expenses & Payment Vouchers | UNK-009, UNK-015 | pending |
@@ -115,6 +115,7 @@ unknown OPEN (AI-11) — nothing is closed by inference.
 2. Every resolution triggers the Consistency Rule (GOV-001 §6) across DOM-001…004
    and any later documents.
 3. Next available IDs: **UNK-025**, **ASM-004**.
-4. Current tally (2026-07-16, post-Session 1): **22 open** (7 HIGH, 10 MEDIUM,
-   5 LOW), 2 resolved (UNK-002, UNK-020), 1 assumption rejected (ASM-002),
-   2 assumptions awaiting confirmation (ASM-001, ASM-003).
+4. Current tally (2026-07-16, post-V1-scope decision): **21 open** (6 HIGH,
+   10 MEDIUM, 5 LOW), 3 resolved (UNK-002, UNK-020, UNK-024 — the last closed by
+   scope reduction, ADR-0009), 1 assumption rejected (ASM-002), 2 assumptions
+   awaiting confirmation (ASM-001, ASM-003).
