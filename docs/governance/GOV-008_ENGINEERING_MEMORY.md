@@ -91,6 +91,28 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   item: "could I write its Purpose, Lifecycle, and Example right now from stated
   facts?" Any item that fails goes straight into the unknowns register (AI-11).
 
+### LES-005 — Resolving unknowns creates new, more precise unknowns
+
+- **Observation:** Interview Session 1 resolved two HIGH unknowns (UNK-002,
+  UNK-020) but the answers introduced five compensation models whose per-receipt
+  money semantics are themselves undefined — spawning UNK-024. The founding
+  vocabulary also shifted: "Center Balance" split into three never-merged
+  balances (Cash / Teacher Payables / Center Net).
+- **Engineering lesson:** Domain knowledge converges by refinement, not by
+  monotonic countdown; each real answer sharpens the questions and can refine
+  founding vocabulary. A permanent business rule discovered this way (rounding
+  belongs to the currency, never to distribution — DR-014) can retire a whole
+  class of would-be design decisions.
+- **Reason:** The owner's mental model is richer than any first brief; interviews
+  expose structure the brief compressed (percentage was only the *most common*
+  model, not *the* model — ASM-002 rejected).
+- **Impact:** Positive — the balance model and entitlement timing are now exact;
+  UNK count went 23 → 22 despite two resolutions.
+- **Future guidance:** After every interview session, re-derive the unknown
+  register from the answers (spawn follow-ups explicitly), update fixed
+  terminology immediately when the owner refines vocabulary, and never treat a
+  rejected assumption as wasted work — its rejection is itself a captured rule.
+
 ---
 
 ## 4. Maintenance rules
@@ -99,4 +121,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-005**.
+3. Next available lesson number: **LES-006**.

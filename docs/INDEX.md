@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -85,7 +85,9 @@ Gate 8 (Repository Integrity) violation.
 | DOM-003 | `docs/domain/DOMAIN-003_BUSINESS_WORKFLOWS.md` | Business Workflows | FROZEN |
 | DOM-004 | `docs/domain/DOMAIN-004_BUSINESS_RULES_CATALOG.md` | Business Rules Catalog | FROZEN |
 | DOM-005 | `docs/domain/DOMAIN-005_UNKNOWNS_AND_ASSUMPTIONS.md` | Unknowns & Assumptions | LIVING |
+| ADR-0008 | `docs/decisions/ADR-0008-session-1-owner-decisions.md` | Session 1 Owner Decisions: Compensation, Rounding, Entitlement, Balances | ACCEPTED |
 | AUD-P1A-001 | `docs/audits/phase-1a/AUDIT-P1A-DOMAIN.md` | Phase 1A Domain Discovery Audit Report | FROZEN |
+| AUD-P1A-002 | `docs/audits/phase-1a/AUDIT-P1A-SESSION1.md` | Phase 1A Session 1 Decisions Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

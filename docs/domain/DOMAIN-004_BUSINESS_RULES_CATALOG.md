@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001 (F-01…F-09), DOM-001, DOM-002, DOM-003 |
+| Version | 1.1.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D1–D6), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -44,8 +44,8 @@ no duplicates.
   (→ F-06, F-08)
 - **Dependencies:** DR-002.
 - **Possible exceptions:** none stated.
-- **Unknown status:** policy form (percentage/fixed/tiered) and whether policies
-  are shared across programs → UNK-002; how/when a policy changes → UNK-003.
+- **Unknown status:** ~~policy form and scope~~ RESOLVED by D1/D2 (→ DR-013);
+  how/when a policy changes → UNK-003.
 
 ### DR-004 — Every receipt belongs to exactly one program
 - **Description:** Money received is recorded as a receipt voucher tied to exactly
@@ -64,7 +64,8 @@ no duplicates.
   example: 1000 → 700 teacher / 300 center)
 - **Dependencies:** DR-003, DR-004.
 - **Possible exceptions:** none — this rule is absolute.
-- **Unknown status:** rounding behavior for indivisible amounts → UNK-002.
+- **Unknown status:** ~~rounding~~ RESOLVED by D3 (→ DR-014); how non-percentage
+  compensation models map onto a receipt's stored split → UNK-024.
 
 ### DR-006 — The applied split is stored in the voucher permanently
 - **Description:** Each receipt voucher permanently holds the split that was
@@ -97,19 +98,20 @@ no duplicates.
   in receipt vouchers of their programs, reduced by payments made to that teacher.
 - **Reason:** The owner must be able to see what each teacher is owed at any
   moment without computing. (→ F-05, F-07, F-08)
-- **Dependencies:** DR-005, DR-006, DR-007, DR-008.
+- **Dependencies:** DR-005, DR-006, DR-007, DR-008, DR-015.
 - **Possible exceptions:** unknown.
-- **Unknown status:** accrual timing (does the share become owed at receipt?) →
-  UNK-020; negative balances/advances → UNK-008; departing teachers → UNK-019.
+- **Unknown status:** ~~accrual timing~~ RESOLVED by D4 (→ DR-015); negative
+  balances/advances → UNK-008; departing teachers → UNK-019; accrual of
+  non-receipt-based models (fixed monthly) → UNK-024.
 
-### DR-010 — Center balance is a derived quantity
-- **Description:** The center's balance is derived from recorded receipts and
-  payments — never maintained by hand.
+### DR-010 — Center balances are derived quantities
+- **Description:** The center-side balances (Cash Balance, Center Net Balance,
+  Teacher Payables in aggregate) are derived from recorded receipts and payments —
+  never maintained by hand.
 - **Reason:** Same as DR-009, for the center. (→ F-05, F-08)
-- **Dependencies:** DR-005…DR-008.
+- **Dependencies:** DR-005…DR-008, DR-016.
 - **Possible exceptions:** unknown.
-- **Unknown status:** exact composition — center share only, or all cash held
-  including unpaid teacher shares → UNK-020.
+- **Unknown status:** ~~composition~~ RESOLVED by D5 (→ DR-016).
 
 ### DR-011 — Account statements are views, not records
 - **Description:** A statement presents existing recorded activity; producing one
@@ -129,3 +131,63 @@ no duplicates.
 - **Possible exceptions:** none stated.
 - **Unknown status:** whether any deductions from teacher shares exist (fees,
   penalties) → UNK-021.
+
+### DR-013 — Teacher compensation follows one of the owner's compensation models
+- **Description:** A program's distribution policy uses one of these compensation
+  models: percentage of each receipt (most common), fixed amount per student,
+  fixed amount per training program, fixed monthly amount, or a custom agreement
+  defined by the owner. The model set must remain extensible for future models
+  without changing the business model.
+- **Reason:** The owner's real agreements with teachers take these varied forms.
+  (→ Owner decision D1, ADR-0008; example D2: English → 70%, Mathematics → 60%,
+  Robotics → fixed per student)
+- **Dependencies:** DR-003.
+- **Possible exceptions:** none — "custom agreement" is itself the escape hatch.
+- **Unknown status:** how each non-percentage model maps onto per-receipt splits
+  and entitlement accrual → UNK-024.
+
+### DR-014 — Rounding belongs exclusively to the currency
+- **Description:** Distribution rules never define rounding. If the currency
+  supports decimals, the exact decimal value is stored; if not, the currency's
+  official rounding rules apply. No custom rounding logic exists in the business.
+- **Reason:** Rounding is a property of money itself, not of any agreement.
+  (→ Owner decision D3, ADR-0008)
+- **Dependencies:** DR-005.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** which currency the business uses → UNK-010.
+
+### DR-015 — Teacher entitlement begins at receipt posting
+- **Description:** The moment a receipt voucher is posted, a teacher receivable
+  is created: the teacher's share is owed from that moment. Entitlement and
+  payment are two different business events — payment happens later.
+- **Reason:** The teacher's right arises from the money being received, not from
+  the owner's later cash decision. (→ Owner decision D4, ADR-0008)
+- **Dependencies:** DR-005, DR-006, DR-012.
+- **Possible exceptions:** none stated.
+- **Unknown status:** entitlement accrual for non-receipt-based models (fixed
+  monthly) → UNK-024.
+
+### DR-016 — Three balances, never merged
+- **Description:** The business distinguishes three balances that must never be
+  merged: **Cash Balance** (all cash currently held), **Teacher Payables** (money
+  currently owed to teachers), and **Center Net Balance** (the center's own
+  earned share). Owner's worked example: after one 1000 receipt at 70/30 —
+  Cash 1000, Teacher Payables 700, Center Net 300.
+- **Reason:** Merging them hides what the owner actually needs to know: what is
+  in the box, what is owed, and what is earned. (→ Owner decision D5, ADR-0008;
+  refines F-05's "Center Balance / Teacher Balances", see ADR-0008 interpretation
+  boundaries)
+- **Dependencies:** DR-009, DR-010, DR-012, DR-015.
+- **Possible exceptions:** none — separation is absolute.
+- **Unknown status:** —
+
+### DR-017 — Posting a receipt drives the automatic revenue ledger
+- **Description:** Every posted receipt voucher automatically creates three
+  business effects: increase Cash Balance (full amount), increase Teacher
+  Payables (teacher share), increase Center Net Balance (center share). This is a
+  business ledger, NOT an accounting journal.
+- **Reason:** The three balances must always reflect reality without any manual
+  step. (→ Owner decision D6, ADR-0008; F-07, F-08)
+- **Dependencies:** DR-005, DR-006, DR-015, DR-016.
+- **Possible exceptions:** none stated.
+- **Unknown status:** the three effects under non-percentage models → UNK-024.

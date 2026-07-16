@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09) |
+| Version | 1.1.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D1–D6) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -54,12 +54,17 @@ Students/Payers ──payment for a program──►  ┌───────�
 1. **Money in:** a student/payer pays for a training program. The payment is
    recorded as a **receipt voucher (سند قبض)** that belongs to exactly one program
    (F-06).
-2. **The split:** at the moment of receipt, the money is divided between a
-   **teacher share** and a **center share** according to the program's **revenue
-   distribution policy** (F-07). Example given by the owner: receipt 1000 →
-   teacher 700, center 300. The split is computed automatically — never by hand
-   (F-08) — and the applied split is preserved inside that voucher forever, even
-   if the policy later changes (F-07).
+2. **The split:** at the moment a receipt is posted, the money is divided between
+   a **teacher share** and a **center share** according to the program's **revenue
+   distribution policy** (F-07). Policies follow one of the owner's compensation
+   models — percentage of each receipt (most common), fixed per student, fixed
+   per program, fixed monthly, or custom agreement (ADR-0008 D1; per-model
+   semantics → UNK-024). Example given by the owner: receipt 1000 → teacher 700,
+   center 300. The split is computed automatically — never by hand (F-08) — the
+   teacher's entitlement begins at that same moment (ADR-0008 D4), rounding
+   follows the currency's own rules, never custom logic (ADR-0008 D3), and the
+   applied split is preserved inside that voucher forever, even if the policy
+   later changes (F-07).
 3. **Money out:** outgoing money is recorded as **payment vouchers (سند صرف)**
    (F-05). What categories of outgoing money exist, and whether paying a teacher
    their accumulated share is itself a payment voucher, is not yet stated →
@@ -86,7 +91,8 @@ approval, and timing are not stated → UNK-008, UNK-009, UNK-015.
 The owner currently must track programs, teachers, payments, splits, and balances
 manually. The system exists to remove that burden (M-01): every receipt is split
 automatically (F-07, F-08), and the owner can see — at any moment, without
-calculating — the **center balance** and each **teacher balance**, and obtain
+calculating — the three never-merged balances (**Cash Balance**, **Teacher
+Payables**, **Center Net Balance** — ADR-0008 D5), each **teacher balance**, and
 **account statements** (F-05, M-07). The business is intentionally small and must
 stay that way: one center, one owner, one database; never an ERP (F-02, F-03,
 M-03, M-08).

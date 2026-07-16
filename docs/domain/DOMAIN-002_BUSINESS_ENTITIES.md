@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001 (F-04…F-08), DOM-001 |
+| Version | 2.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D1–D6), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -98,19 +98,26 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 
 ## 6. Revenue Distribution Policy (سياسة توزيع الإيراد)
 
-- **Purpose:** the agreement that determines how each receipt of a program is
-  divided into teacher share and center share (F-06, F-07).
-- **Responsibility:** supplying the split automatically applied at receipt time.
-- **Relationships:** exactly one policy per program (F-06). Whether one policy is
-  shared by several programs or each program has its own → UNK-002.
+- **Purpose:** the agreement that determines the teacher's compensation for a
+  program and thereby how each receipt divides into teacher share and center
+  share (F-06, F-07).
+- **Responsibility:** supplying the split automatically applied at receipt time,
+  according to one of the owner's **compensation models** (DR-013): percentage of
+  each receipt (most common), fixed amount per student, fixed amount per program,
+  fixed monthly amount, or a custom agreement. The model set stays extensible
+  without changing the business model (ADR-0008 D1).
+- **Relationships:** belongs to the Training Program — exactly one policy per
+  program, never to the teacher directly; one teacher's programs may each carry
+  different policies (ADR-0008 D2). Rounding is never the policy's concern — it
+  belongs to the currency (DR-014).
 - **Lifecycle:** may change over time — but past vouchers keep the split that was
   applied (F-07). What triggers a change and who agrees to it → UNK-003.
-- **Owns:** the definition of the split (its form — percentage, fixed amounts,
-  tiers — is established only by one example, 700/300 of 1000 → UNK-002).
+- **Owns:** the definition of the compensation model and its parameters.
 - **Never owns:** the recorded splits inside vouchers — those belong to the
-  vouchers permanently (F-07).
-- **Example:** "teacher 70% / center 30%" — consistent with the owner's example;
-  the general form is unconfirmed (UNK-002).
+  vouchers permanently (F-07); rounding rules (currency-owned, DR-014).
+- **Example:** English → 70% to the teacher; Mathematics → 60%; Robotics → fixed
+  amount per student (owner's examples, ADR-0008 D2). Exact per-receipt semantics
+  of the non-percentage models → UNK-024.
 
 ## 7. Receipt Voucher (سند قبض)
 
@@ -119,10 +126,13 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Responsibility:** preserving, forever, the amount received and the exact split
   applied to it (F-07).
 - **Relationships:** belongs to one Training Program (and through it to one
-  Teacher and one policy); contributes the teacher share to the Teacher Balance
-  and the center share to the Center Balance (accrual timing → UNK-020).
-- **Lifecycle:** created when money is received. Whether it can ever be cancelled
-  or corrected, and how → UNK-007.
+  Teacher and one policy). Posting it automatically creates three business
+  effects: Cash Balance up by the full amount, Teacher Payables up by the teacher
+  share (the teacher's entitlement begins at that moment — DR-015), Center Net
+  Balance up by the center share (DR-017, ADR-0008 D4/D6).
+- **Lifecycle:** created when money is received; posting it is what triggers the
+  ledger effects. Whether it can ever be cancelled or corrected, and how →
+  UNK-007.
 - **Owns:** its amount, its date, its stored split (teacher share + center share).
 - **Never owns:** the current policy — it holds a *copy* of the applied split,
   immune to later policy changes (F-07).
@@ -166,32 +176,64 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Example:** "statement of teacher Ahmad" — scope and content to be confirmed
   (UNK-013).
 
-## 11. Center Balance (رصيد المركز)
+## 11. The Three Balances (الأرصدة الثلاثة)
 
-- **Purpose:** what the center currently holds/is entitled to (F-05).
-- **Responsibility:** answering "how much does the center have?" at any moment
-  without manual computation (F-08).
-- **Relationships:** increased by center shares of receipts; affected by outgoing
-  payments — exact composition (does it include cash held on behalf of teachers?)
-  → UNK-020.
-- **Lifecycle:** continuous; recalculated from records, never entered by hand
-  (F-08).
-- **Owns:** nothing — it is a derived quantity.
-- **Never owns:** teacher shares (they belong to teachers, F-07).
-- **Example:** after the single 1000 receipt (split 700/300) and no payments, the
-  center share standing is 300; whether "center balance" equals 300 or 1000-held-
-  minus-obligations depends on UNK-020.
+The owner distinguishes **three completely different balances that must never be
+merged** (ADR-0008 D5, DR-016). This refines F-05's "Center Balance / Teacher
+Balances" — see ADR-0008 interpretation boundaries. All three are derived
+quantities, recalculated from records, never entered by hand (F-08), and all
+three rise automatically when a receipt is posted (DR-017).
+
+### 11a. Cash Balance (الرصيد النقدي)
+
+- **Purpose:** all cash currently held by the center.
+- **Responsibility:** answering "how much money is physically here?".
+- **Relationships:** up by the full amount of every posted receipt; down when any
+  money is paid out (DR-008).
+- **Lifecycle:** continuous; derived.
+- **Owns / Never owns:** nothing — a derived quantity; the portion matching
+  Teacher Payables is held, not owned (DR-012).
+- **Example:** after the single 1000 receipt: Cash Balance = 1000 (owner's
+  example).
+
+### 11b. Teacher Payables (مستحقات المدرّبين)
+
+- **Purpose:** money currently owed to teachers — the aggregate of all individual
+  teacher balances.
+- **Responsibility:** answering "how much do I owe teachers in total?".
+- **Relationships:** up by the teacher share the moment each receipt is posted
+  (entitlement at posting, DR-015); down by teacher payments (mechanics →
+  UNK-008).
+- **Lifecycle:** continuous; derived.
+- **Owns / Never owns:** derived quantity; its amounts belong to the teachers
+  (DR-012).
+- **Example:** after the 1000 receipt at 70/30: Teacher Payables = 700 (owner's
+  example).
+
+### 11c. Center Net Balance (صافي رصيد المركز)
+
+- **Purpose:** the center's own earned share.
+- **Responsibility:** answering "how much has the center itself earned?".
+- **Relationships:** up by the center share of every posted receipt (DR-017);
+  relation to center expenses (does it decrease with expenses?) → UNK-009,
+  UNK-015.
+- **Lifecycle:** continuous; derived.
+- **Owns / Never owns:** derived quantity; never includes teacher shares.
+- **Example:** after the 1000 receipt at 70/30: Center Net Balance = 300 (owner's
+  example).
 
 ## 12. Teacher Balance (رصيد المدرّب)
 
-- **Purpose:** what a teacher is currently owed (F-05).
+- **Purpose:** what one specific teacher is currently owed (F-05); the per-teacher
+  component of Teacher Payables (§11b).
 - **Responsibility:** answering "how much is teacher X owed?" at any moment
   without manual computation (F-08).
-- **Relationships:** increased by teacher shares of receipts on the teacher's
-  programs (F-07); decreased by teacher payments (mechanics → UNK-008); accrual
-  timing (at receipt vs. other) → UNK-020.
+- **Relationships:** increased by the teacher share the moment a receipt on the
+  teacher's programs is posted — a teacher receivable is created then (DR-015,
+  ADR-0008 D4); decreased by teacher payments (mechanics → UNK-008). Entitlement
+  and payment are two different business events (D4).
 - **Lifecycle:** continuous; derived from records.
 - **Owns:** nothing — derived quantity.
 - **Never owns:** center shares.
-- **Example:** after the 1000 receipt on Ahmad's program, Ahmad's balance shows
-  700 owed (owner's example, subject to UNK-020 timing confirmation).
+- **Example:** the moment the 1000 receipt on Ahmad's program is posted, Ahmad is
+  owed 700 — even though he is paid later (owner's example + D4).

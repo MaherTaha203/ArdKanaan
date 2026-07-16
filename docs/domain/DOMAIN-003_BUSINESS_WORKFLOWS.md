@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001 (F-05…F-08), DOM-001, DOM-002 |
+| Version | 1.1.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D1–D6), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -36,10 +36,12 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   (identity depth → UNK-011); date. Payment method and currency → UNK-010, UNK-004.
 - **Business rules:** DR-004 (one receipt ↔ one program), DR-005 (automatic split
   at receipt), DR-006 (split stored permanently in the voucher), DR-007 (owner
-  never computes anything).
-- **Outputs:** a receipt voucher holding amount + applied teacher share + applied
-  center share; teacher balance and center balance reflect the new shares
-  (timing → UNK-020).
+  never computes anything), DR-015/DR-017 (posting creates the teacher
+  receivable and the three ledger effects).
+- **Outputs:** a posted receipt voucher holding amount + applied teacher share +
+  applied center share; automatically: Cash Balance +full amount, Teacher
+  Payables +teacher share (entitlement begins now, D4), Center Net Balance
+  +center share (D6).
 - **Exceptional cases:** partial payment/installments → UNK-004; overpayment →
   UNK-004; payment covering multiple programs at once → UNK-004.
 
@@ -47,20 +49,27 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 
 - **Trigger:** occurs automatically as part of WF-02 — never a separate manual
   step (F-07, F-08).
-- **Inputs:** receipt amount; the program's revenue distribution policy.
+- **Inputs:** receipt amount; the program's revenue distribution policy (one of
+  the five compensation models, DR-013).
 - **Business rules:** DR-003 (one policy per program), DR-005 (automatic
-  calculation), DR-006 (permanence of the applied split). Policy form → UNK-002.
+  calculation), DR-006 (permanence of the applied split), DR-013 (compensation
+  models), DR-014 (rounding is currency-owned: exact decimals stored when the
+  currency supports them, otherwise official currency rounding — never custom
+  logic).
 - **Outputs:** teacher share and center share, both recorded inside the voucher.
-- **Exceptional cases:** a program with no policy, or amounts the policy cannot
-  divide evenly (rounding) → UNK-002.
+- **Exceptional cases:** per-receipt semantics under non-percentage models (fixed
+  per student / per program / monthly / custom) → UNK-024.
 
 ## WF-04 — Teacher balance changes — *PARTIAL*
 
-- **Trigger:** a receipt voucher on the teacher's program records a teacher share
-  (increase, F-07); a teacher payment settles owed amounts (decrease → UNK-008).
-- **Inputs:** stored shares from vouchers; teacher payments.
+- **Trigger:** a receipt voucher on the teacher's program is posted — the teacher
+  receivable is created at that moment (increase, DR-015, D4); a teacher payment
+  settles owed amounts later (decrease → UNK-008). Entitlement and payment are
+  two different business events (D4).
+- **Inputs:** stored shares from posted vouchers; teacher payments.
 - **Business rules:** DR-009 (balance derives from recorded shares and payments,
-  never entered by hand — F-08); accrual timing → UNK-020.
+  never entered by hand — F-08), DR-015 (entitlement at posting), DR-016 (feeds
+  Teacher Payables, never merged with the other balances).
 - **Outputs:** current amount owed to the teacher.
 - **Exceptional cases:** negative balance (teacher paid more than owed) →
   UNK-008; departing teacher with open balance → UNK-019.
@@ -115,7 +124,9 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 - **Trigger:** the owner wants to know the current state (any moment).
 - **Inputs:** recorded vouchers (and their stored splits).
 - **Business rules:** DR-007 (everything derivable is derived — F-08), DR-009,
-  DR-010 (balances are derived quantities); statement scope and periods → UNK-013.
-- **Outputs:** center balance, teacher balances, account statements.
+  DR-010, DR-016 (the three balances — Cash, Teacher Payables, Center Net — are
+  shown distinctly, never merged); statement scope and periods → UNK-013.
+- **Outputs:** Cash Balance, Teacher Payables, Center Net Balance, per-teacher
+  balances, account statements.
 - **Exceptional cases:** statement for a period with corrections → UNK-007,
   UNK-013.

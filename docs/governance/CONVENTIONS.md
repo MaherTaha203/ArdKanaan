@@ -6,7 +6,7 @@
 | Title | Engineering & Naming Conventions |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Depends on | GOV-000, GOV-001 |
 | Referenced by | IDX-001, GOV-006, GOV-007, TPL-001, TPL-002, TPL-003, ADR-0003, ADR-0006 |
 
@@ -118,8 +118,11 @@ Versioning is semantic for documents:
    The product's UI language is decided in Phase 3 (UX Constitution), not here.
 2. **Terminology is fixed** — use exactly: Training Program, Teacher, Student (Payer),
    Revenue Distribution Policy, Receipt Voucher, Payment Voucher, Operation,
-   Account Statement, Center Balance, Teacher Balance. Synonyms (e.g. “course”,
-   “instructor”, “invoice”) are forbidden in normative text.
+   Account Statement, Teacher Balance; and for the three never-merged balances
+   (ADR-0008 D5): **Cash Balance**, **Teacher Payables**, **Center Net Balance**
+   (the founding term “Center Balance” is refined by these — use the precise
+   terms in all post-Session-1 text). Synonyms (e.g. “course”, “instructor”,
+   “invoice”) are forbidden in normative text.
 3. Normative language: **MUST / MUST NOT / SHOULD / MAY** per RFC 2119 spirit.
 4. Every cross-document reference uses a Doc ID plus a relative Markdown link.
 5. One sentence per requirement atom; each atom carries exactly one ID.
