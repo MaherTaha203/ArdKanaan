@@ -133,6 +133,28 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   about the removed scope; and keep the exploratory decision trail intact
   (supersede ADRs partially, never rewrite them).
 
+### LES-007 — Ask what kind of thing it is before modeling it
+
+- **Observation:** "Operations", carried since the founding brief as a core
+  *entity* (F-05) and modeled as an entity placeholder in DOM-002, turned out —
+  by the owner's definitive ruling (ADR-0010) — to be no entity at all, but a
+  read-only system activity timeline.
+- **Engineering lesson:** A term's *classification* (entity vs. view vs. event
+  vs. report) is itself a discoverable fact and must be asked, not inherited from
+  where the term appeared in a list. Modeling proceeds only after the
+  classification question is answered.
+- **Reason:** Founding enumerations mix things of different kinds; every reader
+  before Session 2 (including the entity catalog's own structure) silently
+  assumed "listed among entities" meant "is an entity".
+- **Impact:** Contained — the placeholder carried a HIGH unknown instead of an
+  invented model (LES-004 guidance worked); reclassification cost one section
+  rewrite, not a cascade.
+- **Future guidance:** For each term in an authoritative list, the first
+  interview question is "what kind of thing is this?"; keep undefined terms as
+  explicitly-unknown placeholders (never provisional models); expect answers to
+  carry *signals* about other unknowns — log them on those unknowns without
+  closing them (AI-11).
+
 ---
 
 ## 4. Maintenance rules
@@ -141,4 +163,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-007**.
+3. Next available lesson number: **LES-008**.

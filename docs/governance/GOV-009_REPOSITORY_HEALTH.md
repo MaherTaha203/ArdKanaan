@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-16 — V1 scope reduction applied, Phase 1A re-frozen (AUD-P1A-003)
+**Last refresh:** 2026-07-16 — Session 2 (Operations) applied, Phase 1A re-frozen (AUD-P1A-004)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 35 / 35 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 37 / 37 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design) | 35 / 35 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design) | 37 / 37 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 17 / 17 DR-atoms cite F/M/owner decisions (ADR-0008) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 20 / 20 DR-atoms cite F/M/owner decisions (ADR-0008/0009/0010) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 17 (GOV-000…GOV-007, DOM-001…DOM-004, 5 audit reports) + 9 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 18 (GOV-000…GOV-007, DOM-001…DOM-004, 6 audit reports) + 10 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 21 (6 HIGH, 10 MEDIUM, 5 LOW); 2 assumptions awaiting confirmation; 3 unknowns resolved (2 answered via ADR-0008, 1 mooted via ADR-0009) + 1 assumption rejected | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
+| 13 | Open domain unknowns (DOM-005) | 20 (5 HIGH, 10 MEDIUM, 5 LOW); 2 assumptions awaiting confirmation; 4 unknowns resolved (3 answered via ADR-0008/0010, 1 mooted via ADR-0009) + 1 assumption rejected | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -59,3 +59,4 @@ next phase.
 | 2026-07-16 | Phase 1A close | AUD-P1A-001 | 🟢 except indicator 13 🟡 — 23 open unknowns awaiting owner (by design: discovered, not invented) |
 | 2026-07-16 | Session 1 decisions applied (ADR-0008) | AUD-P1A-002 | 🟢 except indicator 13 🟡 — 22 open (7 HIGH); UNK-002/020 resolved, UNK-024 opened |
 | 2026-07-16 | V1 scope reduction (ADR-0009) | AUD-P1A-003 | 🟢 except indicator 13 🟡 — 21 open (6 HIGH); UNK-024 mooted, session 1-FU withdrawn |
+| 2026-07-16 | Session 2: Operations defined (ADR-0010) | AUD-P1A-004 | 🟢 except indicator 13 🟡 — 20 open (5 HIGH); UNK-001 resolved, DOM-002 §9 reclassified |

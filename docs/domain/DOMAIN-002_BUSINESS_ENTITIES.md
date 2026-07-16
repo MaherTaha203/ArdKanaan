@@ -6,14 +6,17 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.1.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), DOM-001 |
+| Version | 2.2.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
 
 The business entities below are exactly those fixed by F-04 and F-05, plus the
-Training Center and the Owner themselves. Descriptions use **business terminology
+Training Center and the Owner themselves. One exception: §9 "Operations" is, by
+the owner's definitive ruling, **not an entity** but a system activity view
+(ADR-0010) — it stays in this catalog only so the founding term is defined in
+one place. Descriptions use **business terminology
 only** — no software terms. Where the business meaning of an aspect is not yet
 established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 
@@ -150,14 +153,32 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Never owns:** revenue splits — splits belong to receipt vouchers only.
 - **Example:** none stated by the owner yet (UNK-009).
 
-## 9. Operation (عملية)
+## 9. Operations — System Activity View (سجل النشاط / العمليات)
 
-- **Purpose:** listed by the owner as a core entity (F-05), but its business
-  meaning is **not yet defined** → **UNK-001**.
-- **Responsibility / Relationships / Lifecycle / Owns / Never owns / Example:**
-  unknown — deliberately not invented (AI-10). Plausible readings (a ledger line;
-  any money movement; a generic term covering both voucher types) are recorded as
-  candidate interpretations under UNK-001 for the owner to confirm.
+**Reclassified by the owner (ADR-0010): Operations is NOT a business entity.**
+It is a **chronological activity timeline** of everything that happened inside
+the system — an activity log presented in a business-friendly way. F-05's listing
+names this view within the core vocabulary; it does not make it a domain object.
+It is described here so the founding term stays defined in one place:
+
+- **Purpose:** letting the owner see the center's history — everything that
+  happened, newest first, searchable (ADR-0010 §8).
+- **Responsibility:** *recording and displaying* meaningful business events
+  (voucher created/edited/cancelled, teacher payment recorded, program
+  created/modified, policy changed, settings changed, backup/restore). It
+  creates **no business logic** — rules belong to the originating entity
+  (DR-018).
+- **Relationships:** every operation belongs to a source (Receipt Voucher,
+  Payment Voucher, Training Program, Teacher, Settings, Backup, System); an
+  operation never exists by itself (DR-020). Some operations carry financial
+  impact, some do not (DR-020).
+- **Lifecycle:** append-only history — operations are immutable historical
+  events; corrections generate new operations; history never disappears
+  (DR-019).
+- **Owns:** nothing — it displays events.
+- **Never owns:** business rules, balances, or documents.
+- **Example:** a timeline row: "Receipt Voucher posted — 1000 — English program
+  (Teacher Ahmad) — split 700/300 — financial impact: yes."
 
 ## 10. Account Statement (كشف حساب)
 

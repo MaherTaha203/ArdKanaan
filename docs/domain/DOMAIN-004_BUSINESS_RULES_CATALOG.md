@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.0.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), DOM-001, DOM-002, DOM-003 |
+| Version | 2.1.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -185,6 +185,46 @@ no duplicates.
 - **Reason:** The three balances must always reflect reality without any manual
   step. (→ Owner decision D6, ADR-0008; F-07, F-08)
 - **Dependencies:** DR-005, DR-006, DR-015, DR-016.
+- **Possible exceptions:** none stated.
+- **Unknown status:** —
+
+### DR-018 — Operations is an activity view that creates no business logic
+- **Description:** "Operations" is a chronological, business-friendly activity
+  timeline of everything that happened inside the system. It is NOT a business
+  entity, financial document, workflow, ledger, or journal. It only *records and
+  displays* business events; every business rule belongs to the originating
+  entity, never to the timeline.
+- **Reason:** The owner needs one place to see the center's history without that
+  place becoming a second source of truth. (→ ADR-0010 §1–§4; refines F-05's
+  vocabulary)
+- **Dependencies:** DR-007 (the view is derived — nothing is entered into it by
+  hand).
+- **Possible exceptions:** none — logic in the timeline is a defect by
+  definition.
+- **Unknown status:** —
+
+### DR-019 — The activity timeline is append-only and immutable
+- **Description:** Operations represent historical events. The timeline is
+  append-only: corrections generate NEW operations; existing operations are never
+  edited or deleted; history never disappears.
+- **Reason:** The owner must always be able to see what actually happened,
+  including mistakes and their corrections. (→ ADR-0010 §7; kin to DR-006's
+  permanence principle)
+- **Dependencies:** DR-018.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** how voucher corrections/cancellations themselves work
+  (the events the timeline would record) → UNK-007.
+
+### DR-020 — Every operation belongs to a source and carries a financial-impact flag
+- **Description:** An operation never exists by itself: each belongs to a source
+  (Receipt Voucher, Payment Voucher, Training Program, Teacher, Settings, Backup,
+  System). Some operations affect money (e.g. receipt posted, teacher payment
+  posted) and some do not (e.g. settings changed, program name edited); each
+  operation is distinguishable accordingly, and each row must let the owner
+  understand what happened without opening the source document.
+- **Reason:** The timeline is only trustworthy if every event is anchored to what
+  caused it and its money effect is unambiguous. (→ ADR-0010 §5, §6, §8)
+- **Dependencies:** DR-018, DR-019.
 - **Possible exceptions:** none stated.
 - **Unknown status:** —
 
