@@ -6,9 +6,9 @@
 | Title | Engineering Workflow |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001, GOV-003, GOV-004 |
-| Referenced by | RDM-001 |
+| Version | 1.1.0 |
+| Depends on | GOV-001, GOV-003, GOV-004, GOV-007, GOV-008, GOV-009 |
+| Referenced by | RDM-001, GOV-007, GOV-008, GOV-009 |
 
 ---
 
@@ -30,12 +30,16 @@ same for every phase.
 │      │            all gates                             │
 │      └─ all PASS ↓                                      │
 │ 7. FREEZE    docs → FROZEN, commit audit report         │
-│ 8. CLOSE     update IDX-001 + RDM-001, commit, push     │
+│ 8. CLOSE     update IDX-001 + RDM-001, refresh GOV-009, │
+│              capture lessons in GOV-008, commit, push   │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## 2. Daily working rules
 
+0. **Session start per protocol.** Every session begins with the obligations of
+   GOV-007 §2 (read GOV-000/GOV-001, consult GOV-008, check IDX-001/RDM-001,
+   verify the branch).
 1. **One phase, one focus.** Never author content for a phase that is not open.
 2. **Decisions before documents.** If authoring stalls on an open question, stop
    and write the ADR first (GOV-001 §7).

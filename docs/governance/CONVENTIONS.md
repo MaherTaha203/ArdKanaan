@@ -6,9 +6,9 @@
 | Title | Engineering & Naming Conventions |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001 |
-| Referenced by | IDX-001, GOV-006, TPL-001, TPL-002, TPL-003, ADR-0003 |
+| Version | 1.1.0 |
+| Depends on | GOV-000, GOV-001 |
+| Referenced by | IDX-001, GOV-006, GOV-007, TPL-001, TPL-002, TPL-003, ADR-0003, ADR-0006 |
 
 ---
 
@@ -25,7 +25,8 @@
 
 | Document class | File name pattern | Example |
 |---|---|---|
-| Governance | `UPPER-KEBAB.md` in `docs/governance/` | `QUALITY-GATES.md` |
+| Governance (founding, GOV-001…GOV-006) | `UPPER-KEBAB.md` in `docs/governance/` | `QUALITY-GATES.md` |
+| Governance (platform, GOV-000 and GOV-007+) | `GOV-NNN_UPPER_SNAKE.md` in `docs/governance/` (→ ADR-0006 §3) | `GOV-007_AI_EXECUTION_PROTOCOL.md` |
 | Index | `INDEX.md` in `docs/` | `INDEX.md` |
 | Roadmap | `ROADMAP.md` in `docs/roadmap/` | `ROADMAP.md` |
 | Decision log | `DECISION-LOG.md` in `docs/decisions/` | `DECISION-LOG.md` |
@@ -81,7 +82,10 @@ Fine-grained, referencable statements inside documents use these prefixes
 
 | ID prefix | Meaning | Defined in phase |
 |---|---|---|
+| `M-NN` | Manifesto principle | 0 (GOV-000) |
 | `F-NN` | Immutable project fact | 0 (GOV-001 §2) |
+| `AI-NN` | AI execution protocol rule | 0 (GOV-007) |
+| `LES-NNN` | Engineering lesson | 0 (GOV-008, spans all phases) |
 | `PR-NNN` | Product requirement | 1 |
 | `BR-NNN` | Business rule | 2 |
 | `UX-NNN` | UX rule / principle | 3 |

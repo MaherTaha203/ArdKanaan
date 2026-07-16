@@ -6,9 +6,9 @@
 | Title | Quality Gates |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001, GOV-002 |
-| Referenced by | GOV-004, GOV-005, RDM-001, TPL-003 |
+| Version | 1.1.0 |
+| Depends on | GOV-000, GOV-001, GOV-002 |
+| Referenced by | GOV-004, GOV-005, GOV-007, GOV-009, RDM-001, TPL-003 |
 
 ---
 
@@ -80,4 +80,16 @@ TPL-003 and stored under `docs/audits/phase-N/`.
 
 Gates are executed by the acting Quality Director (see GOV-004 §2). Each gate is
 run as an independent adversarial pass: the reviewer's job is to find reasons to
-FAIL, not reasons to pass.
+FAIL, not reasons to pass. The AI Execution Supervisor (GOV-004 §2) verifies that
+every gate run complied with the AI Execution Protocol (GOV-007).
+
+## 5. Protocol & platform checks (all gates)
+
+In addition to its own checklist, every audit run MUST verify:
+
+1. **GOV-007 compliance** — no protocol rule (AI-10…AI-39) was violated during the
+   phase; a violation is a DEFECT at whichever gate detects it.
+2. **GOV-009 refresh** — the Repository Health dashboard is updated with evidence
+   from this audit before the phase closes (checked at Gate 6).
+3. **GOV-008 capture** — lessons learned during the phase are recorded in the
+   Engineering Memory before the phase closes (checked at Gate 6).

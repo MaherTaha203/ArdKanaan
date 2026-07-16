@@ -6,35 +6,38 @@
 | Title | Repository Governance |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | — |
-| Referenced by | IDX-001, GOV-002…GOV-006, RDM-001, ADR-0001, ADR-0002 |
+| Version | 2.0.0 |
+| Depends on | GOV-000 |
+| Referenced by | IDX-001, GOV-002…GOV-009, RDM-001, ADR-0001, ADR-0002, ADR-0006 |
 
 ---
 
 ## 1. Purpose
 
-This document is the supreme law of the Ard Kanaan repository. Every other document,
-process, and (eventually) line of code is subordinate to it. Where any document
-conflicts with GOV-001, GOV-001 wins and the conflicting document must be repaired
-(see §6, Consistency Rule).
+This document is the supreme **operational law** of the Ard Kanaan repository. It is
+subordinate only to the Project Manifesto (GOV-000): conflicts of principle are
+resolved by GOV-000, conflicts of operational rule by GOV-001 (→ ADR-0006 §2).
+Every other document, process, and (eventually) line of code is subordinate to
+both. Where any other document conflicts with GOV-001, GOV-001 wins and the
+conflicting document must be repaired (see §6, Consistency Rule).
 
 ## 2. Project identity (immutable facts)
 
-These facts are fixed. No phase may contradict them. Changing any of them requires a
-new ADR superseding ADR-0001 and re-running all quality gates for all frozen phases.
+These facts are fixed and operationalize the manifesto's principles (GOV-000). No
+phase may contradict them. Changing any of them requires a new ADR superseding
+ADR-0001 and re-running all quality gates for all frozen phases.
 
-| # | Fact |
-|---|---|
-| F-01 | The project is **Ard Kanaan (أرض كنعان)**, a financial management system for a training center. |
-| F-02 | It serves exactly **one** training center, **one** owner, **one** database. |
-| F-03 | It is **not** an ERP, **not** general accounting software, **not** multi-company, **not** multi-user. |
-| F-04 | The core of the system is the **Training Center**, not vouchers. |
-| F-05 | Core entities: Training Programs, Teachers, Students (Payers), Revenue Distribution Policies, Receipt Vouchers, Payment Vouchers, Operations, Account Statements, Center Balance, Teacher Balances. |
-| F-06 | Every receipt voucher belongs to one training program; every training program belongs to one teacher and has one distribution policy. |
-| F-07 | Revenue distribution is calculated **automatically** and the applied split is **permanently stored inside each voucher**, immune to later policy changes. |
-| F-08 | **Absolute Rule:** the system must never ask the user to enter information that can be calculated automatically. |
-| F-09 | Speed is more important than features. Clarity is more important than flexibility. |
+| # | Fact | Derives from |
+|---|---|---|
+| F-01 | The project is **Ard Kanaan (أرض كنعان)**, a financial management system for a training center. | M-01, M-02 |
+| F-02 | It serves exactly **one** training center, **one** owner, **one** database. | M-02 |
+| F-03 | It is **not** an ERP, **not** general accounting software, **not** multi-company, **not** multi-user. | M-03 |
+| F-04 | The core of the system is the **Training Center**, not vouchers. | M-06 |
+| F-05 | Core entities: Training Programs, Teachers, Students (Payers), Revenue Distribution Policies, Receipt Vouchers, Payment Vouchers, Operations, Account Statements, Center Balance, Teacher Balances. | M-06 |
+| F-06 | Every receipt voucher belongs to one training program; every training program belongs to one teacher and has one distribution policy. | M-06 |
+| F-07 | Revenue distribution is calculated **automatically** and the applied split is **permanently stored inside each voucher**, immune to later policy changes. | M-06, M-07 |
+| F-08 | **Absolute Rule:** the system must never ask the user to enter information that can be calculated automatically. | M-07 |
+| F-09 | Speed is more important than features. Clarity is more important than flexibility. | M-08 |
 
 ## 3. The Documentation-First Law
 
@@ -86,3 +89,13 @@ Every reviewer at every gate must ask: *"Does this addition make the system simp
 and faster for the single owner-operator?"* Features, abstractions, or flexibility
 mechanisms that serve hypothetical future needs (multi-user, multi-center,
 configurability beyond the stated business model) must be **rejected** at review.
+
+## 9. Execution & platform governance
+
+1. Every AI executor working in this repository is bound by the AI Execution
+   Protocol (GOV-007) in every phase.
+2. Engineering lessons are recorded permanently in the Engineering Memory
+   (GOV-008) and MUST be consulted at every session start (→ AI-02).
+3. Repository health is measured, not assumed: the Repository Health dashboard
+   (GOV-009) is refreshed at every phase close, and any 🔴 indicator blocks the
+   opening of the next phase.

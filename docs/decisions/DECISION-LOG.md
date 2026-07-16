@@ -6,7 +6,7 @@
 | Title | Decision Log |
 | Phase | 0 (spans all phases) |
 | Status | LIVING |
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 | Depends on | GOV-001 §7 |
 
 ---
@@ -32,8 +32,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0003](ADR-0003-document-identity-and-lifecycle.md) | Document Identity, Naming & Lifecycle | 0 | ACCEPTED | — |
 | [ADR-0004](ADR-0004-traceability-strategy.md) | Traceability Strategy | 0 | ACCEPTED | — |
 | [ADR-0005](ADR-0005-documentation-language.md) | Documentation Language | 0 | ACCEPTED | — |
+| [ADR-0006](ADR-0006-phase-0-governance-platform-extension.md) | Phase 0 Governance Platform Extension | 0 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0006**.
+Next available ADR number: **ADR-0007**.
 
 ## 4. Maintenance rules
 

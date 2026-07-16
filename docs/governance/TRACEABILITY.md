@@ -6,9 +6,9 @@
 | Title | Traceability & Cross-Reference Strategy |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001, GOV-002 |
-| Referenced by | GOV-003 (Gates 5–7), ADR-0004 |
+| Version | 1.1.0 |
+| Depends on | GOV-000, GOV-001, GOV-002 |
+| Referenced by | GOV-003 (Gates 5–7), GOV-007, ADR-0004, ADR-0006 |
 
 ---
 
@@ -29,18 +29,22 @@ weight**; only ID-bearing statements can be traced, reviewed, or implemented.
 ## 3. The trace chain across phases
 
 ```
-F-NN (facts, Phase 0)
-  └─► PR-NNN (product requirements, Phase 1)
-        └─► BR-NNN (business rules, Phase 2)
-              ├─► UX-NNN (UX rules, Phase 3)
-              ├─► DB-NNN (data model rules, Phase 4)
-              ├─► CP-NNN (component contracts, Phase 5)
-              └─► SC-NNN (screen requirements, Phase 6)
-                    └─► implementation artifacts (post-freeze)
+M-NN (manifesto principles, Phase 0 — GOV-000)
+  └─► F-NN (facts, Phase 0 — GOV-001 §2)
+        └─► PR-NNN (product requirements, Phase 1)
+              └─► BR-NNN (business rules, Phase 2)
+                    ├─► UX-NNN (UX rules, Phase 3)
+                    ├─► DB-NNN (data model rules, Phase 4)
+                    ├─► CP-NNN (component contracts, Phase 5)
+                    └─► SC-NNN (screen requirements, Phase 6)
+                          └─► implementation artifacts (post-freeze)
 ```
 
 Rules per link:
 
+0. Every `F` cites at least one `M` (the *Derives from* column of GOV-001 §2).
+   `AI-NN` and `LES-NNN` atoms (→ GOV-002 §5) govern execution rather than the
+   product and stand outside this chain; `AI` atoms cite `M-09`.
 1. Every `PR` cites at least one `F`. Every `BR` cites at least one `PR` or `F`.
 2. Every `UX`, `DB`, `CP` cites at least one `BR` or `PR`.
 3. Every `SC` cites the `UX`/`CP`/`DB` atoms it composes.
@@ -64,7 +68,7 @@ Rules per link:
    (`<PREFIX>-TRACE`) mapping its new atoms to their upstream atoms.
 2. Matrices are LIVING within their phase and FROZEN at phase close.
 3. The Final Audit composes all matrices to demonstrate an unbroken chain
-   F → PR → BR → {UX, DB, CP} → SC → code.
+   M → F → PR → BR → {UX, DB, CP} → SC → code.
 
 ## 6. Retirement
 

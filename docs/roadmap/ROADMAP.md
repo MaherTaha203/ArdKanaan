@@ -6,8 +6,8 @@
 | Title | Phase Roadmap |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.0.0 |
-| Depends on | GOV-001, GOV-003, GOV-005 |
+| Version | 1.1.0 |
+| Depends on | GOV-000, GOV-001, GOV-003, GOV-005 |
 
 ---
 
@@ -21,7 +21,7 @@ steps are forbidden until Phases 1–6 are all FROZEN (“documentation freeze�
 
 | # | Phase | Deliverables | Directory | Status |
 |---|---|---|---|---|
-| 0 | **Repository Bootstrap** | Governance, conventions, gates, review process, workflow, traceability, index, roadmap, decision log, templates, Phase 0 audit | `docs/governance/`, `docs/` | ✅ COMPLETE |
+| 0 | **Repository Bootstrap & Governance Platform** | Manifesto, governance, conventions, gates, review process, workflow, traceability, AI execution protocol, engineering memory, repository health dashboard, index, roadmap, decision log, templates; audits AUD-P0-001 + AUD-P0-002 (extension per ADR-0006) | `docs/governance/`, `docs/` | ✅ COMPLETE (extended & re-frozen) |
 | 1 | **Product Constitution** | Product vision, scope & non-scope, actors, product requirements (`PR-NNN`), glossary of the ten core entities, traceability matrix | `docs/product/` | ⏳ NEXT |
 | 2 | **Business Constitution** | Business rules (`BR-NNN`) for programs, teachers, payers, distribution policies, vouchers, operations, statements, balances; calculation rules; immutability rules for stored splits; traceability matrix | `docs/business/` | PENDING |
 | 3 | **UX Constitution** | UX principles (`UX-NNN`), interaction rules, automation rules enforcing F-08, information architecture, language/RTL decisions, traceability matrix | `docs/ux/` | PENDING |

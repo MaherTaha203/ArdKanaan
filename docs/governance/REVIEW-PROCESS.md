@@ -6,9 +6,9 @@
 | Title | Review Process |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | GOV-001, GOV-003 |
-| Referenced by | GOV-005, TPL-003 |
+| Version | 1.1.0 |
+| Depends on | GOV-001, GOV-003, GOV-007 |
+| Referenced by | GOV-005, GOV-007, TPL-003, ADR-0006 |
 
 ---
 
@@ -33,6 +33,7 @@ roles, but **must switch roles explicitly and sequentially**, never merging them
 | Documentation Engineer | Gate 6 |
 | Technical Reviewer | Gate 7 |
 | Quality Director | Gate 8, owns the audit report and the final verdict |
+| AI Execution Supervisor | Cross-cutting: verifies GOV-007 compliance at every gate (GOV-003 §5) |
 
 ## 3. Review procedure (per phase)
 
@@ -48,7 +49,8 @@ roles, but **must switch roles explicitly and sequentially**, never merging them
    forbidden.
 4. **Freeze** — when all eight gates PASS in one uninterrupted run, phase documents
    move to FROZEN, the audit report (TPL-003) is committed to
-   `docs/audits/phase-N/`, IDX-001 is updated, and the phase is declared complete.
+   `docs/audits/phase-N/`, IDX-001 is updated, GOV-009 is refreshed and GOV-008
+   lessons are captured (GOV-003 §5), and the phase is declared complete.
 
 ## 4. Findings classification
 

@@ -6,8 +6,8 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.0.0 |
-| Depends on | GOV-001, GOV-002 |
+| Version | 1.1.0 |
+| Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
 Every document in `docs/` MUST be registered here. A document that is not registered
@@ -49,12 +49,16 @@ Gate 8 (Repository Integrity) violation.
 | Doc ID | File | Title | Status |
 |---|---|---|---|
 | IDX-001 | `docs/INDEX.md` | Documentation Index | LIVING |
+| GOV-000 | `docs/governance/GOV-000_PROJECT_MANIFESTO.md` | Project Manifesto | FROZEN |
 | GOV-001 | `docs/governance/GOVERNANCE.md` | Repository Governance | FROZEN |
 | GOV-002 | `docs/governance/CONVENTIONS.md` | Engineering & Naming Conventions | FROZEN |
 | GOV-003 | `docs/governance/QUALITY-GATES.md` | Quality Gates | FROZEN |
 | GOV-004 | `docs/governance/REVIEW-PROCESS.md` | Review Process | FROZEN |
 | GOV-005 | `docs/governance/WORKFLOW.md` | Engineering Workflow | FROZEN |
 | GOV-006 | `docs/governance/TRACEABILITY.md` | Traceability & Cross-Reference Strategy | FROZEN |
+| GOV-007 | `docs/governance/GOV-007_AI_EXECUTION_PROTOCOL.md` | AI Execution Protocol | FROZEN |
+| GOV-008 | `docs/governance/GOV-008_ENGINEERING_MEMORY.md` | Engineering Memory | LIVING |
+| GOV-009 | `docs/governance/GOV-009_REPOSITORY_HEALTH.md` | Repository Health | LIVING |
 | RDM-001 | `docs/roadmap/ROADMAP.md` | Phase Roadmap | LIVING |
 | DEC-000 | `docs/decisions/DECISION-LOG.md` | Decision Log | LIVING |
 | ADR-0001 | `docs/decisions/ADR-0001-documentation-first-pipeline.md` | Documentation-First Pipeline | ACCEPTED |
@@ -62,10 +66,12 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0003 | `docs/decisions/ADR-0003-document-identity-and-lifecycle.md` | Document Identity, Naming & Lifecycle | ACCEPTED |
 | ADR-0004 | `docs/decisions/ADR-0004-traceability-strategy.md` | Traceability Strategy | ACCEPTED |
 | ADR-0005 | `docs/decisions/ADR-0005-documentation-language.md` | Documentation Language | ACCEPTED |
+| ADR-0006 | `docs/decisions/ADR-0006-phase-0-governance-platform-extension.md` | Phase 0 Governance Platform Extension | ACCEPTED |
 | TPL-001 | `docs/templates/DOCUMENT-TEMPLATE.md` | Canonical Document Template | LIVING |
 | TPL-002 | `docs/templates/ADR-TEMPLATE.md` | ADR Template | LIVING |
 | TPL-003 | `docs/templates/AUDIT-TEMPLATE.md` | Audit Report Template | LIVING |
 | AUD-P0-001 | `docs/audits/phase-0/AUDIT-P0-REPOSITORY.md` | Phase 0 Repository Audit Report | FROZEN |
+| AUD-P0-002 | `docs/audits/phase-0/AUDIT-P0-EXTENSION.md` | Phase 0 Governance Platform Extension Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 
