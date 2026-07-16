@@ -6,7 +6,7 @@
 | Title | Engineering & Naming Conventions |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Depends on | GOV-000, GOV-001 |
 | Referenced by | IDX-001, GOV-006, GOV-007, TPL-001, TPL-002, TPL-003, ADR-0003, ADR-0006 |
 
@@ -27,6 +27,7 @@
 |---|---|---|
 | Governance (founding, GOV-001…GOV-006) | `UPPER-KEBAB.md` in `docs/governance/` | `QUALITY-GATES.md` |
 | Governance (platform, GOV-000 and GOV-007+) | `GOV-NNN_UPPER_SNAKE.md` in `docs/governance/` (→ ADR-0006 §3) | `GOV-007_AI_EXECUTION_PROTOCOL.md` |
+| Domain Discovery (Phase 1A) | `DOMAIN-NNN_UPPER_SNAKE.md` in `docs/domain/`; filename word `DOMAIN` maps to Doc-ID prefix `DOM` (→ ADR-0007 §2) | `DOMAIN-004_BUSINESS_RULES_CATALOG.md` |
 | Index | `INDEX.md` in `docs/` | `INDEX.md` |
 | Roadmap | `ROADMAP.md` in `docs/roadmap/` | `ROADMAP.md` |
 | Decision log | `DECISION-LOG.md` in `docs/decisions/` | `DECISION-LOG.md` |
@@ -65,7 +66,8 @@ SUPERSEDED).
 | `DEC-NNN` | Decision log | 0 (spans all phases) |
 | `ADR-NNNN` | Architecture Decision Record | any |
 | `TPL-NNN` | Templates | 0 |
-| `AUD-PN-NNN` | Audit report for phase N | any |
+| `AUD-PN-NNN` | Audit report for phase N (N may be a label such as `1A`) | any |
+| `DOM-NNN` | Domain Discovery documents | 1A |
 | `PRD-NNN` | Product Constitution documents | 1 |
 | `BUS-NNN` | Business Constitution documents | 2 |
 | `UXC-NNN` | UX Constitution documents | 3 |
@@ -86,6 +88,10 @@ Fine-grained, referencable statements inside documents use these prefixes
 | `F-NN` | Immutable project fact | 0 (GOV-001 §2) |
 | `AI-NN` | AI execution protocol rule | 0 (GOV-007) |
 | `LES-NNN` | Engineering lesson | 0 (GOV-008, spans all phases) |
+| `DR-NNN` | Domain rule | 1A (DOM-004) |
+| `WF-NN` | Domain workflow (descriptive, non-normative) | 1A (DOM-003) |
+| `UNK-NNN` | Unknown business fact | 1A (DOM-005, LIVING) |
+| `ASM-NNN` | Working assumption (no normative force) | 1A (DOM-005, LIVING) |
 | `PR-NNN` | Product requirement | 1 |
 | `BR-NNN` | Business rule | 2 |
 | `UX-NNN` | UX rule / principle | 3 |

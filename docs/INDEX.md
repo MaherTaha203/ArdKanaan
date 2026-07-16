@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -27,7 +27,9 @@ here does not officially exist (see GOV-001 §4).
     ├── roadmap/                  Phase roadmap
     ├── templates/                Canonical document templates
     ├── audits/                   Audit reports, one folder per phase
-    │   └── phase-0/
+    │   ├── phase-0/
+    │   └── phase-1a/
+    ├── domain/                   Phase 1A — Domain Discovery
     ├── product/                  Phase 1 — Product Constitution   (RESERVED)
     ├── business/                 Phase 2 — Business Constitution  (RESERVED)
     ├── ux/                       Phase 3 — UX Constitution        (RESERVED)
@@ -72,6 +74,18 @@ Gate 8 (Repository Integrity) violation.
 | TPL-003 | `docs/templates/AUDIT-TEMPLATE.md` | Audit Report Template | LIVING |
 | AUD-P0-001 | `docs/audits/phase-0/AUDIT-P0-REPOSITORY.md` | Phase 0 Repository Audit Report | FROZEN |
 | AUD-P0-002 | `docs/audits/phase-0/AUDIT-P0-EXTENSION.md` | Phase 0 Governance Platform Extension Audit Report | FROZEN |
+
+### 2.1a Phase 1A — Domain Discovery
+
+| Doc ID | File | Title | Status |
+|---|---|---|---|
+| ADR-0007 | `docs/decisions/ADR-0007-phase-1a-domain-discovery.md` | Phase 1A: Domain Discovery | ACCEPTED |
+| DOM-001 | `docs/domain/DOMAIN-001_BUSINESS_OVERVIEW.md` | Business Overview | FROZEN |
+| DOM-002 | `docs/domain/DOMAIN-002_BUSINESS_ENTITIES.md` | Business Entities | FROZEN |
+| DOM-003 | `docs/domain/DOMAIN-003_BUSINESS_WORKFLOWS.md` | Business Workflows | FROZEN |
+| DOM-004 | `docs/domain/DOMAIN-004_BUSINESS_RULES_CATALOG.md` | Business Rules Catalog | FROZEN |
+| DOM-005 | `docs/domain/DOMAIN-005_UNKNOWNS_AND_ASSUMPTIONS.md` | Unknowns & Assumptions | LIVING |
+| AUD-P1A-001 | `docs/audits/phase-1a/AUDIT-P1A-DOMAIN.md` | Phase 1A Domain Discovery Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

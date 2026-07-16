@@ -7,8 +7,8 @@
 | Project code | `ARDK` |
 | System class | Single-center, single-owner, single-database financial management system |
 | Engineering mode | Strict documentation-first pipeline |
-| Current phase | **Phase 0 — Repository Bootstrap & Governance Platform (COMPLETE, extended & re-frozen)** |
-| Next phase | Phase 1 — Product Constitution (Domain Discovery) |
+| Current phase | **Phase 1A — Domain Discovery (COMPLETE, frozen)** |
+| Next phase | Phase 1 — Product Constitution (HIGH unknowns in DOM-005 must be answered by the owner before Phase 1 can freeze) |
 
 ---
 
@@ -52,3 +52,7 @@ frozen.** See [`docs/governance/GOVERNANCE.md`](docs/governance/GOVERNANCE.md).
 | [`docs/decisions/DECISION-LOG.md`](docs/decisions/DECISION-LOG.md) | Architecture Decision Records index |
 | [`docs/audits/phase-0/AUDIT-P0-REPOSITORY.md`](docs/audits/phase-0/AUDIT-P0-REPOSITORY.md) | Phase 0 Repository Audit Report |
 | [`docs/audits/phase-0/AUDIT-P0-EXTENSION.md`](docs/audits/phase-0/AUDIT-P0-EXTENSION.md) | Phase 0 Governance Platform Extension Audit Report |
+| [`docs/domain/DOMAIN-001_BUSINESS_OVERVIEW.md`](docs/domain/DOMAIN-001_BUSINESS_OVERVIEW.md) | The business itself — what the center does and how money flows |
+| [`docs/domain/DOMAIN-004_BUSINESS_RULES_CATALOG.md`](docs/domain/DOMAIN-004_BUSINESS_RULES_CATALOG.md) | Domain rules catalog (DR-001…DR-012) |
+| [`docs/domain/DOMAIN-005_UNKNOWNS_AND_ASSUMPTIONS.md`](docs/domain/DOMAIN-005_UNKNOWNS_AND_ASSUMPTIONS.md) | **Open business questions awaiting the owner's answers** |
+| [`docs/audits/phase-1a/AUDIT-P1A-DOMAIN.md`](docs/audits/phase-1a/AUDIT-P1A-DOMAIN.md) | Phase 1A Domain Discovery Audit Report |

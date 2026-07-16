@@ -33,8 +33,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0004](ADR-0004-traceability-strategy.md) | Traceability Strategy | 0 | ACCEPTED | — |
 | [ADR-0005](ADR-0005-documentation-language.md) | Documentation Language | 0 | ACCEPTED | — |
 | [ADR-0006](ADR-0006-phase-0-governance-platform-extension.md) | Phase 0 Governance Platform Extension | 0 | ACCEPTED | — |
+| [ADR-0007](ADR-0007-phase-1a-domain-discovery.md) | Phase 1A: Domain Discovery | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0007**.
+Next available ADR number: **ADR-0008**.
 
 ## 4. Maintenance rules
 

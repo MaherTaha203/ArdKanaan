@@ -75,6 +75,22 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   apply GOV-007 §5: surface the conflict, resolve it with an ADR, and amend the
   convention — never fork the convention silently.
 
+### LES-004 — An enumerated entity is not a defined entity
+
+- **Observation:** Domain Discovery (Phase 1A) found that "Operations" — listed as
+  a core entity in the founding facts (F-05) since Phase 0 — has no stated
+  business meaning at all (→ UNK-001).
+- **Engineering lesson:** A name appearing in an authoritative enumeration reads
+  as "known", but enumeration is not definition; undefined listed concepts are the
+  most dangerous gaps because no one questions them.
+- **Reason:** F-05 was transcribed faithfully from the owner's brief, which named
+  the entity without describing it; every later restatement inherited the name.
+- **Impact:** Contained — discovered before Product Constitution; captured as the
+  first HIGH unknown (UNK-001) rather than silently interpreted.
+- **Future guidance:** When ingesting authoritative lists, immediately test each
+  item: "could I write its Purpose, Lifecycle, and Example right now from stated
+  facts?" Any item that fails goes straight into the unknowns register (AI-11).
+
 ---
 
 ## 4. Maintenance rules
@@ -83,4 +99,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-004**.
+3. Next available lesson number: **LES-005**.

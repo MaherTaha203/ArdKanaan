@@ -6,7 +6,7 @@
 | Title | Traceability & Cross-Reference Strategy |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 | Referenced by | GOV-003 (Gates 5–7), GOV-007, ADR-0004, ADR-0006 |
 
@@ -31,6 +31,7 @@ weight**; only ID-bearing statements can be traced, reviewed, or implemented.
 ```
 M-NN (manifesto principles, Phase 0 — GOV-000)
   └─► F-NN (facts, Phase 0 — GOV-001 §2)
+        └─► DR-NNN (domain rules, Phase 1A — DOM-004)
         └─► PR-NNN (product requirements, Phase 1)
               └─► BR-NNN (business rules, Phase 2)
                     ├─► UX-NNN (UX rules, Phase 3)
@@ -45,7 +46,12 @@ Rules per link:
 0. Every `F` cites at least one `M` (the *Derives from* column of GOV-001 §2).
    `AI-NN` and `LES-NNN` atoms (→ GOV-002 §5) govern execution rather than the
    product and stand outside this chain; `AI` atoms cite `M-09`.
-1. Every `PR` cites at least one `F`. Every `BR` cites at least one `PR` or `F`.
+   `DR` atoms (Phase 1A) cite `F`/`M` atoms or explicit owner statements; `WF`
+   atoms are descriptive; `UNK`/`ASM` atoms stand outside the chain until
+   resolved by the owner (→ ADR-0007 §3–§4).
+1. Every `PR` cites at least one `F`, and MUST reconcile with the `DR` catalog
+   without contradicting it (→ ADR-0007 §3). Every `BR` cites at least one `PR`,
+   `DR`, or `F`.
 2. Every `UX`, `DB`, `CP` cites at least one `BR` or `PR`.
 3. Every `SC` cites the `UX`/`CP`/`DB` atoms it composes.
 4. **No orphans:** an atom cited by nothing after its consuming phase freezes is a
