@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.2.0 |
+| Version | 1.3.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -93,7 +93,7 @@ corrections, the meaning of "operations").
 | Session | Business area | Unknowns targeted | Status |
 |---|---|---|---|
 | 1 | Revenue Distribution & Balances | UNK-002, UNK-020 (+ ASM-002) | **COMPLETE** — answers recorded as ADR-0008 (D1–D6); UNK-002/UNK-020 resolved, ASM-002 rejected, UNK-024 opened |
-| 1-FU | Session 1 follow-up: per-model money semantics | UNK-024 | pending (to be asked with or before Session 5) |
+| 1-FU | Session 1 follow-up: per-model money semantics | UNK-024 | **ASKED — awaiting owner answers** |
 | 2 | Student Payments & Receipt Vouchers | UNK-004 (+ UNK-010, UNK-011, UNK-012, UNK-014) | pending |
 | 3 | Teacher Payments | UNK-008 (+ UNK-019, UNK-021, ASM-003) | pending |
 | 4 | Expenses & Payment Vouchers | UNK-009, UNK-015 | pending |
