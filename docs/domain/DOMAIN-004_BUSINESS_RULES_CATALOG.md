@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.0.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), DOM-001, DOM-002, DOM-003 |
+| Version | 3.1.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -71,9 +71,12 @@ no duplicates.
   applied to it; later policy changes never affect existing vouchers.
 - **Reason:** Historical money records must be immune to future agreements. (→ F-07)
 - **Dependencies:** DR-005.
-- **Possible exceptions:** none — permanence is absolute. Corrections, if the
-  business allows them, must work around this rule, not through it. (→ UNK-007)
-- **Unknown status:** correction/cancellation/refund mechanics → UNK-006, UNK-007.
+- **Possible exceptions:** none — permanence is absolute. Refunds respect it:
+  they reverse revenue via a separate Refund Voucher (DR-041), never by editing
+  a past receipt. Corrections, if the business allows them, must likewise work
+  around this rule, not through it. (→ UNK-007)
+- **Unknown status:** ~~refund mechanics~~ RESOLVED by S5-D1…D7 (→ DR-036…042);
+  correction/cancellation mechanics → UNK-007.
 
 ### DR-007 — Nothing computable is ever entered by hand
 - **Description:** Any value derivable from existing records — shares, balances,
@@ -408,6 +411,95 @@ no duplicates.
 - **Dependencies:** DR-006, DR-009, DR-028.
 - **Possible exceptions:** none permitted.
 - **Unknown status:** presentation scope of statements → UNK-013.
+
+### DR-036 — A refund is a reversal of recognized revenue
+- **Description:** A Student Refund is NOT a new operating expense. It is a
+  REVERSAL of previously recognized revenue: the refunded amount is treated as
+  though that portion of the revenue had never been earned. This is the
+  governing principle for every refund-related workflow, and a reversal is
+  necessarily bounded by previously recognized revenue — a refund cannot exceed
+  the Student × Program net paid amount.
+- **Reason:** Refunded money was never truly earned; treating it as an expense
+  would distort every downstream number. (→ ADR-0016 S5-D1)
+- **Dependencies:** DR-017, DR-023.
+- **Possible exceptions:** none — governing principle.
+- **Unknown status:** —
+
+### DR-037 — A refund reduces Program Revenue and the Student Paid Amount
+- **Description:** Every refund reduces the Program Revenue and the
+  Student × Program paid amount, and the financial state MUST be recalculated
+  after every refund.
+- **Reason:** Reversal semantics (DR-036) applied to the two quantities the
+  money touched. (→ ADR-0016 S5-D2)
+- **Dependencies:** DR-036, DR-024.
+- **Possible exceptions:** none stated.
+- **Unknown status:** —
+
+### DR-038 — Teacher entitlement reflects net revenue after refunds
+- **Description:** Teacher entitlement always reflects the net revenue after
+  refunds. If the teacher has NOT yet been paid, a refund immediately and
+  automatically reduces the teacher's entitlement — no manual adjustment. The
+  outstanding-balance arithmetic of DR-034 operates on this net entitlement.
+- **Reason:** The teacher's share follows the revenue that actually stands.
+  (→ ADR-0016 S5-D3)
+- **Dependencies:** DR-036, DR-037, DR-009, DR-034.
+- **Possible exceptions:** teacher already paid → DR-039.
+- **Unknown status:** exact net-recalculation formula and its interaction with
+  nearest-shekel rounding (DR-028) → UNK-026.
+
+### DR-039 — A refunded, already-paid teacher share becomes a teacher debt
+- **Description:** If the teacher has already received payment for the refunded
+  amount, the refunded teacher share becomes a debt owed by the teacher to the
+  center, settled by either immediate repayment by the teacher OR deduction
+  from future teacher entitlements. The center does NOT permanently absorb the
+  refunded teacher share. Teacher debt is its own concept — it is not a
+  negative program balance (DR-033 stands).
+- **Reason:** Money already handed over for revenue that was reversed must come
+  back. (→ ADR-0016 S5-D4; this refund-debt settlement is distinct from the
+  general deduction model postponed by S4-D8 — UNK-021 remains open)
+- **Dependencies:** DR-036, DR-038, DR-030.
+- **Possible exceptions:** none stated.
+- **Unknown status:** debt tracking scope (per Teacher × Program vs per
+  teacher), cross-program deduction vs DR-031, and the document recording an
+  immediate repayment → UNK-026.
+
+### DR-040 — Refunds attach to Student × Program only; no receipt allocation
+- **Description:** Refunds are never allocated to individual Receipt Vouchers —
+  no FIFO, no LIFO, no receipt matching. A refund reduces the total paid amount
+  of the Student × Program and is associated with the Student and the Program
+  only.
+- **Reason:** Mirrors DR-034's rejection of allocation machinery on the payment
+  side (M-08). (→ ADR-0016 S5-D5)
+- **Dependencies:** DR-023, DR-034, DR-037.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-041 — Refunds are recorded by the dedicated Refund Voucher
+- **Description:** Refunds are recorded using a dedicated, independent
+  financial document: the **Refund Voucher (سند استرجاع)**. It is NOT a Payment
+  Voucher and NOT an expense voucher; it exists solely to record student
+  refunds.
+- **Reason:** A revenue reversal must never masquerade as outgoing expense
+  documentation (DR-036 vs DR-008). (→ ADR-0016 S5-D6)
+- **Dependencies:** DR-036, DR-008 (by contrast).
+- **Possible exceptions:** none permitted.
+- **Unknown status:** whether Refund Vouchers carry their own independent
+  number sequence → UNK-026.
+
+### DR-042 — Refund Voucher responsibilities and ledger effects
+- **Description:** Every Refund Voucher references the Student and the Program,
+  records the refund amount and the refund reason, reverses recognized revenue,
+  affects teacher entitlement, appears in the Student Statement, and
+  participates in the full audit trail. Entailed balance effects (S5-D2/D3/D4
+  with DR-016/DR-017): Cash Balance decreases by the refunded amount; Center
+  Net Balance decreases by the center's portion of the reversal; Teacher
+  Payables decreases by the teacher's portion (unpaid case) or a teacher debt
+  arises instead (paid case, DR-039).
+- **Reason:** The refund's full footprint must be visible and auditable.
+  (→ ADR-0016 S5-D7; M-10)
+- **Dependencies:** DR-036…DR-041, DR-016, DR-017, DR-019.
+- **Possible exceptions:** none stated.
+- **Unknown status:** —
 
 ---
 

@@ -6,17 +6,17 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 4.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), DOM-001 |
+| Version | 5.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
 
-The business entities below are exactly those fixed by F-04 and F-05, plus the
-Training Center and the Owner themselves. One exception: §9 "Operations" is, by
-the owner's definitive ruling, **not an entity** but a system activity view
-(ADR-0010) — it stays in this catalog only so the founding term is defined in
-one place. Descriptions use **business terminology
+The business entities below are those fixed by F-04 and F-05, plus the Training
+Center and the Owner themselves, plus the **Refund Voucher** added by Owner
+decision (ADR-0016 S5-D6). One exception: §9 "Operations" is, by the owner's
+definitive ruling, **not an entity** but a system activity view (ADR-0010) — it
+stays in this catalog only so the founding term is defined in one place. Descriptions use **business terminology
 only** — no software terms. Where the business meaning of an aspect is not yet
 established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 
@@ -79,7 +79,9 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
   confirmed reading of F-06); holds one independent balance **per program**
   (Teacher × Program, DR-031); receives owner-initiated teacher payments per
   program, partial or full up to the outstanding balance, never in advance
-  (DR-030, DR-032, DR-033).
+  (DR-030, DR-032, DR-033); may owe the center a **teacher debt** when revenue
+  they were already paid for is refunded (DR-039), settled by repayment or
+  deduction from future entitlements.
 - **Lifecycle:** not yet established — how teachers join or leave, and what happens
   to a departing teacher's balance and programs → UNK-019.
 - **Owns:** the teacher share recorded in each receipt voucher of their programs;
@@ -102,8 +104,9 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
   the optional **Payer Name** field — the payer is information, never an entity
   in V1 (DR-021).
 - **Lifecycle:** created at registration, even with no payment yet; may pay
-  later, in installments (DR-023); may withdraw before paying (S3-D2);
-  withdrawal after payment is a refund question → UNK-006.
+  later, in installments (DR-023); may withdraw before paying (S3-D2); may
+  receive a refund, recorded by a Refund Voucher (§13, DR-041) — the conditions
+  and amount determination remain the Owner's practice (→ UNK-006, reduced).
 - **Owns:** their registrations and their statement.
 - **Never owns:** any part of the revenue split.
 - **Example:** a student registers today in the English program, pays 600 next
@@ -151,7 +154,8 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
   its single payment method — cash or bank transfer (DR-025), its optional Payer
   Name (DR-021), and its stored split (teacher share + center share).
 - **Never owns:** the current policy — it holds a *copy* of the applied split,
-  immune to later policy changes (F-07).
+  immune to later policy changes (F-07). Refunds never attach to it — they
+  attach to the Student × Program only (DR-040).
 - **Example:** receipt of 1000 → stored inside it: teacher share 700, center
   share 300 (owner's example).
 
@@ -229,7 +233,7 @@ three rise automatically when a receipt is posted (DR-017).
 - **Purpose:** all cash currently held by the center.
 - **Responsibility:** answering "how much money is physically here?".
 - **Relationships:** up by the full amount of every posted receipt; down when any
-  money is paid out (DR-008).
+  money is paid out (DR-008) and when a refund is issued (DR-042).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** nothing — a derived quantity; the portion matching
   Teacher Payables is held, not owned (DR-012).
@@ -243,7 +247,9 @@ three rise automatically when a receipt is posted (DR-017).
 - **Responsibility:** answering "how much do I owe teachers in total?".
 - **Relationships:** up by the teacher share the moment each receipt is posted
   (entitlement at posting, DR-015, DR-029); down by owner-issued teacher payment
-  vouchers, per program (DR-030, DR-032…DR-034).
+  vouchers, per program (DR-030, DR-032…DR-034), and by the teacher portion of
+  refunds when the teacher was not yet paid (DR-038; already-paid case →
+  teacher debt, DR-039).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** derived quantity; its amounts belong to the teachers
   (DR-012).
@@ -255,6 +261,7 @@ three rise automatically when a receipt is posted (DR-017).
 - **Purpose:** the center's own earned share.
 - **Responsibility:** answering "how much has the center itself earned?".
 - **Relationships:** up by the center share of every posted receipt (DR-017);
+  down by the center's portion of every refund (revenue reversal, DR-042);
   relation to center expenses (does it decrease with expenses?) → UNK-009,
   UNK-015.
 - **Lifecycle:** continuous; derived.
@@ -288,3 +295,30 @@ three rise automatically when a receipt is posted (DR-017).
   independent balances (owner's example, S4-D4). The moment a 1000 receipt on
   Excel is posted at 70/30, Ahmed's Excel balance shows 700 owed; paying him 400
   leaves Excel outstanding at 300, while ICDL and Accounting are unaffected.
+
+## 13. Refund Voucher (سند استرجاع)
+
+**Added by Owner decision (ADR-0016 S5-D6) — a dedicated, independent financial
+document that extends the founding entity set (F-05).**
+
+- **Purpose:** the permanent record of a student refund — a reversal of
+  previously recognized revenue (DR-036), never an expense.
+- **Responsibility:** recording the refund amount and reason; reversing
+  recognized revenue; adjusting teacher entitlement (or creating a teacher
+  debt, DR-039); appearing in the Student Statement; participating in the full
+  audit trail (DR-042).
+- **Relationships:** references exactly one Student and one Program (DR-040 —
+  never individual receipts, no FIFO/LIFO); reduces the Student × Program paid
+  amount and Program Revenue (DR-037); moves the three balances per DR-042.
+- **Lifecycle:** created when the Owner grants a refund (entitlement conditions
+  and amount determination are the Owner's practice → UNK-006, reduced);
+  permanent once recorded (DR-019, DR-042). Own number sequence → UNK-026.
+- **Owns:** its amount, its date, its recorded reason.
+- **Never owns:** receipt vouchers' stored splits (DR-006 permanence is
+  untouched — reversal happens beside history, never by editing it).
+- **Example:** a student who paid 1000 for a program withdraws and the Owner
+  grants a 400 refund: a Refund Voucher (student, program, 400, reason) is
+  recorded; Program Revenue and the student's paid amount drop by 400; the
+  teacher's entitlement reflects the net revenue (DR-038) — and if the teacher
+  had already been paid for that portion, the teacher share of the 400 becomes
+  a debt (DR-039).

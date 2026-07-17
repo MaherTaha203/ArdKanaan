@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-17 — Session 4 (Teacher Payments) applied, Phase 1A re-frozen (AUD-P1A-007)
+**Last refresh:** 2026-07-17 — Session 5 (Student Refunds) applied, Phase 1A re-frozen (AUD-P1A-008)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 49 / 49 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 51 / 51 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design) | 49 / 49 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design) | 51 / 51 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 35 / 35 DR-atoms cite F/M/owner decisions (ADR-0008…0015) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 42 / 42 DR-atoms cite F/M/owner decisions (ADR-0008…0016) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 25 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 11 audit reports) + 15 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 26 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 12 audit reports) + 16 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 14 (3 HIGH, 6 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 11 unknowns resolved (10 answered, 1 mooted) + ASM-001/ASM-003 confirmed, ASM-002 rejected | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
+| 13 | Open domain unknowns (DOM-005) | 15 (3 HIGH, 7 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 11 unknowns resolved + UNK-006 reduced/downgraded; ASM-001/ASM-003 confirmed, ASM-002 rejected | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -65,3 +65,4 @@ next phase.
 | 2026-07-17 | Session 3 decisions applied (ADR-0013) | AUD-P1A-005 | 🟢 except indicator 13 🟡 — 16 open (5 HIGH); 5 unknowns resolved, UNK-025 opened, ASM-001 confirmed |
 | 2026-07-17 | Rounding rule applied (ADR-0014) | AUD-P1A-006 | 🟢 except indicator 13 🟡 — 15 open (4 HIGH); UNK-025 resolved, ASM-004 opened |
 | 2026-07-17 | Session 4: Teacher Payments (ADR-0015) | AUD-P1A-007 | 🟢 except indicator 13 🟡 — 14 open (3 HIGH); UNK-008 resolved, ASM-003 confirmed, UNK-021 postponed by Owner |
+| 2026-07-17 | Session 5: Student Refunds (ADR-0016) | AUD-P1A-008 | 🟢 except indicator 13 🟡 — 15 open (3 HIGH); UNK-006 reduced→MEDIUM, UNK-026 opened; Refund Voucher entity added |

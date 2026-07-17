@@ -42,8 +42,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0013](ADR-0013-session-3-owner-decisions.md) | Session 3 Owner Decisions: Student Entity, Registration, Installments, Currency, Numbering, V1 Simplicity | 1A | ACCEPTED | — |
 | [ADR-0014](ADR-0014-rounding-rule-and-closing-discipline.md) | Integer Rounding Rule; Session-Closing Discipline | 1A | ACCEPTED | — |
 | [ADR-0015](ADR-0015-session-4-teacher-payments.md) | Session 4 Owner Decisions: Teacher Payments | 1A | ACCEPTED | — |
+| [ADR-0016](ADR-0016-session-5-student-refunds.md) | Session 5 Owner Decisions: Student Refunds | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0016**.
+Next available ADR number: **ADR-0017**.
 
 ## 4. Maintenance rules
 

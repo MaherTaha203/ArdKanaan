@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.5.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments) |
+| Version | 1.6.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -75,6 +75,12 @@ Students/Payers ──payment for a program──►  ┌───────�
    an independent balance settled separately (DR-030…DR-034, ADR-0015). What
    other categories of outgoing money exist (center expenses) → UNK-009,
    UNK-015.
+4. **Money back (refunds):** a student refund is a **reversal of previously
+   recognized revenue** — never an expense — recorded by the dedicated **Refund
+   Voucher (سند استرجاع)**: it reduces Program Revenue and the student's paid
+   amount, teacher entitlement follows the net revenue automatically, and a
+   share already paid to the teacher becomes a teacher debt settled by
+   repayment or future deduction (DR-036…DR-042, ADR-0016).
 
 Currency, methods, and installments were fixed by ADR-0013 S3-D3/S3-D4 (see
 point 1 above); fractional splits round the teacher share to the nearest whole
@@ -84,8 +90,9 @@ to the exact voucher amount (DR-028).
 ## 4. What creates revenue
 
 The only revenue source established so far is **student/payer payments for
-training programs** (F-05, F-06). Whether the center has any other income (renting
-rooms, selling materials, registration fees) is not stated → UNK-018.
+training programs** (F-05, F-06) — recognized net of refunds (DR-036, DR-037).
+Whether the center has any other income (renting rooms, selling materials,
+registration fees) is not stated → UNK-018.
 
 ## 5. What creates expenses
 

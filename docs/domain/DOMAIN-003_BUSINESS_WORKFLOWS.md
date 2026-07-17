@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.5.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), DOM-001, DOM-002 |
+| Version | 1.6.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -117,17 +117,28 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   (DR-008).
 - **Exceptional cases:** unknown (UNK-009).
 
-## WF-07 — Refund — *UNKNOWN*
+## WF-07 — Student refund — *ESTABLISHED (mechanics), PARTIAL (conditions)*
 
-- **Trigger:** a student/payer asks for money back.
-- **Inputs / Business rules / Outputs:** whether refunds exist in this business at
-  all, and if so how a refund affects the already-stored split, the teacher's
-  balance, and the center's balance → **UNK-006**. Constraint that any answer must
-  respect: the original voucher's stored split is permanent (DR-006); therefore a
-  refund cannot be implemented by *editing* a past voucher — how the business
-  actually handles it is for the owner to state.
-- **Exceptional cases:** partial refund; refund after the teacher was already
-  paid → UNK-006.
+- **Trigger:** the Owner grants a student a refund (when a student is entitled
+  and how the amount is determined remain the Owner's practice → UNK-006,
+  reduced).
+- **Inputs:** the Student and the Program (DR-040); the refund amount (bounded
+  by the Student × Program net paid amount, DR-036); the refund reason (S5-D7);
+  date.
+- **Business rules:** DR-036 (reversal of recognized revenue — never an
+  expense), DR-037 (reduces Program Revenue and Student Paid Amount; financial
+  state recalculated), DR-038 (teacher entitlement reflects net revenue —
+  automatic reduction when unpaid), DR-039 (already-paid share becomes teacher
+  debt: repayment or deduction from future entitlements; never absorbed by the
+  center), DR-040 (no receipt allocation), DR-041 (dedicated Refund Voucher),
+  DR-042 (full responsibilities and ledger effects). DR-006 untouched — stored
+  splits are never edited.
+- **Outputs:** a recorded Refund Voucher; recalculated Student × Program paid
+  amount, Program Revenue, teacher entitlement, and the three balances
+  (DR-042); a line in the Student Statement; audit-trail participation.
+- **Exceptional cases:** teacher already paid → teacher debt (DR-039);
+  net-recalculation formula, debt tracking scope, repayment document, and
+  refund-voucher numbering → UNK-026.
 
 ## WF-08 — Voucher cancellation — *UNKNOWN*
 
