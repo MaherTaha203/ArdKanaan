@@ -175,6 +175,25 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   conflicts with it, record the conflict and wait (GOV-011 §4, GOV-007 §5);
   status lives in RDM-001, law lives in GOV-011 — never blur the two.
 
+### LES-009 — Record apparent gaps; never repair them on your own
+
+- **Observation:** ADR-0011's numbering order skipped GOV-010. Instead of
+  "fixing" the gap (renumbering) or silently ignoring it, the gap was recorded
+  as reserved-unassigned by owner order. One order later, the Owner assigned
+  GOV-010 as the Owner Decision Protocol — the gap was intentional headroom.
+- **Engineering lesson:** An apparent inconsistency in an owner-mandated
+  structure may be deliberate. The correct handling is exactly what governance
+  prescribes for conflicts: record the observation, do not deviate, and let the
+  authority resolve it.
+- **Reason:** The executor cannot distinguish an oversight from a plan it has
+  not been shown; self-repair destroys the plan, while recording preserves both
+  possibilities at zero cost.
+- **Impact:** Positive — the GOV sequence is now gap-free (GOV-000…GOV-011)
+  without any renumbering, broken references, or rework.
+- **Future guidance:** When owner-mandated names, numbers, or sequences look
+  wrong: transcribe verbatim, record the observation in the ADR and audit, and
+  wait. Reserve self-repair for defects in the executor's own artifacts.
+
 ---
 
 ## 4. Maintenance rules
@@ -183,4 +202,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-009**.
+3. Next available lesson number: **LES-010**.

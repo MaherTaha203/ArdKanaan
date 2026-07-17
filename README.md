@@ -44,6 +44,7 @@ frozen.** See [`docs/governance/GOVERNANCE.md`](docs/governance/GOVERNANCE.md).
 | [`docs/INDEX.md`](docs/INDEX.md) | Master documentation index — the map of everything |
 | [`docs/governance/GOVERNANCE.md`](docs/governance/GOVERNANCE.md) | Repository governance and the strict rules |
 | [`docs/governance/GOV-011_MASTER_ENGINEERING_ROADMAP.md`](docs/governance/GOV-011_MASTER_ENGINEERING_ROADMAP.md) | **The Master Engineering Roadmap — the only legal execution sequence** |
+| [`docs/governance/GOV-010_OWNER_DECISION_PROTOCOL.md`](docs/governance/GOV-010_OWNER_DECISION_PROTOCOL.md) | How Owner decisions are introduced, propagated, verified, and frozen |
 | [`docs/governance/GOV-007_AI_EXECUTION_PROTOCOL.md`](docs/governance/GOV-007_AI_EXECUTION_PROTOCOL.md) | Mandatory behavioral protocol for AI executors |
 | [`docs/governance/GOV-008_ENGINEERING_MEMORY.md`](docs/governance/GOV-008_ENGINEERING_MEMORY.md) | Permanent engineering lessons — read at every session start |
 | [`docs/governance/GOV-009_REPOSITORY_HEALTH.md`](docs/governance/GOV-009_REPOSITORY_HEALTH.md) | Measurable repository health dashboard |

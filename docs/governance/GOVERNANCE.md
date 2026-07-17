@@ -6,7 +6,7 @@
 | Title | Repository Governance |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 2.1.0 |
+| Version | 2.2.0 |
 | Depends on | GOV-000 |
 | Referenced by | IDX-001, GOV-002…GOV-009, RDM-001, ADR-0001, ADR-0002, ADR-0006 |
 
@@ -104,3 +104,7 @@ configurability beyond the stated business model) must be **rejected** at review
 4. The Master Engineering Roadmap (GOV-011) is the only legal execution
    sequence; conflicting instructions in future conversations lose to it unless
    the Owner explicitly changes it (GOV-011 §4).
+5. Owner decisions are introduced, propagated, verified, and frozen exclusively
+   through the Owner Decision Protocol (GOV-010): the Owner is the sole decision
+   authority, propagation is all-or-nothing, and hidden impacts are engineering
+   defects.

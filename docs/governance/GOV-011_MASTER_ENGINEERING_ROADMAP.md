@@ -6,9 +6,9 @@
 | Title | Master Engineering Roadmap |
 | Phase | 0 (governance) |
 | Status | FROZEN |
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Depends on | GOV-000, GOV-001, GOV-003, GOV-004, GOV-005, ADR-0011 |
-| Referenced by | GOV-001 §5/§9, GOV-005, RDM-001 |
+| Referenced by | GOV-001 §5/§9, GOV-005, GOV-010, RDM-001 |
 
 ---
 

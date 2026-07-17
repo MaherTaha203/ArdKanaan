@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.6.0 |
+| Version | 1.7.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -61,6 +61,7 @@ Gate 8 (Repository Integrity) violation.
 | GOV-007 | `docs/governance/GOV-007_AI_EXECUTION_PROTOCOL.md` | AI Execution Protocol | FROZEN |
 | GOV-008 | `docs/governance/GOV-008_ENGINEERING_MEMORY.md` | Engineering Memory | LIVING |
 | GOV-009 | `docs/governance/GOV-009_REPOSITORY_HEALTH.md` | Repository Health | LIVING |
+| GOV-010 | `docs/governance/GOV-010_OWNER_DECISION_PROTOCOL.md` | Owner Decision Protocol | FROZEN |
 | GOV-011 | `docs/governance/GOV-011_MASTER_ENGINEERING_ROADMAP.md` | Master Engineering Roadmap | FROZEN |
 | RDM-001 | `docs/roadmap/ROADMAP.md` | Phase Roadmap (status tracker, subordinate to GOV-011) | LIVING |
 | DEC-000 | `docs/decisions/DECISION-LOG.md` | Decision Log | LIVING |
@@ -77,6 +78,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P0-002 | `docs/audits/phase-0/AUDIT-P0-EXTENSION.md` | Phase 0 Governance Platform Extension Audit Report | FROZEN |
 | ADR-0011 | `docs/decisions/ADR-0011-master-engineering-roadmap.md` | Master Engineering Roadmap as Governance Law | ACCEPTED |
 | AUD-P0-003 | `docs/audits/phase-0/AUDIT-P0-ROADMAP.md` | Phase 0 Master Roadmap Audit Report | FROZEN |
+| ADR-0012 | `docs/decisions/ADR-0012-owner-decision-protocol.md` | Owner Decision Protocol (GOV-010) Completes the Governance Layer | ACCEPTED |
+| AUD-P0-004 | `docs/audits/phase-0/AUDIT-P0-DECISION-PROTOCOL.md` | Phase 0 Owner Decision Protocol Audit Report | FROZEN |
 
 ### 2.1a Phase 1A — Domain Discovery
 

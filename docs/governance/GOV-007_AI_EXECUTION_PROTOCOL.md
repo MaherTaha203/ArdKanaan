@@ -6,9 +6,9 @@
 | Title | AI Execution Protocol |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Depends on | GOV-000 (M-09), GOV-001, GOV-003, GOV-004, GOV-006 |
-| Referenced by | GOV-004 §2, GOV-005, GOV-008, GOV-009, TPL-003 |
+| Referenced by | GOV-004 §2, GOV-005, GOV-008, GOV-009, GOV-010, GOV-011, TPL-003 |
 
 ---
 
