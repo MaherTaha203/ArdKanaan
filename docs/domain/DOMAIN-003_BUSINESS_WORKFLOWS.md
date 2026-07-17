@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.2.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), DOM-001, DOM-002 |
+| Version | 1.3.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -21,29 +21,39 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 
 ---
 
-## WF-01 — Student joins a program — *UNKNOWN*
+## WF-01 — Student registers in a program — *ESTABLISHED*
 
-- **Trigger:** a student decides to take a training program.
-- **Inputs / Business rules / Outputs:** whether "joining" is a recorded business
-  event at all — separate from paying — is not established → UNK-012; student
-  identity handling → UNK-011.
-- **Exceptional cases:** unknown (UNK-012).
+- **Trigger:** a student decides to take a training program (ADR-0013 S3-D2).
+- **Inputs:** the student (created as an entity if new, DR-021); the training
+  program.
+- **Business rules:** DR-021 (student is the core person entity), DR-022
+  (registration is an independent recorded event, before and without payment).
+- **Outputs:** a recorded registration linking the student to the program;
+  payment may follow later — Registration → Payment.
+- **Exceptional cases:** the student withdraws before paying (S3-D2 — allowed);
+  withdrawal after payment is a refund → UNK-006. What the amount due for a
+  registration is based on (program price, discounts) → UNK-005.
 
-## WF-02 — Student pays / Receipt voucher is created — *ESTABLISHED (core), PARTIAL (edges)*
+## WF-02 — Student pays / Receipt voucher is created — *ESTABLISHED*
 
-- **Trigger:** a student/payer hands money to the center for a specific program.
-- **Inputs:** the amount; the training program it belongs to; the payer
-  (identity depth → UNK-011); date. Payment method and currency → UNK-010, UNK-004.
-- **Business rules:** DR-004 (one receipt ↔ one program), DR-005 (automatic split
-  at receipt), DR-006 (split stored permanently in the voucher), DR-007 (owner
-  never computes anything), DR-015/DR-017 (posting creates the teacher
-  receivable and the three ledger effects).
-- **Outputs:** a posted receipt voucher holding amount + applied teacher share +
-  applied center share; automatically: Cash Balance +full amount, Teacher
-  Payables +teacher share (entitlement begins now, D4), Center Net Balance
-  +center share (D6).
-- **Exceptional cases:** partial payment/installments → UNK-004; overpayment →
-  UNK-004; payment covering multiple programs at once → UNK-004.
+- **Trigger:** a registered student (or a payer on their behalf) hands money to
+  the center for a specific program.
+- **Inputs:** the student and their program registration (DR-021, DR-022); the
+  whole-shekel amount (DR-025); the payment method — cash or bank transfer, one
+  per voucher (DR-025); date; optional Payer Name (DR-021).
+- **Business rules:** DR-004/DR-023 (one voucher = one student + one program +
+  one payment), DR-005 (automatic split at posting), DR-006 (split stored
+  permanently), DR-007 (owner never computes anything), DR-015/DR-017 (posting
+  creates the teacher receivable and the three ledger effects), DR-024
+  (overpayment prevented), DR-026 (continuous receipt numbering).
+- **Outputs:** a posted, sequentially-numbered receipt voucher holding amount +
+  applied teacher share + applied center share; automatically: Cash Balance
+  +full amount, Teacher Payables +teacher share (entitlement begins now, D4),
+  Center Net Balance +center share (D6).
+- **Exceptional cases:** installments — each payment is its own voucher, split
+  at its own moment (DR-023); amounts exceeding the due amount are rejected
+  (DR-024); multi-program/multi-student/multi-method vouchers do not exist in V1
+  (DR-027).
 
 ## WF-03 — Revenue is distributed — *ESTABLISHED*
 
@@ -57,8 +67,9 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   decimals stored when the currency supports them, otherwise official currency
   rounding — never custom logic).
 - **Outputs:** teacher share and center share, both recorded inside the voucher.
-- **Exceptional cases:** none identified in V1 — percentages not summing to 100%
-  are invalid (DR-013); rounding is fully governed by DR-014.
+- **Exceptional cases:** percentages not summing to 100% are invalid (DR-013);
+  amounts are whole Shekels (DR-025), so a fractional percentage result must be
+  rounded to a whole number — direction and remainder ownership → UNK-025.
 
 ## WF-04 — Teacher balance changes — *PARTIAL*
 

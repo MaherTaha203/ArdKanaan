@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.7.0 |
+| Version | 1.8.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -98,6 +98,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1A-003 | `docs/audits/phase-1a/AUDIT-P1A-V1SCOPE.md` | Phase 1A V1 Scope Reduction Audit Report | FROZEN |
 | ADR-0010 | `docs/decisions/ADR-0010-operations-is-a-system-activity-view.md` | Operations Is a System Activity View | ACCEPTED |
 | AUD-P1A-004 | `docs/audits/phase-1a/AUDIT-P1A-OPERATIONS.md` | Phase 1A Operations Definition Audit Report | FROZEN |
+| ADR-0013 | `docs/decisions/ADR-0013-session-3-owner-decisions.md` | Session 3 Owner Decisions: Student Entity, Registration, Installments, Currency, Numbering, V1 Simplicity | ACCEPTED |
+| AUD-P1A-005 | `docs/audits/phase-1a/AUDIT-P1A-SESSION3.md` | Phase 1A Session 3 Decisions Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

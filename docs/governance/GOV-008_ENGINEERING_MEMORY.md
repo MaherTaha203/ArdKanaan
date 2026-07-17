@@ -194,6 +194,27 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   wrong: transcribe verbatim, record the observation in the ADR and audit, and
   wait. Reserve self-repair for defects in the executor's own artifacts.
 
+### LES-010 — Decisions can implicitly create concepts no question asked about
+
+- **Observation:** Session 3's "no overpayment — the system prevents amounts
+  larger than what is due" (S3-D3) presupposes a defined **amount due** per
+  student per program — a concept no interview question had asked about and no
+  document had established. It was surfaced as a signal on UNK-005 instead of
+  being silently absorbed.
+- **Engineering lesson:** Owner decisions must be swept not only for what they
+  answer but for what they **assume**: a prohibition or validation rule implies
+  the existence of the quantity it checks against. Implied concepts are
+  unknowns until the owner defines them.
+- **Reason:** Decision language naturally references the owner's full mental
+  model; the repository only holds the part that has been made explicit.
+- **Impact:** Positive — DR-024 carries an explicit dependency signal instead of
+  a hidden one; UNK-005's priority reasoning improved.
+- **Future guidance:** After recording each decision, ask of every rule: "what
+  must already exist for this rule to operate?" Any answer not yet defined in
+  the repository becomes an unknown or a logged signal — never an implicit
+  assumption (AI-11, GOV-010 §8's silent-impact prohibition applied to
+  concepts).
+
 ---
 
 ## 4. Maintenance rules
@@ -202,4 +223,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-010**.
+3. Next available lesson number: **LES-011**.

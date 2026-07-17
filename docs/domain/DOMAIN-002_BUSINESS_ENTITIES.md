@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.2.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), DOM-001 |
+| Version | 3.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -58,7 +58,8 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
   each program belongs to exactly one teacher and carries exactly one revenue
   distribution policy (F-06).
 - **Relationships:** belongs to one Teacher; has one Revenue Distribution Policy;
-  receives Receipt Vouchers.
+  receives Receipt Vouchers; Students register in it as an independent event
+  before paying (DR-022).
 - **Lifecycle:** not yet established — how a program starts, whether it has dates,
   cohorts, capacity, or an end → UNK-016; its price structure → UNK-005; whether
   its policy can change during its life → UNK-003.
@@ -85,19 +86,27 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Example:** teacher Ahmad, whose program produced a 1000 receipt, is owed 700
   (owner's example, F-07).
 
-## 5. Student / Payer (الطالب / الدافع)
+## 5. Student (الطالب)
 
-- **Purpose:** the person who receives training and/or pays for it (F-05 names
-  this entity "Students (or Payers)").
-- **Responsibility:** paying for programs.
-- **Relationships:** pays money that becomes Receipt Vouchers tied to one program.
-- **Lifecycle:** not yet established — whether students are registered persons
-  with continuing records or names on vouchers → UNK-011; whether joining a
-  program is recorded before/without payment → UNK-012.
-- **Owns:** nothing inside the center's finances (whether prepaid amounts create
-  an obligation toward the student, e.g. refunds → UNK-006).
+- **Purpose:** the person who receives training — the **core person entity** of
+  the system (ADR-0013 S3-D1; refines F-05's "Students (or Payers)").
+- **Responsibility:** registering in programs and paying for them (or having a
+  payer pay on their behalf).
+- **Relationships:** registers in Training Programs — registration is an
+  independent recorded event that precedes payment (DR-022); every receipt
+  voucher belongs to exactly one student (DR-023); the account statement belongs
+  to the student (S3-D1; other statement scopes → UNK-013). When someone else
+  pays (parent, company, other party), their name is recorded on the voucher as
+  the optional **Payer Name** field — the payer is information, never an entity
+  in V1 (DR-021).
+- **Lifecycle:** created at registration, even with no payment yet; may pay
+  later, in installments (DR-023); may withdraw before paying (S3-D2);
+  withdrawal after payment is a refund question → UNK-006.
+- **Owns:** their registrations and their statement.
 - **Never owns:** any part of the revenue split.
-- **Example:** a student paying 1000 for a program (owner's example).
+- **Example:** a student registers today in the English program, pays 600 next
+  week and 400 the week after — two receipt vouchers, each with its own number
+  and date, each split at its own posting moment (owner's rulings S3-D2/S3-D3).
 
 ## 6. Revenue Distribution Policy (سياسة توزيع الإيراد)
 
@@ -123,19 +132,22 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 
 ## 7. Receipt Voucher (سند قبض)
 
-- **Purpose:** the permanent record of money received, belonging to exactly one
-  training program (F-06).
+- **Purpose:** the permanent record of one payment received — always exactly
+  **one student + one program + one payment** (F-06, DR-023).
 - **Responsibility:** preserving, forever, the amount received and the exact split
   applied to it (F-07).
-- **Relationships:** belongs to one Training Program (and through it to one
-  Teacher and one policy). Posting it automatically creates three business
-  effects: Cash Balance up by the full amount, Teacher Payables up by the teacher
-  share (the teacher's entitlement begins at that moment — DR-015), Center Net
-  Balance up by the center share (DR-017, ADR-0008 D4/D6).
+- **Relationships:** belongs to one Student (DR-021) and one Training Program
+  (and through it to one Teacher and one policy). Posting it automatically
+  creates three business effects: Cash Balance up by the full amount, Teacher
+  Payables up by the teacher share (the teacher's entitlement begins at that
+  moment — DR-015), Center Net Balance up by the center share (DR-017, ADR-0008
+  D4/D6). The system prevents an amount larger than what is due (DR-024).
 - **Lifecycle:** created when money is received; posting it is what triggers the
-  ledger effects. Whether it can ever be cancelled or corrected, and how →
-  UNK-007.
-- **Owns:** its amount, its date, its stored split (teacher share + center share).
+  ledger effects. Carries its own number from the continuous receipt sequence
+  (DR-026). Whether it can ever be cancelled or corrected, and how → UNK-007.
+- **Owns:** its sequential number, its date, its whole-shekel amount (DR-025),
+  its single payment method — cash or bank transfer (DR-025), its optional Payer
+  Name (DR-021), and its stored split (teacher share + center share).
 - **Never owns:** the current policy — it holds a *copy* of the applied split,
   immune to later policy changes (F-07).
 - **Example:** receipt of 1000 → stored inside it: teacher share 700, center
@@ -148,8 +160,11 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Relationships:** not yet established — what a payment voucher may be tied to
   (a teacher payment? a center expense category? a program?) → UNK-008, UNK-009,
   UNK-015.
-- **Lifecycle:** created when money is paid. Cancellation/correction → UNK-007.
-- **Owns:** its amount, its date, its purpose (categories → UNK-009).
+- **Lifecycle:** created when money is paid; carries its own number from the
+  continuous payment sequence, independent of the receipt sequence (DR-026).
+  Cancellation/correction → UNK-007.
+- **Owns:** its sequential number, its amount, its date, its purpose (categories
+  → UNK-009).
 - **Never owns:** revenue splits — splits belong to receipt vouchers only.
 - **Example:** none stated by the owner yet (UNK-009).
 
@@ -186,8 +201,9 @@ It is described here so the founding term stays defined in one place:
   (F-05).
 - **Responsibility:** letting the owner see what happened without calculating
   anything (F-08, M-07).
-- **Relationships:** whose statements exist (teacher, center, program, student)
-  and over what periods → UNK-013.
+- **Relationships:** the account statement belongs to the **Student** (ADR-0013
+  S3-D1); whether teacher/center/program statements also exist, and over what
+  periods with what content → UNK-013.
 - **Lifecycle:** derived on demand from recorded vouchers; it records nothing of
   its own (follows from F-08's no-manual-computation principle; presentation
   specifics → UNK-013).

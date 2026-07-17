@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.2.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope) |
+| Version | 1.3.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -33,7 +33,7 @@ last, and whether programs repeat in cohorts is not yet stated → UNK-016.
 |---|---|
 | **The Owner** | The single person who runs the center, handles its money, and is the sole user of the future system (F-02, M-01). |
 | **Teachers** | Deliver training programs. Each program belongs to exactly one teacher (F-06). Teachers are entitled to a share of the revenue their programs generate (F-07). |
-| **Students / Payers** | Receive training and pay for it. Whether the business tracks students as persons with ongoing records, or only as the payer named on a payment, is not yet stated → UNK-011. |
+| **Students** | Receive training and pay for it. The Student is the core person entity: registration precedes payment, receipts and statements belong to the student, and when someone else pays (parent, company) their name is recorded on the voucher as optional Payer Name information — never a separate entity in V1 (ADR-0013 S3-D1/S3-D2, DR-021, DR-022). |
 
 No other participants (employees, partners, external accountants) have been
 mentioned → UNK-017.
@@ -51,9 +51,13 @@ Students/Payers ──payment for a program──►  ┌───────�
                                             └────────────────┘
 ```
 
-1. **Money in:** a student/payer pays for a training program. The payment is
-   recorded as a **receipt voucher (سند قبض)** that belongs to exactly one program
-   (F-06).
+1. **Money in:** a student pays for a training program they registered in
+   (registration is its own earlier event, DR-022). The payment is recorded as a
+   **receipt voucher (سند قبض)** that belongs to exactly one student and one
+   program and represents exactly one payment (F-06, DR-023); installments each
+   get their own voucher. Amounts are whole Shekels, paid in cash or by bank
+   transfer — one method per voucher (DR-025); overpayment is prevented
+   (DR-024); vouchers are numbered in a continuous sequence (DR-026).
 2. **The split:** at the moment a receipt is posted, the money is divided between
    a **teacher share** and a **center share** according to the program's **revenue
    distribution policy** (F-07). In Version 1 every policy is a **percentage
@@ -69,8 +73,9 @@ Students/Payers ──payment for a program──►  ┌───────�
    their accumulated share is itself a payment voucher, is not yet stated →
    UNK-008, UNK-009.
 
-Payment methods (cash, bank, other), currency, and whether amounts can be received
-in installments are not yet stated → UNK-004, UNK-010.
+Currency, methods, and installments were fixed by ADR-0013 S3-D3/S3-D4 (see
+point 1 above); the direction of integer rounding for fractional percentage
+splits remains open → UNK-025.
 
 ## 4. What creates revenue
 

@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.1.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), DOM-001, DOM-002, DOM-003 |
+| Version | 2.2.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -52,10 +52,10 @@ no duplicates.
   one training program.
 - **Reason:** The program connects the money to its teacher and policy. (→ F-06)
 - **Dependencies:** DR-002, DR-003.
-- **Possible exceptions:** a payment intended to cover several programs would have
-  to be recorded as multiple receipts — unconfirmed. (→ UNK-004)
-- **Unknown status:** installments/partial payments → UNK-004; payer identity
-  depth → UNK-011.
+- **Possible exceptions:** none — confirmed by S3-D3: a payment covering several
+  programs or students MUST be recorded as multiple receipts (→ DR-023).
+- **Unknown status:** ~~installments~~ RESOLVED by S3-D3 (→ DR-023);
+  ~~payer identity~~ RESOLVED by S3-D1 (→ DR-021).
 
 ### DR-005 — The split is calculated automatically at receipt
 - **Description:** When a receipt is recorded, the teacher share and center share
@@ -149,9 +149,11 @@ no duplicates.
   official rounding rules apply. No custom rounding logic exists in the business.
 - **Reason:** Rounding is a property of money itself, not of any agreement.
   (→ Owner decision D3, ADR-0008)
-- **Dependencies:** DR-005.
+- **Dependencies:** DR-005, DR-025.
 - **Possible exceptions:** none permitted.
-- **Unknown status:** which currency the business uses → UNK-010.
+- **Unknown status:** ~~currency~~ RESOLVED by S3-D4 (Shekel, whole numbers —
+  → DR-025); rounding direction and remainder ownership for fractional
+  percentage splits of whole amounts → UNK-025.
 
 ### DR-015 — Teacher entitlement begins at receipt posting
 - **Description:** The moment a receipt voucher is posted, a teacher receivable
@@ -226,6 +228,88 @@ no duplicates.
   caused it and its money effect is unambiguous. (→ ADR-0010 §5, §6, §8)
 - **Dependencies:** DR-018, DR-019.
 - **Possible exceptions:** none stated.
+- **Unknown status:** —
+
+### DR-021 — Student is the core person entity; payer is optional information
+- **Description:** The Student is an independent entity: receipt vouchers,
+  account statements, and program registrations belong to the student. The payer
+  is an optional **Payer Name** field on the voucher (used when a parent,
+  company, or other party pays) — never an independent entity in V1.
+- **Reason:** In over 95% of cases the payer is the student or irrelevant to
+  record; a payer entity would add weight without value (M-08). (→ ADR-0013
+  S3-D1; refines F-05's "Students (or Payers)")
+- **Dependencies:** DR-004.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-022 — Registration is an independent event that precedes payment
+- **Description:** A student registers in a training program as a recorded
+  business event, independent of payment: registration may happen without any
+  payment, payment may follow later, and a student may withdraw before paying.
+  Order: Registration → Payment.
+- **Reason:** This is how the center actually works. (→ ADR-0013 S3-D2)
+- **Dependencies:** DR-021, DR-002.
+- **Possible exceptions:** withdrawal after payment is a refund question →
+  UNK-006.
+- **Unknown status:** —
+
+### DR-023 — One receipt voucher = one student + one program + one payment
+- **Description:** Program fees may be paid in installments; every payment gets
+  its own receipt voucher with its own number and date, split immediately at its
+  posting moment by the program's percentage (DR-005, DR-015). A receipt voucher
+  may NEVER cover more than one program or more than one student.
+- **Reason:** Keeps every money record atomic and the system very simple (M-08).
+  (→ ADR-0013 S3-D3)
+- **Dependencies:** DR-004, DR-005, DR-013, DR-015.
+- **Possible exceptions:** none in V1 (→ DR-027).
+- **Unknown status:** —
+
+### DR-024 — Overpayment is prevented
+- **Description:** The system MUST prevent recording a payment larger than the
+  amount due for the student's registration in the program. Overpayment does not
+  exist in V1.
+- **Reason:** No money may enter the records without a matching entitlement to
+  training. (→ ADR-0013 S3-D3)
+- **Dependencies:** DR-022, DR-023.
+- **Possible exceptions:** none in V1 (→ DR-027).
+- **Unknown status:** structure of the "amount due" (program price, discounts)
+  → UNK-005 (signal: a defined due amount must exist for this rule to operate).
+
+### DR-025 — Whole-shekel currency; one payment method per voucher
+- **Description:** The base currency is the Shekel (الشيكل); decimals are not
+  used — all amounts and operations are whole numbers. Allowed payment methods
+  are cash and bank transfer; each voucher uses exactly one method — mixing
+  methods in one voucher is forbidden.
+- **Reason:** Matches the center's real money practice. (→ ADR-0013 S3-D4;
+  confirms ASM-001; instantiates DR-014's currency ownership of rounding)
+- **Dependencies:** DR-014.
+- **Possible exceptions:** none in V1 (→ DR-027).
+- **Unknown status:** rounding direction/remainder for fractional splits →
+  UNK-025.
+
+### DR-026 — Independent continuous voucher numbering
+- **Description:** Receipt vouchers and payment vouchers carry independent
+  sequential numbers. Sequences never reset (not yearly, not ever); each
+  sequence starts at go-live from a number the Owner specifies, aligning the
+  system with the existing paper vouchers.
+- **Reason:** Continuity with the center's current paper records. (→ ADR-0013
+  S3-D5)
+- **Dependencies:** DR-004, DR-008.
+- **Possible exceptions:** none stated.
+- **Unknown status:** whether historical paper records are imported → UNK-022.
+
+### DR-027 — V1 Simplicity Principle
+- **Description:** The following are NOT part of Version 1: more than one
+  student per voucher; more than one program per voucher; more than one payment
+  method per voucher; overpayment; manual distribution; editing a distribution
+  after the voucher is posted. Any future need for them belongs to V2 or later
+  and MUST NOT affect the V1 design.
+- **Reason:** The Owner's pre-emptive simplicity ruling, closing this class of
+  questions for V1. (→ ADR-0013 S3-D6; M-08, F-09; kin to ADR-0009's
+  future-considerations pattern)
+- **Dependencies:** DR-023, DR-024, DR-025; reinforces DR-005 (no manual
+  distribution) and DR-006 (no post-posting edits).
+- **Possible exceptions:** none — that is the point.
 - **Unknown status:** —
 
 ---

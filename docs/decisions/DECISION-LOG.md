@@ -39,8 +39,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0010](ADR-0010-operations-is-a-system-activity-view.md) | Operations Is a System Activity View | 1A | ACCEPTED | — |
 | [ADR-0011](ADR-0011-master-engineering-roadmap.md) | Master Engineering Roadmap as Governance Law | 0 | ACCEPTED | — |
 | [ADR-0012](ADR-0012-owner-decision-protocol.md) | Owner Decision Protocol (GOV-010) Completes the Governance Layer | 0 | ACCEPTED | — |
+| [ADR-0013](ADR-0013-session-3-owner-decisions.md) | Session 3 Owner Decisions: Student Entity, Registration, Installments, Currency, Numbering, V1 Simplicity | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0013**.
+Next available ADR number: **ADR-0014**.
 
 ## 4. Maintenance rules
 
