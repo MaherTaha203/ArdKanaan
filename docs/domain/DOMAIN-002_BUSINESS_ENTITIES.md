@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 5.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), DOM-001 |
+| Version | 5.1.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -312,7 +312,8 @@ document that extends the founding entity set (F-05).**
   amount and Program Revenue (DR-037); moves the three balances per DR-042.
 - **Lifecycle:** created when the Owner grants a refund (entitlement conditions
   and amount determination are the Owner's practice → UNK-006, reduced);
-  permanent once recorded (DR-019, DR-042). Own number sequence → UNK-026.
+  permanent once recorded (DR-019, DR-042). Its numbering is a deferred
+  design decision (ADR-0017 §2), not a domain unknown.
 - **Owns:** its amount, its date, its recorded reason.
 - **Never owns:** receipt vouchers' stored splits (DR-006 permanence is
   untouched — reversal happens beside history, never by editing it).

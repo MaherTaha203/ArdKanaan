@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.1.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), DOM-001, DOM-002, DOM-003 |
+| Version | 3.2.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -445,7 +445,7 @@ no duplicates.
 - **Dependencies:** DR-036, DR-037, DR-009, DR-034.
 - **Possible exceptions:** teacher already paid → DR-039.
 - **Unknown status:** exact net-recalculation formula and its interaction with
-  nearest-shekel rounding (DR-028) → UNK-026.
+  nearest-shekel rounding (DR-028) → UNK-027.
 
 ### DR-039 — A refunded, already-paid teacher share becomes a teacher debt
 - **Description:** If the teacher has already received payment for the refunded
@@ -459,9 +459,8 @@ no duplicates.
   general deduction model postponed by S4-D8 — UNK-021 remains open)
 - **Dependencies:** DR-036, DR-038, DR-030.
 - **Possible exceptions:** none stated.
-- **Unknown status:** debt tracking scope (per Teacher × Program vs per
-  teacher), cross-program deduction vs DR-031, and the document recording an
-  immediate repayment → UNK-026.
+- **Unknown status:** debt calculation and management (tracking scope,
+  cross-program deduction vs DR-031, settlement recording) → UNK-026.
 
 ### DR-040 — Refunds attach to Student × Program only; no receipt allocation
 - **Description:** Refunds are never allocated to individual Receipt Vouchers —
@@ -483,8 +482,9 @@ no duplicates.
   documentation (DR-036 vs DR-008). (→ ADR-0016 S5-D6)
 - **Dependencies:** DR-036, DR-008 (by contrast).
 - **Possible exceptions:** none permitted.
-- **Unknown status:** whether Refund Vouchers carry their own independent
-  number sequence → UNK-026.
+- **Unknown status:** — (Refund Voucher numbering is a deferred design
+  decision, removed from Domain Discovery by ADR-0017 §2 — not a domain
+  unknown.)
 
 ### DR-042 — Refund Voucher responsibilities and ledger effects
 - **Description:** Every Refund Voucher references the Student and the Program,

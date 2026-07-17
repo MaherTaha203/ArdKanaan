@@ -43,8 +43,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0014](ADR-0014-rounding-rule-and-closing-discipline.md) | Integer Rounding Rule; Session-Closing Discipline | 1A | ACCEPTED | — |
 | [ADR-0015](ADR-0015-session-4-teacher-payments.md) | Session 4 Owner Decisions: Teacher Payments | 1A | ACCEPTED | — |
 | [ADR-0016](ADR-0016-session-5-student-refunds.md) | Session 5 Owner Decisions: Student Refunds | 1A | ACCEPTED | — |
+| [ADR-0017](ADR-0017-unknown-register-restructure.md) | Unknown Register Restructure: Split of UNK-026 | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0017**.
+Next available ADR number: **ADR-0018**.
 
 ## 4. Maintenance rules
 

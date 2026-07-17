@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.6.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), DOM-001, DOM-002 |
+| Version | 1.7.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -137,8 +137,9 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   amount, Program Revenue, teacher entitlement, and the three balances
   (DR-042); a line in the Student Statement; audit-trail participation.
 - **Exceptional cases:** teacher already paid → teacher debt (DR-039);
-  net-recalculation formula, debt tracking scope, repayment document, and
-  refund-voucher numbering → UNK-026.
+  entitlement recalculation & rounding rules → UNK-027; teacher-debt
+  calculation and management → UNK-026 (refund-voucher numbering is a deferred
+  design decision, ADR-0017 §2).
 
 ## WF-08 — Voucher cancellation — *UNKNOWN*
 

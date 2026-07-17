@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.11.0 |
+| Version | 1.12.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -35,7 +35,8 @@ correctly without the owner's answers.
 | UNK-002 | **RESOLVED (2026-07-16, ADR-0008 D1–D3; V1 scope reduced by ADR-0009):** the policy belongs to the program (one per program, one teacher may have many programs each with its own policy); rounding is owned exclusively by the currency definition (exact decimals stored when supported, otherwise official currency rounding). Session 1 initially opened five compensation models; the owner's V1 scope decision (ADR-0009) then fixed **percentage-of-posted-receipts as the ONLY V1 model** (teacher % + center % = 100%), postponing the rest as Future Considerations (→ DOM-004). → DR-013 v2, DR-014. | The split calculation is the heart of the system (F-07). | resolved |
 | UNK-004 | **RESOLVED (2026-07-17, ADR-0013 S3-D3):** installments allowed — each payment is its own receipt voucher with its own number and date, split immediately at posting by the program's percentage. One voucher = one student + one program + one payment, never more. Overpayment does not exist — the system prevents amounts larger than what is due. → DR-023, DR-024. | Determines what a receipt voucher represents. | resolved |
 | UNK-025 | **RESOLVED (2026-07-17, ADR-0014 D1):** the teacher share is rounded to the **nearest whole shekel**; any rounding difference automatically belongs to the center; the two shares always sum to exactly the full voucher amount (1001 × 70% → teacher 701 / center 300; teacher at 30% → teacher 300 / center 701). → DR-028. Exact-half (.5) direction parked as ASM-004. | The exact calculation rule of every split. | resolved |
-| UNK-026 | **Refund-adjacent money mechanics (opened by ADR-0016).** (a) The exact recalculation formula for net teacher entitlement after a refund and its interaction with nearest-shekel rounding (DR-028); (b) whether teacher debt (DR-039) is tracked per Teacher × Program or per teacher, and whether settlement-by-deduction may cross programs given program isolation (DR-031); (c) what document records a teacher's immediate repayment, and whether Refund Vouchers carry their own independent number sequence (DR-026 covers receipt/payment only). | Blocks the exact calculation and document spec of refunds. | DR-038, DR-039, DR-041, WF-07 |
+| UNK-026 | **Teacher debt from refunds — calculation and management** (restructured by ADR-0017 from the cancelled composite form). Is the debt (DR-039) tracked per Teacher × Program or per teacher? May settlement-by-deduction cross programs, given program isolation (DR-031)? How is an immediate repayment or a deduction settlement recorded? | Blocks the exact debt-management spec of refunds. | DR-039, WF-07 |
+| UNK-027 | **Entitlement recalculation and rounding rules after refunds** (split from UNK-026 by ADR-0017 — genuinely unresolved). What is the exact formula for net teacher entitlement after a refund, and how does it interact with nearest-shekel rounding (DR-028)? | Blocks the exact calculation spec of refunds. | DR-038, WF-07 |
 | UNK-007 | **Cancellation and corrections.** Can a wrongly recorded voucher be cancelled or corrected? What mistakes actually occur (wrong amount, wrong program, wrong payer)? What trace must a correction leave? *Session 2 signal (ADR-0010): the owner's activity-event examples include "Receipt Voucher edited" and "Receipt Voucher cancelled", and corrections must generate new operations (DR-019) — so these events exist; their money mechanics remain open.* | Every real bookkeeping practice needs a correction path that respects DR-006. | WF-08, WF-09, DR-006, DR-019 |
 | UNK-008 | **RESOLVED (2026-07-17, ADR-0015 S4-D1…D7, D10, D11):** payments are owner-initiated only, on the date the center-teacher agreement dictates — never automatic; recorded as a Payment Voucher belonging to exactly one program; partial payments allowed up to the program's outstanding balance; advances forbidden (no negative balances); every Teacher × Program is an independent balance settled per program with Outstanding = Total Entitlement − Total Payments, no FIFO/LIFO allocation; payment history permanent. → DR-029…DR-035; WF-04/WF-05 now ESTABLISHED. | Defines the decrease side of teacher balances. | resolved |
 | UNK-009 | **Payment voucher categories for center expenses.** What categories of center expenses exist (rent, supplies, salaries…), and do expense payment vouchers attach to a program or stand alone? *Session 4 signals (ADR-0015): teacher payouts ARE Payment Vouchers, one program each (S4-D2/S4-D5) — that part is resolved; S4-D5's program-scope statement is not extended to expense vouchers (ADR-0015 interpretation boundary).* | Defines expense recording. | DR-008, WF-06 |
@@ -100,7 +101,7 @@ corrections, the meaning of "operations").
 | 2 | Operations (العمليات) — moved to front by owner instruction (2026-07-16) | UNK-001 | **COMPLETE** — answered and recorded as ADR-0010; UNK-001 resolved; signals logged on UNK-003/UNK-007 |
 | 3 | Student Payments & Receipt Vouchers | UNK-004 (+ UNK-010, UNK-011, UNK-012, UNK-014) | **COMPLETE** — answers recorded as ADR-0013 (S3-D1…S3-D6); 5 unknowns resolved, ASM-001 confirmed, UNK-025 opened, signals on UNK-005/013/022 |
 | 4 | Teacher Payments | UNK-008 (+ UNK-019, UNK-021, ASM-003) | **COMPLETE** — closed by direct Owner Engineering Order, recorded as ADR-0015 (S4-D1…D11); UNK-008 resolved, ASM-003 confirmed, UNK-021 explicitly postponed (S4-D8), UNK-019 untouched |
-| 5 | Student Refunds — conducted per Owner order (2026-07-17) | UNK-006 | **COMPLETE** — recorded as ADR-0016 (S5-D1…D7); UNK-006 reduced & downgraded to MEDIUM, UNK-026 opened (HIGH) |
+| 5 | Student Refunds — conducted per Owner order (2026-07-17) | UNK-006 | **COMPLETE** — recorded as ADR-0016 (S5-D1…D7); UNK-006 reduced & downgraded to MEDIUM; register restructured by ADR-0017 (UNK-026 refocused on teacher debt, UNK-027 split out, refund-voucher numbering removed as a deferred design decision) |
 | 6 | Expenses & Payment Vouchers | UNK-009, UNK-015 | pending |
 | 6a | Cancellations & Corrections | UNK-007 | pending |
 | 7 | Account Statements | UNK-013 | pending (depends on Sessions 2–5) |
@@ -119,10 +120,11 @@ unknown OPEN (AI-11) — nothing is closed by inference.
    GOV-006 §6).
 2. Every resolution triggers the Consistency Rule (GOV-001 §6) across DOM-001…004
    and any later documents.
-3. Next available IDs: **UNK-027**, **ASM-005**.
-4. Current tally (2026-07-17, post-Session 5): **15 open** (3 HIGH: UNK-007,
-   UNK-009, UNK-026; 7 MEDIUM incl. reduced UNK-006; 5 LOW), 11 resolved
-   (UNK-001, UNK-002, UNK-004, UNK-008, UNK-010, UNK-011, UNK-012, UNK-014,
-   UNK-020, UNK-025 answered; UNK-024 mooted by scope), 1 assumption rejected
-   (ASM-002), 2 confirmed (ASM-001, ASM-003), 1 awaiting confirmation
-   (ASM-004).
+3. Next available IDs: **UNK-028**, **ASM-005**.
+4. Current tally (2026-07-17, post-ADR-0017 restructure): **16 open** (4 HIGH:
+   UNK-007, UNK-009, UNK-026, UNK-027; 7 MEDIUM incl. reduced UNK-006; 5 LOW),
+   11 resolved (UNK-001, UNK-002, UNK-004, UNK-008, UNK-010, UNK-011, UNK-012,
+   UNK-014, UNK-020, UNK-025 answered; UNK-024 mooted by scope), 1 assumption
+   rejected (ASM-002), 2 confirmed (ASM-001, ASM-003), 1 awaiting confirmation
+   (ASM-004). Refund-voucher numbering is NOT tracked here — deferred design
+   decision per ADR-0017 §2.
