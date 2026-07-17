@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.4.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), DOM-001, DOM-002 |
+| Version | 1.5.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -72,27 +72,41 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   rounding difference to the center, shares always summing to the exact voucher
   amount.
 
-## WF-04 — Teacher balance changes — *PARTIAL*
+## WF-04 — Teacher balance changes — *ESTABLISHED*
 
 - **Trigger:** a receipt voucher on the teacher's program is posted — the teacher
-  receivable is created at that moment (increase, DR-015, D4); a teacher payment
-  settles owed amounts later (decrease → UNK-008). Entitlement and payment are
-  two different business events (D4).
-- **Inputs:** stored shares from posted vouchers; teacher payments.
-- **Business rules:** DR-009 (balance derives from recorded shares and payments,
-  never entered by hand — F-08), DR-015 (entitlement at posting), DR-016 (feeds
-  Teacher Payables, never merged with the other balances).
-- **Outputs:** current amount owed to the teacher.
-- **Exceptional cases:** negative balance (teacher paid more than owed) →
-  UNK-008; departing teacher with open balance → UNK-019.
+  receivable is created at that moment, from posted receipts only, with no
+  additional conditions (increase, DR-015, DR-029); an owner-issued teacher
+  payment voucher for that program settles owed amounts later (decrease,
+  DR-030). Entitlement and payment are two different business events (D4).
+- **Inputs:** stored shares from posted vouchers of that program; payment
+  vouchers issued for that program.
+- **Business rules:** DR-009/DR-031 (independent balance per Teacher × Program,
+  derived, never entered by hand — F-08), DR-015/DR-029 (entitlement at
+  posting), DR-016 (feeds Teacher Payables, never merged), DR-034 (Outstanding
+  = Total Entitlement − Total Payments, per program; no receipt allocation).
+- **Outputs:** current outstanding balance per Teacher × Program.
+- **Exceptional cases:** negative balances cannot exist — advances are forbidden
+  and payments are capped at the outstanding balance (DR-033); departing
+  teacher with open balance → UNK-019.
 
-## WF-05 — Teacher payment (paying out the teacher's share) — *UNKNOWN*
+## WF-05 — Teacher payment (paying out the teacher's share) — *ESTABLISHED*
 
-- **Trigger:** the owner pays a teacher some or all of what they are owed.
-- **Inputs / Business rules / Outputs:** whether this is recorded as a payment
-  voucher, whether partial payouts are allowed, on what schedule, and with what
-  effect on statements → UNK-008, UNK-009.
-- **Exceptional cases:** paying more than owed; advances → UNK-008.
+- **Trigger:** the Owner decides to pay a teacher, on whatever date the
+  center-teacher agreement dictates — never automatically (DR-030).
+- **Inputs:** the teacher; ONE program (DR-032); an amount up to that program's
+  outstanding balance (DR-033); date; the payment voucher from the continuous
+  payment sequence (DR-026).
+- **Business rules:** DR-030 (owner-initiated only), DR-032 (one program per
+  payment voucher), DR-033 (partial allowed, ceiling = outstanding, no
+  advances), DR-034 (associates with the program only — no FIFO/LIFO; voucher
+  permanently recorded), DR-035 (entitlement breakdown fully traceable).
+- **Outputs:** a posted payment voucher; that Teacher × Program outstanding
+  balance decreases; Cash Balance and Teacher Payables decrease; other programs
+  unaffected (S4-D6).
+- **Exceptional cases:** an amount exceeding the outstanding balance is
+  rejected (DR-033); deductions are intentionally postponed — no behavior
+  exists (S4-D8 → UNK-021).
 
 ## WF-06 — Center expense is paid — *UNKNOWN*
 

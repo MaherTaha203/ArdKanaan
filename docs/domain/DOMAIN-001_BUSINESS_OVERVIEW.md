@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.4.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule) |
+| Version | 1.5.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -69,9 +69,12 @@ Students/Payers ──payment for a program──►  ┌───────�
    never custom logic (ADR-0008 D3), and the applied split is preserved inside
    that voucher forever, even if the policy later changes (F-07).
 3. **Money out:** outgoing money is recorded as **payment vouchers (سند صرف)**
-   (F-05). What categories of outgoing money exist, and whether paying a teacher
-   their accumulated share is itself a payment voucher, is not yet stated →
-   UNK-008, UNK-009.
+   (F-05). Paying a teacher IS a payment voucher: owner-initiated on the agreed
+   date (never automatic), one program per voucher, partial or full up to that
+   program's outstanding balance, never in advance — each Teacher × Program is
+   an independent balance settled separately (DR-030…DR-034, ADR-0015). What
+   other categories of outgoing money exist (center expenses) → UNK-009,
+   UNK-015.
 
 Currency, methods, and installments were fixed by ADR-0013 S3-D3/S3-D4 (see
 point 1 above); fractional splits round the teacher share to the nearest whole
@@ -86,10 +89,10 @@ rooms, selling materials, registration fees) is not stated → UNK-018.
 
 ## 5. What creates expenses
 
-Established only in outline: the center has outgoing money recorded as payment
-vouchers (F-05). Known candidates from the entity list are payments to teachers
-(settling teacher balances) and center operating expenses — but their categories,
-approval, and timing are not stated → UNK-008, UNK-009, UNK-015.
+Teacher payments are established (ADR-0015): owner-initiated payment vouchers,
+one program each, settling Teacher × Program balances. Center operating
+expenses remain in outline — their categories, approval, and timing are not
+stated → UNK-009, UNK-015.
 
 ## 6. Why the system exists
 

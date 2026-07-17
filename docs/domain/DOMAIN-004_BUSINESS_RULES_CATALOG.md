@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.3.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), DOM-001, DOM-002, DOM-003 |
+| Version | 3.0.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -89,18 +89,24 @@ no duplicates.
   principle applied to the business's own records)
 - **Dependencies:** DR-001.
 - **Possible exceptions:** unknown.
-- **Unknown status:** payment voucher categories and linkage (teacher payments?
-  expenses? programs?) → UNK-008, UNK-009, UNK-015.
+- **Unknown status:** teacher payouts CONFIRMED as Payment Vouchers, one program
+  each (→ DR-030, DR-032, ADR-0015); center-expense categories and their
+  linkage → UNK-009, UNK-015.
 
-### DR-009 — Teacher balance is a derived quantity
-- **Description:** A teacher's balance is derived from the teacher shares stored
-  in receipt vouchers of their programs, reduced by payments made to that teacher.
-- **Reason:** The owner must be able to see what each teacher is owed at any
-  moment without computing. (→ F-05, F-07, F-08)
-- **Dependencies:** DR-005, DR-006, DR-007, DR-008, DR-015.
-- **Possible exceptions:** unknown.
-- **Unknown status:** ~~accrual timing~~ RESOLVED by D4 (→ DR-015); negative
-  balances/advances → UNK-008; departing teachers → UNK-019.
+### DR-009 — Teacher balances are derived quantities, per Teacher × Program
+- **Description:** Teacher balances are never managed globally: every
+  **Teacher × Program** combination is an independent financial relationship
+  (→ DR-031). Each such balance is derived from the teacher shares stored in
+  that program's posted receipt vouchers, reduced by payments issued for that
+  program — never entered by hand.
+- **Reason:** The owner must be able to see what each teacher is owed per
+  program at any moment without computing; financial separation between
+  programs is mandatory. (→ F-05, F-07, F-08; ADR-0015 S4-D4)
+- **Dependencies:** DR-005, DR-006, DR-007, DR-008, DR-015, DR-031, DR-034.
+- **Possible exceptions:** none stated.
+- **Unknown status:** ~~accrual timing~~ RESOLVED by D4 (→ DR-015); ~~negative
+  balances/advances~~ RESOLVED by S4-D7 (→ DR-033: advances forbidden);
+  departing teachers → UNK-019.
 
 ### DR-010 — Center balances are derived quantities
 - **Description:** The center-side balances (Cash Balance, Center Net Balance,
@@ -323,6 +329,85 @@ no duplicates.
 - **Possible exceptions:** none permitted.
 - **Unknown status:** exact-half (.5) direction recorded as ASM-004, awaiting
   confirmation — only reachable by percentages that can produce halves.
+
+### DR-029 — Entitlement arises from posted receipts only, unconditionally
+- **Description:** Teacher entitlement is created immediately when a Receipt
+  Voucher is officially posted, and by posted student payments ONLY. No
+  additional entitlement conditions (program completion, attendance completion,
+  or any other) exist in Version 1.
+- **Reason:** Entitlement follows the money received, nothing else. (→ ADR-0015
+  S4-D1; sharpens DR-015)
+- **Dependencies:** DR-015, DR-023.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-030 — Teacher payments are owner-initiated, never automatic
+- **Description:** The system never generates a teacher payment. The payment
+  date depends entirely on the agreement between the center and the teacher; a
+  payment exists only when the Owner decides to issue a Payment Voucher.
+- **Reason:** Payment timing is a human agreement, not a system rule.
+  (→ ADR-0015 S4-D2)
+- **Dependencies:** DR-008, DR-015.
+- **Possible exceptions:** none stated.
+- **Unknown status:** —
+
+### DR-031 — Every Teacher × Program pair is an independent financial relationship
+- **Description:** Teacher balances are never global. Each Teacher × Program
+  combination carries its own independent balance, and the center's liability is
+  settled per program: clearing Program A's outstanding entitlement affects
+  Program A only. Example: Teacher Ahmed with Excel, ICDL, and Accounting
+  programs holds three independent balances.
+- **Reason:** Financial separation between programs is mandatory. (→ ADR-0015
+  S4-D4, S4-D6)
+- **Dependencies:** DR-002, DR-009.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-032 — A teacher Payment Voucher belongs to exactly one program
+- **Description:** Every Payment Voucher issued to a teacher belongs to exactly
+  one Program; a single Payment Voucher must never cover multiple programs.
+- **Reason:** Program isolation (DR-031) requires atomic per-program payments,
+  mirroring DR-023 on the receipt side. (→ ADR-0015 S4-D5; whether
+  center-expense payment vouchers also attach to a program is NOT decided —
+  UNK-009)
+- **Dependencies:** DR-008, DR-031.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** expense-voucher linkage → UNK-009, UNK-015.
+
+### DR-033 — Partial payments up to outstanding; advances forbidden
+- **Description:** A teacher may receive any amount up to the outstanding
+  balance of the selected program; the remainder stays outstanding. Advance
+  payments before entitlement are forbidden — no payment may exceed the
+  program's outstanding balance, so negative balances cannot exist in V1.
+- **Reason:** Money owed is the ceiling of money paid. (→ ADR-0015 S4-D3,
+  S4-D7)
+- **Dependencies:** DR-031, DR-034.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-034 — Program-level balance arithmetic; no allocation algorithms
+- **Description:** Payments associate with a Program only — never with specific
+  receipts; FIFO, LIFO, and receipt-allocation algorithms do not exist.
+  Outstanding Balance = Total Teacher Entitlement − Total Payments issued for
+  that Program. Every Payment Voucher remains permanently recorded and payment
+  history is always available for auditing.
+- **Reason:** One simple subtraction per program replaces an entire allocation
+  machine (M-08). (→ ADR-0015 S4-D10, S4-D11)
+- **Dependencies:** DR-031, DR-006, DR-019.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-035 — Teacher entitlement is fully traceable
+- **Description:** The system must provide a complete entitlement breakdown:
+  every component of a teacher's entitlement is inspectable — the Receipt
+  Voucher, the Student, the Program, the payment amount, the distribution
+  percentage, and the teacher share. A teacher balance must always be fully
+  traceable to its components.
+- **Reason:** A balance the owner cannot decompose is a balance the owner
+  cannot trust. (→ ADR-0015 S4-D9; M-10, DR-007)
+- **Dependencies:** DR-006, DR-009, DR-028.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** presentation scope of statements → UNK-013.
 
 ---
 

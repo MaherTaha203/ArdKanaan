@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), DOM-001 |
+| Version | 4.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -76,12 +76,14 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 - **Responsibility:** teaching; being the beneficiary of the teacher share.
 - **Relationships:** has one or more Training Programs (each program has exactly
   one teacher; nothing stated limits how many programs one teacher may have —
-  confirmed reading of F-06); has a Teacher Balance; receives teacher payments
-  (mechanics → UNK-008).
+  confirmed reading of F-06); holds one independent balance **per program**
+  (Teacher × Program, DR-031); receives owner-initiated teacher payments per
+  program, partial or full up to the outstanding balance, never in advance
+  (DR-030, DR-032, DR-033).
 - **Lifecycle:** not yet established — how teachers join or leave, and what happens
   to a departing teacher's balance and programs → UNK-019.
 - **Owns:** the teacher share recorded in each receipt voucher of their programs;
-  their balance.
+  their independent per-program balances (DR-031).
 - **Never owns:** the center share; other teachers' shares.
 - **Example:** teacher Ahmad, whose program produced a 1000 receipt, is owed 700
   (owner's example, F-07).
@@ -156,10 +158,12 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
 ## 8. Payment Voucher (سند صرف)
 
 - **Purpose:** the permanent record of money paid out (F-05).
-- **Responsibility:** documenting outgoing money.
-- **Relationships:** not yet established — what a payment voucher may be tied to
-  (a teacher payment? a center expense category? a program?) → UNK-008, UNK-009,
-  UNK-015.
+- **Responsibility:** documenting outgoing money — permanently: every payment
+  voucher remains recorded forever for auditing (DR-034).
+- **Relationships:** teacher payments ARE payment vouchers, issued only by the
+  Owner's decision, each belonging to exactly one Program (DR-030, DR-032,
+  ADR-0015). Whether center-expense payment vouchers also attach to a program,
+  and what expense categories exist → UNK-009, UNK-015.
 - **Lifecycle:** created when money is paid; carries its own number from the
   continuous payment sequence, independent of the receipt sequence (DR-026).
   Cancellation/correction → UNK-007.
@@ -234,12 +238,12 @@ three rise automatically when a receipt is posted (DR-017).
 
 ### 11b. Teacher Payables (مستحقات المدرّبين)
 
-- **Purpose:** money currently owed to teachers — the aggregate of all individual
-  teacher balances.
+- **Purpose:** money currently owed to teachers — the aggregate of all
+  Teacher × Program balances (DR-031).
 - **Responsibility:** answering "how much do I owe teachers in total?".
 - **Relationships:** up by the teacher share the moment each receipt is posted
-  (entitlement at posting, DR-015); down by teacher payments (mechanics →
-  UNK-008).
+  (entitlement at posting, DR-015, DR-029); down by owner-issued teacher payment
+  vouchers, per program (DR-030, DR-032…DR-034).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** derived quantity; its amounts belong to the teachers
   (DR-012).
@@ -258,18 +262,29 @@ three rise automatically when a receipt is posted (DR-017).
 - **Example:** after the 1000 receipt at 70/30: Center Net Balance = 300 (owner's
   example).
 
-## 12. Teacher Balance (رصيد المدرّب)
+## 12. Teacher Balance (رصيد المدرّب) — per Teacher × Program
 
-- **Purpose:** what one specific teacher is currently owed (F-05); the per-teacher
-  component of Teacher Payables (§11b).
-- **Responsibility:** answering "how much is teacher X owed?" at any moment
-  without manual computation (F-08).
-- **Relationships:** increased by the teacher share the moment a receipt on the
-  teacher's programs is posted — a teacher receivable is created then (DR-015,
-  ADR-0008 D4); decreased by teacher payments (mechanics → UNK-008). Entitlement
-  and payment are two different business events (D4).
-- **Lifecycle:** continuous; derived from records.
+- **Purpose:** what one specific teacher is currently owed **for one specific
+  program** (F-05 as refined by ADR-0015 S4-D4): every Teacher × Program
+  combination is an independent financial relationship (DR-031). There is no
+  global teacher balance.
+- **Responsibility:** answering "how much is teacher X owed for program Y?" at
+  any moment without manual computation (F-08), by the fixed arithmetic:
+  Outstanding Balance = Total Teacher Entitlement − Total Payments issued for
+  that Program (DR-034).
+- **Relationships:** increased by the teacher share the moment a receipt on that
+  program is posted — entitlement from posted receipts only, with no additional
+  conditions (DR-015, DR-029); decreased by owner-issued Payment Vouchers for
+  that program, partial or full, never exceeding the outstanding balance and
+  never in advance (DR-030, DR-032, DR-033); settling one program leaves the
+  teacher's other programs untouched (S4-D6). Payments are never allocated to
+  specific receipts — no FIFO/LIFO (DR-034). Every component of the balance is
+  inspectable: receipt voucher, student, program, amount, percentage, teacher
+  share (DR-035).
+- **Lifecycle:** continuous; derived from permanent records.
 - **Owns:** nothing — derived quantity.
-- **Never owns:** center shares.
-- **Example:** the moment the 1000 receipt on Ahmad's program is posted, Ahmad is
-  owed 700 — even though he is paid later (owner's example + D4).
+- **Never owns:** center shares; other programs' balances.
+- **Example:** Teacher Ahmed teaches Excel, ICDL, and Accounting — three
+  independent balances (owner's example, S4-D4). The moment a 1000 receipt on
+  Excel is posted at 70/30, Ahmed's Excel balance shows 700 owed; paying him 400
+  leaves Excel outstanding at 300, while ICDL and Accounting are unaffected.
