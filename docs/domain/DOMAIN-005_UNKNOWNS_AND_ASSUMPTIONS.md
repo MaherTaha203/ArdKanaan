@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.6.0 |
+| Version | 1.7.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -95,7 +95,7 @@ corrections, the meaning of "operations").
 | 1 | Revenue Distribution & Balances | UNK-002, UNK-020 (+ ASM-002) | **COMPLETE** — answers recorded as ADR-0008 (D1–D6); UNK-002/UNK-020 resolved, ASM-002 rejected, UNK-024 opened |
 | 1-FU | Session 1 follow-up: per-model money semantics | UNK-024 | **WITHDRAWN** — mooted by the V1 percentage-only scope decision (ADR-0009) |
 | 2 | Operations (العمليات) — moved to front by owner instruction (2026-07-16) | UNK-001 | **COMPLETE** — answered and recorded as ADR-0010; UNK-001 resolved; signals logged on UNK-003/UNK-007 |
-| 3 | Student Payments & Receipt Vouchers | UNK-004 (+ UNK-010, UNK-011, UNK-012, UNK-014) | pending |
+| 3 | Student Payments & Receipt Vouchers | UNK-004 (+ UNK-010, UNK-011, UNK-012, UNK-014) | **ASKED — awaiting owner answers** (Phase 1A continuation authorized by Owner, 2026-07-17) |
 | 4 | Teacher Payments | UNK-008 (+ UNK-019, UNK-021, ASM-003) | pending |
 | 5 | Expenses & Payment Vouchers | UNK-009, UNK-015 | pending |
 | 6 | Refunds, Cancellations & Corrections | UNK-006, UNK-007 | pending (depends on Sessions 1, 3, 4) |
