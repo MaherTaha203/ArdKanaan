@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.8.0 |
+| Version | 1.9.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -34,7 +34,7 @@ correctly without the owner's answers.
 | UNK-001 | **RESOLVED (2026-07-16, ADR-0010):** Operations is **not a business entity** — it is a **chronological system activity timeline** (activity log) of everything that happened, presented business-friendly: newest first, searchable, each row self-explanatory. It records events (vouchers created/edited/cancelled, teacher payments, program/policy changes, settings, backup/restore) but creates no business logic (rules stay with the originating entity); every operation belongs to a source and never exists alone; some have financial impact, some don't; the timeline is append-only — corrections generate new operations, history never disappears. Candidate reading (b) was closest. → DR-018, DR-019, DR-020; DOM-002 §9 reclassified. | A core term cannot remain undefined. | resolved |
 | UNK-002 | **RESOLVED (2026-07-16, ADR-0008 D1–D3; V1 scope reduced by ADR-0009):** the policy belongs to the program (one per program, one teacher may have many programs each with its own policy); rounding is owned exclusively by the currency definition (exact decimals stored when supported, otherwise official currency rounding). Session 1 initially opened five compensation models; the owner's V1 scope decision (ADR-0009) then fixed **percentage-of-posted-receipts as the ONLY V1 model** (teacher % + center % = 100%), postponing the rest as Future Considerations (→ DOM-004). → DR-013 v2, DR-014. | The split calculation is the heart of the system (F-07). | resolved |
 | UNK-004 | **RESOLVED (2026-07-17, ADR-0013 S3-D3):** installments allowed — each payment is its own receipt voucher with its own number and date, split immediately at posting by the program's percentage. One voucher = one student + one program + one payment, never more. Overpayment does not exist — the system prevents amounts larger than what is due. → DR-023, DR-024. | Determines what a receipt voucher represents. | resolved |
-| UNK-025 | **Integer rounding of fractional percentage splits.** All amounts are whole Shekels (DR-025), and receipts are split by percentage (DR-013). When the split of a whole amount is fractional (e.g. 70% of 1001 = 700.7, or 70% of 15 = 10.5): in which direction is the teacher share rounded, and who receives the remainder — teacher or center? | The exact calculation rule of every split; blocks the calculation spec of Product/Business Constitution. | DR-005, DR-013, DR-014, DR-025, WF-03 |
+| UNK-025 | **RESOLVED (2026-07-17, ADR-0014 D1):** the teacher share is rounded to the **nearest whole shekel**; any rounding difference automatically belongs to the center; the two shares always sum to exactly the full voucher amount (1001 × 70% → teacher 701 / center 300; teacher at 30% → teacher 300 / center 701). → DR-028. Exact-half (.5) direction parked as ASM-004. | The exact calculation rule of every split. | resolved |
 | UNK-006 | **Refunds.** Do refunds happen in this business? If money is returned after the split was stored (and possibly after the teacher was paid), how does the business handle the teacher's share and the center's share? | Money can flow backwards; DR-006 makes stored splits permanent, so the business's real practice must be captured, not guessed. | WF-07, DR-006, DR-009, DR-010 |
 | UNK-007 | **Cancellation and corrections.** Can a wrongly recorded voucher be cancelled or corrected? What mistakes actually occur (wrong amount, wrong program, wrong payer)? What trace must a correction leave? *Session 2 signal (ADR-0010): the owner's activity-event examples include "Receipt Voucher edited" and "Receipt Voucher cancelled", and corrections must generate new operations (DR-019) — so these events exist; their money mechanics remain open.* | Every real bookkeeping practice needs a correction path that respects DR-006. | WF-08, WF-09, DR-006, DR-019 |
 | UNK-008 | **Teacher payment mechanics.** How and when are teachers paid what they are owed — on demand, on schedule, in full or partially? Are advances (paying before it is owed) possible, creating negative balances? | Defines the decrease side of teacher balances. | WF-05, DR-009 |
@@ -82,6 +82,7 @@ the affected documents are amended instead.
 | ASM-001 | All amounts are in a single currency and positive. | UNK-010 | **CONFIRMED (2026-07-17, ADR-0013 S3-D4):** single currency (Shekel), whole positive numbers → DR-025 |
 | ASM-002 | The 1000 → 700/300 example generalizes to proportional (percentage) policies, e.g. 70/30. | UNK-002 | **REJECTED (2026-07-16, ADR-0008 D1):** percentage is only the *most common* of five compensation models |
 | ASM-003 | Paying a teacher reduces that teacher's balance by the paid amount. | UNK-008 | AWAITING CONFIRMATION |
+| ASM-004 | "Nearest whole shekel" (DR-028) rounds an exact half (.5) up, toward the teacher — standard commercial rounding. Only reachable by percentages that can produce halves (e.g. 50% of an odd amount); impossible for 70/30. | DR-028 | AWAITING CONFIRMATION |
 
 ## 6. Interview workshop plan (Phase 1A.1)
 
@@ -116,9 +117,9 @@ unknown OPEN (AI-11) — nothing is closed by inference.
    GOV-006 §6).
 2. Every resolution triggers the Consistency Rule (GOV-001 §6) across DOM-001…004
    and any later documents.
-3. Next available IDs: **UNK-026**, **ASM-004**.
-4. Current tally (2026-07-17, post-Session 3): **16 open** (5 HIGH: UNK-006,
-   UNK-007, UNK-008, UNK-009, UNK-025; 6 MEDIUM; 5 LOW), 9 resolved (UNK-001,
-   UNK-002, UNK-004, UNK-010, UNK-011, UNK-012, UNK-014, UNK-020 answered;
-   UNK-024 mooted by scope), 1 assumption rejected (ASM-002), 1 confirmed
-   (ASM-001), 1 awaiting confirmation (ASM-003).
+3. Next available IDs: **UNK-026**, **ASM-005**.
+4. Current tally (2026-07-17, post-UNK-025 resolution): **15 open** (4 HIGH:
+   UNK-006, UNK-007, UNK-008, UNK-009; 6 MEDIUM; 5 LOW), 10 resolved (UNK-001,
+   UNK-002, UNK-004, UNK-010, UNK-011, UNK-012, UNK-014, UNK-020, UNK-025
+   answered; UNK-024 mooted by scope), 1 assumption rejected (ASM-002),
+   1 confirmed (ASM-001), 2 awaiting confirmation (ASM-003, ASM-004).

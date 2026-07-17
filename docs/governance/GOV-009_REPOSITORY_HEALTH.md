@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-17 — Session 3 decisions applied, Phase 1A re-frozen (AUD-P1A-005)
+**Last refresh:** 2026-07-17 — UNK-025 rounding rule applied, Phase 1A re-frozen (AUD-P1A-006)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 45 / 45 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 47 / 47 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design) | 45 / 45 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design) | 47 / 47 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 27 / 27 DR-atoms cite F/M/owner decisions (ADR-0008/0009/0010/0013) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 28 / 28 DR-atoms cite F/M/owner decisions (ADR-0008/0009/0010/0013/0014) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 23 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 9 audit reports) + 13 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 24 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 10 audit reports) + 14 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 16 (5 HIGH, 6 MEDIUM, 5 LOW); 1 assumption awaiting confirmation; 9 unknowns resolved (8 answered, 1 mooted) + ASM-001 confirmed, ASM-002 rejected | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
+| 13 | Open domain unknowns (DOM-005) | 15 (4 HIGH, 6 MEDIUM, 5 LOW); 2 assumptions awaiting confirmation (ASM-003, ASM-004); 10 unknowns resolved (9 answered, 1 mooted) + ASM-001 confirmed, ASM-002 rejected | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -63,3 +63,4 @@ next phase.
 | 2026-07-16 | Master Engineering Roadmap enacted (ADR-0011) | AUD-P0-003 | 🟢 except indicator 13 🟡 (unchanged — no domain work in this amendment) |
 | 2026-07-16 | Owner Decision Protocol integrated (ADR-0012); Governance layer COMPLETE & FROZEN | AUD-P0-004 | 🟢 except indicator 13 🟡 (unchanged — no domain work in this amendment) |
 | 2026-07-17 | Session 3 decisions applied (ADR-0013) | AUD-P1A-005 | 🟢 except indicator 13 🟡 — 16 open (5 HIGH); 5 unknowns resolved, UNK-025 opened, ASM-001 confirmed |
+| 2026-07-17 | Rounding rule applied (ADR-0014) | AUD-P1A-006 | 🟢 except indicator 13 🟡 — 15 open (4 HIGH); UNK-025 resolved, ASM-004 opened |

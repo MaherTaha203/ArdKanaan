@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.3.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions) |
+| Version | 1.4.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -74,8 +74,9 @@ Students/Payers ──payment for a program──►  ┌───────�
    UNK-008, UNK-009.
 
 Currency, methods, and installments were fixed by ADR-0013 S3-D3/S3-D4 (see
-point 1 above); the direction of integer rounding for fractional percentage
-splits remains open → UNK-025.
+point 1 above); fractional splits round the teacher share to the nearest whole
+shekel with any difference going to the center, and the two shares always sum
+to the exact voucher amount (DR-028).
 
 ## 4. What creates revenue
 

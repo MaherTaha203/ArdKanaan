@@ -215,6 +215,28 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   assumption (AI-11, GOV-010 §8's silent-impact prohibition applied to
   concepts).
 
+### LES-011 — Session-closing language must reflect authority, not initiative
+
+- **Observation:** The Owner corrected the executor's session-ending phrasing:
+  "Next per the frozen plan: Session 4…" reads as if the executor leads
+  execution, when the roadmap (GOV-011) defines only the **order** of work and
+  never grants permission to begin (ADR-0014 D2).
+- **Engineering lesson:** Communication is part of governance. A status line
+  that names the next task in an anticipatory voice quietly reverses the
+  authority model, even when the underlying behavior is compliant.
+- **Reason:** Language shapes expectation; over many sessions, anticipatory
+  phrasing normalizes executor-led sequencing.
+- **Impact:** Linguistic only — no execution deviation occurred — but the
+  correction precisely encodes the governance philosophy (GOV-010 §2,
+  GOV-011 §2).
+- **Future guidance:** **Every session MUST end with the compliance-first
+  formula (mandated by ADR-0014 D2):**
+  > Repository state: <current frozen state>.
+  > No further work is authorized.
+  > Awaiting explicit Owner Engineering Order.
+  Pending items may be *listed as facts* (e.g. open unknowns and their session
+  mapping) but never announced as "next" actions.
+
 ---
 
 ## 4. Maintenance rules
@@ -223,4 +245,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-011**.
+3. Next available lesson number: **LES-012**.

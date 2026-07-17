@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.3.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), DOM-001, DOM-002 |
+| Version | 1.4.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -68,8 +68,9 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   rounding — never custom logic).
 - **Outputs:** teacher share and center share, both recorded inside the voucher.
 - **Exceptional cases:** percentages not summing to 100% are invalid (DR-013);
-  amounts are whole Shekels (DR-025), so a fractional percentage result must be
-  rounded to a whole number — direction and remainder ownership → UNK-025.
+  fractional results follow DR-028 — teacher share to nearest whole shekel,
+  rounding difference to the center, shares always summing to the exact voucher
+  amount.
 
 ## WF-04 — Teacher balance changes — *PARTIAL*
 

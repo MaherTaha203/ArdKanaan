@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 2.2.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), DOM-001, DOM-002, DOM-003 |
+| Version | 2.3.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -152,8 +152,7 @@ no duplicates.
 - **Dependencies:** DR-005, DR-025.
 - **Possible exceptions:** none permitted.
 - **Unknown status:** ~~currency~~ RESOLVED by S3-D4 (Shekel, whole numbers —
-  → DR-025); rounding direction and remainder ownership for fractional
-  percentage splits of whole amounts → UNK-025.
+  → DR-025); ~~rounding direction~~ RESOLVED by ADR-0014 D1 (→ DR-028).
 
 ### DR-015 — Teacher entitlement begins at receipt posting
 - **Description:** The moment a receipt voucher is posted, a teacher receivable
@@ -284,8 +283,7 @@ no duplicates.
   confirms ASM-001; instantiates DR-014's currency ownership of rounding)
 - **Dependencies:** DR-014.
 - **Possible exceptions:** none in V1 (→ DR-027).
-- **Unknown status:** rounding direction/remainder for fractional splits →
-  UNK-025.
+- **Unknown status:** ~~rounding direction~~ RESOLVED by ADR-0014 D1 (→ DR-028).
 
 ### DR-026 — Independent continuous voucher numbering
 - **Description:** Receipt vouchers and payment vouchers carry independent
@@ -311,6 +309,20 @@ no duplicates.
   distribution) and DR-006 (no post-posting edits).
 - **Possible exceptions:** none — that is the point.
 - **Unknown status:** —
+
+### DR-028 — Teacher share rounds to nearest shekel; remainder belongs to the center
+- **Description:** When a percentage split produces a fraction, the teacher
+  share is rounded to the **nearest whole shekel**; any difference created by
+  rounding automatically belongs to the center; the two shares MUST always sum
+  to exactly the full voucher amount — rounding may never create an independent
+  accounting difference. Examples: 1001 × 70% = 700.7 → teacher 701 / center
+  300; teacher at 30%: 1001 × 30% = 300.3 → teacher 300 / center 701.
+- **Reason:** Whole-shekel operation (DR-025) requires one deterministic integer
+  rule, and the voucher amount must be conserved exactly. (→ ADR-0014 D1)
+- **Dependencies:** DR-005, DR-013, DR-014, DR-025.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** exact-half (.5) direction recorded as ASM-004, awaiting
+  confirmation — only reachable by percentages that can produce halves.
 
 ---
 
