@@ -53,8 +53,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0024](ADR-0024-session-12-final-boundary-confirmations.md) | Session 12 Owner Decisions: Final Boundary Confirmations | 1A | ACCEPTED | — |
 | [ADR-0025](ADR-0025-phase-1a-closure-and-phase-1-authorization.md) | Phase 1A Closure & Phase 1 Authorization | 1A → 1 | ACCEPTED | — |
 | [ADR-0026](ADR-0026-adopt-layer-ownership-constitution.md) | Adopt GOV-012 Layer Ownership Constitution | 0 | ACCEPTED | — |
+| [ADR-0027](ADR-0027-phase-1-commencement-and-p1-000-adoption.md) | Phase 1 Commencement & P1-000 Master Plan Adoption | 1 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0027**.
+Next available ADR number: **ADR-0028**.
 
 ## 4. Maintenance rules
 

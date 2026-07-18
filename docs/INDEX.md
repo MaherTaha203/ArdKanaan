@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.21.0 |
+| Version | 1.22.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -28,9 +28,10 @@ here does not officially exist (see GOV-001 §4).
     ├── templates/                Canonical document templates
     ├── audits/                   Audit reports, one folder per phase
     │   ├── phase-0/
-    │   └── phase-1a/
+    │   ├── phase-1a/
+    │   └── phase-1/
     ├── domain/                   Phase 1A — Domain Discovery
-    ├── product/                  Phase 1 — Product Constitution   (RESERVED)
+    ├── product/                  Phase 1 — Product Constitution   (IN PROGRESS)
     ├── business/                 Phase 2 — Business Constitution  (RESERVED)
     ├── ux/                       Phase 3 — UX Constitution        (RESERVED)
     ├── data/                     Phase 4 — DDL Specification      (RESERVED)
@@ -128,11 +129,14 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0025 | `docs/decisions/ADR-0025-phase-1a-closure-and-phase-1-authorization.md` | Phase 1A Closure & Phase 1 Authorization | ACCEPTED |
 | AUD-P1A-FINAL | `docs/audits/phase-1a/AUDIT-P1A-FINAL.md` | Domain Discovery Completion Report | FROZEN |
 
-### 2.2 Phase 1 — Product Constitution (OPEN — authorized 2026-07-18, ADR-0025; no documents yet)
+### 2.2 Phase 1 — Product Constitution (IN PROGRESS — P1-000 adopted 2026-07-18, ADR-0027)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| — | `docs/product/` | Reserved — authorized to open; awaiting Phase 1 work order | AUTHORIZED |
+| P1-000 | `docs/product/P1-000_PRODUCT_CONSTITUTION_MASTER_PLAN.md` | Product Constitution Master Plan | LIVING |
+| ADR-0027 | `docs/decisions/ADR-0027-phase-1-commencement-and-p1-000-adoption.md` | Phase 1 Commencement & P1-000 Master Plan Adoption | ACCEPTED |
+| AUD-P1-001 | `docs/audits/phase-1/AUDIT-P1-MASTER-PLAN.md` | Phase 1 Commencement & Master Plan Audit Report | FROZEN |
+| — | `docs/product/` (PC-001…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
 
 ### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
 

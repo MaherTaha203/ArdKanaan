@@ -6,7 +6,7 @@
 | Title | Phase Roadmap |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.4.0 |
+| Version | 1.5.0 |
 | Depends on | GOV-000, GOV-001, GOV-003, GOV-005, GOV-011 |
 
 ---
@@ -29,7 +29,7 @@ until Phases 1–6 are all FROZEN (“documentation freeze”).
 |---|---|---|---|---|
 | 0 | **Repository Bootstrap & Governance Platform** | Manifesto, governance, conventions, gates, review process, workflow, traceability, AI execution protocol, engineering memory, repository health dashboard, index, roadmap, decision log, templates; audits AUD-P0-001 + AUD-P0-002 (extension per ADR-0006) | `docs/governance/`, `docs/` | ✅ COMPLETE (extended & re-frozen) |
 | 1A | **Domain Discovery** (inserted by ADR-0007) | Business overview, business entities, business workflows (`WF-01…16`), business rules catalog (`DR-001…090`), unknowns & assumptions register (`UNK`/`ASM`, LIVING); interview Sessions 1–12; audits AUD-P1A-001…016 + **AUD-P1A-FINAL** | `docs/domain/` | ✅ **CLOSED** (frozen 2026-07-18; ADR-0025) |
-| 1 | **Product Constitution** | Product vision, scope & non-scope, actors, product requirements (`PR-NNN`), glossary of the ten core entities, traceability matrix. **Entry criterion:** cannot FREEZE while HIGH unknowns in DOM-005 remain open (ADR-0007 §7) — 0 HIGH open | `docs/product/` | 🟢 **OPEN** — authorized 2026-07-18 (GOV-011 §2; ADR-0025); work not yet started |
+| 1 | **Product Constitution** | Governed by **P1-000** (ADR-0027): PC-001…PC-008 — manifesto, principles, mental model, scope/non-scope/anti-patterns, actors, language & glossary, product requirements (`PR-NNN`), traceability matrix. Ownership authority: **GOV-012**. **Freeze criterion:** 0 open HIGH unknowns (ADR-0007 §7) — satisfied | `docs/product/` | 🔵 **IN PROGRESS** — P1-000 adopted 2026-07-18 (ADR-0027); authoring PC documents |
 | 2 | **Business Constitution** | Business rules (`BR-NNN`) for programs, teachers, payers, distribution policies, vouchers, operations, statements, balances; calculation rules; immutability rules for stored splits; traceability matrix | `docs/business/` | PENDING |
 | 3 | **UX Constitution** | UX principles (`UX-NNN`), interaction rules, automation rules enforcing F-08, information architecture, language/RTL decisions, traceability matrix | `docs/ux/` | PENDING |
 | 4 | **DDL Specification** | Documented data model (`DB-NNN`): entities, attributes, keys, constraints, integrity rules — as specification documents, **not** executable SQL | `docs/data/` | PENDING |
