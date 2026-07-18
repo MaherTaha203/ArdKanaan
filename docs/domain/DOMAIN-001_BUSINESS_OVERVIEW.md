@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.6.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds) |
+| Version | 1.7.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -86,6 +86,14 @@ Currency, methods, and installments were fixed by ADR-0013 S3-D3/S3-D4 (see
 point 1 above); fractional splits round the teacher share to the nearest whole
 shekel with any difference going to the center, and the two shares always sum
 to the exact voucher amount (DR-028).
+
+**Fixing mistakes:** every financial document is Posted the moment it is saved
+(no Draft stage in V1) and is then immutable. A financial error is fixed by
+**cancellation** — the original keeps a "Cancelled" status that reverses all its
+effects automatically and stays visible for audit — followed by recreating the
+correct document; a document cannot be cancelled while later documents depend on
+it (remove dependents newest → original first). Non-financial descriptive fields
+may be edited in place with a full change log (DR-043…DR-048, ADR-0018).
 
 ## 4. What creates revenue
 

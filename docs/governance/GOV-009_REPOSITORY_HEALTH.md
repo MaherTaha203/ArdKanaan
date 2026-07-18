@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-17 — Unknown register restructured (ADR-0017), Phase 1A re-frozen (AUD-P1A-009)
+**Last refresh:** 2026-07-17 — Session 6 (Corrections & Cancellations) applied, Phase 1A re-frozen (AUD-P1A-010)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 53 / 53 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 55 / 55 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design) | 53 / 53 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design) | 55 / 55 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 42 / 42 DR-atoms cite F/M/owner decisions (ADR-0008…0017) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 48 / 48 DR-atoms cite F/M/owner decisions (ADR-0008…0018) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 27 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 13 audit reports) + 17 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 28 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 14 audit reports) + 18 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 16 (4 HIGH, 7 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 11 unknowns resolved; register restructured per ADR-0017 (numbering item removed as deferred design decision) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
+| 13 | Open domain unknowns (DOM-005) | 15 (3 HIGH, 7 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 12 unknowns resolved; UNK-007 CLOSED (Session 6); Draft stage recorded as Future Consideration | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -67,3 +67,4 @@ next phase.
 | 2026-07-17 | Session 4: Teacher Payments (ADR-0015) | AUD-P1A-007 | 🟢 except indicator 13 🟡 — 14 open (3 HIGH); UNK-008 resolved, ASM-003 confirmed, UNK-021 postponed by Owner |
 | 2026-07-17 | Session 5: Student Refunds (ADR-0016) | AUD-P1A-008 | 🟢 except indicator 13 🟡 — 15 open (3 HIGH); UNK-006 reduced→MEDIUM, UNK-026 opened; Refund Voucher entity added |
 | 2026-07-17 | Unknown register restructured (ADR-0017) | AUD-P1A-009 | 🟢 except indicator 13 🟡 — 16 open (4 HIGH); UNK-026 refocused, UNK-027 split out, numbering item removed as design-deferred |
+| 2026-07-17 | Session 6: Corrections & Cancellations (ADR-0018) | AUD-P1A-010 | 🟢 except indicator 13 🟡 — 15 open (3 HIGH); UNK-007 CLOSED; WF-08/WF-09 ESTABLISHED; Draft → Future Consideration |

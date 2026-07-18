@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 5.1.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), DOM-001 |
+| Version | 6.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -19,6 +19,15 @@ definitive ruling, **not an entity** but a system activity view (ADR-0010) — i
 stays in this catalog only so the founding term is defined in one place. Descriptions use **business terminology
 only** — no software terms. Where the business meaning of an aspect is not yet
 established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
+
+**Common lifecycle for the three financial vouchers (Receipt §7, Payment §8,
+Refund §13):** each is Posted immediately on save (DR-043) and is thereafter
+immutable (DR-044). A financial error is fixed by
+cancellation — a **"Cancelled"** status on the original that reverses all
+effects automatically and is preserved and visible (DR-045, DR-047) — followed
+by recreation (DR-048); a document cannot be cancelled while later documents
+depend on it (DR-046). Descriptive (non-financial) fields may be edited in place
+with full change logging (DR-048).
 
 ---
 
@@ -147,9 +156,13 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
   Payables up by the teacher share (the teacher's entitlement begins at that
   moment — DR-015), Center Net Balance up by the center share (DR-017, ADR-0008
   D4/D6). The system prevents an amount larger than what is due (DR-024).
-- **Lifecycle:** created when money is received; posting it is what triggers the
-  ledger effects. Carries its own number from the continuous receipt sequence
-  (DR-026). Whether it can ever be cancelled or corrected, and how → UNK-007.
+- **Lifecycle:** created and Posted immediately on save (DR-043); posting is
+  what triggers the ledger effects. Carries its own number from the
+  continuous receipt sequence (DR-026). Once Posted it is immutable (DR-044): a
+  financial mistake is fixed by cancellation (a "Cancelled" status that reverses
+  all effects, DR-045/DR-047) then recreation (DR-048); it cannot be cancelled
+  while a teacher payment or refund depends on it (DR-046). Descriptive fields
+  (e.g. Payer Name) may be edited with logging (DR-048).
 - **Owns:** its sequential number, its date, its whole-shekel amount (DR-025),
   its single payment method — cash or bank transfer (DR-025), its optional Payer
   Name (DR-021), and its stored split (teacher share + center share).
@@ -168,9 +181,11 @@ established, the entry cites `UNK-NNN` (→ DOM-005) instead of guessing.
   Owner's decision, each belonging to exactly one Program (DR-030, DR-032,
   ADR-0015). Whether center-expense payment vouchers also attach to a program,
   and what expense categories exist → UNK-009, UNK-015.
-- **Lifecycle:** created when money is paid; carries its own number from the
-  continuous payment sequence, independent of the receipt sequence (DR-026).
-  Cancellation/correction → UNK-007.
+- **Lifecycle:** created and Posted immediately on save (DR-043); carries its
+  own number from the continuous payment sequence, independent of
+  the receipt sequence (DR-026). Once Posted it is immutable (DR-044); an error
+  is fixed by cancellation + recreation (DR-045…DR-048). It must be cancelled
+  before the receipt it drew from can be cancelled (DR-046).
 - **Owns:** its sequential number, its amount, its date, its purpose (categories
   → UNK-009).
 - **Never owns:** revenue splits — splits belong to receipt vouchers only.
@@ -285,7 +300,7 @@ three rise automatically when a receipt is posted (DR-017).
   that program, partial or full, never exceeding the outstanding balance and
   never in advance (DR-030, DR-032, DR-033); settling one program leaves the
   teacher's other programs untouched (S4-D6). Payments are never allocated to
-  specific receipts — no FIFO/LIFO (DR-034). Every component of the balance is
+  specific receipts — no receipt-allocation algorithm (DR-034). Every component of the balance is
   inspectable: receipt voucher, student, program, amount, percentage, teacher
   share (DR-035).
 - **Lifecycle:** continuous; derived from permanent records.
@@ -308,12 +323,15 @@ document that extends the founding entity set (F-05).**
   debt, DR-039); appearing in the Student Statement; participating in the full
   audit trail (DR-042).
 - **Relationships:** references exactly one Student and one Program (DR-040 —
-  never individual receipts, no FIFO/LIFO); reduces the Student × Program paid
+  never individual receipts; no receipt-allocation algorithm); reduces the Student × Program paid
   amount and Program Revenue (DR-037); moves the three balances per DR-042.
-- **Lifecycle:** created when the Owner grants a refund (entitlement conditions
-  and amount determination are the Owner's practice → UNK-006, reduced);
-  permanent once recorded (DR-019, DR-042). Its numbering is a deferred
-  design decision (ADR-0017 §2), not a domain unknown.
+- **Lifecycle:** created and Posted immediately on save (DR-043) — when the
+  Owner grants a refund (entitlement conditions and amount
+  determination are the Owner's practice → UNK-006, reduced); permanent and
+  immutable once recorded (DR-019, DR-044). An error is fixed by cancellation +
+  recreation (DR-045…DR-048); it must be cancelled before the receipt it depends
+  on can be cancelled (DR-046). Its numbering is a deferred design decision
+  (ADR-0017 §2), not a domain unknown.
 - **Owns:** its amount, its date, its recorded reason.
 - **Never owns:** receipt vouchers' stored splits (DR-006 permanence is
   untouched — reversal happens beside history, never by editing it).

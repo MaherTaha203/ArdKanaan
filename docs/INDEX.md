@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.12.0 |
+| Version | 1.13.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -108,6 +108,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1A-008 | `docs/audits/phase-1a/AUDIT-P1A-SESSION5.md` | Phase 1A Session 5 Decisions Audit Report | FROZEN |
 | ADR-0017 | `docs/decisions/ADR-0017-unknown-register-restructure.md` | Unknown Register Restructure: Split of UNK-026 | ACCEPTED |
 | AUD-P1A-009 | `docs/audits/phase-1a/AUDIT-P1A-UNKREG.md` | Phase 1A Unknown Register Restructure Audit Report | FROZEN |
+| ADR-0018 | `docs/decisions/ADR-0018-session-6-corrections-cancellations.md` | Session 6 Owner Decisions: Corrections & Cancellations | ACCEPTED |
+| AUD-P1A-010 | `docs/audits/phase-1a/AUDIT-P1A-SESSION6.md` | Phase 1A Session 6 Decisions Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

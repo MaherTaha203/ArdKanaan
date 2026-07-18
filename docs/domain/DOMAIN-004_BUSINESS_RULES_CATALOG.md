@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.2.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), DOM-001, DOM-002, DOM-003 |
+| Version | 3.3.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -73,10 +73,10 @@ no duplicates.
 - **Dependencies:** DR-005.
 - **Possible exceptions:** none — permanence is absolute. Refunds respect it:
   they reverse revenue via a separate Refund Voucher (DR-041), never by editing
-  a past receipt. Corrections, if the business allows them, must likewise work
-  around this rule, not through it. (→ UNK-007)
+  a past receipt. Corrections respect it too: a financial mistake is fixed by
+  cancelling and recreating, never by editing a posted document (DR-044, DR-048).
 - **Unknown status:** ~~refund mechanics~~ RESOLVED by S5-D1…D7 (→ DR-036…042);
-  correction/cancellation mechanics → UNK-007.
+  ~~correction/cancellation mechanics~~ RESOLVED by S6-D1…D7 (→ DR-043…048).
 
 ### DR-007 — Nothing computable is ever entered by hand
 - **Description:** Any value derivable from existing records — shares, balances,
@@ -222,8 +222,10 @@ no duplicates.
   permanence principle)
 - **Dependencies:** DR-018.
 - **Possible exceptions:** none permitted.
-- **Unknown status:** how voucher corrections/cancellations themselves work
-  (the events the timeline would record) → UNK-007.
+- **Unknown status:** ~~how voucher corrections/cancellations work~~ RESOLVED by
+  S6-D1…D7 (→ DR-043…048): a cancellation is a "Cancelled" status on the
+  original, and both cancellations and logged descriptive edits are append-only
+  timeline events.
 
 ### DR-020 — Every operation belongs to a source and carries a financial-impact flag
 - **Description:** An operation never exists by itself: each belongs to a source
@@ -390,10 +392,10 @@ no duplicates.
 
 ### DR-034 — Program-level balance arithmetic; no allocation algorithms
 - **Description:** Payments associate with a Program only — never with specific
-  receipts; FIFO, LIFO, and receipt-allocation algorithms do not exist.
-  Outstanding Balance = Total Teacher Entitlement − Total Payments issued for
-  that Program. Every Payment Voucher remains permanently recorded and payment
-  history is always available for auditing.
+  receipts; no receipt-allocation algorithm of any kind exists. Outstanding
+  Balance = Total Teacher Entitlement − Total Payments issued for that Program.
+  Every Payment Voucher remains permanently recorded and payment history is
+  always available for auditing.
 - **Reason:** One simple subtraction per program replaces an entire allocation
   machine (M-08). (→ ADR-0015 S4-D10, S4-D11)
 - **Dependencies:** DR-031, DR-006, DR-019.
@@ -464,7 +466,8 @@ no duplicates.
 
 ### DR-040 — Refunds attach to Student × Program only; no receipt allocation
 - **Description:** Refunds are never allocated to individual Receipt Vouchers —
-  no FIFO, no LIFO, no receipt matching. A refund reduces the total paid amount
+  no receipt-matching or receipt-allocation algorithm of any kind. A refund
+  reduces the total paid amount
   of the Student × Program and is associated with the Student and the Program
   only.
 - **Reason:** Mirrors DR-034's rejection of allocation machinery on the payment
@@ -501,6 +504,85 @@ no duplicates.
 - **Possible exceptions:** none stated.
 - **Unknown status:** —
 
+### DR-043 — Saving a financial document posts it immediately; no Draft stage in V1
+- **Description:** Recording (saving) a financial voucher IS posting it: every
+  financial document (Receipt, Payment, Refund Voucher) becomes Posted
+  immediately on save. Version 1 has no draft stage of any kind; a draft/posting
+  lifecycle is only a Future Consideration (→ §Future considerations).
+- **Reason:** The center's daily practice is enter → quick review → save; a
+  draft lifecycle adds complexity a single operator does not need (M-08).
+  (→ ADR-0018 S6-D6)
+- **Dependencies:** DR-001.
+- **Possible exceptions:** none in V1 (a Draft stage is a Future Consideration).
+- **Unknown status:** —
+
+### DR-044 — Posted financial documents are immutable
+- **Description:** A Posted financial document is never edited and never
+  deleted; it is preserved permanently. Financial errors are handled by
+  cancellation (DR-045…DR-047), never by altering or removing the posted
+  document.
+- **Reason:** A complete, tamper-evident audit trail — always able to answer
+  what happened, who did it, when, and which document corrected the error.
+  (→ ADR-0018 S6-D1; extends DR-006, DR-019)
+- **Dependencies:** DR-006, DR-019, DR-043.
+- **Possible exceptions:** descriptive (non-financial) fields may be edited with
+  logging — DR-048.
+- **Unknown status:** —
+
+### DR-045 — A permitted cancellation reverses all financial effects automatically
+- **Description:** When cancellation is permitted (DR-046), all financial
+  effects generated by that document are automatically reversed and the system
+  returns to the state immediately before that document existed — Cash Balance,
+  teacher entitlement, Center Net Balance, and all derived balances and reports
+  update with no further user action.
+- **Reason:** Cancellation must be a single, complete, self-correcting act.
+  (→ ADR-0018 S6-D2; worded to hold independently of the dependency rule)
+- **Dependencies:** DR-016, DR-017, DR-046.
+- **Possible exceptions:** none — the reversal is total.
+- **Unknown status:** —
+
+### DR-046 — No document may be cancelled while later documents depend on it
+- **Description:** A document cannot be cancelled while later financial documents
+  depend on it. Dependent documents must be removed beginning with the newest
+  dependent document until the original document becomes independent (e.g. cancel
+  a teacher Payment Voucher before the receipt it drew from; cancel a Refund
+  Voucher before the receipt it depends on). Cancellation never creates automatic
+  debts or open items — the user removes dependents first.
+- **Reason:** Preserve the financial timeline — no document may reference a
+  source that no longer exists — while keeping a single-operator system simple.
+  (→ ADR-0018 S6-D3; M-08)
+- **Dependencies:** DR-044, DR-030, DR-039, DR-041.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-047 — Cancellation is a status on the original document, fully preserved
+- **Description:** Cancelling a Posted document creates no separate cancellation
+  document; the original keeps its place and carries a **"Cancelled"** status —
+  never deleted, never hidden. It remains visible in the voucher log, the
+  student (member) statement, financial-history reports, and the activity
+  timeline, clearly shown as cancelled. Each cancellation records its date, its
+  reason (mandatory), and the actor who cancelled it (the owner, the single
+  user — F-02).
+- **Reason:** Preserve the full history without adding extra document types
+  (M-08, M-10). (→ ADR-0018 S6-D4)
+- **Dependencies:** DR-044, DR-045, DR-019.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-048 — Financial fields cancel-and-recreate; descriptive fields edit-with-log
+- **Description:** Fields that affect money — amount, student, program, payment
+  method, or anything affecting balances, entitlements, or financial reports —
+  are never edited after posting; correcting them is always cancel the original
+  + create a new correct document. Descriptive fields that affect no money —
+  notes, Payer Name, extra description — may be edited after posting, provided
+  the change is recorded in the activity log with date, user, and old value →
+  new value; such an edit triggers no financial recalculation.
+- **Reason:** Lock what money depends on; allow harmless descriptive fixes
+  without the weight of cancellation, but never silently. (→ ADR-0018 S6-D5)
+- **Dependencies:** DR-044, DR-021, DR-019.
+- **Possible exceptions:** none beyond the financial/descriptive split itself.
+- **Unknown status:** —
+
 ---
 
 ## Future considerations — NOT part of Version 1
@@ -519,3 +601,10 @@ NOTHING in V1 may depend on them:
 Reintroducing any of them is a future-version decision requiring its own ADR and
 its own domain discovery of per-receipt money semantics (the questions formerly
 tracked as UNK-024).
+
+Additionally postponed (Session 6, ADR-0018 S6-D6):
+
+- **Draft / posting lifecycle** (`Draft → Review → Posted`). V1 has no Draft
+  stage — saving a financial document posts it immediately (DR-043). A Draft
+  stage is a possible future development, not an active V1 behavior; nothing in
+  V1 may depend on it.

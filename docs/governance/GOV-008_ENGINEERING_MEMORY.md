@@ -237,6 +237,29 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   Pending items may be *listed as facts* (e.g. open unknowns and their session
   mapping) but never announced as "next" actions.
 
+### LES-012 — State rules in plain domain language; make each rule locally true
+
+- **Observation:** At Session 6 propagation the Owner rejected two draft
+  wordings: (a) "the system returns to the state as if the voucher never existed"
+  — true only when no dependents exist, so it silently leaned on another rule;
+  and (b) the term "LIFO" for the cancellation-ordering rule — accurate but
+  borrowed accounting/inventory jargon that invites future misreading. Both were
+  reworded (DR-045 made self-contained; DR-046 written as "remove dependents
+  newest → original").
+- **Engineering lesson:** A rule should be true read in isolation (not only in
+  conjunction with a sibling rule), and stated in the domain's own plain
+  language rather than imported technical jargon. This is a distinct concern
+  from business correctness — it is documentation quality, and it is a
+  legitimate engineering lesson (not a business decision).
+- **Reason:** Rules are read one at a time by future implementers and reviewers;
+  a rule that is only true "together with rule X," or that hides behind a term
+  of art, is a latent inconsistency and a Gate-5 hazard.
+- **Impact:** Positive — DR-045/DR-046 are now unambiguous and jargon-free.
+- **Future guidance:** When drafting a normative statement, test it two ways:
+  "Is it still true if the reader knows only this one rule?" and "Would a
+  domain expert with no accounting-systems background read this the way I
+  mean?" Reword until both pass. Prefer the Owner's own vocabulary.
+
 ---
 
 ## 4. Maintenance rules
@@ -245,4 +268,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-012**.
+3. Next available lesson number: **LES-013**.

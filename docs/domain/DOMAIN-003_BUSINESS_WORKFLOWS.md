@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.7.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), DOM-001, DOM-002 |
+| Version | 1.8.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -99,7 +99,7 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   payment sequence (DR-026).
 - **Business rules:** DR-030 (owner-initiated only), DR-032 (one program per
   payment voucher), DR-033 (partial allowed, ceiling = outstanding, no
-  advances), DR-034 (associates with the program only — no FIFO/LIFO; voucher
+  advances), DR-034 (associates with the program only — no receipt-allocation algorithm; voucher
   permanently recorded), DR-035 (entitlement breakdown fully traceable).
 - **Outputs:** a posted payment voucher; that Teacher × Program outstanding
   balance decreases; Cash Balance and Teacher Payables decrease; other programs
@@ -141,21 +141,42 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   calculation and management → UNK-026 (refund-voucher numbering is a deferred
   design decision, ADR-0017 §2).
 
-## WF-08 — Voucher cancellation — *UNKNOWN*
+## WF-08 — Voucher cancellation — *ESTABLISHED*
 
-- **Trigger:** a voucher was recorded and must be voided.
-- **Inputs / Business rules / Outputs:** whether cancellation is permitted, how it
-  differs from a refund, and what trace it must leave → **UNK-007**. Same standing
-  constraint as WF-07: stored splits are permanent (DR-006).
-- **Exceptional cases:** cancelling after balances were settled → UNK-007.
+- **Trigger:** the owner must void a Posted financial document (a mistake, a
+  duplicate, a voucher entered by error).
+- **Inputs:** the Posted document to cancel; a mandatory cancellation reason
+  (DR-047); date; the actor (the owner, F-02).
+- **Business rules:** DR-044 (Posted documents are never edited or deleted),
+  DR-046 (may not cancel while dependents exist — remove dependents newest →
+  original; no automatic debts), DR-045 (a permitted cancellation reverses all
+  financial effects automatically, returning to the prior state), DR-047
+  (cancellation is a "Cancelled" status on the original — no separate document —
+  preserved and visible, with date, reason, actor). DR-006 untouched — stored
+  splits are never edited.
+- **Outputs:** the original marked **Cancelled** (still visible everywhere); all
+  its financial effects reversed automatically (Cash, teacher entitlement,
+  Center Net, derived balances/reports); an append-only cancellation event on
+  the activity timeline (DR-019).
+- **Exceptional cases:** dependents present → cancellation is refused until they
+  are cancelled first, newest → original (DR-046).
 
-## WF-09 — Workflow corrections (fixing a recording mistake) — *UNKNOWN*
+## WF-09 — Correction of a recording mistake — *ESTABLISHED*
 
-- **Trigger:** the owner discovers a wrongly recorded amount, program, or payer.
-- **Inputs / Business rules / Outputs:** correction mechanism (reversal entry?
-  amended voucher? delete?) → **UNK-007**; which mistakes occur in practice →
-  UNK-007.
-- **Exceptional cases:** corrections spanning periods already reviewed → UNK-013.
+- **Trigger:** the owner discovers a wrongly recorded value on a Posted
+  document.
+- **Inputs:** the Posted document; whether the wrong field is financial or
+  descriptive (DR-048).
+- **Business rules:** DR-048 — a **financial** field (amount, student, program,
+  payment method) is corrected by **cancel + recreate** (WF-08 then WF-02/…);
+  a **descriptive** field (notes, Payer Name, extra description) may be **edited
+  in place** with the change logged (activity log, date, user, old value → new
+  value) and no financial recalculation.
+- **Outputs:** for financial fields, a cancelled original plus a new correct
+  document; for descriptive fields, an edited document with a logged change
+  event on the activity timeline (DR-019).
+- **Exceptional cases:** correcting a financial field of a document that has
+  dependents requires unwinding the dependents first (DR-046).
 
 ## WF-10 — Owner reads balances / account statements — *PARTIAL*
 
@@ -166,5 +187,5 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   shown distinctly, never merged); statement scope and periods → UNK-013.
 - **Outputs:** Cash Balance, Teacher Payables, Center Net Balance, per-teacher
   balances, account statements.
-- **Exceptional cases:** statement for a period with corrections → UNK-007,
-  UNK-013.
+- **Exceptional cases:** a statement showing a cancelled document displays it as
+  **Cancelled** (never hidden, DR-047); statement scope/periods → UNK-013.
