@@ -125,4 +125,5 @@ decomposition) · measurable completion (the acceptance criteria above) · layer
 | P1-000 | ADOPTED (this document) |
 | PC-001 Product Manifesto | **FROZEN** (2026-07-18, ADR-0028 / AUD-P1-002) — 7 axioms PA-1…PA-7 |
 | PC-002 Product Principles (+ Automation Boundary) | **FROZEN** (2026-07-18, ADR-0029 / AUD-P1-003) — PP-1…PP-6 + Automation Boundary A/B/C + AB-1 |
-| PC-003…PC-008 | NOT STARTED — authored on Owner order, in the §9 sequence |
+| PC-003 Product Mental Model | **FROZEN** (2026-07-18, ADR-0030 / AUD-P1-004) — 19 concepts; §0 The Product's World; MMI-1…MMI-9. **Checkpoint C1 COMPLETE.** |
+| PC-004…PC-008 | NOT STARTED — authored on Owner order, in the §9 sequence |

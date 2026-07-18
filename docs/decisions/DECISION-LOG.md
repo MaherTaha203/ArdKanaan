@@ -56,8 +56,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0027](ADR-0027-phase-1-commencement-and-p1-000-adoption.md) | Phase 1 Commencement & P1-000 Master Plan Adoption | 1 | ACCEPTED | — |
 | [ADR-0028](ADR-0028-pc-001-product-manifesto.md) | PC-001 Product Manifesto Adopted | 1 | ACCEPTED | — |
 | [ADR-0029](ADR-0029-pc-002-product-principles.md) | PC-002 Product Principles (+ Automation Boundary) Adopted | 1 | ACCEPTED | — |
+| [ADR-0030](ADR-0030-pc-003-product-mental-model.md) | PC-003 Product Mental Model Adopted | 1 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0030**.
+Next available ADR number: **ADR-0031**.
 
 ## 4. Maintenance rules
 

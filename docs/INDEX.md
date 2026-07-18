@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.24.0 |
+| Version | 1.25.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -142,7 +142,10 @@ Gate 8 (Repository Integrity) violation.
 | PC-002 | `docs/product/PC-002_PRODUCT_PRINCIPLES.md` | Product Principles (+ Automation Boundary) | FROZEN |
 | ADR-0029 | `docs/decisions/ADR-0029-pc-002-product-principles.md` | PC-002 Product Principles (+ Automation Boundary) Adopted | ACCEPTED |
 | AUD-P1-003 | `docs/audits/phase-1/AUDIT-P1-PC002.md` | PC-002 Product Principles Audit Report | FROZEN |
-| — | `docs/product/` (PC-003…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
+| PC-003 | `docs/product/PC-003_PRODUCT_MENTAL_MODEL.md` | Product Mental Model | FROZEN |
+| ADR-0030 | `docs/decisions/ADR-0030-pc-003-product-mental-model.md` | PC-003 Product Mental Model Adopted | ACCEPTED |
+| AUD-P1-004 | `docs/audits/phase-1/AUDIT-P1-PC003.md` | PC-003 Product Mental Model Audit Report | FROZEN |
+| — | `docs/product/` (PC-004…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
 
 ### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
 
