@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.19.0 |
+| Version | 1.20.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -81,7 +81,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0012 | `docs/decisions/ADR-0012-owner-decision-protocol.md` | Owner Decision Protocol (GOV-010) Completes the Governance Layer | ACCEPTED |
 | AUD-P0-004 | `docs/audits/phase-0/AUDIT-P0-DECISION-PROTOCOL.md` | Phase 0 Owner Decision Protocol Audit Report | FROZEN |
 
-### 2.1a Phase 1A — Domain Discovery
+### 2.1a Phase 1A — Domain Discovery (CLOSED — frozen 2026-07-18, ADR-0025 / AUD-P1A-FINAL)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
@@ -122,12 +122,14 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1A-015 | `docs/audits/phase-1a/AUDIT-P1A-SESSION11.md` | Phase 1A Session 11 Decisions Audit Report | FROZEN |
 | ADR-0024 | `docs/decisions/ADR-0024-session-12-final-boundary-confirmations.md` | Session 12 Owner Decisions: Final Boundary Confirmations | ACCEPTED |
 | AUD-P1A-016 | `docs/audits/phase-1a/AUDIT-P1A-SESSION12.md` | Phase 1A Session 12 Decisions Audit Report | FROZEN |
+| ADR-0025 | `docs/decisions/ADR-0025-phase-1a-closure-and-phase-1-authorization.md` | Phase 1A Closure & Phase 1 Authorization | ACCEPTED |
+| AUD-P1A-FINAL | `docs/audits/phase-1a/AUDIT-P1A-FINAL.md` | Domain Discovery Completion Report | FROZEN |
 
-### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
+### 2.2 Phase 1 — Product Constitution (OPEN — authorized 2026-07-18, ADR-0025; no documents yet)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| — | `docs/product/` | Reserved | PENDING |
+| — | `docs/product/` | Reserved — authorized to open; awaiting Phase 1 work order | AUTHORIZED |
 
 ### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
 

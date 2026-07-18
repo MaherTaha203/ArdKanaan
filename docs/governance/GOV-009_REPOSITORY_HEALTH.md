@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-18 — Session 12 (Final Boundary Confirmations) applied, Phase 1A re-frozen (AUD-P1A-016)
+**Last refresh:** 2026-07-18 — **Phase 1A CLOSED**; Domain Discovery frozen; Phase 1 authorized (ADR-0025 / AUD-P1A-FINAL)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 67 / 67 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 69 / 69 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 67 / 67 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 69 / 69 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
 | 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite F/M/owner decisions (ADR-0008…0024) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 34 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 20 audit reports) + 24 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending** (ASM-004 CONFIRMED); 25 unknowns resolved; UNK-017 & UNK-023 CLOSED (Session 12) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
+| 11 | Frozen documents | 35 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 21 audit reports incl. AUD-P1A-FINAL) + 25 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | 0 — Phase 1A closed; Phase 1 authorized-open, no work started (gates run at Phase 1 close) | 0 at close | 🟢 |
+| 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -75,3 +75,4 @@ next phase.
 | 2026-07-18 | Session 10: Program Definition, Pricing & Distribution Policy (ADR-0022) | AUD-P1A-014 | **All indicators 🟢** — 8 open (**0 HIGH**); UNK-003, UNK-005 & UNK-016 CLOSED; DR-071…DR-079 added; WF-13 ESTABLISHED; Program refined as single run (entity name kept); capacity & cohorts → Future Considerations; LES-016 |
 | 2026-07-18 | Session 11: Business Boundary & Operational Completeness (ADR-0023) | AUD-P1A-015 | **All indicators 🟢** — 7 open (**0 HIGH**); UNK-006, UNK-018, UNK-019 CLOSED, UNK-029 & UNK-030 opened; DR-080…DR-088 added; center-only non-program revenue; teacher/registration lifecycle + shared status pattern (DR-088, §18); WF-14/15/16 ESTABLISHED; LES-017 |
 | 2026-07-18 | Session 12: Final Boundary Confirmations (ADR-0024) | AUD-P1A-016 | **All indicators 🟢** — 5 open (**0 HIGH**, 0 assumptions pending); UNK-017 & UNK-023 CLOSED; ASM-004 CONFIRMED; DR-089 (Guardian) & DR-090 (per-type numbering) added; DR-028 amended (round-half-up) |
+| 2026-07-18 | **Phase 1A CLOSED** — Domain Discovery frozen; Phase 1 authorized (ADR-0025) | AUD-P1A-FINAL | **All indicators 🟢** — DR-001…090; ADR-0001…0025; 5 unknowns open (0 HIGH) formally deferred; GOV-011 §2 phase-entry conditions met for Phase 1 |
