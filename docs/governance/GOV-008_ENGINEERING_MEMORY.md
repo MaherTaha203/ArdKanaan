@@ -260,6 +260,27 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   domain expert with no accounting-systems background read this the way I
   mean?" Reword until both pass. Prefer the Owner's own vocabulary.
 
+### LES-013 — Keep version/product scope out of business rules
+
+- **Observation:** DR-043 initially bundled a business rule ("saving a financial
+  document immediately posts it") with a version-scope statement ("no Draft
+  stage in V1"). The Owner directed separating the two: the rule keeps only the
+  business behavior; the V1 exclusion moves to ADR explanatory text and the
+  Future Considerations section.
+- **Engineering lesson:** A business rule states enduring business behavior;
+  whether a capability is present in a given version is product/version scope.
+  Co-locating them makes the rule version-bound and blurs what is permanent
+  versus what is a scoping choice.
+- **Reason:** Scope changes per version; business behavior is meant to endure.
+  Mixing them forces re-editing the rule catalog on every scope change and
+  muddies its meaning.
+- **Impact:** Positive — DR-043 now states only business behavior; the V1 Draft
+  exclusion lives in ADR-0018 S6-D6 and DOM-004 §Future considerations.
+- **Future guidance:** When writing a DR, ask "is this true regardless of
+  version?" Anything version-specific ("not in V1", "postponed", "future")
+  belongs in ADR explanatory text, Future Considerations, or product-scope
+  documentation — never in the rule body.
+
 ---
 
 ## 4. Maintenance rules
@@ -268,4 +289,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-013**.
+3. Next available lesson number: **LES-014**.

@@ -21,7 +21,7 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-17 — Session 6 (Corrections & Cancellations) applied, Phase 1A re-frozen (AUD-P1A-010)
+**Last refresh:** 2026-07-17 — DR-043 business-rule/scope separation refinement, Phase 1A re-frozen (inline verification)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
@@ -68,3 +68,4 @@ next phase.
 | 2026-07-17 | Session 5: Student Refunds (ADR-0016) | AUD-P1A-008 | 🟢 except indicator 13 🟡 — 15 open (3 HIGH); UNK-006 reduced→MEDIUM, UNK-026 opened; Refund Voucher entity added |
 | 2026-07-17 | Unknown register restructured (ADR-0017) | AUD-P1A-009 | 🟢 except indicator 13 🟡 — 16 open (4 HIGH); UNK-026 refocused, UNK-027 split out, numbering item removed as design-deferred |
 | 2026-07-17 | Session 6: Corrections & Cancellations (ADR-0018) | AUD-P1A-010 | 🟢 except indicator 13 🟡 — 15 open (3 HIGH); UNK-007 CLOSED; WF-08/WF-09 ESTABLISHED; Draft → Future Consideration |
+| 2026-07-17 | DR-043 rule/scope separation refinement | inline (no ADR/DR/renumber; no behavior change) | 🟢 unchanged — DR-043 now states only business behavior; V1 Draft exclusion lives in ADR-0018 S6-D6 + Future Considerations; LES-013 |

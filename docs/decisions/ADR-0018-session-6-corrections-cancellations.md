@@ -82,6 +82,12 @@ Business, Scope.
 - **Workflows:** WF-08 (cancellation) and WF-09 (corrections) become
   ESTABLISHED; WF-10 exceptional-cases reference to UNK-007 cleared.
 - **Future Consideration added:** Draft / posting lifecycle (S6-D6).
+- **Business-rule vs scope separation (post-acceptance refinement, 2026-07-17):**
+  DR-043 expresses only the business behavior — *saving a financial document
+  immediately posts it*. The statement *"a separate Draft stage does not exist in
+  V1"* is product/version scope, not a business rule, and lives here (S6-D6) and
+  in DOM-004 §Future considerations — not inside DR-043. No business behavior,
+  workflow, decision, rule number, or unknown changed.
 - **Blast radius:** DOM-001 v1.7.0, DOM-002 v6.0.0 (voucher lifecycles gain the
   cancellation model + financial/descriptive edit rule), DOM-003 v1.8.0,
   DOM-004 v3.3.0, DOM-005 v1.13.0, GOV-008 (LES-012 — a documentation-quality

@@ -6,7 +6,7 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.3.0 |
+| Version | 3.3.1 |
 | Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
@@ -504,17 +504,19 @@ no duplicates.
 - **Possible exceptions:** none stated.
 - **Unknown status:** —
 
-### DR-043 — Saving a financial document posts it immediately; no Draft stage in V1
+### DR-043 — Saving a financial document immediately posts it
 - **Description:** Recording (saving) a financial voucher IS posting it: every
   financial document (Receipt, Payment, Refund Voucher) becomes Posted
-  immediately on save. Version 1 has no draft stage of any kind; a draft/posting
-  lifecycle is only a Future Consideration (→ §Future considerations).
-- **Reason:** The center's daily practice is enter → quick review → save; a
-  draft lifecycle adds complexity a single operator does not need (M-08).
-  (→ ADR-0018 S6-D6)
+  immediately on save.
+- **Reason:** Recording and posting are one act in the center's daily practice —
+  enter → quick review → save. (→ ADR-0018 S6-D6)
 - **Dependencies:** DR-001.
-- **Possible exceptions:** none in V1 (a Draft stage is a Future Consideration).
+- **Possible exceptions:** none.
 - **Unknown status:** —
+
+*(Version-scope note, not part of the business rule: whether a separate Draft
+stage exists is product/version scope, not business behavior — V1 has no Draft
+stage; see ADR-0018 S6-D6 and §Future considerations.)*
 
 ### DR-044 — Posted financial documents are immutable
 - **Description:** A Posted financial document is never edited and never
