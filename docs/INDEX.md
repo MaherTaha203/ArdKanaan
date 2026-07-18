@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.20.0 |
+| Version | 1.21.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -63,6 +63,7 @@ Gate 8 (Repository Integrity) violation.
 | GOV-009 | `docs/governance/GOV-009_REPOSITORY_HEALTH.md` | Repository Health | LIVING |
 | GOV-010 | `docs/governance/GOV-010_OWNER_DECISION_PROTOCOL.md` | Owner Decision Protocol | FROZEN |
 | GOV-011 | `docs/governance/GOV-011_MASTER_ENGINEERING_ROADMAP.md` | Master Engineering Roadmap | FROZEN |
+| GOV-012 | `docs/governance/GOV-012_LAYER_OWNERSHIP_CONSTITUTION.md` | Layer Ownership Constitution | FROZEN |
 | RDM-001 | `docs/roadmap/ROADMAP.md` | Phase Roadmap (status tracker, subordinate to GOV-011) | LIVING |
 | DEC-000 | `docs/decisions/DECISION-LOG.md` | Decision Log | LIVING |
 | ADR-0001 | `docs/decisions/ADR-0001-documentation-first-pipeline.md` | Documentation-First Pipeline | ACCEPTED |
@@ -80,6 +81,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P0-003 | `docs/audits/phase-0/AUDIT-P0-ROADMAP.md` | Phase 0 Master Roadmap Audit Report | FROZEN |
 | ADR-0012 | `docs/decisions/ADR-0012-owner-decision-protocol.md` | Owner Decision Protocol (GOV-010) Completes the Governance Layer | ACCEPTED |
 | AUD-P0-004 | `docs/audits/phase-0/AUDIT-P0-DECISION-PROTOCOL.md` | Phase 0 Owner Decision Protocol Audit Report | FROZEN |
+| ADR-0026 | `docs/decisions/ADR-0026-adopt-layer-ownership-constitution.md` | Adopt GOV-012 Layer Ownership Constitution | ACCEPTED |
+| AUD-P0-005 | `docs/audits/phase-0/AUDIT-P0-LAYER-OWNERSHIP.md` | Layer Ownership Constitution Adoption Audit Report | FROZEN |
 
 ### 2.1a Phase 1A — Domain Discovery (CLOSED — frozen 2026-07-18, ADR-0025 / AUD-P1A-FINAL)
 

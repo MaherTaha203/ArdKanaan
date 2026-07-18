@@ -21,21 +21,21 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-18 — **Phase 1A CLOSED**; Domain Discovery frozen; Phase 1 authorized (ADR-0025 / AUD-P1A-FINAL)
+**Last refresh:** 2026-07-18 — **GOV-012 (Layer Ownership Constitution) adopted** (ADR-0026 / AUD-P0-005); Phase 1A closed; Phase 1 authorized
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 69 / 69 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 72 / 72 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 69 / 69 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 72 / 72 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
 | 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite F/M/owner decisions (ADR-0008…0024) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 35 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 21 audit reports incl. AUD-P1A-FINAL) + 25 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 37 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, 22 audit reports) + 26 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — Phase 1A closed; Phase 1 authorized-open, no work started (gates run at Phase 1 close) | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
