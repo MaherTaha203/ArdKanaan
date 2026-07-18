@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.10.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt) |
+| Version | 1.11.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -24,8 +24,14 @@ programs** — structured instruction delivered to students. Each program is tau
 by exactly one **teacher** (F-06). Students (or the persons paying on their behalf
 — "payers") pay money for these programs (F-05, F-06).
 
-What subjects the center teaches, how many programs run at once, how long programs
-last, and whether programs repeat in cohorts is not yet stated → UNK-016.
+In V1 a **Program** is a single **run (offering)** of a service: the same service
+name (e.g. "ICDL") may run many times, and each run is a **separate, fully
+independent program** — its own teacher, price, distribution percentage, students,
+and money (DR-071, ADR-0022). A program carries a base price and documentary
+start/end dates, and the Owner controls whether it is **Open or Closed** to new
+business; any number of programs, including same-named ones, may run at once. V1
+has no student-capacity limit and no internal cohorts (each batch is its own
+program) — both are future enhancements (DOM-004 §Future considerations).
 
 ## 2. Who participates
 
@@ -52,12 +58,16 @@ Students/Payers ──payment for a program──►  ┌───────�
 ```
 
 1. **Money in:** a student pays for a training program they registered in
-   (registration is its own earlier event, DR-022). The payment is recorded as a
-   **receipt voucher (سند قبض)** that belongs to exactly one student and one
-   program and represents exactly one payment (F-06, DR-023); installments each
-   get their own voucher. Amounts are whole Shekels, paid in cash or by bank
-   transfer — one method per voucher (DR-025); overpayment is prevented
-   (DR-024); vouchers are numbered in a continuous sequence (DR-026).
+   (registration is its own earlier event, DR-022). Each registration has a
+   **Final Registration Price** — the program's base price by default, which the
+   Owner may override for that student; it is a single stored amount (no separate
+   discount) that locks once the first receipt is recorded (DR-072…DR-075). The
+   payment is recorded as a **receipt voucher (سند قبض)** that belongs to exactly
+   one student and one program and represents exactly one payment (F-06, DR-023);
+   installments each get their own voucher. Amounts are whole Shekels, paid in cash
+   or by bank transfer — one method per voucher (DR-025); overpayment beyond the
+   Final Registration Price is prevented (DR-024, DR-074); vouchers are numbered in
+   a continuous sequence (DR-026).
 2. **The split:** at the moment a receipt is posted, the money is divided between
    a **teacher share** and a **center share** according to the program's **revenue
    distribution policy** (F-07). In Version 1 every policy is a **percentage

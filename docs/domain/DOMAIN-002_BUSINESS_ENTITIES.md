@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 8.1.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), DOM-001 |
+| Version | 8.2.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -62,22 +62,39 @@ with full change logging (DR-048).
 
 ## 3. Training Program (البرنامج التدريبي)
 
-- **Purpose:** a unit of instruction that students pay for; the anchor to which
-  every receipt belongs (F-06).
+**In V1 a Program represents a single Program Run (Offering)** — one independent
+training offering with its own financial identity (ADR-0022 S10-D1; the entity
+name stays "Program"). Each new run of a same-named service is a distinct Program;
+the shared service name (e.g. "ICDL") is only a label and creates no financial
+link between runs (DR-071).
+
+- **Purpose:** a single training offering that students pay for; the anchor to
+  which every receipt belongs (F-06). It is the basic financial unit on which all
+  student and teacher operations are built.
 - **Responsibility:** connecting money to a teacher and to a distribution policy:
-  each program belongs to exactly one teacher and carries exactly one revenue
-  distribution policy (F-06).
+  each program belongs to exactly one teacher (DR-002; one teacher per run
+  confirmed for V1 — S10-D3) and carries exactly one revenue distribution policy
+  (F-06). It also holds the program's base price (DR-072).
 - **Relationships:** belongs to one Teacher; has one Revenue Distribution Policy;
   receives Receipt Vouchers; Students register in it as an independent event
-  before paying (DR-022).
-- **Lifecycle:** not yet established — how a program starts, whether it has dates,
-  cohorts, capacity, or an end → UNK-016; its price structure → UNK-005; whether
-  its policy can change during its life → UNK-003.
-- **Owns:** its identity, its teacher assignment, its policy assignment.
+  before paying (DR-022). Fully independent of every other program, including
+  same-named runs; any number of programs may be open at once (DR-071). Settings
+  copied from a prior run at creation are initial values only, not a live link.
+- **Lifecycle:** created by the Owner with a base price (DR-072), a fixed
+  distribution percentage (DR-076), and a documentary **start date** and **end
+  date** that drive no automatic behavior (DR-077). Actual operation is governed by
+  an Owner-controlled **Open/Closed** status: closing blocks new registrations and
+  new receipts while keeping all records visible and allowing legitimate operations
+  on existing records (DR-078); a closed program may be reopened at any time
+  (DR-079). No capacity limit and no internal cohorts exist in V1 (§Future
+  considerations, DOM-004).
+- **Owns:** its identity, its teacher assignment, its policy assignment, its base
+  price, its start/end dates, and its Open/Closed status.
 - **Never owns:** money — money is held in balances; the program is what receipts
   refer to, not an account (whether programs also act as accounts → UNK-013).
-- **Example:** an English-language course taught by teacher Ahmad with a 70/30
-  split policy (illustrative composition of the owner's stated example).
+- **Example:** "ICDL — January 2026", taught by teacher Ahmad, 70/30 split, base
+  price 1000, Open — an independent program; "ICDL — September 2026" is a separate
+  independent program sharing only the name.
 
 ## 4. Teacher (المدرّب / المعلّم)
 
@@ -114,10 +131,15 @@ with full change logging (DR-048).
   pays (parent, company, other party), their name is recorded on the voucher as
   the optional **Payer Name** field — the payer is information, never an entity
   in V1 (DR-021).
-- **Lifecycle:** created at registration, even with no payment yet; may pay
-  later, in installments (DR-023); may withdraw before paying (S3-D2); may
-  receive a refund, recorded by a Refund Voucher (§13, DR-041) — the conditions
-  and amount determination remain the Owner's practice (→ UNK-006, reduced).
+- **Lifecycle:** created at registration, even with no payment yet; each
+  registration carries a **Final Registration Price** — the program's base price
+  by default (DR-072), which the Owner may override for that registration only
+  (DR-073). It is a single stored amount with no discount concept (DR-074),
+  editable until the first receipt and locked thereafter (DR-075). The student may
+  pay later, in installments up to that amount (DR-023, DR-024); may withdraw
+  before paying (S3-D2); may receive a refund, recorded by a Refund Voucher (§13,
+  DR-041) — the conditions and amount determination remain the Owner's practice
+  (→ UNK-006, reduced).
 - **Owns:** their registrations and their statement.
 - **Never owns:** any part of the revenue split.
 - **Example:** a student registers today in the English program, pays 600 next
@@ -138,8 +160,10 @@ with full change logging (DR-048).
   program, never to the teacher directly; one teacher's programs may each carry
   different percentages (ADR-0008 D2). Rounding is never the policy's concern —
   it belongs to the currency (DR-014).
-- **Lifecycle:** may change over time — but past vouchers keep the split that was
-  applied (F-07). What triggers a change and who agrees to it → UNK-003.
+- **Lifecycle:** **fixed for the program's whole life** — a program's percentage
+  is set at creation and never changes in place (DR-076); a different agreement is
+  realized by creating a new Program (run), and past vouchers always keep the split
+  that was applied (F-07, DR-006).
 - **Owns:** the definition of the percentage split (teacher % + center % = 100%).
 - **Never owns:** the recorded splits inside vouchers — those belong to the
   vouchers permanently (F-07); rounding rules (currency-owned, DR-014).

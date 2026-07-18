@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.11.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), DOM-001, DOM-002 |
+| Version | 1.12.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -23,37 +23,48 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 
 ## WF-01 — Student registers in a program — *ESTABLISHED*
 
-- **Trigger:** a student decides to take a training program (ADR-0013 S3-D2).
-- **Inputs:** the student (created as an entity if new, DR-021); the training
-  program.
+- **Trigger:** a student decides to take a training program (ADR-0013 S3-D2). The
+  program must be **Open** — a Closed program accepts no new registrations (DR-078).
+- **Inputs:** the student (created as an entity if new, DR-021); the (Open)
+  training program; the **Final Registration Price** — defaulting to the program's
+  base price (DR-072), which the Owner may override for this registration (DR-073).
 - **Business rules:** DR-021 (student is the core person entity), DR-022
-  (registration is an independent recorded event, before and without payment).
-- **Outputs:** a recorded registration linking the student to the program;
-  payment may follow later — Registration → Payment.
+  (registration is an independent recorded event, before and without payment),
+  DR-072 (base price inherited as default), DR-073 (per-registration override),
+  DR-074 (a single stored Final Registration Price — no discount concept),
+  DR-078 (a Closed program blocks new registrations).
+- **Outputs:** a recorded registration linking the student to the program and
+  carrying its Final Registration Price; payment may follow later — Registration →
+  Payment. The price stays editable until the first receipt, then locks (DR-075).
 - **Exceptional cases:** the student withdraws before paying (S3-D2 — allowed);
-  withdrawal after payment is a refund → UNK-006. What the amount due for a
-  registration is based on (program price, discounts) → UNK-005.
+  withdrawal after payment is a refund → UNK-006; a Closed program is reopened
+  first if a late registration is needed (DR-079).
 
 ## WF-02 — Student pays / Receipt voucher is created — *ESTABLISHED*
 
 - **Trigger:** a registered student (or a payer on their behalf) hands money to
-  the center for a specific program.
+  the center for a specific program. The program must be **Open** — a Closed
+  program accepts no new receipts (DR-078).
 - **Inputs:** the student and their program registration (DR-021, DR-022); the
-  whole-shekel amount (DR-025); the payment method — cash or bank transfer, one
-  per voucher (DR-025); date; optional Payer Name (DR-021).
+  whole-shekel amount (DR-025), bounded by the registration's **Final Registration
+  Price** (DR-074, DR-024); the payment method — cash or bank transfer, one per
+  voucher (DR-025); date; optional Payer Name (DR-021).
 - **Business rules:** DR-004/DR-023 (one voucher = one student + one program +
   one payment), DR-005 (automatic split at posting), DR-006 (split stored
   permanently), DR-007 (owner never computes anything), DR-015/DR-017 (posting
   creates the teacher receivable and the three ledger effects), DR-024
-  (overpayment prevented), DR-026 (continuous receipt numbering).
+  (overpayment prevented against the Final Registration Price, DR-074), DR-026
+  (continuous receipt numbering), DR-078 (a Closed program blocks new receipts).
 - **Outputs:** a posted, sequentially-numbered receipt voucher holding amount +
   applied teacher share + applied center share; automatically: Cash Balance
   +full amount, Teacher Payables +teacher share (entitlement begins now, D4),
-  Center Net Balance +center share (D6).
+  Center Net Balance +center share (D6). The **first** receipt on a registration
+  locks its Final Registration Price (DR-075).
 - **Exceptional cases:** installments — each payment is its own voucher, split
-  at its own moment (DR-023); amounts exceeding the due amount are rejected
-  (DR-024); multi-program/multi-student/multi-method vouchers do not exist in V1
-  (DR-027).
+  at its own moment (DR-023); amounts exceeding the Final Registration Price are
+  rejected (DR-024, DR-074); multi-program/multi-student/multi-method vouchers do
+  not exist in V1 (DR-027); a Closed program is reopened first if a further
+  receipt is needed (DR-079).
 
 ## WF-03 — Revenue is distributed — *ESTABLISHED*
 
@@ -254,3 +265,28 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   model (fees, penalties, materials) remains out of scope (S4-D8 → UNK-021). The
   record used to capture a settlement is a deferred design decision, not a domain
   unknown.
+
+## WF-13 — Program creation & lifecycle (open / close / reopen) — *ESTABLISHED*
+
+- **Trigger:** the Owner sets up a new training offering, or changes the
+  operational state of an existing one.
+- **Inputs:** at creation — the service name (label), the one teacher (DR-002,
+  DR-071), the fixed distribution percentage (DR-076), the base price (DR-072),
+  and documentary start/end dates (DR-077); optionally initial values copied from
+  a prior run (initial only, no live link — DR-071). Thereafter — status changes
+  (Open ↔ Closed) by the Owner (DR-078, DR-079).
+- **Business rules:** DR-071 (a Program is a single independent run; the name is a
+  label; concurrent and same-named runs allowed), DR-072 (base price), DR-076
+  (percentage fixed for the program's life — a new agreement is a new program),
+  DR-077 (documentary dates drive no behavior), DR-078 (Closed blocks new business
+  but allows viewing and operations on existing records), DR-079 (Open/Closed is a
+  reversible status that changes no identity, price, percentage, or history).
+- **Outputs:** a created Program with its base price, percentage, dates, and Open
+  status; on close, new registrations/receipts are blocked while existing records
+  stay fully usable; on reopen, new business resumes unchanged. Each state change
+  is an append-only event on the activity timeline (DR-019).
+- **Exceptional cases:** a needed change to the percentage, or to the price after
+  the first receipt, is made by creating a **new** program, not by editing the
+  existing one (DR-075, DR-076); no capacity limit and no internal cohorts exist in
+  V1 (Future Considerations, DOM-004); dates never trigger automatic closing
+  (DR-077).

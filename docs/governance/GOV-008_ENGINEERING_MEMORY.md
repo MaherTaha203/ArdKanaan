@@ -328,6 +328,30 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   files expected to grow monotonically (GOV-008, DOM-005, DEC-000) never shrink
   toward zero between commits. Treat a shrink-to-empty as a Gate 5/Gate 8 defect.
 
+### LES-016 — Refine the concept, keep the entity name stable
+
+- **Observation:** Session 10 revealed that a "Program" is really a single **run
+  (offering)** — a richer concept than the founding term implied. The natural
+  instinct was to rename the entity to "Program Run." The Owner instead directed:
+  keep the entity name **"Program"** and document that *in V1 a Program represents
+  a single Program Run (Offering).* The meaning was sharpened; the name stayed put.
+- **Engineering lesson:** When discovery deepens the meaning of an existing term,
+  prefer **refining the concept under the stable name** over renaming the entity.
+  A rename ripples through every citing document, rule, workflow, and cross-
+  reference and invites broken links and reader confusion for no domain gain; a
+  documented refinement captures the same knowledge at a fraction of the blast
+  radius.
+- **Reason:** Names are load-bearing across a heavily cross-referenced repository;
+  the cost of a rename is structural, while the value being added is semantic —
+  the two should not be coupled.
+- **Impact:** Positive — "Program" remained the single entity name (DOM-002 §3);
+  DR-071 states the refined "a Program is a single run" meaning without disturbing
+  F-06, DR-002, or any existing citation.
+- **Future guidance:** When an interview sharpens what a known term *means*, add
+  the refinement to the entity's definition and a DR; rename only when the old name
+  is genuinely wrong (not merely less precise), and then do it as its own scoped
+  change with a full cross-reference sweep.
+
 ---
 
 ## 4. Maintenance rules
@@ -336,4 +360,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-016**.
+3. Next available lesson number: **LES-017**.

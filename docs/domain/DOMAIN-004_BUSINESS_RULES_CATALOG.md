@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.6.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), DOM-001, DOM-002, DOM-003 |
+| Version | 3.7.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -34,8 +34,10 @@ no duplicates.
 - **Reason:** Revenue from a program must flow to an unambiguous teacher. (→ F-06)
 - **Dependencies:** DR-001.
 - **Possible exceptions:** none stated; co-taught programs are not part of the
-  domain as described.
-- **Unknown status:** program lifecycle details → UNK-016.
+  domain as described (one teacher per program confirmed for V1 — ADR-0022 S10-D3).
+- **Unknown status:** ~~program lifecycle details~~ RESOLVED by S10-D1/D9…D14
+  (→ DR-071: a Program is a single Program Run; DR-077: documentary dates;
+  DR-078/DR-079: Open/Closed lifecycle).
 
 ### DR-003 — Every program has exactly one revenue distribution policy
 - **Description:** Each training program carries one policy that defines how its
@@ -45,7 +47,9 @@ no duplicates.
 - **Dependencies:** DR-002.
 - **Possible exceptions:** none stated.
 - **Unknown status:** ~~policy form and scope~~ RESOLVED by D2 and the V1 scope
-  decision (→ DR-013, ADR-0009); how/when a policy changes → UNK-003.
+  decision (→ DR-013, ADR-0009); ~~how/when a policy changes~~ RESOLVED by
+  S10-D8 (→ DR-076: the percentage is fixed for the program's life; a changed
+  agreement is a new program, never an in-place change).
 
 ### DR-004 — Every receipt belongs to exactly one program
 - **Description:** Money received is recorded as a receipt voucher tied to exactly
@@ -283,8 +287,11 @@ no duplicates.
   training. (→ ADR-0013 S3-D3)
 - **Dependencies:** DR-022, DR-023.
 - **Possible exceptions:** none in V1 (→ DR-027).
-- **Unknown status:** structure of the "amount due" (program price, discounts)
-  → UNK-005 (signal: a defined due amount must exist for this rule to operate).
+- **Unknown status:** ~~structure of the "amount due" (program price, discounts)~~
+  RESOLVED by S10-D4…D7 (→ DR-072: a program base price; DR-073: per-registration
+  override; DR-074: a single stored Final Registration Price, no discount concept;
+  DR-075: locked at the first receipt). The amount due is the Final Registration
+  Price.
 
 ### DR-025 — Whole-shekel currency; one payment method per voucher
 - **Description:** The base currency is the Shekel (الشيكل); decimals are not
@@ -882,6 +889,125 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Possible exceptions:** none.
 - **Unknown status:** —
 
+### DR-071 — In V1 a Program is a single Program Run; runs are independent
+- **Description:** In Version 1 a **Program** represents a single **Program Run
+  (Offering)** — an independent training offering with its own financial identity.
+  Each Program Run is fully independent: its own teacher, distribution percentage,
+  price, students, receipts, refunds, entitlements, payments, balances, and debts.
+  A run that carries the same service name as another (e.g. "ICDL — Jan 2026" and
+  "ICDL — Sep 2026") is a **distinct Program**; the shared name is only a **label**
+  for the service type and creates **no financial link**. Any number of Programs,
+  including same-named ones, may be open at the same time. Settings copied from a
+  prior run at creation are **initial values only**, never a live link.
+- **Reason:** Each offering has its own agreement, price, and students; treating it
+  as an independent unit keeps every balance unambiguous. (→ ADR-0022 S10-D1, S10-D2,
+  S10-D14; entity name kept stable per the pre-propagation refinement)
+- **Dependencies:** DR-002, DR-003, DR-004.
+- **Possible exceptions:** none — independence is absolute; the only shared thing is
+  the service-name label.
+- **Unknown status:** —
+
+### DR-072 — A Program carries a base price inherited as each registration's default
+- **Description:** Each Program (run) carries **one base price**, set at creation.
+  When a student registers, the registration takes that base price as its **default**
+  amount due.
+- **Reason:** The price is a property of the offering, applied automatically at
+  registration. (→ ADR-0022 S10-D4)
+- **Dependencies:** DR-071, DR-022.
+- **Possible exceptions:** the default may be overridden per registration (DR-073).
+- **Unknown status:** —
+
+### DR-073 — A registration's price may be overridden per registration
+- **Description:** The Owner may set an individual registration's price to a value
+  **different from the program base price**. The override applies to **that
+  registration only** and changes neither the base price nor any other student's
+  registration.
+- **Reason:** A student may be admitted at a different agreed amount without
+  disturbing the program's price or anyone else's. (→ ADR-0022 S10-D5)
+- **Dependencies:** DR-072.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-074 — The Final Registration Price is a single stored value; no discount concept
+- **Description:** The amount due for a registration is a **single stored value —
+  the Final Registration Price**. It is **not derived** from `base price − discount`.
+  Version 1 has **no discount** entity, field, percentage, or reason; whatever the
+  agreed final price is, it is stored directly. This Final Registration Price is the
+  **sole amount-due reference** for receipts, refunds, and overpayment prevention
+  (DR-024).
+- **Reason:** One clear figure keeps pricing simple and unambiguous; the reason a
+  price differs from the base is an administrative matter the system need not model
+  (M-08). (→ ADR-0022 S10-D6; pre-propagation pricing refinement)
+- **Dependencies:** DR-072, DR-073, DR-024.
+- **Possible exceptions:** none in V1 — no discount modelling.
+- **Unknown status:** —
+
+### DR-075 — The Final Registration Price locks at the first receipt
+- **Description:** A registration's Final Registration Price may be edited **until
+  the first receipt voucher for that registration is recorded**; once the first
+  receipt exists the price is **locked** and never changed. Corrections needed
+  afterward are made through financial operations (e.g. a refund), never by altering
+  the amount due.
+- **Reason:** The first receipt begins the financial record built on that amount;
+  changing it afterward would distort outstanding balance, receipts, refunds, and
+  overpayment prevention. (→ ADR-0022 S10-D7; kin to DR-044's immutability
+  principle)
+- **Dependencies:** DR-074, DR-023, DR-024.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-076 — A Program's distribution percentage is fixed for the program's life
+- **Description:** Once set at creation, a Program's teacher/center percentage is
+  **immutable for the whole life of that program**. A different agreement (e.g.
+  70/30 → 75/25) is realized by creating a **new Program (run)** with the new
+  percentage — never by editing an existing program.
+- **Reason:** The percentage is part of the program's financial identity; changing
+  it mid-life would complicate entitlement, past receipts, refunds, balances, and
+  audit. A new agreement is a new offering. (→ ADR-0022 S10-D8; consistent with
+  DR-006 permanence, DR-013)
+- **Dependencies:** DR-003, DR-013, DR-071, DR-006.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-077 — A Program records documentary start and end dates that drive no behavior
+- **Description:** Each Program records a **start date** and an **end date**,
+  captured at creation. In V1 these are **documentary/administrative only**: the
+  system never auto-closes a program, never blocks registration or receipts by
+  date, and creates no date-driven operations. Reaching the end date changes
+  nothing on its own.
+- **Reason:** The dates aid organization and reporting; actual operation is governed
+  by the Open/Closed status, not the calendar. (→ ADR-0022 S10-D9)
+- **Dependencies:** DR-071, DR-078.
+- **Possible exceptions:** none — dates never trigger automatic behavior in V1.
+- **Unknown status:** —
+
+### DR-078 — A Program's Open/Closed status governs new business
+- **Description:** Each Program has an **Owner-controlled status, Open or Closed**,
+  that governs actual operation. **Closing** a Program blocks **new business** — no
+  new registrations and no new receipt vouchers on it — while all existing records
+  (registrations, receipts, refunds, teacher entitlements and balances) remain fully
+  visible, and **legitimate financial operations on already-existing records** (e.g.
+  a refund against an existing receipt) remain allowed. Closing deletes nothing and
+  alters no entitlement, balance, or prior financial effect.
+- **Reason:** The Owner needs to stop new activity on a finished offering without
+  freezing the legitimate lifecycle of records already created. (→ ADR-0022 S10-D10)
+- **Dependencies:** DR-071, DR-022, DR-023.
+- **Possible exceptions:** management/correction of pre-existing records (refunds,
+  cancellations) is not "new business" and stays allowed on a closed program.
+- **Unknown status:** —
+
+### DR-079 — Open/Closed is a reversible operational status
+- **Description:** A **Closed** Program may be **reopened** by the Owner at any time,
+  restoring new business (new registrations and receipts). Open/Closed is a
+  **reversible operational status** that never changes the program's identity, its
+  dates, its price, its distribution percentage, or any historical data.
+- **Reason:** A program may legitimately need to reopen (a late student, an extended
+  registration period); reopening is a status change, not a new program. (→ ADR-0022
+  S10-D11)
+- **Dependencies:** DR-078.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
 ---
 
 ## Future considerations — NOT part of Version 1
@@ -928,3 +1054,17 @@ Additionally postponed (Session 8, ADR-0020):
   balances (payables), and **goods replacement** without cash — are outside V1
   and belong to a fuller purchase cycle in a later version. Nothing in V1 may
   depend on them.
+
+Additionally postponed (Session 10, ADR-0022):
+
+- **Program capacity.** V1 has no maximum-student-capacity concept and never
+  blocks registration by student count (ADR-0022 S10-D12). Capacity management —
+  a maximum, remaining-seats display, full-capacity blocking, waiting lists — is a
+  possible later-version feature. Nothing in V1 may depend on it.
+- **Internal cohorts / sections.** V1 programs have no internal cohorts, batches,
+  groups, sections, or schedules; each batch is its own independent Program
+  (ADR-0022 S10-D13). Internal grouping is a possible later-version feature.
+  Nothing in V1 may depend on it.
+- **Multiple teachers per program.** V1 keeps one teacher per program (ADR-0022
+  S10-D3, DR-002); supporting more than one teacher per program — with its own
+  share-splitting decisions — is a later-version concern.
