@@ -123,4 +123,5 @@ decomposition) · measurable completion (the acceptance criteria above) · layer
 | Doc | Status |
 |---|---|
 | P1-000 | ADOPTED (this document) |
-| PC-001…PC-008 | NOT STARTED — authored on Owner order, in the §9 sequence |
+| PC-001 Product Manifesto | **FROZEN** (2026-07-18, ADR-0028 / AUD-P1-002) — 7 axioms PA-1…PA-7 |
+| PC-002…PC-008 | NOT STARTED — authored on Owner order, in the §9 sequence |

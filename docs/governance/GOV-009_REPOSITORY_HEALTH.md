@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-18 — **Phase 1 commenced**; P1-000 Master Plan adopted (ADR-0027 / AUD-P1-001); GOV-012 is the ownership authority
+**Last refresh:** 2026-07-18 — **PC-001 Product Manifesto FROZEN** (ADR-0028 / AUD-P1-002); Phase 1 in progress (Checkpoint C1)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 75 / 75 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 78 / 78 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 75 / 75 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 78 / 78 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite F/M/owner decisions (ADR-0008…0024) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite F/M/owner decisions (ADR-0008…0024); 7 / 7 PC-001 axioms cite upstream F/M/DR | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 38 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, 23 audit reports) + 27 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 1 IN PROGRESS (P1-000 adopted; PC docs pending) — gates run per document and at phase close | 0 at close | 🟢 |
+| 11 | Frozen documents | 40 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001, 24 audit reports) + 28 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | Phase 1 IN PROGRESS (Checkpoint C1: PC-001 frozen; PC-002…008 pending) — gates run per document and at phase close | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -78,3 +78,4 @@ next phase.
 | 2026-07-18 | **Phase 1A CLOSED** — Domain Discovery frozen; Phase 1 authorized (ADR-0025) | AUD-P1A-FINAL | **All indicators 🟢** — DR-001…090; ADR-0001…0025; 5 unknowns open (0 HIGH) formally deferred; GOV-011 §2 phase-entry conditions met for Phase 1 |
 | 2026-07-18 | **GOV-012 adopted** — Layer Ownership Constitution (ADR-0026) | AUD-P0-005 | **All indicators 🟢** — 17 laws incl. L16/L17; deterministic LOA; no conflict with Minimal Perturbation; frozen governance untouched |
 | 2026-07-18 | **Phase 1 commenced** — P1-000 Master Plan adopted (ADR-0027) | AUD-P1-001 | **All indicators 🟢** — Product-layer-pure plan (PC-001…008); UX deferred to Phase 3 per GOV-012; GOV-012 is the ownership authority |
+| 2026-07-18 | **PC-001 Product Manifesto FROZEN** (ADR-0028) | AUD-P1-002 | **All indicators 🟢** — 7 axioms (PA-1…PA-7), each testable/traceable; Product-layer-pure; Checkpoint C1 in progress |

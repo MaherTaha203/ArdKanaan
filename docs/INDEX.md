@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.22.0 |
+| Version | 1.23.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -136,7 +136,10 @@ Gate 8 (Repository Integrity) violation.
 | P1-000 | `docs/product/P1-000_PRODUCT_CONSTITUTION_MASTER_PLAN.md` | Product Constitution Master Plan | LIVING |
 | ADR-0027 | `docs/decisions/ADR-0027-phase-1-commencement-and-p1-000-adoption.md` | Phase 1 Commencement & P1-000 Master Plan Adoption | ACCEPTED |
 | AUD-P1-001 | `docs/audits/phase-1/AUDIT-P1-MASTER-PLAN.md` | Phase 1 Commencement & Master Plan Audit Report | FROZEN |
-| — | `docs/product/` (PC-001…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
+| PC-001 | `docs/product/PC-001_PRODUCT_MANIFESTO.md` | Product Manifesto | FROZEN |
+| ADR-0028 | `docs/decisions/ADR-0028-pc-001-product-manifesto.md` | PC-001 Product Manifesto Adopted | ACCEPTED |
+| AUD-P1-002 | `docs/audits/phase-1/AUDIT-P1-PC001.md` | PC-001 Product Manifesto Audit Report | FROZEN |
+| — | `docs/product/` (PC-002…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
 
 ### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
 

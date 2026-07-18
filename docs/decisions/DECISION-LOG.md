@@ -54,8 +54,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0025](ADR-0025-phase-1a-closure-and-phase-1-authorization.md) | Phase 1A Closure & Phase 1 Authorization | 1A → 1 | ACCEPTED | — |
 | [ADR-0026](ADR-0026-adopt-layer-ownership-constitution.md) | Adopt GOV-012 Layer Ownership Constitution | 0 | ACCEPTED | — |
 | [ADR-0027](ADR-0027-phase-1-commencement-and-p1-000-adoption.md) | Phase 1 Commencement & P1-000 Master Plan Adoption | 1 | ACCEPTED | — |
+| [ADR-0028](ADR-0028-pc-001-product-manifesto.md) | PC-001 Product Manifesto Adopted | 1 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0028**.
+Next available ADR number: **ADR-0029**.
 
 ## 4. Maintenance rules
 
