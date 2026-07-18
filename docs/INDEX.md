@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.15.0 |
+| Version | 1.16.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -114,6 +114,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1A-011 | `docs/audits/phase-1a/AUDIT-P1A-SESSION7.md` | Phase 1A Session 7 Decisions Audit Report | FROZEN |
 | ADR-0020 | `docs/decisions/ADR-0020-session-8-expense-returns.md` | Session 8 Owner Decisions: Expense Returns | ACCEPTED |
 | AUD-P1A-012 | `docs/audits/phase-1a/AUDIT-P1A-SESSION8.md` | Phase 1A Session 8 Decisions Audit Report | FROZEN |
+| ADR-0021 | `docs/decisions/ADR-0021-session-9-refund-teacher-entitlement-and-debt.md` | Session 9 Owner Decisions: Refund Effects on Teacher Entitlement & Debt | ACCEPTED |
+| AUD-P1A-013 | `docs/audits/phase-1a/AUDIT-P1A-SESSION9.md` | Phase 1A Session 9 Decisions Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

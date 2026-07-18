@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.5.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), DOM-001, DOM-002, DOM-003 |
+| Version | 3.6.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -448,8 +448,10 @@ no duplicates.
   (→ ADR-0016 S5-D3)
 - **Dependencies:** DR-036, DR-037, DR-009, DR-034.
 - **Possible exceptions:** teacher already paid → DR-039.
-- **Unknown status:** exact net-recalculation formula and its interaction with
-  nearest-shekel rounding (DR-028) → UNK-027.
+- **Unknown status:** ~~exact net-recalculation formula and its interaction with
+  nearest-shekel rounding~~ RESOLVED by S9-D1…D3 (→ DR-062: reduce by the
+  original program percentage; DR-063: rounding per DR-028; DR-064: unpaid
+  entitlement floors at zero).
 
 ### DR-039 — A refunded, already-paid teacher share becomes a teacher debt
 - **Description:** If the teacher has already received payment for the refunded
@@ -463,8 +465,12 @@ no duplicates.
   general deduction model postponed by S4-D8 — UNK-021 remains open)
 - **Dependencies:** DR-036, DR-038, DR-030.
 - **Possible exceptions:** none stated.
-- **Unknown status:** debt calculation and management (tracking scope,
-  cross-program deduction vs DR-031, settlement recording) → UNK-026.
+- **Unknown status:** ~~debt calculation and management (tracking scope,
+  cross-program deduction vs DR-031, settlement recording)~~ RESOLVED by
+  S9-D4…D9 (→ DR-065: when a debt exists; DR-066: per Teacher × Program, never
+  merged; DR-067: settleable balance, never negative, closes at zero; DR-068:
+  two settlement paths, Owner-chosen; DR-069: no expiry; DR-070: repayment-only
+  when no future entitlement).
 
 ### DR-040 — Refunds attach to Student × Program only; no receipt allocation
 - **Description:** Refunds are never allocated to individual Receipt Vouchers —
@@ -749,6 +755,130 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Reason:** Time does not change the nature of the transaction. (→ ADR-0020
   S8-D8)
 - **Dependencies:** DR-055, DR-059.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-062 — A refund reduces teacher entitlement by the original program percentage
+- **Description:** When a student refund reverses revenue, the teacher's
+  entitlement on that program is reduced by the **same percentage that was
+  originally applied** to the enrollment (the program's teacher percentage),
+  computed on the refunded amount. The percentage is a property of the program,
+  constant regardless of which receipt the money came from; teacher entitlement
+  is **cumulative across the Teacher × Program**, never tied to a single receipt.
+  Example: 1000 at 70/30, refund 400 → teacher entitlement falls by 280 (to 420),
+  center by 120 (to 180).
+- **Reason:** A reversal must unwind the same split that recognized the revenue,
+  or the balances stop reflecting reality. (→ ADR-0021 S9-D1, S9-D3a; applies
+  DR-038's net-revenue principle)
+- **Dependencies:** DR-038, DR-013, DR-031.
+- **Possible exceptions:** none — the reversal always uses the original
+  percentage.
+- **Unknown status:** —
+
+### DR-063 — Refund entitlement reductions follow the currency rounding rule
+- **Description:** When a refund's teacher share produces a fraction, it is
+  rounded to the **nearest whole shekel**, any rounding difference belongs to the
+  center, and the teacher and center reductions **sum exactly to the refunded
+  amount** — the same deterministic rule the receipt side uses (DR-028). Example:
+  refund 401 at 70% → teacher reduction 281, center reduction 120.
+- **Reason:** One rounding rule governs every split in the system, in both
+  directions; the refunded amount must be conserved exactly. (→ ADR-0021 S9-D2)
+- **Dependencies:** DR-028, DR-062.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-064 — Unpaid teacher entitlement never displays negative; a shortfall signals a debt
+- **Description:** While the teacher has **not** yet been paid for the refunded
+  portion, a refund reduces the teacher's entitlement directly, and that
+  entitlement **never displays a negative value** — it floors at zero. A
+  reduction that would push it below zero is the **signal that a teacher debt
+  arises** (DR-065), not a negative balance.
+- **Reason:** Entitlement is money still owed to the teacher; you cannot owe less
+  than nothing. A shortfall is a different concept — money the teacher must return
+  — and is modelled as a debt, not as a negative entitlement. (→ ADR-0021 S9-D3b;
+  keeps DR-033's no-negative-balance discipline)
+- **Dependencies:** DR-038, DR-062, DR-065.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-065 — A teacher debt exists only when payments exceed the final entitlement
+- **Description:** A **teacher debt exists only when the total amount already paid
+  to the teacher for a program exceeds that teacher's final entitlement for the
+  program after all refund recalculations.** The excess is the debt. If the amount
+  paid does not exceed the final entitlement, there is no debt — the refund simply
+  reduces the outstanding entitlement (DR-064). *(Explanatory arithmetic, not part
+  of the rule: Teacher Debt = Total Teacher Payments − Final Teacher Entitlement,
+  recognized only when positive. Example: paid 700, final entitlement 420 → debt
+  280.)*
+- **Reason:** Money already handed over for revenue that was later reversed must
+  come back; but only the part that exceeds what the teacher has truly earned is a
+  debt. (→ ADR-0021 S9-D4; sharpens DR-039)
+- **Dependencies:** DR-039, DR-062, DR-034.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-066 — Teacher debt is per Teacher × Program; never merged or offset across programs
+- **Description:** A teacher debt is calculated and tracked for each
+  **Teacher × Program** independently. Debts and entitlements are **never merged
+  or offset between different programs**: a debt arising on one program is never
+  cleared using entitlements owed on another program, even for the same teacher.
+  Example: an Excel debt of 280 stays entirely separate from any amount the
+  teacher is owed on ICDL or Accounting.
+- **Reason:** Financial separation between programs is mandatory (DR-031); debt
+  management must obey the same isolation as entitlement. (→ ADR-0021 S9-D5)
+- **Dependencies:** DR-031, DR-065.
+- **Possible exceptions:** none permitted.
+- **Unknown status:** —
+
+### DR-067 — A teacher debt is a settleable balance: never negative, closed at zero
+- **Description:** A teacher debt is a balance that **only decreases** as it is
+  settled. Partial settlements are allowed and settlement may take several steps
+  over time; each settlement reduces the remaining balance only. The balance
+  **never becomes negative**; when it reaches **zero** the debt is fully settled
+  and closed.
+- **Reason:** A debt represents a finite amount to be returned; it converges to
+  zero and cannot overshoot into a credit. (→ ADR-0021 S9-D7)
+- **Dependencies:** DR-065.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-068 — Two settlement paths, Owner-chosen; deduction stays within the same program
+- **Description:** A teacher debt is settled by **either** (a) **direct
+  repayment** by the teacher to the center, **or** (b) **deduction from the
+  teacher's future entitlements on the same program**, and the two may be
+  **combined** on one debt (e.g. 100 repaid directly and the remaining 180
+  deducted from the next entitlement on that program). The choice of method is an
+  **administrative decision the Owner makes case by case — never an automatic
+  system action.** Deduction draws only on the same program's entitlements;
+  cross-program deduction is forbidden (DR-066).
+- **Reason:** Both paths occur in real life; the Owner decides which fits each
+  case; program isolation constrains deduction to the program that generated the
+  debt. (→ ADR-0021 S9-D6, S9-D7; details the settlement authorized in S5-D4 —
+  distinct from the postponed general deduction model, UNK-021)
+- **Dependencies:** DR-065, DR-066, DR-030, DR-034.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-069 — A teacher debt has no expiry
+- **Description:** A teacher debt carries **no time limit**; it stays open until
+  it is actually settled. Elapsed time never writes it off or reduces it.
+- **Reason:** Time does not change the fact that the money is owed. (→ ADR-0021
+  S9-D8; mirrors DR-061 on the expense-return side)
+- **Dependencies:** DR-065, DR-067.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-070 — With no future entitlement on the program, a debt is settled only by direct repayment
+- **Description:** If the teacher has **no further entitlement** on the program
+  that generated the debt (for example, they no longer run that program), so
+  same-program deduction (DR-068 path b) is impossible, the debt simply **stays
+  open** as an outstanding balance owed to the center, and the **only** remaining
+  way to clear it is **direct repayment** by the teacher. There is no other
+  mechanism, and cross-program settlement remains forbidden (DR-066).
+- **Reason:** Program isolation (DR-066) rules out drawing on another program, so
+  a program with no future entitlement leaves repayment as the sole path; the
+  debt does not disappear (DR-069). (→ ADR-0021 S9-D9)
+- **Dependencies:** DR-066, DR-068, DR-069.
 - **Possible exceptions:** none.
 - **Unknown status:** —
 

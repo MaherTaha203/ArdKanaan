@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.9.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns) |
+| Version | 1.10.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -78,9 +78,14 @@ Students/Payers ──payment for a program──►  ┌───────�
 4. **Money back (refunds):** a student refund is a **reversal of previously
    recognized revenue** — never an expense — recorded by the dedicated **Refund
    Voucher (سند استرجاع)**: it reduces Program Revenue and the student's paid
-   amount, teacher entitlement follows the net revenue automatically, and a
-   share already paid to the teacher becomes a teacher debt settled by
-   repayment or future deduction (DR-036…DR-042, ADR-0016).
+   amount, and the teacher's entitlement falls by the **same original program
+   percentage** (rounded like every split, DR-028/DR-063), never dropping below
+   zero (DR-036…DR-042, DR-062…DR-064, ADR-0016, ADR-0021). If the teacher had
+   already been paid more than their final entitlement, the excess becomes a
+   **teacher debt** — tracked per Teacher × Program, never merged across programs,
+   settled by direct repayment or by same-program future-entitlement deduction at
+   the Owner's choice, never automatically, never expiring, and cleared only by
+   repayment when the program has no future entitlement (DR-065…DR-070, ADR-0021).
 
 Currency, methods, and installments were fixed by ADR-0013 S3-D3/S3-D4 (see
 point 1 above); fractional splits round the teacher share to the nearest whole

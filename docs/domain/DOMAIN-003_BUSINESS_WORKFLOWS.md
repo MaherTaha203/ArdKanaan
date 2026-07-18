@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.10.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), DOM-001, DOM-002 |
+| Version | 1.11.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -139,19 +139,22 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   date.
 - **Business rules:** DR-036 (reversal of recognized revenue — never an
   expense), DR-037 (reduces Program Revenue and Student Paid Amount; financial
-  state recalculated), DR-038 (teacher entitlement reflects net revenue —
-  automatic reduction when unpaid), DR-039 (already-paid share becomes teacher
-  debt: repayment or deduction from future entitlements; never absorbed by the
-  center), DR-040 (no receipt allocation), DR-041 (dedicated Refund Voucher),
-  DR-042 (full responsibilities and ledger effects). DR-006 untouched — stored
-  splits are never edited.
+  state recalculated), DR-038 (teacher entitlement reflects net revenue),
+  DR-062 (entitlement reduced by the original program percentage, cumulative
+  per Teacher × Program), DR-063 (reduction rounded per DR-028), DR-064
+  (unpaid entitlement floors at zero — never negative), DR-039/DR-065
+  (already-paid case beyond final entitlement becomes a teacher debt; never
+  absorbed by the center), DR-040 (no receipt allocation), DR-041 (dedicated
+  Refund Voucher), DR-042 (full responsibilities and ledger effects). DR-006
+  untouched — stored splits are never edited.
 - **Outputs:** a recorded Refund Voucher; recalculated Student × Program paid
-  amount, Program Revenue, teacher entitlement, and the three balances
-  (DR-042); a line in the Student Statement; audit-trail participation.
-- **Exceptional cases:** teacher already paid → teacher debt (DR-039);
-  entitlement recalculation & rounding rules → UNK-027; teacher-debt
-  calculation and management → UNK-026 (refund-voucher numbering is a deferred
-  design decision, ADR-0017 §2).
+  amount, Program Revenue, teacher entitlement (per the original percentage,
+  rounded per DR-028), and the three balances (DR-042); a teacher debt when the
+  already-paid amount exceeds the final entitlement (DR-065 → WF-12); a line in
+  the Student Statement; audit-trail participation.
+- **Exceptional cases:** teacher already paid beyond final entitlement → a
+  teacher debt arises and is settled via WF-12 (DR-065…DR-070); refund-voucher
+  numbering is a deferred design decision (ADR-0017 §2).
 
 ## WF-08 — Voucher cancellation — *ESTABLISHED*
 
@@ -225,3 +228,29 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   outcomes (credit notes, goods replacement) are not expense returns in V1
   (DR-060, Future Considerations); cash after a cancelled expense is out of
   concept (DR-059).
+
+## WF-12 — Teacher debt settlement — *ESTABLISHED*
+
+- **Trigger:** a teacher owes a debt on a program because a refund of
+  already-paid revenue pushed their final entitlement below what was paid
+  (DR-065, arising from WF-07), and the Owner acts to settle it.
+- **Inputs:** the Teacher × Program debt balance; the settlement method chosen by
+  the Owner — direct repayment by the teacher, deduction from a future
+  entitlement on the **same** program, or a mix (DR-068); the amount settled
+  (up to the remaining balance); date.
+- **Business rules:** DR-065 (a debt exists only when payments exceed final
+  entitlement), DR-066 (per Teacher × Program; never merged/offset across
+  programs), DR-067 (settleable balance — partial/multiple, never negative,
+  closes at zero), DR-068 (two paths, Owner-chosen, never automatic; deduction
+  stays within the same program), DR-069 (no expiry), DR-070 (repayment-only
+  when the program has no future entitlement).
+- **Outputs:** the debt balance decreases by the settled amount; a direct
+  repayment raises the Cash Balance; a deduction reduces a future entitlement on
+  that same program; when the balance reaches zero the debt is closed; an
+  append-only event on the activity timeline (DR-019).
+- **Exceptional cases:** the program has no future entitlement → only direct
+  repayment can clear the debt, which otherwise stays open indefinitely (DR-070);
+  cross-program settlement is never allowed (DR-066); the general teacher-deduction
+  model (fees, penalties, materials) remains out of scope (S4-D8 → UNK-021). The
+  record used to capture a settlement is a deferred design decision, not a domain
+  unknown.

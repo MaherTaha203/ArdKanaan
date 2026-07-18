@@ -47,8 +47,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0018](ADR-0018-session-6-corrections-cancellations.md) | Session 6 Owner Decisions: Corrections & Cancellations | 1A | ACCEPTED | — |
 | [ADR-0019](ADR-0019-session-7-expense-categories.md) | Session 7 Owner Decisions: Expense Categories | 1A | ACCEPTED | — |
 | [ADR-0020](ADR-0020-session-8-expense-returns.md) | Session 8 Owner Decisions: Expense Returns | 1A | ACCEPTED | — |
+| [ADR-0021](ADR-0021-session-9-refund-teacher-entitlement-and-debt.md) | Session 9 Owner Decisions: Refund Effects on Teacher Entitlement & Debt | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0021**.
+Next available ADR number: **ADR-0022**.
 
 ## 4. Maintenance rules
 

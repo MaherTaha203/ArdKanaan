@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 8.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), DOM-001 |
+| Version | 8.1.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -89,9 +89,10 @@ with full change logging (DR-048).
   confirmed reading of F-06); holds one independent balance **per program**
   (Teacher × Program, DR-031); receives owner-initiated teacher payments per
   program, partial or full up to the outstanding balance, never in advance
-  (DR-030, DR-032, DR-033); may owe the center a **teacher debt** when revenue
-  they were already paid for is refunded (DR-039), settled by repayment or
-  deduction from future entitlements.
+  (DR-030, DR-032, DR-033); may owe the center a **teacher debt** — per
+  Teacher × Program — when a refund reverses revenue they were already paid for
+  beyond their final entitlement (DR-039, DR-065, §16), settled by direct
+  repayment or by same-program future-entitlement deduction (DR-068).
 - **Lifecycle:** not yet established — how teachers join or leave, and what happens
   to a departing teacher's balance and programs → UNK-019.
 - **Owns:** the teacher share recorded in each receipt voucher of their programs;
@@ -274,8 +275,9 @@ three rise automatically when a receipt is posted (DR-017).
 - **Relationships:** up by the teacher share the moment each receipt is posted
   (entitlement at posting, DR-015, DR-029); down by owner-issued teacher payment
   vouchers, per program (DR-030, DR-032…DR-034), and by the teacher portion of
-  refunds when the teacher was not yet paid (DR-038; already-paid case →
-  teacher debt, DR-039).
+  refunds when the teacher was not yet paid — floored at zero, never negative
+  (DR-038, DR-062, DR-064); the already-paid case instead raises a teacher debt
+  (DR-039, DR-065, §16).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** derived quantity; its amounts belong to the teachers
   (DR-012).
@@ -405,3 +407,42 @@ returning to the center because of a prior expense.**
   returns 300: an Expense Return of 300 against that expense → real expense 700;
   Cash Balance +300, Center Net Balance +300. Credit notes and goods
   replacement are **not** expense returns in V1 (DR-060).
+
+## 16. Teacher Debt (دين المدرّب) — per Teacher × Program
+
+**Specified by Owner decision (ADR-0021 S9-D4…D9).** Like the Teacher Balance
+(§12), a teacher debt is a **derived per-program quantity**, not a voucher or a
+new entity type. It is described here because it now has a fully defined
+lifecycle.
+
+- **Purpose:** what one teacher must return to the center **for one specific
+  program** because a refund reversed revenue they had already been paid for
+  beyond their final entitlement (DR-065). A teacher debt exists **only** when the
+  total already paid to the teacher for a program exceeds that teacher's final
+  entitlement for the program after all refund recalculations; the excess is the
+  debt.
+- **Responsibility:** answering "how much must teacher X return on program Y?"
+  without manual computation (F-08). It is distinct from the Teacher Balance (§12,
+  what the center owes the teacher) and is **never** modelled as a negative
+  entitlement — unpaid entitlement floors at zero (DR-064).
+- **Relationships:** tracked for each **Teacher × Program** independently and
+  **never merged or offset across programs** (DR-066, DR-031) — an Excel debt is
+  never cleared with ICDL entitlements. Settled by **either** direct repayment by
+  the teacher **or** deduction from the teacher's future entitlements on the
+  **same** program, or a mix of both, always at the Owner's case-by-case choice —
+  never automatically (DR-068). Direct repayment brings cash back to the center
+  (Cash Balance up); a deduction reduces a future entitlement on that program.
+- **Lifecycle:** arises the moment a refund of already-paid revenue pushes final
+  entitlement below what was paid (DR-065); a **settleable balance** that only
+  decreases, in partial and/or multiple steps, never going negative, closing when
+  it reaches **zero** (DR-067). It has **no expiry** — it stays open until
+  actually settled (DR-069). If the program has no future entitlement, only direct
+  repayment can clear it (DR-070). The record used to capture a settlement is a
+  deferred design decision, not a domain unknown.
+- **Owns:** nothing — a derived quantity.
+- **Never owns:** other programs' balances or debts; it is never offset against
+  entitlements on another program (DR-066).
+- **Example:** a teacher paid 700 on Excel; a refund cuts final Excel entitlement
+  to 420 → a 280 Excel debt. The teacher repays 100 directly (balance 180), and
+  the Owner deducts the remaining 180 from the next Excel entitlement → debt
+  closed. An ICDL amount owed to the same teacher is untouched throughout.
