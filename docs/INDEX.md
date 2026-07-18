@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.18.0 |
+| Version | 1.19.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -120,6 +120,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1A-014 | `docs/audits/phase-1a/AUDIT-P1A-SESSION10.md` | Phase 1A Session 10 Decisions Audit Report | FROZEN |
 | ADR-0023 | `docs/decisions/ADR-0023-session-11-business-boundary-completeness.md` | Session 11 Owner Decisions: Business Boundary & Operational Completeness | ACCEPTED |
 | AUD-P1A-015 | `docs/audits/phase-1a/AUDIT-P1A-SESSION11.md` | Phase 1A Session 11 Decisions Audit Report | FROZEN |
+| ADR-0024 | `docs/decisions/ADR-0024-session-12-final-boundary-confirmations.md` | Session 12 Owner Decisions: Final Boundary Confirmations | ACCEPTED |
+| AUD-P1A-016 | `docs/audits/phase-1a/AUDIT-P1A-SESSION12.md` | Phase 1A Session 12 Decisions Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

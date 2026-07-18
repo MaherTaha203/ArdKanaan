@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 8.3.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), DOM-001 |
+| Version | 8.4.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), ADR-0024 (Session 12 final boundary confirmations), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -39,8 +39,11 @@ with full change logging (DR-048).
   vouchers.
 - **Responsibility:** offering programs, collecting payments, honoring teacher
   shares, covering its own expenses.
-- **Relationships:** employs/hosts Teachers (engagement terms → UNK-017); offers
-  Training Programs; receives money from Students/Payers; holds the Center Balance.
+- **Relationships:** employs/hosts Teachers; offers Training Programs; receives
+  money from Students/Payers (a student may carry Guardian contact data, DR-089);
+  holds the Center Balance. The business's people are the Owner, Teachers, and
+  Students (with optional Guardian contact data); the Owner is the sole system user
+  (ADR-0024 S12-D3).
 - **Lifecycle:** permanent — exactly one center, for the life of the business (F-02).
 - **Owns:** its programs' center shares, its balance, its records (vouchers,
   statements).
@@ -53,8 +56,10 @@ with full change logging (DR-048).
 - **Purpose:** the single person who operates the center and its finances (F-02).
 - **Responsibility:** recording receipts and payments, paying teachers, reading
   balances and statements. The owner never calculates splits by hand (F-08).
-- **Relationships:** operates the Training Center; the only human actor in the
-  domain established so far (others → UNK-017).
+- **Relationships:** operates the Training Center; the **sole system user** and the
+  only human actor with system authority (ADR-0024 S12-D3). Other people in the
+  business — Teachers, Students, and a student's Guardian (contact data only) — hold
+  no system role.
 - **Lifecycle:** permanent, singular.
 - **Owns:** the center and all its decisions.
 - **Never owns:** teacher shares (they are owed to teachers).
@@ -135,7 +140,11 @@ link between runs (DR-071).
   to the student (S3-D1; other statement scopes → UNK-013). When someone else
   pays (parent, company, other party), their name is recorded on the voucher as
   the optional **Payer Name** field — the payer is information, never an entity
-  in V1 (DR-021).
+  in V1 (DR-021). A student may also carry **Guardian/Parent** contact data
+  (name, relationship, phone, contact means) stored on the student for
+  administrative communication — used especially for minors (DR-089). The Guardian
+  is standing contact information, **distinct** from the per-voucher Payer Name and
+  independent of any payment; it is never a system user or a financial entity.
 - **Lifecycle:** created at registration, even with no payment yet; each
   registration carries a **Final Registration Price** — the program's base price
   by default (DR-072), which the Owner may override for that registration only
@@ -194,7 +203,10 @@ link between runs (DR-071).
   D4/D6). The system prevents an amount larger than what is due (DR-024).
 - **Lifecycle:** created and Posted immediately on save (DR-043); posting is
   what triggers the ledger effects. Carries its own number from the
-  continuous receipt sequence (DR-026). Once Posted it is immutable (DR-044): a
+  continuous receipt sequence — an official, unique, audit-preserved number in its
+  own series, as required for every financial voucher type; the voucher is the
+  center's internal record, not a government tax invoice, and V1 has no tax
+  dimension (DR-026, DR-090). Once Posted it is immutable (DR-044): a
   financial mistake is fixed by cancellation (a "Cancelled" status that reverses
   all effects, DR-045/DR-047) then recreation (DR-048); it cannot be cancelled
   while a teacher payment or refund depends on it (DR-046). Descriptive fields

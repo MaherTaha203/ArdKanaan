@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.18.0 |
+| Version | 1.19.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -70,11 +70,11 @@ Can be answered any time before the phase that consumes them.
 
 | ID | Missing fact | Why it matters | Blocks |
 |---|---|---|---|
-| UNK-017 | Are there any participants besides the owner, teachers, and students/payers (assistant, accountant, partner)? F-02 fixes a single system user; this asks about the business, not the software. | Completeness of the participant model. | DOM-001 §2 |
+| UNK-017 | **RESOLVED (2026-07-18, ADR-0024 S12-D1…D3):** the only additional participant is the **Guardian/Parent** — student-level administrative contact data (name, relationship, phone, contact means), distinct from the per-voucher Payer Name, and never a system user or financial entity (DR-089). No employees, accountant, secretary, or partner exist; the **Owner remains the sole system user** (F-02). → DR-089. | Completeness of the participant model. | resolved |
 | UNK-018 | **RESOLVED (2026-07-18, ADR-0023 S11-D1…D3):** V1 also earns **exam fees, certificate-issuance fees, and book/material sales** — each charged separately, **entirely center revenue** (no teacher share — DR-081), **always tied to a student** with an optional program link (DR-082), and every receipt names a defined revenue source (DR-080). **Room rental, consulting, and other services are out of scope.** → DR-080, DR-081, DR-082. | Revenue completeness. | resolved |
 | UNK-021 | Are there ever deductions from a teacher's share (fees, penalties, materials costs)? **Intentionally postponed by Owner order (ADR-0015 S4-D8): no deduction model may be invented; this stays open until the Owner explicitly authorizes it.** *Session 5 note (ADR-0016 S5-D4), detailed in Session 9 (ADR-0021 S9-D6 → DR-068): refund-debt settlement by same-program deduction is a separate, Owner-decided mechanism (DR-039, DR-068) — it does not resolve or preempt this general topic.* | Edge of DR-012. | DR-012, DR-039 |
 | UNK-022 | Does existing historical data (past vouchers, current balances) need to be brought into the system at start? *Session 3 signal (ADR-0013 S3-D5): voucher numbering continues from the paper sequences at go-live — continuity matters; whether records themselves are imported is still open.* | Opening balances at go-live. | future phases, DR-026 |
-| UNK-023 | Do receipts/payments carry any tax obligations or official receipt requirements? | Legal/format constraints on vouchers. | DOM-002 §7, §8 |
+| UNK-023 | **RESOLVED (2026-07-18, ADR-0024 S12-D4/D5):** V1 has **no tax dimension** — no VAT, tax computation, tax reports, or tax invoices (out of scope); vouchers are the center's **internal** records. The only regulatory requirement is **official, sequential, unique, non-duplicated numbering per financial voucher type**, preserved for audit (generalizes DR-026). → DR-090. | Legal/format constraints on vouchers. | resolved |
 
 ## 5. Working assumptions (ASM)
 
@@ -87,7 +87,7 @@ the affected documents are amended instead.
 | ASM-001 | All amounts are in a single currency and positive. | UNK-010 | **CONFIRMED (2026-07-17, ADR-0013 S3-D4):** single currency (Shekel), whole positive numbers → DR-025 |
 | ASM-002 | The 1000 → 700/300 example generalizes to proportional (percentage) policies, e.g. 70/30. | UNK-002 | **REJECTED (2026-07-16, ADR-0008 D1):** percentage is only the *most common* of five compensation models |
 | ASM-003 | Paying a teacher reduces that teacher's balance by the paid amount. | UNK-008 | **CONFIRMED (2026-07-17, ADR-0015 S4-D11):** per Teacher × Program — Outstanding = Total Entitlement − Total Payments (DR-034) |
-| ASM-004 | "Nearest whole shekel" (DR-028) rounds an exact half (.5) up, toward the teacher — standard commercial rounding. Only reachable by percentages that can produce halves (e.g. 50% of an odd amount); impossible for 70/30. | DR-028 | AWAITING CONFIRMATION |
+| ASM-004 | "Nearest whole shekel" (DR-028) rounds an exact half (.5) up, toward the teacher — standard commercial rounding. Only reachable by percentages that can produce halves (e.g. 50% of an odd amount); impossible for 70/30. | DR-028 | **CONFIRMED (2026-07-18, ADR-0024 S12-D6):** round-half-up — teacher's exact-half share rounds up, difference to center, shares sum to the voucher; now stated in DR-028 |
 
 ## 6. Interview workshop plan (Phase 1A.1)
 
@@ -110,6 +110,7 @@ corrections, the meaning of "operations").
 | 9 | Refund Effects on Teacher Entitlement & Debt — conducted per Owner order (2026-07-18) | UNK-027, UNK-026 | **COMPLETE** — recorded as ADR-0021 (S9-D1…D10); UNK-026 & UNK-027 CLOSED (the last two HIGH unknowns); DR-062…DR-070 added; Teacher Debt concept (DOM-002 §16) + WF-12 added |
 | 10 | Program Definition, Pricing & Distribution Policy — conducted per Owner order (2026-07-18) | UNK-005, UNK-016, UNK-003 | **COMPLETE** — recorded as ADR-0022 (S10-D1…D14); UNK-003, UNK-005 & UNK-016 CLOSED; DR-071…DR-079 added; Program refined as a single run (entity name kept); WF-13 added; capacity & cohorts → Future Considerations |
 | 11 | Business Boundary & Operational Completeness — conducted per Owner order (2026-07-18) | UNK-018, UNK-019, UNK-006 | **COMPLETE** — recorded as ADR-0023 (S11-D1…D9); UNK-006, UNK-018 & UNK-019 CLOSED; DR-080…DR-088 added; non-program center-only revenue, teacher/registration lifecycle + shared status pattern; WF-14/15/16 added; UNK-029 & UNK-030 opened |
+| 12 | Final Boundary Confirmations — conducted per Owner order (2026-07-18) | UNK-017, UNK-023, ASM-004 | **COMPLETE** — recorded as ADR-0024 (S12-D1…D6); UNK-017 & UNK-023 CLOSED; ASM-004 CONFIRMED (last pending assumption); DR-089 (Guardian) & DR-090 (numbering) added; DR-028 amended (round-half-up) |
 | 6 (Corrections) | Corrections & Cancellations — conducted per Owner order (2026-07-17) | UNK-007 | **COMPLETE** — recorded as ADR-0018 (S6-D1…D7); UNK-007 CLOSED; Draft stage recorded as a Future Consideration |
 | 7 | Account Statements | UNK-013 | pending (depends on Sessions 2–5) |
 | 8 | Training Programs | UNK-016, UNK-005, UNK-003 | **COMPLETE** — conducted as Session 10 (ADR-0022); all three CLOSED |
@@ -127,21 +128,23 @@ unknown OPEN (AI-11) — nothing is closed by inference.
    GOV-006 §6).
 2. Every resolution triggers the Consistency Rule (GOV-001 §6) across DOM-001…004
    and any later documents.
-3. Next available IDs: **UNK-031**, **ASM-005**.
-4. Current tally (2026-07-18, post-Session 11): **7 open** (**0 HIGH**; 3 MEDIUM:
-   UNK-013, UNK-029, UNK-030; 4 LOW: UNK-017, UNK-021, UNK-022, UNK-023),
-   23 resolved (UNK-001, UNK-002, UNK-003, UNK-004, UNK-005, UNK-006, UNK-007,
-   UNK-008, UNK-009, UNK-010, UNK-011, UNK-012, UNK-014, UNK-015, UNK-016,
-   UNK-018, UNK-019, UNK-020, UNK-025, UNK-026, UNK-027, UNK-028 answered;
-   UNK-024 mooted by scope), 1 assumption rejected (ASM-002), 2 confirmed
-   (ASM-001, ASM-003), 1 awaiting confirmation (ASM-004). **No HIGH unknown
-   remains open** — the ADR-0007 §7 blocker on Phase 1 freeze is cleared (the 7
-   remaining are MEDIUM and LOW). Deferred design/future items not tracked as
-   unknowns: refund-voucher numbering (ADR-0017 §2), teacher-debt settlement
-   record (ADR-0021), non-program-revenue document structure (ADR-0023 — an
-   architectural modeling decision), Draft/posting lifecycle (ADR-0018 S6-D6),
-   fixed-asset distinction & program/proportional expense allocation (ADR-0019),
-   non-cash expense returns — credit notes / supplier balances / goods
-   replacement (ADR-0020), program capacity & internal cohorts &
-   multiple-teachers-per-program (ADR-0022), non-educational revenue services —
-   room rental / consulting / other (ADR-0023).
+3. Next available IDs: **UNK-031**, **ASM-005**. (Unchanged — Session 12 opened no
+   new unknowns and confirmed ASM-004 rather than adding an assumption.)
+4. Current tally (2026-07-18, post-Session 12): **5 open** (**0 HIGH**; 3 MEDIUM:
+   UNK-013, UNK-029, UNK-030; 2 LOW: UNK-021, UNK-022), 25 resolved (UNK-001,
+   UNK-002, UNK-003, UNK-004, UNK-005, UNK-006, UNK-007, UNK-008, UNK-009,
+   UNK-010, UNK-011, UNK-012, UNK-014, UNK-015, UNK-016, UNK-017, UNK-018,
+   UNK-019, UNK-020, UNK-023, UNK-025, UNK-026, UNK-027, UNK-028 answered;
+   UNK-024 mooted by scope), 1 assumption rejected (ASM-002), **3 confirmed
+   (ASM-001, ASM-003, ASM-004)**, **0 awaiting confirmation**. **No HIGH unknown
+   remains open**, and no assumption is pending — the 5 remaining unknowns are
+   MEDIUM/LOW and are formally deferred at Phase 1A close (see AUD-P1A-FINAL).
+   Deferred design/future items not tracked as unknowns: refund-voucher numbering
+   (ADR-0017 §2), teacher-debt settlement record (ADR-0021), non-program-revenue
+   document structure (ADR-0023 — an architectural modeling decision), per-type
+   voucher numbering scheme (ADR-0024 — design/go-live detail), Draft/posting
+   lifecycle (ADR-0018 S6-D6), fixed-asset distinction & program/proportional
+   expense allocation (ADR-0019), non-cash expense returns (ADR-0020), program
+   capacity & internal cohorts & multiple-teachers-per-program (ADR-0022),
+   non-educational revenue services (ADR-0023), tax / VAT / tax invoices
+   (ADR-0024).

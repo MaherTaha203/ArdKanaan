@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.8.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), DOM-001, DOM-002, DOM-003 |
+| Version | 3.9.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), ADR-0024 (Session 12 final boundary confirmations), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -338,14 +338,20 @@ no duplicates.
   share is rounded to the **nearest whole shekel**; any difference created by
   rounding automatically belongs to the center; the two shares MUST always sum
   to exactly the full voucher amount — rounding may never create an independent
-  accounting difference. Examples: 1001 × 70% = 700.7 → teacher 701 / center
-  300; teacher at 30%: 1001 × 30% = 300.3 → teacher 300 / center 701.
+  accounting difference. On an **exact half shekel (.5)** the teacher share
+  rounds **up** to the whole shekel (**round-half-up**, standard commercial
+  rounding), the difference again going to the center. Examples: 1001 × 70% =
+  700.7 → teacher 701 / center 300; teacher at 30%: 1001 × 30% = 300.3 → teacher
+  300 / center 701; 1001 @ 50/50 = 500.5 each → teacher 501 / center 500.
 - **Reason:** Whole-shekel operation (DR-025) requires one deterministic integer
-  rule, and the voucher amount must be conserved exactly. (→ ADR-0014 D1)
+  rule, and the voucher amount must be conserved exactly; the exact-half
+  direction is fixed to round-half-up so the rule is fully predictable.
+  (→ ADR-0014 D1; ADR-0024 S12-D6 confirming ASM-004)
 - **Dependencies:** DR-005, DR-013, DR-014, DR-025.
 - **Possible exceptions:** none permitted.
-- **Unknown status:** exact-half (.5) direction recorded as ASM-004, awaiting
-  confirmation — only reachable by percentages that can produce halves.
+- **Unknown status:** ~~exact-half (.5) direction~~ RESOLVED by S12-D6 —
+  round-half-up (ASM-004 CONFIRMED). Only ever reachable by percentages that can
+  produce halves (e.g. 50% of an odd amount); never for 70/30.
 
 ### DR-029 — Entitlement arises from posted receipts only, unconditionally
 - **Description:** Teacher entitlement is created immediately when a Receipt
@@ -1133,6 +1139,39 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Possible exceptions:** none — the pattern is uniform.
 - **Unknown status:** —
 
+### DR-089 — Guardian/Parent is student-level contact data, not a user or financial entity
+- **Description:** A student may carry **Guardian/Parent** contact information —
+  name, relationship, phone, and other contact means — stored on the **student**
+  for administrative communication (many students are minors). The Guardian is
+  **not** a system user, **not** a financial entity, and holds **no** permissions
+  or role in any operation. It is **distinct** from the per-voucher **Payer Name**
+  (DR-021): the Guardian is standing contact information on the student, unchanged
+  by payments, whereas the Payer Name records who paid on one specific receipt and
+  may vary from receipt to receipt.
+- **Reason:** The center often communicates with a minor's family, not the student;
+  this is contact data, never a money relationship. (→ ADR-0024 S12-D1, S12-D2)
+- **Dependencies:** DR-021.
+- **Possible exceptions:** the sole system user remains the Owner (F-02); no other
+  participant exists in V1 (S12-D3).
+- **Unknown status:** —
+
+### DR-090 — Official unique sequential numbering per financial voucher type
+- **Description:** Every **financial voucher type** carries an **official,
+  sequential, unique, non-duplicated** number in its **own independent series**,
+  preserved for audit. No number is ever reused or duplicated within a type. This
+  is the general regulatory-numbering requirement; DR-026 is its receipt/payment
+  instance, and it extends to every other financial voucher type (Refund Voucher,
+  Expense Return, and non-program-revenue receipts). The vouchers are the center's
+  **internal** records — **not** government tax invoices (V1 has no tax dimension).
+- **Reason:** The only regulatory obligation in V1 is a trustworthy, auditable
+  numbering of every financial document; taxes and tax invoices are out of scope.
+  (→ ADR-0024 S12-D4, S12-D5; generalizes DR-026)
+- **Dependencies:** DR-026, DR-008, DR-004.
+- **Possible exceptions:** the exact per-type numbering scheme and go-live starting
+  numbers are a design/go-live detail (as with Refund Voucher numbering,
+  ADR-0017 §2), not a domain rule.
+- **Unknown status:** —
+
 ---
 
 ## Future considerations — NOT part of Version 1
@@ -1186,6 +1225,13 @@ Additionally postponed (Session 11, ADR-0023):
   revenue (program fees, exam fees, certificate fees, book/material sales — DR-080…
   DR-082). **Room rental, consulting, and other services** are out of scope and are
   a possible later-version addition. Nothing in V1 may depend on them.
+
+Additionally postponed (Session 12, ADR-0024):
+
+- **Tax / VAT / tax invoices / tax reporting.** V1 has **no** tax dimension: no VAT,
+  no tax computation, no tax reports, and no government tax invoices. The system's
+  vouchers are the center's internal records (DR-090). Any future tax obligation is
+  a later-version concern; nothing in V1 may depend on it.
 
 Additionally postponed (Session 10, ADR-0022):
 

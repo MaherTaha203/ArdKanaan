@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.12.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness) |
+| Version | 1.13.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), ADR-0024 (Session 12 final boundary confirmations) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -40,9 +40,13 @@ program) — both are future enhancements (DOM-004 §Future considerations).
 | **The Owner** | The single person who runs the center, handles its money, and is the sole user of the future system (F-02, M-01). |
 | **Teachers** | Deliver training programs. Each program belongs to exactly one teacher (F-06). Teachers are entitled to a share of the revenue their programs generate (F-07). |
 | **Students** | Receive training and pay for it. The Student is the core person entity: registration precedes payment, receipts and statements belong to the student, and when someone else pays (parent, company) their name is recorded on the voucher as optional Payer Name information — never a separate entity in V1 (ADR-0013 S3-D1/S3-D2, DR-021, DR-022). |
+| **Guardian/Parent** | Contact information attached to a student (name, relationship, phone, contact means) for administrative communication — used especially for minors. Not a system user, not a financial entity, no permissions; distinct from the per-voucher Payer Name (ADR-0024 S12-D1/S12-D2, DR-089). |
 
-No other participants (employees, partners, external accountants) have been
-mentioned → UNK-017.
+Beyond these there are no other participants — no employees, accountant,
+secretary, or partner — and the **Owner is the sole system user** (F-02; ADR-0024
+S12-D3). The center has **no tax dimension** in V1 (no VAT, tax computation, or tax
+invoices); its vouchers are internal records, each officially and uniquely numbered
+per type (DR-090).
 
 ## 3. How money flows
 

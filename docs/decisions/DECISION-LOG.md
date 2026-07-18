@@ -50,8 +50,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0021](ADR-0021-session-9-refund-teacher-entitlement-and-debt.md) | Session 9 Owner Decisions: Refund Effects on Teacher Entitlement & Debt | 1A | ACCEPTED | — |
 | [ADR-0022](ADR-0022-session-10-program-definition-pricing-policy.md) | Session 10 Owner Decisions: Program Definition, Pricing & Distribution Policy | 1A | ACCEPTED | — |
 | [ADR-0023](ADR-0023-session-11-business-boundary-completeness.md) | Session 11 Owner Decisions: Business Boundary & Operational Completeness | 1A | ACCEPTED | — |
+| [ADR-0024](ADR-0024-session-12-final-boundary-confirmations.md) | Session 12 Owner Decisions: Final Boundary Confirmations | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0024**.
+Next available ADR number: **ADR-0025**.
 
 ## 4. Maintenance rules
 
