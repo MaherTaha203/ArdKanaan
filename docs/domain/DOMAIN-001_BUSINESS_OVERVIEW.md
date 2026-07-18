@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.7.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations) |
+| Version | 1.8.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -72,9 +72,9 @@ Students/Payers ──payment for a program──►  ┌───────�
    (F-05). Paying a teacher IS a payment voucher: owner-initiated on the agreed
    date (never automatic), one program per voucher, partial or full up to that
    program's outstanding balance, never in advance — each Teacher × Program is
-   an independent balance settled separately (DR-030…DR-034, ADR-0015). What
-   other categories of outgoing money exist (center expenses) → UNK-009,
-   UNK-015.
+   an independent balance settled separately (DR-030…DR-034, ADR-0015). Center
+   expenses are also payment vouchers — general, center-borne, each under one
+   expense category (DR-049…DR-054).
 4. **Money back (refunds):** a student refund is a **reversal of previously
    recognized revenue** — never an expense — recorded by the dedicated **Refund
    Voucher (سند استرجاع)**: it reduces Program Revenue and the student's paid
@@ -105,9 +105,15 @@ registration fees) is not stated → UNK-018.
 ## 5. What creates expenses
 
 Teacher payments are established (ADR-0015): owner-initiated payment vouchers,
-one program each, settling Teacher × Program balances. Center operating
-expenses remain in outline — their categories, approval, and timing are not
-stated → UNK-009, UNK-015.
+one program each, settling Teacher × Program balances. **Center expenses** are
+established (ADR-0019): money the center pays to operate itself (rent, utilities,
+stationery, maintenance, furniture/equipment, government fees, subscriptions —
+not teacher payments or refunds, which are settlements/reversals). Each expense
+is a center-borne Payment Voucher under exactly one expandable **Expense
+Category**, recorded when the cash actually leaves, reducing Cash Balance and
+Center Net Balance and never touching any teacher (DR-049…DR-054). Whether money
+that returns to the center after an expense (returns/supplier refunds) has its
+own treatment is open → UNK-028.
 
 ## 6. Why the system exists
 

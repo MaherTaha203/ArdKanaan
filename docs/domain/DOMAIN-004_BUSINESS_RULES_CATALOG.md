@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.3.1 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001, DOM-002, DOM-003 |
+| Version | 3.4.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -93,8 +93,9 @@ no duplicates.
 - **Dependencies:** DR-001.
 - **Possible exceptions:** unknown.
 - **Unknown status:** teacher payouts CONFIRMED as Payment Vouchers, one program
-  each (→ DR-030, DR-032, ADR-0015); center-expense categories and their
-  linkage → UNK-009, UNK-015.
+  each (→ DR-030, DR-032, ADR-0015); ~~center-expense categories and linkage~~
+  RESOLVED by S7-D1…D6 (→ DR-049…054): a center expense is a Payment Voucher,
+  general and center-borne, carrying one expense category.
 
 ### DR-009 — Teacher balances are derived quantities, per Teacher × Program
 - **Description:** Teacher balances are never managed globally: every
@@ -372,12 +373,13 @@ no duplicates.
 - **Description:** Every Payment Voucher issued to a teacher belongs to exactly
   one Program; a single Payment Voucher must never cover multiple programs.
 - **Reason:** Program isolation (DR-031) requires atomic per-program payments,
-  mirroring DR-023 on the receipt side. (→ ADR-0015 S4-D5; whether
-  center-expense payment vouchers also attach to a program is NOT decided —
-  UNK-009)
+  mirroring DR-023 on the receipt side. (→ ADR-0015 S4-D5) This rule scopes
+  **teacher** payment vouchers only; center-expense payment vouchers are general
+  and carry no program (DR-052).
 - **Dependencies:** DR-008, DR-031.
 - **Possible exceptions:** none in V1.
-- **Unknown status:** expense-voucher linkage → UNK-009, UNK-015.
+- **Unknown status:** — (center-expense linkage RESOLVED by S7-D4 → DR-052:
+  expenses stand alone, no program).
 
 ### DR-033 — Partial payments up to outstanding; advances forbidden
 - **Description:** A teacher may receive any amount up to the outstanding
@@ -585,6 +587,82 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Possible exceptions:** none beyond the financial/descriptive split itself.
 - **Unknown status:** —
 
+### DR-049 — What is (and is not) an expense
+- **Description:** An expense is money the center pays for a good, service, or
+  obligation **to operate the center itself**, that does **not** settle a
+  pre-existing financial right of another party. Settlements of pre-existing
+  rights are NOT expenses: teacher payments settle teacher entitlement (DR-030)
+  and student refunds reverse recognized revenue (DR-036) — neither is an
+  expense.
+- **Reason:** Operating costs must be separated from settlements and reversals
+  so each balance means what it should. (→ ADR-0019 S7-D1)
+- **Dependencies:** DR-008, DR-030, DR-036.
+- **Possible exceptions:** none stated.
+- **Unknown status:** money returning to the center after an expense (returns,
+  supplier refunds, credit notes) → UNK-028.
+
+### DR-050 — Expenses are recorded uniformly, regardless of what is bought
+- **Description:** Every expense is recorded the same way — by category and
+  amount — whether it buys a consumable (electricity, stationery) or a durable
+  item (furniture, a device). The nature of the purchased item does not change
+  how the expense is recorded.
+- **Reason:** The center records what it spent, not what it owns. (→ ADR-0019
+  S7-D2)
+- **Dependencies:** DR-049, DR-051.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+  *(Version-scope note, not part of the business rule: V1 does not distinguish
+  Fixed Assets from ordinary expenses; a fixed-asset/capitalization distinction
+  is a Future Consideration and may be introduced in a later version — see
+  §Future considerations. This does not permanently classify durable purchases
+  as expenses for all future versions.)*
+
+### DR-051 — Expenses are classified by a single category from an expandable list
+- **Description:** Every expense is assigned **exactly one** category, chosen
+  from a named list of expense categories that the owner can extend by adding
+  new categories when needed. Categories exist so the owner can see per-category
+  spending totals alongside the detail of each expense.
+- **Reason:** The owner wants to see what was spent — by category and in detail.
+  (→ ADR-0019 S7-D3)
+- **Dependencies:** DR-049.
+- **Possible exceptions:** an expense never belongs to more than one category.
+- **Unknown status:** —
+
+### DR-052 — In V1 every expense is center-borne
+- **Description:** In Version 1, every expense is borne by the center: recording
+  it reduces the **Cash Balance** (money out) and the **Center Net Balance** (the
+  center bears the cost from its own earnings), and never touches any teacher's
+  entitlement.
+- **Reason:** Expenses are the center's operating costs, not the teachers'.
+  (→ ADR-0019 S7-D4; consistent with S4-D8 / UNK-021 — no teacher deductions in
+  V1)
+- **Dependencies:** DR-016, DR-049.
+- **Possible exceptions:** allocating an expense to a program (and thereby to its
+  teacher), or splitting it proportionally, is postponed to a later version
+  (→ §Future considerations) — it would deduct from teachers (UNK-021).
+- **Unknown status:** —
+
+### DR-053 — An expense is recorded only when cash has left the center
+- **Description:** An expense is recorded at the moment the cash actually leaves
+  the center, always paid from the center's own money. Version 1 has no
+  unpaid/accrued expense (no owed-but-unpaid bill) and no owner-personal-money
+  payment path.
+- **Reason:** The center records money it has actually spent from its own box.
+  (→ ADR-0019 S7-D5)
+- **Dependencies:** DR-008, DR-052.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-054 — Expenses require no approval step
+- **Description:** The owner records an expense directly; V1 has no approval or
+  review step before an expense is recorded.
+- **Reason:** Single owner-operator (F-02); an approval step would serve no one.
+  (→ ADR-0019 S7-D6; M-08)
+- **Dependencies:** DR-052.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
 ---
 
 ## Future considerations — NOT part of Version 1
@@ -610,3 +688,16 @@ Additionally postponed (Session 6, ADR-0018 S6-D6):
   stage — saving a financial document posts it immediately (DR-043). A Draft
   stage is a possible future development, not an active V1 behavior; nothing in
   V1 may depend on it.
+
+Additionally postponed (Session 7, ADR-0019):
+
+- **Fixed-asset / capitalization distinction.** V1 records durable purchases
+  (furniture, equipment) as ordinary expenses (DR-050); distinguishing Fixed
+  Assets from expenses is a possible later-version concept. Nothing in V1 may
+  depend on it, and this does not permanently classify durable purchases as
+  expenses for future versions.
+- **Program-account / proportional expense allocation.** V1 expenses are
+  center-borne only (DR-052). Charging an expense to a program (and thereby its
+  teacher), or splitting it proportionally between center and teacher, is
+  postponed — it would deduct from teachers and belongs with the postponed
+  teacher-deduction model (UNK-021).

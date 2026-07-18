@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.8.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001, DOM-002 |
+| Version | 1.9.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -108,14 +108,26 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   rejected (DR-033); deductions are intentionally postponed — no behavior
   exists (S4-D8 → UNK-021).
 
-## WF-06 — Center expense is paid — *UNKNOWN*
+## WF-06 — Center expense is paid — *ESTABLISHED*
 
-- **Trigger:** the center pays money for its own needs.
-- **Inputs / Business rules / Outputs:** expense categories, whether any expense
-  relates to a program or teacher, approval and recording specifics → UNK-009,
-  UNK-015. Established only: outgoing money is recorded as a payment voucher
-  (DR-008).
-- **Exceptional cases:** unknown (UNK-009).
+- **Trigger:** the center pays money from its own cash for an operating need —
+  rent, utilities, stationery, cleaning, maintenance, furniture/equipment,
+  government fees, subscriptions (DR-049); recorded only when the cash has
+  actually left (DR-053). Teacher payments and refunds are NOT expenses (DR-049).
+- **Inputs:** the amount; exactly one **Expense Category** from the expandable
+  list (DR-051); date. Recorded directly by the owner — no approval (DR-054).
+- **Business rules:** DR-049 (expense boundary), DR-050 (recorded uniformly,
+  no fixed-asset distinction in V1), DR-051 (one category, expandable list),
+  DR-052 (center-borne — reduces Cash Balance and Center Net Balance, never a
+  teacher), DR-053 (recorded when cash leaves; from center money only), DR-054
+  (no approval), DR-008 (recorded as a Payment Voucher).
+- **Outputs:** a posted center-expense Payment Voucher; Cash Balance and Center
+  Net Balance both decrease; per-category totals and expense detail available
+  to the owner (DR-051); an append-only event on the activity timeline (DR-019).
+- **Exceptional cases:** money returning to the center after an expense (returns,
+  supplier refunds, credit notes) → UNK-028; charging an expense to a program/
+  teacher or splitting it proportionally is postponed (Future Considerations,
+  UNK-021).
 
 ## WF-07 — Student refund — *ESTABLISHED (mechanics), PARTIAL (conditions)*
 

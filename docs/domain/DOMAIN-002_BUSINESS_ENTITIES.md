@@ -6,15 +6,15 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 6.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), DOM-001 |
+| Version | 7.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
 
 The business entities below are those fixed by F-04 and F-05, plus the Training
-Center and the Owner themselves, plus the **Refund Voucher** added by Owner
-decision (ADR-0016 S5-D6). One exception: §9 "Operations" is, by the owner's
+Center and the Owner themselves, plus the **Refund Voucher** (ADR-0016 S5-D6)
+and the **Expense Category** (ADR-0019 S7-D3) added by Owner decision. One exception: §9 "Operations" is, by the owner's
 definitive ruling, **not an entity** but a system activity view (ADR-0010) — it
 stays in this catalog only so the founding term is defined in one place. Descriptions use **business terminology
 only** — no software terms. Where the business meaning of an aspect is not yet
@@ -177,19 +177,27 @@ with full change logging (DR-048).
 - **Purpose:** the permanent record of money paid out (F-05).
 - **Responsibility:** documenting outgoing money — permanently: every payment
   voucher remains recorded forever for auditing (DR-034).
-- **Relationships:** teacher payments ARE payment vouchers, issued only by the
-  Owner's decision, each belonging to exactly one Program (DR-030, DR-032,
-  ADR-0015). Whether center-expense payment vouchers also attach to a program,
-  and what expense categories exist → UNK-009, UNK-015.
+- **Two kinds (V1):** (a) **Teacher payment** — issued by the Owner, belonging
+  to exactly one Program, settling teacher entitlement (DR-030, DR-032); (b)
+  **Center expense** — a general, center-borne operating cost carrying exactly
+  one expense category (DR-049…DR-054), not attached to any program or teacher.
+- **Relationships:** a teacher payment relates to one Teacher × Program; a
+  center expense relates to one **Expense Category** (§14) and to no program or
+  teacher (DR-052). Neither is a refund (refunds use the Refund Voucher, §13).
 - **Lifecycle:** created and Posted immediately on save (DR-043); carries its
   own number from the continuous payment sequence, independent of
   the receipt sequence (DR-026). Once Posted it is immutable (DR-044); an error
-  is fixed by cancellation + recreation (DR-045…DR-048). It must be cancelled
-  before the receipt it drew from can be cancelled (DR-046).
-- **Owns:** its sequential number, its amount, its date, its purpose (categories
-  → UNK-009).
+  is fixed by cancellation + recreation (DR-045…DR-048). A teacher-payment
+  voucher must be cancelled before the receipt it drew from can be cancelled
+  (DR-046). An expense is recorded only when cash has actually left the center
+  (DR-053).
+- **Owns:** its sequential number, its amount, its date; for a center expense,
+  its single expense category (DR-051); for a teacher payment, the Program it
+  settles.
 - **Never owns:** revenue splits — splits belong to receipt vouchers only.
-- **Example:** none stated by the owner yet (UNK-009).
+- **Example:** teacher payment — 400 to teacher Ahmad for the Excel program
+  (settles Excel outstanding). Center expense — 300 rent, category "Rent"
+  (reduces Cash Balance and Center Net Balance; no teacher affected).
 
 ## 9. Operations — System Activity View (سجل النشاط / العمليات)
 
@@ -248,7 +256,8 @@ three rise automatically when a receipt is posted (DR-017).
 - **Purpose:** all cash currently held by the center.
 - **Responsibility:** answering "how much money is physically here?".
 - **Relationships:** up by the full amount of every posted receipt; down when any
-  money is paid out (DR-008) and when a refund is issued (DR-042).
+  money is paid out (DR-008) — teacher payments (DR-030), center expenses
+  (DR-052/DR-053), and refunds (DR-042).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** nothing — a derived quantity; the portion matching
   Teacher Payables is held, not owned (DR-012).
@@ -276,9 +285,9 @@ three rise automatically when a receipt is posted (DR-017).
 - **Purpose:** the center's own earned share.
 - **Responsibility:** answering "how much has the center itself earned?".
 - **Relationships:** up by the center share of every posted receipt (DR-017);
-  down by the center's portion of every refund (revenue reversal, DR-042);
-  relation to center expenses (does it decrease with expenses?) → UNK-009,
-  UNK-015.
+  down by the center's portion of every refund (revenue reversal, DR-042); and
+  down by **every center expense** — the center bears all expenses in V1
+  (DR-052).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** derived quantity; never includes teacher shares.
 - **Example:** after the 1000 receipt at 70/30: Center Net Balance = 300 (owner's
@@ -341,3 +350,25 @@ document that extends the founding entity set (F-05).**
   teacher's entitlement reflects the net revenue (DR-038) — and if the teacher
   had already been paid for that portion, the teacher share of the 400 becomes
   a debt (DR-039).
+
+## 14. Expense Category (بند المصروف)
+
+**Added by Owner decision (ADR-0019 S7-D3) — a supporting classification for
+center expenses.**
+
+- **Purpose:** naming what a center expense was for (rent, utilities,
+  stationery, cleaning, maintenance, government fees, subscriptions, …) so the
+  owner can see per-category spending totals plus each expense's detail
+  (DR-051).
+- **Responsibility:** classifying every center expense; each expense carries
+  exactly one category (DR-051).
+- **Relationships:** an owner-maintained **expandable list** — the owner adds
+  new categories when needed (DR-051). Categories apply only to center-expense
+  Payment Vouchers (§8), never to receipts, refunds, or teacher payments.
+- **Lifecycle:** created by the owner as needed; endures for classifying future
+  expenses.
+- **Owns:** its name.
+- **Never owns:** money, balances, or vouchers — it only classifies expenses.
+- **Example:** "Rent", "Electricity", "Maintenance". Buying a desk is recorded
+  as an ordinary expense under (say) "Furniture" — V1 draws no fixed-asset
+  distinction (DR-050).

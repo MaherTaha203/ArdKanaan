@@ -45,8 +45,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0016](ADR-0016-session-5-student-refunds.md) | Session 5 Owner Decisions: Student Refunds | 1A | ACCEPTED | — |
 | [ADR-0017](ADR-0017-unknown-register-restructure.md) | Unknown Register Restructure: Split of UNK-026 | 1A | ACCEPTED | — |
 | [ADR-0018](ADR-0018-session-6-corrections-cancellations.md) | Session 6 Owner Decisions: Corrections & Cancellations | 1A | ACCEPTED | — |
+| [ADR-0019](ADR-0019-session-7-expense-categories.md) | Session 7 Owner Decisions: Expense Categories | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0019**.
+Next available ADR number: **ADR-0020**.
 
 ## 4. Maintenance rules
 
