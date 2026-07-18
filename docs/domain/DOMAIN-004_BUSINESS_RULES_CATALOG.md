@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.7.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), DOM-001, DOM-002, DOM-003 |
+| Version | 3.8.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -114,7 +114,9 @@ no duplicates.
 - **Possible exceptions:** none stated.
 - **Unknown status:** ~~accrual timing~~ RESOLVED by D4 (→ DR-015); ~~negative
   balances/advances~~ RESOLVED by S4-D7 (→ DR-033: advances forbidden);
-  departing teachers → UNK-019.
+  ~~departing teachers~~ RESOLVED by S11-D4/D5 (→ DR-083: Active/Inactive-Left
+  status blocks only new assignment; DR-084: all balance operations remain
+  available regardless of status).
 
 ### DR-010 — Center balances are derived quantities
 - **Description:** The center-side balances (Cash Balance, Center Net Balance,
@@ -264,9 +266,11 @@ no duplicates.
   Order: Registration → Payment.
 - **Reason:** This is how the center actually works. (→ ADR-0013 S3-D2)
 - **Dependencies:** DR-021, DR-002.
-- **Possible exceptions:** withdrawal after payment is a refund question →
-  UNK-006.
-- **Unknown status:** —
+- **Possible exceptions:** withdrawal after payment is a refund (DR-036…DR-042);
+  a refund never changes registration status automatically (DR-085). Ending or
+  reactivating a registration is a separate Owner action (DR-086, DR-087).
+- **Unknown status:** ~~refund/registration relationship~~ RESOLVED by S11-D6…D8
+  (→ DR-085, DR-086, DR-087).
 
 ### DR-023 — One receipt voucher = one student + one program + one payment
 - **Description:** Program fees may be paid in installments; every payment gets
@@ -1008,6 +1012,127 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Possible exceptions:** none.
 - **Unknown status:** —
 
+### DR-080 — Every receipt is tied to a defined revenue source
+- **Description:** Every amount the center receives is recorded against a **clear,
+  defined revenue source**. V1's revenue sources are: **program fees**, **exam
+  fees**, **certificate-issuance fees**, and **book/material sales**. No generic or
+  unattributed receipt exists — each carries the revenue source it represents.
+- **Reason:** The Owner must always know what each incoming amount was for; a
+  receipt without a stated source is not allowed. (→ ADR-0023 S11-D1)
+- **Dependencies:** DR-004, DR-008.
+- **Possible exceptions:** none — every receipt names its source.
+- **Unknown status:** whether non-program revenues are refundable → UNK-029; their
+  amount-due/overpayment handling → UNK-030. (The record/document structure that
+  holds the revenue source is an architectural decision, not a domain unknown.)
+
+### DR-081 — Non-program revenue is entirely center revenue
+- **Description:** **Exam fees, certificate-issuance fees, and book/material sales**
+  are **entirely the center's revenue**. They carry **no teacher share, no
+  entitlement, no teacher balance effect, and no teacher debt effect**. Revenue
+  distribution (DR-013) applies **exclusively to program fees**. Recording one of
+  these increases the **Cash Balance** and the **Center Net Balance** only; it
+  never touches any teacher.
+- **Reason:** These are services/products the center provides independently of
+  delivering a training program, so no teacher earned a share of them. (→ ADR-0023
+  S11-D2; consistent with DR-012, DR-016)
+- **Dependencies:** DR-013, DR-016, DR-080.
+- **Possible exceptions:** none — program fees remain the only distributed revenue.
+- **Unknown status:** refundability → UNK-029; amount/overpayment → UNK-030.
+
+### DR-082 — All educational revenue is tied to a student; program link optional
+- **Description:** Every educational revenue in V1 — program fees, exam fees,
+  certificate fees, and book/material sales — is **always tied to a specific
+  student**. A link to a **program is optional**, present when the revenue relates
+  to a particular program and absent otherwise. **No** general, non-student
+  educational revenue is recorded in V1 (a sale to someone not in the system is out
+  of scope).
+- **Reason:** These are services delivered to a student, so every one belongs to a
+  student and appears in that student's record. (→ ADR-0023 S11-D3)
+- **Dependencies:** DR-021, DR-080.
+- **Possible exceptions:** none in V1 — no student, no educational-revenue record.
+- **Unknown status:** —
+
+### DR-083 — Teacher status: Active / Inactive-Left, blocking only new assignment
+- **Description:** A teacher carries an Owner-controlled status, **Active** or
+  **Inactive-Left**, set manually by the Owner. Setting a teacher Inactive-Left
+  blocks **assigning new programs** to that teacher and has **no automatic
+  financial or historical effect**: all prior programs, vouchers, entitlements,
+  payments, balances, debts, and history persist unchanged.
+- **Reason:** The end of a teacher's engagement is a recorded fact, but it must not
+  disturb any money already recorded. (→ ADR-0023 S11-D4)
+- **Dependencies:** DR-002, DR-009.
+- **Possible exceptions:** none — the only thing blocked is new program assignment.
+- **Unknown status:** —
+
+### DR-084 — Teacher status never freezes existing-balance operations
+- **Description:** A teacher's status never closes their financial account. Regardless
+  of Active or Inactive-Left, all operations on **existing** balances remain fully
+  available: paying out remaining entitlement (DR-030…DR-034), refunds on past
+  programs with entitlement recalculation (DR-062…DR-064), and creating/settling a
+  teacher debt (DR-065…DR-070), plus full reporting and history — until every
+  obligation is settled.
+- **Reason:** Obligations outlive the engagement; the system must let the Owner
+  settle them after a teacher leaves. (→ ADR-0023 S11-D5)
+- **Dependencies:** DR-083, DR-030, DR-039, DR-065.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-085 — Refund and registration status are independent
+- **Description:** A refund (partial or full) **never** automatically changes a
+  student's registration status. There is no rule linking the two in either
+  direction ("full refund ⇒ cancelled" and "partial ⇒ active" both do NOT exist).
+  Ending or continuing a registration is a **separate administrative decision**.
+- **Reason:** The financial act (a refund) and the academic act (ending a
+  registration) are distinct; coupling them would force outcomes the Owner does not
+  intend. (→ ADR-0023 S11-D6)
+- **Dependencies:** DR-036, DR-086.
+- **Possible exceptions:** none — the two are always decided independently.
+- **Unknown status:** —
+
+### DR-086 — Registration status: Active / Ended-Withdrawn, blocking new receipts
+- **Description:** A registration carries an Owner-controlled status, **Active** or
+  **Ended-Withdrawn**. Setting it Ended-Withdrawn **blocks new receipts** on that
+  registration while all prior records (receipts, refunds, history) remain visible
+  and unchanged, and **refunds tied to earlier receipts remain allowed** (DR-040,
+  DR-085). Ending closes the registration to **future collection only** and changes
+  no prior financial effect.
+- **Reason:** An ended registration no longer represents an open obligation to
+  collect against, but its history and legitimate reversals must be preserved.
+  (→ ADR-0023 S11-D7; mirrors the program Open/Closed effect, DR-078)
+- **Dependencies:** DR-022, DR-023, DR-024.
+- **Possible exceptions:** operations on pre-existing records (refunds) stay
+  allowed; only new receipts are blocked.
+- **Unknown status:** —
+
+### DR-087 — Ended registration is reversible; a new registration is a new relationship
+- **Description:** An Ended-Withdrawn registration may be **reactivated** by the
+  Owner back to Active; the **same** registration resumes, keeping its full history
+  and its **Final Registration Price** (which is not re-set — it remains locked per
+  DR-075). A **new registration** is created only for a genuinely **new
+  relationship** — another program, or a new financial obligation that is not a
+  continuation of the previous one.
+- **Reason:** Returning to the same program continues the same relationship;
+  starting something genuinely new is a new registration. (→ ADR-0023 S11-D8;
+  mirrors the reversible program status, DR-079)
+- **Dependencies:** DR-086, DR-075.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-088 — Shared operational-status lifecycle pattern
+- **Description:** The entities that carry an operational lifecycle — **Program**
+  (Open/Closed, DR-078/DR-079), **Teacher** (Active/Inactive-Left,
+  DR-083/DR-084), and **Registration** (Active/Ended-Withdrawn, DR-086/DR-087) —
+  all follow **one shared pattern**: the status is **Owner-controlled** and
+  **reversible**, it **preserves full history**, it **blocks only new business**,
+  and it **never rewrites prior financial effects**. Any future operational status
+  in V1 follows this same pattern.
+- **Reason:** A single consistent lifecycle model keeps the system predictable and
+  simple (M-08) and prevents any status from silently altering recorded money.
+  (→ ADR-0023 S11-D9)
+- **Dependencies:** DR-078, DR-079, DR-083, DR-084, DR-086, DR-087.
+- **Possible exceptions:** none — the pattern is uniform.
+- **Unknown status:** —
+
 ---
 
 ## Future considerations — NOT part of Version 1
@@ -1054,6 +1179,13 @@ Additionally postponed (Session 8, ADR-0020):
   balances (payables), and **goods replacement** without cash — are outside V1
   and belong to a fuller purchase cycle in a later version. Nothing in V1 may
   depend on them.
+
+Additionally postponed (Session 11, ADR-0023):
+
+- **Non-educational revenue services.** V1 supports only educational, student-linked
+  revenue (program fees, exam fees, certificate fees, book/material sales — DR-080…
+  DR-082). **Room rental, consulting, and other services** are out of scope and are
+  a possible later-version addition. Nothing in V1 may depend on them.
 
 Additionally postponed (Session 10, ADR-0022):
 

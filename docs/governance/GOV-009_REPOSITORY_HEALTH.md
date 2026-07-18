@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-18 — Session 10 (Program Definition, Pricing & Distribution Policy) applied, Phase 1A re-frozen (AUD-P1A-014)
+**Last refresh:** 2026-07-18 — Session 11 (Business Boundary & Operational Completeness) applied, Phase 1A re-frozen (AUD-P1A-015)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 63 / 63 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 65 / 65 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 63 / 63 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 65 / 65 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 79 / 79 DR-atoms cite F/M/owner decisions (ADR-0008…0022) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 88 / 88 DR-atoms cite F/M/owner decisions (ADR-0008…0023) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 32 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 18 audit reports) + 22 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 33 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 19 audit reports) + 23 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 8 (**0 HIGH**, 3 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 20 unknowns resolved; UNK-003, UNK-005 & UNK-016 CLOSED (Session 10) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
+| 13 | Open domain unknowns (DOM-005) | 7 (**0 HIGH**, 3 MEDIUM, 4 LOW); 1 assumption awaiting confirmation (ASM-004); 23 unknowns resolved; UNK-006, UNK-018 & UNK-019 CLOSED and UNK-029, UNK-030 opened (Session 11) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -73,3 +73,4 @@ next phase.
 | 2026-07-17 | Session 8: Expense Returns (ADR-0020) | AUD-P1A-012 | 🟢 except indicator 13 🟡 — 13 open (2 HIGH); UNK-028 CLOSED; WF-11 ESTABLISHED; Expense Return entity added |
 | 2026-07-18 | Session 9: Refund Effects on Teacher Entitlement & Debt (ADR-0021) | AUD-P1A-013 | **All indicators 🟢** — 11 open (**0 HIGH**); UNK-026 & UNK-027 CLOSED (last two HIGH); DR-062…DR-070 added; WF-12 ESTABLISHED; Teacher Debt concept (§16) added; GOV-008 restored from empty (truncated since Session 7 — LES-015) |
 | 2026-07-18 | Session 10: Program Definition, Pricing & Distribution Policy (ADR-0022) | AUD-P1A-014 | **All indicators 🟢** — 8 open (**0 HIGH**); UNK-003, UNK-005 & UNK-016 CLOSED; DR-071…DR-079 added; WF-13 ESTABLISHED; Program refined as single run (entity name kept); capacity & cohorts → Future Considerations; LES-016 |
+| 2026-07-18 | Session 11: Business Boundary & Operational Completeness (ADR-0023) | AUD-P1A-015 | **All indicators 🟢** — 7 open (**0 HIGH**); UNK-006, UNK-018, UNK-019 CLOSED, UNK-029 & UNK-030 opened; DR-080…DR-088 added; center-only non-program revenue; teacher/registration lifecycle + shared status pattern (DR-088, §18); WF-14/15/16 ESTABLISHED; LES-017 |

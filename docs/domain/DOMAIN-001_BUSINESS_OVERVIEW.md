@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.11.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy) |
+| Version | 1.12.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -112,10 +112,18 @@ may be edited in place with a full change log (DR-043…DR-048, ADR-0018).
 
 ## 4. What creates revenue
 
-The only revenue source established so far is **student/payer payments for
-training programs** (F-05, F-06) — recognized net of refunds (DR-036, DR-037).
-Whether the center has any other income (renting rooms, selling materials,
-registration fees) is not stated → UNK-018.
+The main revenue source is **student/payer payments for training programs**
+(F-05, F-06) — recognized net of refunds (DR-036, DR-037) and split with the
+teacher. V1 also records three **center-only** educational revenues charged
+separately from the program: **exam fees, certificate-issuance fees, and
+book/material sales** (DR-080…DR-082). These carry **no teacher share** — revenue
+distribution applies **exclusively to program fees** — and each is **always tied
+to a student** (program link optional), raising only the Cash Balance and Center
+Net Balance. Every receipt names a defined revenue source; there are no generic
+receipts (DR-080). **Room rental, consulting, and other services are out of scope**
+for V1 (DOM-004 §Future considerations). Whether these non-program revenues are
+refundable, and how their amount is bounded, are open questions (→ UNK-029,
+UNK-030).
 
 ## 5. What creates expenses
 

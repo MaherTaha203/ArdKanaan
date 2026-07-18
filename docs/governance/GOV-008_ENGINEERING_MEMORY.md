@@ -352,6 +352,32 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
   is genuinely wrong (not merely less precise), and then do it as its own scoped
   change with a full cross-reference sweep.
 
+### LES-017 — Notice a repeating cross-entity pattern and unify it
+
+- **Observation:** By Session 11 three entities had each acquired an operational
+  status — Program (Open/Closed), Teacher (Active/Inactive-Left), Registration
+  (Active/Ended-Withdrawn) — discovered in separate sessions. They turned out to
+  share the exact same characteristics: Owner-controlled, reversible,
+  history-preserving, blocking only new business, never rewriting financial
+  history. The Owner directed capturing the pattern itself, which became one rule
+  (DR-088) and one entity-catalog section (DOM-002 §18).
+- **Engineering lesson:** When the same shape recurs across several independently
+  discovered decisions, name and state the **pattern** once, in addition to the
+  per-entity rules. A single unifying statement makes the model predictable, guides
+  every future entity of the same kind, and turns three coincidences into one
+  intentional design.
+- **Reason:** Repetition discovered piecemeal is easy to leave implicit; an explicit
+  pattern rule prevents the next entity's status from being designed inconsistently
+  and gives reviewers one place to check conformance.
+- **Impact:** Positive — DR-088 and DOM-002 §18 state the shared lifecycle once; the
+  three per-entity rules (DR-078/079, DR-083/084, DR-086/087) now read as
+  instances of it.
+- **Future guidance:** After each session, scan for shapes that have now appeared
+  two or three times (statuses, reversal rules, "block new / preserve old"
+  behaviors). When one recurs, add a pattern-level rule and a short catalog section,
+  and cite the per-instance rules as examples of it — but only once the pattern is
+  genuinely established, never pre-emptively.
+
 ---
 
 ## 4. Maintenance rules
@@ -360,4 +386,4 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-017**.
+3. Next available lesson number: **LES-018**.

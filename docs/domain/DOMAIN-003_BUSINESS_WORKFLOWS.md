@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.12.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), DOM-001, DOM-002 |
+| Version | 1.13.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -37,8 +37,11 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   carrying its Final Registration Price; payment may follow later — Registration →
   Payment. The price stays editable until the first receipt, then locks (DR-075).
 - **Exceptional cases:** the student withdraws before paying (S3-D2 — allowed);
-  withdrawal after payment is a refund → UNK-006; a Closed program is reopened
-  first if a late registration is needed (DR-079).
+  withdrawal after payment is a refund (DR-036…), which never changes registration
+  status automatically (DR-085); ending/reactivating a registration is a separate
+  action (WF-16); a Closed program is reopened first if a late registration is
+  needed (DR-079). A new registration is created (Active) with its Final
+  Registration Price (DR-086).
 
 ## WF-02 — Student pays / Receipt voucher is created — *ESTABLISHED*
 
@@ -98,8 +101,9 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   = Total Entitlement − Total Payments, per program; no receipt allocation).
 - **Outputs:** current outstanding balance per Teacher × Program.
 - **Exceptional cases:** negative balances cannot exist — advances are forbidden
-  and payments are capped at the outstanding balance (DR-033); departing
-  teacher with open balance → UNK-019.
+  and payments are capped at the outstanding balance (DR-033); a departed teacher
+  (Inactive-Left) keeps every balance and all operations on it remain available
+  until settled (DR-083, DR-084).
 
 ## WF-05 — Teacher payment (paying out the teacher's share) — *ESTABLISHED*
 
@@ -117,7 +121,8 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   unaffected (S4-D6).
 - **Exceptional cases:** an amount exceeding the outstanding balance is
   rejected (DR-033); deductions are intentionally postponed — no behavior
-  exists (S4-D8 → UNK-021).
+  exists (S4-D8 → UNK-021); paying a departed (Inactive-Left) teacher to settle
+  remaining entitlement is allowed — status blocks only new assignment (DR-084).
 
 ## WF-06 — Center expense is paid — *ESTABLISHED*
 
@@ -142,9 +147,10 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 
 ## WF-07 — Student refund — *ESTABLISHED (mechanics), PARTIAL (conditions)*
 
-- **Trigger:** the Owner grants a student a refund (when a student is entitled
-  and how the amount is determined remain the Owner's practice → UNK-006,
-  reduced).
+- **Trigger:** the Owner grants a student a refund (the amount and conditions are
+  the Owner's practice — a free input, S5-D7). A refund affects only the financial
+  side and **never** changes the student's registration status automatically
+  (DR-085).
 - **Inputs:** the Student and the Program (DR-040); the refund amount (bounded
   by the Student × Program net paid amount, DR-036); the refund reason (S5-D7);
   date.
@@ -290,3 +296,56 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   existing one (DR-075, DR-076); no capacity limit and no internal cohorts exist in
   V1 (Future Considerations, DOM-004); dates never trigger automatic closing
   (DR-077).
+
+## WF-14 — Non-program educational revenue received — *ESTABLISHED*
+
+- **Trigger:** the center receives money for an **exam fee**, a **certificate
+  fee**, or a **book/material sale** charged separately from the program (DR-080).
+- **Inputs:** the whole-shekel amount (DR-025); the **revenue source** (exam /
+  certificate / books); the **student** it belongs to (DR-082); optionally the
+  related **program**; payment method (cash or bank transfer, one per voucher,
+  DR-025); date.
+- **Business rules:** DR-080 (every receipt names a defined revenue source),
+  DR-081 (entirely center revenue — no teacher share/entitlement/balance/debt;
+  distribution applies only to program fees), DR-082 (always tied to a student;
+  program link optional; no general non-student educational revenue).
+- **Outputs:** a posted receipt recording the amount against its source and
+  student; **Cash Balance +amount** and **Center Net Balance +amount**; no teacher
+  is affected; the line appears in the student's record; an append-only activity
+  event (DR-019).
+- **Exceptional cases:** a sale to someone not registered as a student is out of
+  scope (DR-082); whether these revenues are refundable → UNK-029; any
+  amount-due/overpayment handling → UNK-030; room rental / consulting / other
+  services are out of scope (DOM-004 §Future considerations). The record/document
+  structure that carries the revenue source is an architectural decision.
+
+## WF-15 — Teacher status change (Active ↔ Inactive-Left) — *ESTABLISHED*
+
+- **Trigger:** the Owner records that a teacher's engagement has ended (or resumes).
+- **Inputs:** the teacher; the new status (Active / Inactive-Left); date.
+- **Business rules:** DR-083 (Owner-controlled status; Inactive-Left blocks only new
+  program assignment, no automatic effect), DR-084 (all operations on existing
+  balances remain available regardless of status), DR-088 (shared lifecycle
+  pattern — reversible, history-preserving).
+- **Outputs:** the teacher's status updated; no financial or historical effect; new
+  program assignment blocked while Inactive-Left; an append-only activity event
+  (DR-019).
+- **Exceptional cases:** paying remaining entitlement, refunds on past programs, and
+  debt create/settle all continue after Inactive-Left (DR-084); the status is
+  reversible back to Active (DR-088).
+
+## WF-16 — Registration status change (Active ↔ Ended-Withdrawn) — *ESTABLISHED*
+
+- **Trigger:** the Owner ends a student's registration, or reactivates an ended one.
+- **Inputs:** the registration; the new status (Active / Ended-Withdrawn); date.
+- **Business rules:** DR-085 (independent of any refund), DR-086 (Ended blocks new
+  receipts while preserving history and allowing refunds on prior receipts),
+  DR-087 (reversible — reactivation resumes the same registration with its Final
+  Registration Price preserved; a new relationship is a new registration), DR-088
+  (shared lifecycle pattern).
+- **Outputs:** the registration's status updated; when Ended, no new receipts may be
+  collected on it while all prior records remain; when reactivated, collection may
+  resume on the same registration; an append-only activity event (DR-019).
+- **Exceptional cases:** a refund never triggers this workflow automatically
+  (DR-085); starting a genuinely new relationship (another program, or a new
+  obligation) is a new registration (WF-01), not a reactivation (DR-087).

@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.17.0 |
+| Version | 1.18.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -51,7 +51,7 @@ Needed before or during Product Constitution; do not block its start.
 |---|---|---|---|
 | UNK-003 | **RESOLVED (2026-07-18, ADR-0022 S10-D8):** a program's distribution percentage is **fixed for the program's whole life** and never changes in place; a renegotiated agreement is realized by creating a **new Program (run)** with the new percentage, while past receipts keep their applied split (F-07, DR-006). There is no in-program policy-change procedure or separate policy-change record in V1. → DR-076. | Policy lifecycle; history of agreements. | resolved |
 | UNK-005 | **RESOLVED (2026-07-18, ADR-0022 S10-D4…D7):** each Program (run) carries one **base price** (DR-072); a registration inherits it as its default and the Owner may **override** it for that registration only (DR-073); the amount due is a **single stored Final Registration Price** — there is **no discount concept**, and it is not derived from base − discount (DR-074); it is editable until the first receipt and **locked** thereafter (DR-075). This Final Registration Price is the "amount due" DR-024 checks against. | Whether expected income exists as a concept; required by DR-024. | resolved |
-| UNK-006 | **REDUCED (2026-07-17, ADR-0016) — money mechanics resolved (→ DR-036…DR-042); downgraded HIGH → MEDIUM.** Remaining business practice questions: when is a student *entitled* to a refund (withdrawal timing, center cancellation, other reasons)? Is the amount full/partial and how is it determined — or is it pure Owner discretion entered on the Refund Voucher? Who approves, and does the student sign/receive anything? Does the registration end or continue after a refund? | Owner practice around refunds; the voucher takes amount + reason as inputs (S5-D7), so these do not block the calculation spec. | WF-07 (conditions), DOM-002 §13 |
+| UNK-006 | **RESOLVED (2026-07-18, ADR-0023 S11-D6…D8):** the remaining domain portion — the refund/registration relationship — is decided: a refund affects only the financial side and **never** changes registration status automatically (DR-085); a registration carries an Owner-controlled **Active / Ended-Withdrawn** status (Ended blocks new receipts, preserves history, still allows refunds on prior receipts — DR-086) that is **reversible** by reactivation with the Final Registration Price preserved (DR-087). The residual items (when a student is *entitled* to a refund, full/partial amount determination, approval, signing) are confirmed **Owner administrative practice with no system rule** — amount is a free input (S5-D7); a single operator needs no approval (S7-D6). → DR-085, DR-086, DR-087. | Owner practice around refunds; the voucher takes amount + reason as inputs (S5-D7). | resolved |
 | UNK-010 | **RESOLVED (2026-07-17, ADR-0013 S3-D4):** base currency is the Shekel; decimals are not used — all operations in whole numbers. Methods: cash and bank transfer; exactly one method per voucher, mixing forbidden. → DR-025. | Recording detail on every voucher. | resolved |
 | UNK-011 | **RESOLVED (2026-07-17, ADR-0013 S3-D1):** the Student is an independent core entity — receipts, statements, and program registrations belong to the student. The payer is an optional Payer Name field on the voucher (>95% of cases: payer = student or irrelevant), not an entity in V1. → DR-021. | Entity depth; statements per student. | resolved |
 | UNK-012 | **RESOLVED (2026-07-17, ADR-0013 S3-D2):** yes — registration is an independent recorded event; a student may register without paying, pay later, or withdraw before paying. Registration → Payment. → DR-022; WF-01 now ESTABLISHED. | Whether enrollment exists in the domain. | resolved |
@@ -60,7 +60,9 @@ Needed before or during Product Constitution; do not block its start.
 | UNK-015 | **RESOLVED (2026-07-17, ADR-0019 S7-D4):** in V1 all expenses are general and center-borne — no expense is attributed to a specific program or teacher. Program-account / proportional allocation was discussed and postponed (Future Consideration; would deduct from teachers, UNK-021). → DR-052. | Expense linkage. | resolved |
 | UNK-028 | **RESOLVED (2026-07-17, ADR-0020 S8-D1…D9):** an expense return is a financial value returning because of one prior expense; it reduces/reverses that expense, never new income; partial and multiple returns allowed, bounded by the original amount; one return ↔ one expense (lump sums split at entry); the original must be Posted and non-cancelled; V1 realizes it by **actual cash returning** (credit notes and goods replacement excluded → future); no time limit. Recorded as an **Expense Return** (§DOM-002 §15); Cash and Center Net both rise. → DR-055…DR-061; WF-11 ESTABLISHED. | Reverse side of the expense model. | resolved |
 | UNK-016 | **RESOLVED (2026-07-18, ADR-0022 S10-D1/D9…D14):** in V1 a **Program is a single run (offering)** with its own financial identity; a same-named service repeats as **new, independent programs** (DR-071). A program has documentary **start/end dates** that drive no automatic behavior (DR-077) and an Owner-controlled **Open/Closed** status governing new business, reversible by reopening (DR-078, DR-079). **No capacity** and **no internal cohorts** in V1 (each batch is its own program) — both explicit Future Considerations; any number of programs, incl. same-named, may run concurrently. → DR-071, DR-077, DR-078, DR-079. | Program entity depth. | resolved |
-| UNK-019 | What happens when a teacher leaves — their open balance, their running programs? | Teacher lifecycle edge. | DOM-002 §4, WF-04 |
+| UNK-019 | **RESOLVED (2026-07-18, ADR-0023 S11-D4/D5):** a teacher carries an Owner-controlled **Active / Inactive-Left** status; going Inactive-Left blocks **only new program assignment** and has **no** automatic financial or historical effect — all prior programs, vouchers, entitlements, payments, balances, debts, and history persist. All operations on existing balances (payouts, refunds with entitlement recalculation, debt create/settle, reporting) remain available until obligations are settled; the status never freezes balances or closes the financial account. → DR-083, DR-084. | Teacher lifecycle edge. | resolved |
+| UNK-029 | **Refundability of non-program educational revenue.** Can an exam fee, certificate fee, or book/material sale be refunded in V1, and if so how is it recorded (reversal of center revenue only, no teacher effect)? Opened by ADR-0023 (S11-D1…D3) — the refund model (DR-036…DR-042, DR-062…DR-070) is built around program-revenue reversal and teacher entitlement; its applicability to center-only revenue is unresolved. | Completeness of the non-program revenue model. | DR-080, DR-081, WF-14 |
+| UNK-030 | **Amount-due & overpayment handling for non-program educational revenue.** Do exam / certificate / book charges have a defined amount and overpayment prevention like a registration's Final Registration Price (DR-024/DR-074), or are they free-entered amounts with no due-amount concept? Opened by ADR-0023 (S11-D1). | Consistency of the amount-due model across revenue types. | DR-080, DR-082, WF-14 |
 
 ## 4. Unknowns — LOW priority
 
@@ -69,7 +71,7 @@ Can be answered any time before the phase that consumes them.
 | ID | Missing fact | Why it matters | Blocks |
 |---|---|---|---|
 | UNK-017 | Are there any participants besides the owner, teachers, and students/payers (assistant, accountant, partner)? F-02 fixes a single system user; this asks about the business, not the software. | Completeness of the participant model. | DOM-001 §2 |
-| UNK-018 | Any revenue besides program payments (registration fees, materials, room rental)? | Revenue completeness. | DOM-001 §4 |
+| UNK-018 | **RESOLVED (2026-07-18, ADR-0023 S11-D1…D3):** V1 also earns **exam fees, certificate-issuance fees, and book/material sales** — each charged separately, **entirely center revenue** (no teacher share — DR-081), **always tied to a student** with an optional program link (DR-082), and every receipt names a defined revenue source (DR-080). **Room rental, consulting, and other services are out of scope.** → DR-080, DR-081, DR-082. | Revenue completeness. | resolved |
 | UNK-021 | Are there ever deductions from a teacher's share (fees, penalties, materials costs)? **Intentionally postponed by Owner order (ADR-0015 S4-D8): no deduction model may be invented; this stays open until the Owner explicitly authorizes it.** *Session 5 note (ADR-0016 S5-D4), detailed in Session 9 (ADR-0021 S9-D6 → DR-068): refund-debt settlement by same-program deduction is a separate, Owner-decided mechanism (DR-039, DR-068) — it does not resolve or preempt this general topic.* | Edge of DR-012. | DR-012, DR-039 |
 | UNK-022 | Does existing historical data (past vouchers, current balances) need to be brought into the system at start? *Session 3 signal (ADR-0013 S3-D5): voucher numbering continues from the paper sequences at go-live — continuity matters; whether records themselves are imported is still open.* | Opening balances at go-live. | future phases, DR-026 |
 | UNK-023 | Do receipts/payments carry any tax obligations or official receipt requirements? | Legal/format constraints on vouchers. | DOM-002 §7, §8 |
@@ -107,6 +109,7 @@ corrections, the meaning of "operations").
 | 8 (Expense Returns) | Money Returning to the Center After an Expense — conducted per Owner order (2026-07-17) | UNK-028 | **COMPLETE** — recorded as ADR-0020 (S8-D1…D9); UNK-028 CLOSED; Expense Return entity + WF-11 added |
 | 9 | Refund Effects on Teacher Entitlement & Debt — conducted per Owner order (2026-07-18) | UNK-027, UNK-026 | **COMPLETE** — recorded as ADR-0021 (S9-D1…D10); UNK-026 & UNK-027 CLOSED (the last two HIGH unknowns); DR-062…DR-070 added; Teacher Debt concept (DOM-002 §16) + WF-12 added |
 | 10 | Program Definition, Pricing & Distribution Policy — conducted per Owner order (2026-07-18) | UNK-005, UNK-016, UNK-003 | **COMPLETE** — recorded as ADR-0022 (S10-D1…D14); UNK-003, UNK-005 & UNK-016 CLOSED; DR-071…DR-079 added; Program refined as a single run (entity name kept); WF-13 added; capacity & cohorts → Future Considerations |
+| 11 | Business Boundary & Operational Completeness — conducted per Owner order (2026-07-18) | UNK-018, UNK-019, UNK-006 | **COMPLETE** — recorded as ADR-0023 (S11-D1…D9); UNK-006, UNK-018 & UNK-019 CLOSED; DR-080…DR-088 added; non-program center-only revenue, teacher/registration lifecycle + shared status pattern; WF-14/15/16 added; UNK-029 & UNK-030 opened |
 | 6 (Corrections) | Corrections & Cancellations — conducted per Owner order (2026-07-17) | UNK-007 | **COMPLETE** — recorded as ADR-0018 (S6-D1…D7); UNK-007 CLOSED; Draft stage recorded as a Future Consideration |
 | 7 | Account Statements | UNK-013 | pending (depends on Sessions 2–5) |
 | 8 | Training Programs | UNK-016, UNK-005, UNK-003 | **COMPLETE** — conducted as Session 10 (ADR-0022); all three CLOSED |
@@ -124,18 +127,21 @@ unknown OPEN (AI-11) — nothing is closed by inference.
    GOV-006 §6).
 2. Every resolution triggers the Consistency Rule (GOV-001 §6) across DOM-001…004
    and any later documents.
-3. Next available IDs: **UNK-029**, **ASM-005**.
-4. Current tally (2026-07-18, post-Session 10): **8 open** (**0 HIGH**; 3 MEDIUM:
-   UNK-006, UNK-013, UNK-019; 5 LOW: UNK-017, UNK-018, UNK-021, UNK-022, UNK-023),
-   20 resolved (UNK-001, UNK-002, UNK-003, UNK-004, UNK-005, UNK-007, UNK-008,
-   UNK-009, UNK-010, UNK-011, UNK-012, UNK-014, UNK-015, UNK-016, UNK-020,
-   UNK-025, UNK-026, UNK-027, UNK-028 answered; UNK-024 mooted by scope),
-   1 assumption rejected (ASM-002), 2 confirmed (ASM-001, ASM-003),
-   1 awaiting confirmation (ASM-004). **No HIGH unknown remains open** — the
-   ADR-0007 §7 blocker on Phase 1 freeze is cleared (the 8 remaining are MEDIUM
-   and LOW). Deferred design/future items not tracked as unknowns: refund-voucher
-   numbering (ADR-0017 §2), teacher-debt settlement record (ADR-0021), Draft/
-   posting lifecycle (ADR-0018 S6-D6), fixed-asset distinction & program/
-   proportional expense allocation (ADR-0019), non-cash expense returns — credit
-   notes / supplier balances / goods replacement (ADR-0020), program capacity &
-   internal cohorts & multiple-teachers-per-program (ADR-0022).
+3. Next available IDs: **UNK-031**, **ASM-005**.
+4. Current tally (2026-07-18, post-Session 11): **7 open** (**0 HIGH**; 3 MEDIUM:
+   UNK-013, UNK-029, UNK-030; 4 LOW: UNK-017, UNK-021, UNK-022, UNK-023),
+   23 resolved (UNK-001, UNK-002, UNK-003, UNK-004, UNK-005, UNK-006, UNK-007,
+   UNK-008, UNK-009, UNK-010, UNK-011, UNK-012, UNK-014, UNK-015, UNK-016,
+   UNK-018, UNK-019, UNK-020, UNK-025, UNK-026, UNK-027, UNK-028 answered;
+   UNK-024 mooted by scope), 1 assumption rejected (ASM-002), 2 confirmed
+   (ASM-001, ASM-003), 1 awaiting confirmation (ASM-004). **No HIGH unknown
+   remains open** — the ADR-0007 §7 blocker on Phase 1 freeze is cleared (the 7
+   remaining are MEDIUM and LOW). Deferred design/future items not tracked as
+   unknowns: refund-voucher numbering (ADR-0017 §2), teacher-debt settlement
+   record (ADR-0021), non-program-revenue document structure (ADR-0023 — an
+   architectural modeling decision), Draft/posting lifecycle (ADR-0018 S6-D6),
+   fixed-asset distinction & program/proportional expense allocation (ADR-0019),
+   non-cash expense returns — credit notes / supplier balances / goods
+   replacement (ADR-0020), program capacity & internal cohorts &
+   multiple-teachers-per-program (ADR-0022), non-educational revenue services —
+   room rental / consulting / other (ADR-0023).

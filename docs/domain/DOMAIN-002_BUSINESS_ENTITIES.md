@@ -6,8 +6,8 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 8.2.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), DOM-001 |
+| Version | 8.3.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
@@ -110,8 +110,13 @@ link between runs (DR-071).
   Teacher × Program — when a refund reverses revenue they were already paid for
   beyond their final entitlement (DR-039, DR-065, §16), settled by direct
   repayment or by same-program future-entitlement deduction (DR-068).
-- **Lifecycle:** not yet established — how teachers join or leave, and what happens
-  to a departing teacher's balance and programs → UNK-019.
+- **Lifecycle:** carries an Owner-controlled status, **Active / Inactive-Left**
+  (DR-083, §18). Setting Inactive-Left blocks assigning **new** programs but has no
+  automatic financial or historical effect: all prior programs, vouchers,
+  entitlements, payments, balances, debts, and history persist, and every operation
+  on existing balances (payouts, refunds, entitlement recalculation, debt
+  create/settle) stays available until obligations are settled (DR-084). How a
+  teacher first joins is an administrative act (no system rule).
 - **Owns:** the teacher share recorded in each receipt voucher of their programs;
   their independent per-program balances (DR-031).
 - **Never owns:** the center share; other teachers' shares.
@@ -138,8 +143,13 @@ link between runs (DR-071).
   editable until the first receipt and locked thereafter (DR-075). The student may
   pay later, in installments up to that amount (DR-023, DR-024); may withdraw
   before paying (S3-D2); may receive a refund, recorded by a Refund Voucher (§13,
-  DR-041) — the conditions and amount determination remain the Owner's practice
-  (→ UNK-006, reduced).
+  DR-041) — the amount and conditions are the Owner's practice (a free input,
+  S5-D7). A registration itself carries an Owner-controlled status, **Active /
+  Ended-Withdrawn** (DR-086, §18), independent of any refund (DR-085): Ended blocks
+  new receipts while preserving history and still allowing refunds on prior
+  receipts, and is reversible — reactivation resumes the same registration with its
+  Final Registration Price preserved (DR-087). A genuinely new relationship
+  (another program, or a new obligation) is a new registration.
 - **Owns:** their registrations and their statement.
 - **Never owns:** any part of the revenue split.
 - **Example:** a student registers today in the English program, pays 600 next
@@ -364,9 +374,9 @@ document that extends the founding entity set (F-05).**
   never individual receipts; no receipt-allocation algorithm); reduces the Student × Program paid
   amount and Program Revenue (DR-037); moves the three balances per DR-042.
 - **Lifecycle:** created and Posted immediately on save (DR-043) — when the
-  Owner grants a refund (entitlement conditions and amount
-  determination are the Owner's practice → UNK-006, reduced); permanent and
-  immutable once recorded (DR-019, DR-044). An error is fixed by cancellation +
+  Owner grants a refund (the amount and conditions are the Owner's practice, a free
+  input — S5-D7); it **never** changes the student's registration status
+  automatically (DR-085). Permanent and immutable once recorded (DR-019, DR-044). An error is fixed by cancellation +
   recreation (DR-045…DR-048); it must be cancelled before the receipt it depends
   on can be cancelled (DR-046). Its numbering is a deferred design decision
   (ADR-0017 §2), not a domain unknown.
@@ -432,6 +442,32 @@ returning to the center because of a prior expense.**
   Cash Balance +300, Center Net Balance +300. Credit notes and goods
   replacement are **not** expense returns in V1 (DR-060).
 
+## 15a. Non-Program Educational Revenue (إيرادات تعليمية غير البرامج)
+
+**Added by Owner decision (ADR-0023 S11-D1…D3).** Beyond program fees, V1 records
+three other educational revenue sources; the record/document structure that holds
+them is an architectural decision (not modeled here).
+
+- **Purpose:** recording money the center earns from **exam fees**,
+  **certificate-issuance fees**, and **book/material sales** — each charged
+  separately from the program.
+- **Responsibility:** capturing center income tied to a defined revenue source
+  (DR-080) and to a student (DR-082).
+- **Relationships:** each is **entirely center revenue** — no teacher share,
+  entitlement, balance, or debt (DR-081); revenue distribution applies only to
+  program fees. Each is **always tied to a student**, with a **program link
+  optional** (DR-082). Recording one raises the **Cash Balance** and the **Center
+  Net Balance** only (DR-081).
+- **Lifecycle:** recorded when the money is received, against its named source; its
+  refundability and any amount-due/overpayment handling are open questions
+  (→ UNK-029, UNK-030).
+- **Owns:** nothing beyond the recorded amount, its source, and its student link.
+- **Never owns:** any teacher share — it never touches a teacher.
+- **Out of scope (V1):** room rental, consulting, other services; general
+  (non-student) educational sales (DOM-004 §Future considerations).
+- **Example:** an exam fee of 120 charged to student Sara (optionally linked to the
+  ICDL program): Cash Balance +120, Center Net Balance +120; no teacher affected.
+
 ## 16. Teacher Debt (دين المدرّب) — per Teacher × Program
 
 **Specified by Owner decision (ADR-0021 S9-D4…D9).** Like the Teacher Balance
@@ -470,3 +506,28 @@ lifecycle.
   to 420 → a 280 Excel debt. The teacher repays 100 directly (balance 180), and
   the Owner deducts the remaining 180 from the next Excel entitlement → debt
   closed. An ICDL amount owed to the same teacher is untouched throughout.
+
+## 17. Operational Status Lifecycle (shared pattern)
+
+**Documented by Owner decision (ADR-0023 S11-D9).** Three entities carry an
+operational status, and all follow **one shared pattern** (DR-088):
+
+| Entity | Status values | Blocks (new business) | Preserves |
+|---|---|---|---|
+| **Program** (§3) | Open / Closed | new registrations, new receipts (DR-078) | all records; operations on existing records allowed |
+| **Teacher** (§4) | Active / Inactive-Left | new program assignment (DR-083) | all balances; all operations on existing balances allowed (DR-084) |
+| **Registration** (§5) | Active / Ended-Withdrawn | new receipts (DR-086) | all records; refunds on prior receipts allowed |
+
+Every one of these statuses is:
+
+- **Owner-controlled** — changed only by a deliberate Owner action, never
+  automatically;
+- **Reversible** — a Closed program reopens (DR-079), an Inactive teacher can
+  return, an Ended registration reactivates (DR-087);
+- **History-preserving** — nothing is deleted or hidden;
+- **New-business-blocking only** — it stops *new* activity, not operations on
+  already-existing records;
+- **Never rewrites financial history** — no prior entitlement, balance, receipt, or
+  refund is altered by a status change.
+
+Any future operational status in V1 follows this same pattern (DR-088).
