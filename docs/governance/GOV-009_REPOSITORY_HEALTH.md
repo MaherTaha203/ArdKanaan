@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-18 — **PC-003 Product Mental Model FROZEN; Checkpoint C1 COMPLETE** (ADR-0030 / AUD-P1-004)
+**Last refresh:** 2026-07-18 — **PC-004 Scope/Non-Scope/Anti-Patterns FROZEN; Checkpoint C2 open** (ADR-0031 / AUD-P1-005)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 84 / 84 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 87 / 87 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 84 / 84 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 87 / 87 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-003 atoms cite upstream axioms/DOM-002 | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-004 atoms cite upstream | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 44 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-003, 26 audit reports) + 30 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 1 IN PROGRESS — Checkpoint C1 complete (PC-001…003 frozen); C2 (PC-004…006) next | 0 at close | 🟢 |
+| 11 | Frozen documents | 46 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-004, 27 audit reports) + 31 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | Phase 1 IN PROGRESS — Checkpoint C2 open (PC-004 frozen; PC-005, PC-006 next) | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -81,3 +81,4 @@ next phase.
 | 2026-07-18 | **PC-001 Product Manifesto FROZEN** (ADR-0028) | AUD-P1-002 | **All indicators 🟢** — 7 axioms (PA-1…PA-7), each testable/traceable; Product-layer-pure; Checkpoint C1 in progress |
 | 2026-07-18 | **PC-002 Product Principles FROZEN** (ADR-0029) | AUD-P1-003 | **All indicators 🟢** — PP-1…PP-6 (derived, no restatement) + Automation Boundary A/B/C + AB-1 (one category per atom) + 19-row reference table |
 | 2026-07-18 | **PC-003 Product Mental Model FROZEN — Checkpoint C1 COMPLETE** (ADR-0030) | AUD-P1-004 | **All indicators 🟢** — 19 concepts (1:1 DOM-002); §0 The Product's World; Registration as first-class abstraction; Party Financial Standing; MMI-1…MMI-9 |
+| 2026-07-18 | **PC-004 Scope/Non-Scope/Anti-Patterns FROZEN — Checkpoint C2 open** (ADR-0031) | AUD-P1-005 | **All indicators 🟢** — SC-1…12, NS-1…12, AP-1…8, Boundary Tests BT-1…7, Extension Classification (Data/Capability/Behavior/Implementation), Future-Extension tiers |
