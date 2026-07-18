@@ -21,23 +21,23 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-17 — Session 7 (Expense Categories) applied, Phase 1A re-frozen (AUD-P1A-011)
+**Last refresh:** 2026-07-17 — Session 8 (Expense Returns) applied, Phase 1A re-frozen (AUD-P1A-012)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 57 / 57 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 59 / 59 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design) | 57 / 57 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design) | 59 / 59 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 54 / 54 DR-atoms cite F/M/owner decisions (ADR-0008…0019) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 61 / 61 DR-atoms cite F/M/owner decisions (ADR-0008…0020) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 29 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 15 audit reports) + 19 ACCEPTED ADRs | n/a | 🟢 |
+| 11 | Frozen documents | 30 (GOV-000…GOV-007, GOV-010, GOV-011, DOM-001…DOM-004, 16 audit reports) + 20 ACCEPTED ADRs | n/a | 🟢 |
 | 12 | Pending reviews (phases open, awaiting gates) | 0 — no phase open | 0 at close | 🟢 |
-| 13 | Open domain unknowns (DOM-005) | 14 (2 HIGH, 7 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 14 unknowns resolved; UNK-009 & UNK-015 CLOSED (Session 7); UNK-028 registered (money returning after an expense) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
+| 13 | Open domain unknowns (DOM-005) | 13 (2 HIGH, 6 MEDIUM, 5 LOW); 1 assumption awaiting confirmation (ASM-004); 15 unknowns resolved; UNK-028 CLOSED (Session 8) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟡 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
 next phase.
@@ -70,3 +70,4 @@ next phase.
 | 2026-07-17 | Session 6: Corrections & Cancellations (ADR-0018) | AUD-P1A-010 | 🟢 except indicator 13 🟡 — 15 open (3 HIGH); UNK-007 CLOSED; WF-08/WF-09 ESTABLISHED; Draft → Future Consideration |
 | 2026-07-17 | DR-043 rule/scope separation refinement | inline (no ADR/DR/renumber; no behavior change) | 🟢 unchanged — DR-043 now states only business behavior; V1 Draft exclusion lives in ADR-0018 S6-D6 + Future Considerations; LES-013 |
 | 2026-07-17 | Session 7: Expense Categories (ADR-0019) | AUD-P1A-011 | 🟢 except indicator 13 🟡 — 14 open (2 HIGH); UNK-009 & UNK-015 CLOSED; UNK-028 registered; WF-06 ESTABLISHED; Expense Category entity added |
+| 2026-07-17 | Session 8: Expense Returns (ADR-0020) | AUD-P1A-012 | 🟢 except indicator 13 🟡 — 13 open (2 HIGH); UNK-028 CLOSED; WF-11 ESTABLISHED; Expense Return entity added |

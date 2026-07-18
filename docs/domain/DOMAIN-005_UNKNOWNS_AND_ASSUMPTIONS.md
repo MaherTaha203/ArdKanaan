@@ -6,7 +6,7 @@
 | Title | Unknowns & Assumptions |
 | Phase | 1A |
 | Status | LIVING |
-| Version | 1.14.0 |
+| Version | 1.15.0 |
 | Depends on | DOM-001…DOM-004, GOV-007 (AI-10, AI-11), ADR-0007 §4 |
 | Referenced by | DOM-001…DOM-004; Phase 1 entry criterion (ADR-0007 §7) |
 
@@ -58,7 +58,7 @@ Needed before or during Product Constitution; do not block its start.
 | UNK-013 | Account statements — over which periods, showing what lines, and for which parties beyond the student? *Session 3 signal (ADR-0013 S3-D1): student statements confirmed. Session 4 signal (ADR-0015 S4-D9): a full teacher entitlement breakdown is a required reading surface — receipt voucher, student, program, amount, percentage, teacher share (DR-035).* | The main reading surface of the system. | DR-011, DR-035, WF-10 |
 | UNK-014 | **RESOLVED (2026-07-17, ADR-0013 S3-D5):** receipt and payment vouchers have independent continuous sequences; numbering never resets yearly; the system starts each sequence from an Owner-specified number at go-live to align with the paper vouchers. → DR-026. | Continuity with current records. | resolved |
 | UNK-015 | **RESOLVED (2026-07-17, ADR-0019 S7-D4):** in V1 all expenses are general and center-borne — no expense is attributed to a specific program or teacher. Program-account / proportional allocation was discussed and postponed (Future Consideration; would deduct from teachers, UNK-021). → DR-052. | Expense linkage. | resolved |
-| UNK-028 | **Money returning to the center after an expense.** How does the center record money that comes *back* after a previously recorded expense — covering purchase returns, supplier refunds, supplier credit notes, and any post-expense inflow (full or partial)? (Owner explicitly undecided at Session 7 — registered, not answered.) | Reverse side of the expense model; needed before implementation touches expense reversal. | DR-049, WF-06 |
+| UNK-028 | **RESOLVED (2026-07-17, ADR-0020 S8-D1…D9):** an expense return is a financial value returning because of one prior expense; it reduces/reverses that expense, never new income; partial and multiple returns allowed, bounded by the original amount; one return ↔ one expense (lump sums split at entry); the original must be Posted and non-cancelled; V1 realizes it by **actual cash returning** (credit notes and goods replacement excluded → future); no time limit. Recorded as an **Expense Return** (§DOM-002 §15); Cash and Center Net both rise. → DR-055…DR-061; WF-11 ESTABLISHED. | Reverse side of the expense model. | resolved |
 | UNK-016 | Program lifecycle — do programs have start/end dates, cohorts/batches, capacity? Do they repeat? | Program entity depth. | DOM-002 §3 |
 | UNK-019 | What happens when a teacher leaves — their open balance, their running programs? | Teacher lifecycle edge. | DOM-002 §4, WF-04 |
 
@@ -104,6 +104,7 @@ corrections, the meaning of "operations").
 | 4 | Teacher Payments | UNK-008 (+ UNK-019, UNK-021, ASM-003) | **COMPLETE** — closed by direct Owner Engineering Order, recorded as ADR-0015 (S4-D1…D11); UNK-008 resolved, ASM-003 confirmed, UNK-021 explicitly postponed (S4-D8), UNK-019 untouched |
 | 5 | Student Refunds — conducted per Owner order (2026-07-17) | UNK-006 | **COMPLETE** — recorded as ADR-0016 (S5-D1…D7); UNK-006 reduced & downgraded to MEDIUM; register restructured by ADR-0017 (UNK-026 refocused on teacher debt, UNK-027 split out, refund-voucher numbering removed as a deferred design decision) |
 | 7 (Expenses) | Expense Categories — conducted per Owner order (2026-07-17) | UNK-009, UNK-015 | **COMPLETE** — recorded as ADR-0019 (S7-D1…D6); UNK-009 & UNK-015 CLOSED; UNK-028 registered (money returning after an expense) |
+| 8 (Expense Returns) | Money Returning to the Center After an Expense — conducted per Owner order (2026-07-17) | UNK-028 | **COMPLETE** — recorded as ADR-0020 (S8-D1…D9); UNK-028 CLOSED; Expense Return entity + WF-11 added |
 | 6 (Corrections) | Corrections & Cancellations — conducted per Owner order (2026-07-17) | UNK-007 | **COMPLETE** — recorded as ADR-0018 (S6-D1…D7); UNK-007 CLOSED; Draft stage recorded as a Future Consideration |
 | 7 | Account Statements | UNK-013 | pending (depends on Sessions 2–5) |
 | 8 | Training Programs | UNK-016, UNK-005, UNK-003 | pending |
@@ -122,12 +123,13 @@ unknown OPEN (AI-11) — nothing is closed by inference.
 2. Every resolution triggers the Consistency Rule (GOV-001 §6) across DOM-001…004
    and any later documents.
 3. Next available IDs: **UNK-029**, **ASM-005**.
-4. Current tally (2026-07-17, post-Session 7): **14 open** (2 HIGH: UNK-026,
-   UNK-027; 7 MEDIUM incl. reduced UNK-006 and new UNK-028; 5 LOW), 14 resolved
-   (UNK-001, UNK-002, UNK-004, UNK-007, UNK-008, UNK-009, UNK-010, UNK-011,
-   UNK-012, UNK-014, UNK-015, UNK-020, UNK-025 answered; UNK-024 mooted by
+4. Current tally (2026-07-17, post-Session 8): **13 open** (2 HIGH: UNK-026,
+   UNK-027; 6 MEDIUM incl. reduced UNK-006; 5 LOW), 15 resolved (UNK-001,
+   UNK-002, UNK-004, UNK-007, UNK-008, UNK-009, UNK-010, UNK-011, UNK-012,
+   UNK-014, UNK-015, UNK-020, UNK-025, UNK-028 answered; UNK-024 mooted by
    scope), 1 assumption rejected (ASM-002), 2 confirmed (ASM-001, ASM-003),
    1 awaiting confirmation (ASM-004). Deferred design/future items not tracked
    as unknowns: refund-voucher numbering (ADR-0017 §2), Draft/posting lifecycle
-   (ADR-0018 S6-D6), fixed-asset distinction and program/proportional expense
-   allocation (ADR-0019).
+   (ADR-0018 S6-D6), fixed-asset distinction & program/proportional expense
+   allocation (ADR-0019), non-cash expense returns — credit notes / supplier
+   balances / goods replacement (ADR-0020).

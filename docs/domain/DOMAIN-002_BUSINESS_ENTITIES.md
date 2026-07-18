@@ -6,15 +6,16 @@
 | Title | Business Entities |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 7.0.0 |
-| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), DOM-001 |
+| Version | 8.0.0 |
+| Depends on | GOV-001 (F-04…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), DOM-001 |
 | Referenced by | DOM-003, DOM-004, DOM-005 |
 
 ---
 
 The business entities below are those fixed by F-04 and F-05, plus the Training
-Center and the Owner themselves, plus the **Refund Voucher** (ADR-0016 S5-D6)
-and the **Expense Category** (ADR-0019 S7-D3) added by Owner decision. One exception: §9 "Operations" is, by the owner's
+Center and the Owner themselves, plus the **Refund Voucher** (ADR-0016 S5-D6),
+the **Expense Category** (ADR-0019 S7-D3), and the **Expense Return**
+(ADR-0020 S8-D1) added by Owner decision. One exception: §9 "Operations" is, by the owner's
 definitive ruling, **not an entity** but a system activity view (ADR-0010) — it
 stays in this catalog only so the founding term is defined in one place. Descriptions use **business terminology
 only** — no software terms. Where the business meaning of an aspect is not yet
@@ -257,7 +258,8 @@ three rise automatically when a receipt is posted (DR-017).
 - **Responsibility:** answering "how much money is physically here?".
 - **Relationships:** up by the full amount of every posted receipt; down when any
   money is paid out (DR-008) — teacher payments (DR-030), center expenses
-  (DR-052/DR-053), and refunds (DR-042).
+  (DR-052/DR-053), and refunds (DR-042); up again when cash returns for a prior
+  expense (expense return, DR-060).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** nothing — a derived quantity; the portion matching
   Teacher Payables is held, not owned (DR-012).
@@ -285,9 +287,10 @@ three rise automatically when a receipt is posted (DR-017).
 - **Purpose:** the center's own earned share.
 - **Responsibility:** answering "how much has the center itself earned?".
 - **Relationships:** up by the center share of every posted receipt (DR-017);
-  down by the center's portion of every refund (revenue reversal, DR-042); and
-  down by **every center expense** — the center bears all expenses in V1
-  (DR-052).
+  down by the center's portion of every refund (revenue reversal, DR-042); down
+  by **every center expense** — the center bears all expenses in V1 (DR-052); and
+  up again by every **expense return**, which reverses a center-borne expense
+  (DR-056, DR-060).
 - **Lifecycle:** continuous; derived.
 - **Owns / Never owns:** derived quantity; never includes teacher shares.
 - **Example:** after the 1000 receipt at 70/30: Center Net Balance = 300 (owner's
@@ -372,3 +375,33 @@ center expenses.**
 - **Example:** "Rent", "Electricity", "Maintenance". Buying a desk is recorded
   as an ordinary expense under (say) "Furniture" — V1 draws no fixed-asset
   distinction (DR-050).
+
+## 15. Expense Return (استرداد مصروف)
+
+**Added by Owner decision (ADR-0020 S8-D1) — the record of a financial value
+returning to the center because of a prior expense.**
+
+- **Purpose:** recording that cash has come back to the center for a specific
+  prior expense, reducing/reversing that expense — never new income (DR-055,
+  DR-056).
+- **Responsibility:** reducing the original expense's real cost; in V1 realized
+  by actual cash returning (DR-060).
+- **Relationships:** references exactly **one** original expense that is Posted
+  and not cancelled (DR-058, DR-059); one expense may have several returns, but
+  a return never spans multiple expenses (DR-058). Because it depends on its
+  expense, that expense cannot be cancelled while the return is attached
+  (DR-046).
+- **Lifecycle:** created when cash actually returns — no time limit (DR-061);
+  bounded so total returns never exceed the original expense (DR-057). Posted on
+  save and immutable; an error is fixed by cancellation + recreation
+  (DR-043…DR-048). Its numbering is a deferred design decision, not a domain
+  unknown.
+- **Owns:** its amount, its date, and the reference to its original expense.
+- **Never owns:** the original expense itself; it only reduces it. Never touches
+  teachers.
+- **Effect:** Cash Balance up by the returned amount; Center Net Balance up by
+  the same (reversing the center-borne expense) — DR-060.
+- **Example:** the center paid 1000 for supplies (expense), then the supplier
+  returns 300: an Expense Return of 300 against that expense → real expense 700;
+  Cash Balance +300, Center Net Balance +300. Credit notes and goods
+  replacement are **not** expense returns in V1 (DR-060).

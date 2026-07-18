@@ -46,8 +46,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0017](ADR-0017-unknown-register-restructure.md) | Unknown Register Restructure: Split of UNK-026 | 1A | ACCEPTED | — |
 | [ADR-0018](ADR-0018-session-6-corrections-cancellations.md) | Session 6 Owner Decisions: Corrections & Cancellations | 1A | ACCEPTED | — |
 | [ADR-0019](ADR-0019-session-7-expense-categories.md) | Session 7 Owner Decisions: Expense Categories | 1A | ACCEPTED | — |
+| [ADR-0020](ADR-0020-session-8-expense-returns.md) | Session 8 Owner Decisions: Expense Returns | 1A | ACCEPTED | — |
 
-Next available ADR number: **ADR-0020**.
+Next available ADR number: **ADR-0021**.
 
 ## 4. Maintenance rules
 

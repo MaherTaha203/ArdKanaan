@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.4.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), DOM-001, DOM-002, DOM-003 |
+| Version | 3.5.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -550,8 +550,9 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
   depend on it. Dependent documents must be removed beginning with the newest
   dependent document until the original document becomes independent (e.g. cancel
   a teacher Payment Voucher before the receipt it drew from; cancel a Refund
-  Voucher before the receipt it depends on). Cancellation never creates automatic
-  debts or open items — the user removes dependents first.
+  Voucher before the receipt it depends on; cancel an expense return before the
+  expense it reduces). Cancellation never creates automatic debts or open items —
+  the user removes dependents first.
 - **Reason:** Preserve the financial timeline — no document may reference a
   source that no longer exists — while keeping a single-operator system simple.
   (→ ADR-0018 S6-D3; M-08)
@@ -598,8 +599,8 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
   so each balance means what it should. (→ ADR-0019 S7-D1)
 - **Dependencies:** DR-008, DR-030, DR-036.
 - **Possible exceptions:** none stated.
-- **Unknown status:** money returning to the center after an expense (returns,
-  supplier refunds, credit notes) → UNK-028.
+- **Unknown status:** ~~money returning to the center after an expense~~ RESOLVED
+  by S8-D1…D9 (→ DR-055…DR-061).
 
 ### DR-050 — Expenses are recorded uniformly, regardless of what is bought
 - **Description:** Every expense is recorded the same way — by category and
@@ -663,6 +664,94 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Possible exceptions:** none in V1.
 - **Unknown status:** —
 
+### DR-055 — An expense return is a financial value returning because of a prior expense
+- **Description:** An **expense return** is a financial value that returns to the
+  center **because of a specific prior expense**. It references exactly one prior
+  expense (DR-058); with no prior expense to reference, it is not an expense
+  return but a different financial situation handled separately.
+- **Reason:** The concept is defined by its link to a prior expense, not by any
+  one mechanism of return. (→ ADR-0020 S8-D1)
+- **Dependencies:** DR-049.
+- **Possible exceptions:** none — the link to a prior expense is definitional.
+- **Unknown status:** —
+
+### DR-056 — An expense return reduces the original expense; never income
+- **Description:** An expense return reduces/reverses the original expense — the
+  center's real cost falls by the returned amount (1000 spent, 300 back → real
+  expense 700; a full return zeroes the expense). It is never recorded as new
+  income or revenue.
+- **Reason:** Money back for a cost is a smaller cost, not earnings. (→ ADR-0020
+  S8-D2; mirrors DR-036 on the revenue side)
+- **Dependencies:** DR-055, DR-052.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-057 — Partial and multiple returns, bounded by the original amount
+- **Description:** One expense may receive partial returns and several returns
+  over time; the **total returned may never exceed the original expense** (a full
+  return is the ceiling). Any amount beyond the original is not an expense
+  return — it is a different transaction outside this concept.
+- **Reason:** You cannot reverse more cost than was incurred. (→ ADR-0020 S8-D3;
+  mirrors the bounds of DR-024 and DR-036)
+- **Dependencies:** DR-055, DR-056.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-058 — One return references exactly one expense
+- **Description:** Each expense return references exactly one original expense. A
+  lump-sum supplier refund covering several expenses is split at entry into
+  several independent returns, each referencing one expense. One expense may
+  accumulate several returns; one return never spans multiple expenses.
+- **Reason:** Atomic, auditable per-expense history (M-08); mirrors DR-023 and
+  DR-032. (→ ADR-0020 S8-D4)
+- **Dependencies:** DR-055.
+- **Possible exceptions:** none in V1.
+- **Unknown status:** —
+
+### DR-059 — A return requires a standing (Posted, non-cancelled) expense
+- **Description:** An expense return may be recorded only against an original
+  expense that exists, is Posted, and is not cancelled. A cancelled expense can
+  carry no return (nothing remains to reduce); cash arriving after a cancelled
+  expense is a different situation, outside this concept. Because a return
+  depends on its expense, that expense cannot be cancelled while a return is
+  attached — the return is cancelled first (DR-046).
+- **Reason:** A reversal needs a standing thing to reverse. (→ ADR-0020 S8-D5;
+  consistent with DR-044, DR-046)
+- **Dependencies:** DR-055, DR-044, DR-046.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
+### DR-060 — In V1 an expense return is realized by actual cash returning
+- **Description:** In Version 1, an expense return is realized by **actual cash
+  returning** to the center — increasing the Cash Balance and, by reversing the
+  center-borne expense, increasing the Center Net Balance; it never touches any
+  teacher. A **credit note** is not an expense return: it returns no financial
+  value now, only a future credit right. **Goods replacement** returns no cash.
+  Non-cash settlements are outside V1.
+- **Reason:** The concept is "a financial value returns because of a prior
+  expense" (DR-055); V1 realizes it through cash. Credit notes create a future
+  credit (no value returned now); goods replacement returns no cash. (→ ADR-0020
+  S8-D6, S8-D7)
+- **Dependencies:** DR-055, DR-016, DR-052.
+- **Possible exceptions:** non-cash returns (credit notes, goods replacement,
+  any settlement without cash inflow) are postponed → §Future considerations.
+- **Unknown status:** —
+
+  *(Version-scope note, not part of the business rule: the enduring concept is
+  "a financial value returns to the center because of a prior expense" (DR-055);
+  V1 realizes it only through cash. Non-cash realizations — credit notes /
+  supplier balances, goods replacement — are Future Considerations.)*
+
+### DR-061 — No time limit on expense returns
+- **Description:** There is no time limit for recording an expense return;
+  acceptance depends only on the link to the original expense (Posted,
+  non-cancelled, ceiling not exceeded), not on how much time has passed.
+- **Reason:** Time does not change the nature of the transaction. (→ ADR-0020
+  S8-D8)
+- **Dependencies:** DR-055, DR-059.
+- **Possible exceptions:** none.
+- **Unknown status:** —
+
 ---
 
 ## Future considerations — NOT part of Version 1
@@ -701,3 +790,11 @@ Additionally postponed (Session 7, ADR-0019):
   teacher), or splitting it proportionally between center and teacher, is
   postponed — it would deduct from teachers and belongs with the postponed
   teacher-deduction model (UNK-021).
+
+Additionally postponed (Session 8, ADR-0020):
+
+- **Non-cash expense returns.** V1 realizes an expense return only through cash
+  returning (DR-060). Non-cash outcomes — supplier **credit notes** / supplier
+  balances (payables), and **goods replacement** without cash — are outside V1
+  and belong to a fuller purchase cycle in a later version. Nothing in V1 may
+  depend on them.

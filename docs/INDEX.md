@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.14.0 |
+| Version | 1.15.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -112,6 +112,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1A-010 | `docs/audits/phase-1a/AUDIT-P1A-SESSION6.md` | Phase 1A Session 6 Decisions Audit Report | FROZEN |
 | ADR-0019 | `docs/decisions/ADR-0019-session-7-expense-categories.md` | Session 7 Owner Decisions: Expense Categories | ACCEPTED |
 | AUD-P1A-011 | `docs/audits/phase-1a/AUDIT-P1A-SESSION7.md` | Phase 1A Session 7 Decisions Audit Report | FROZEN |
+| ADR-0020 | `docs/decisions/ADR-0020-session-8-expense-returns.md` | Session 8 Owner Decisions: Expense Returns | ACCEPTED |
+| AUD-P1A-012 | `docs/audits/phase-1a/AUDIT-P1A-SESSION8.md` | Phase 1A Session 8 Decisions Audit Report | FROZEN |
 
 ### 2.2 Phase 1 — Product Constitution (NOT YET OPEN)
 

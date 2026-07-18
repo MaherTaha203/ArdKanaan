@@ -6,8 +6,8 @@
 | Title | Business Overview |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.8.0 |
-| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories) |
+| Version | 1.9.0 |
+| Depends on | GOV-000 (M-01…M-08), GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns) |
 | Referenced by | DOM-002…DOM-005 |
 
 ---
@@ -111,9 +111,13 @@ stationery, maintenance, furniture/equipment, government fees, subscriptions —
 not teacher payments or refunds, which are settlements/reversals). Each expense
 is a center-borne Payment Voucher under exactly one expandable **Expense
 Category**, recorded when the cash actually leaves, reducing Cash Balance and
-Center Net Balance and never touching any teacher (DR-049…DR-054). Whether money
-that returns to the center after an expense (returns/supplier refunds) has its
-own treatment is open → UNK-028.
+Center Net Balance and never touching any teacher (DR-049…DR-054). **Expense
+returns** are established (ADR-0020): when cash comes back because of a prior
+expense (a purchase return, supplier refund, cancelled subscription, or returned
+deposit), it is recorded as an **Expense Return** that reduces/reverses that one
+expense — never new income — bounded by the original amount, with Cash Balance
+and Center Net Balance both rising again (DR-055…DR-061). Non-cash returns
+(credit notes, goods replacement) are outside V1.
 
 ## 6. Why the system exists
 

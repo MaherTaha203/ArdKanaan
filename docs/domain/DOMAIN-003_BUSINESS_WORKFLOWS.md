@@ -6,8 +6,8 @@
 | Title | Business Workflows |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 1.9.0 |
-| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), DOM-001, DOM-002 |
+| Version | 1.10.0 |
+| Depends on | GOV-001 (F-05…F-08), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), DOM-001, DOM-002 |
 | Referenced by | DOM-004, DOM-005 |
 
 ---
@@ -124,10 +124,10 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
 - **Outputs:** a posted center-expense Payment Voucher; Cash Balance and Center
   Net Balance both decrease; per-category totals and expense detail available
   to the owner (DR-051); an append-only event on the activity timeline (DR-019).
-- **Exceptional cases:** money returning to the center after an expense (returns,
-  supplier refunds, credit notes) → UNK-028; charging an expense to a program/
-  teacher or splitting it proportionally is postponed (Future Considerations,
-  UNK-021).
+- **Exceptional cases:** money returning to the center after an expense (cash
+  returns, supplier refunds) is handled as an **expense return** — see WF-11
+  (DR-055…DR-061); charging an expense to a program/teacher or splitting it
+  proportionally is postponed (Future Considerations, UNK-021).
 
 ## WF-07 — Student refund — *ESTABLISHED (mechanics), PARTIAL (conditions)*
 
@@ -201,3 +201,27 @@ invented. Knowledge status per workflow: **ESTABLISHED** (grounded in F-atoms),
   balances, account statements.
 - **Exceptional cases:** a statement showing a cancelled document displays it as
   **Cancelled** (never hidden, DR-047); statement scope/periods → UNK-013.
+
+## WF-11 — Money returns to the center after an expense (expense return) — *ESTABLISHED*
+
+- **Trigger:** cash comes back to the center because of a prior expense — a
+  purchase return, a supplier refund (invoice error/overpayment), a cancelled
+  subscription refund, or a returned deposit/security (DR-055; ADR-0020 S8-D1).
+- **Inputs:** the one original expense being reduced — Posted and not cancelled
+  (DR-058, DR-059); the returned cash amount, not exceeding the remaining
+  original value (DR-057); date. No time limit (DR-061).
+- **Business rules:** DR-055 (concept: value returns because of a prior
+  expense), DR-056 (reduces the expense, never income), DR-057 (partial/multiple,
+  bounded by the original), DR-058 (one return ↔ one expense), DR-059 (original
+  must be Posted, non-cancelled), DR-060 (V1 realizes it by actual cash; credit
+  notes and goods replacement excluded), DR-061 (no time limit). A cash return
+  follows the posted/immutable/cancel model (DR-043…DR-048).
+- **Outputs:** a recorded Expense Return referencing one expense; the expense's
+  real cost falls by the returned amount; Cash Balance +amount and Center Net
+  Balance +amount (DR-060); an append-only event on the activity timeline
+  (DR-019).
+- **Exceptional cases:** a lump-sum supplier refund covering several expenses is
+  split at entry into several returns, one per expense (DR-058); non-cash
+  outcomes (credit notes, goods replacement) are not expense returns in V1
+  (DR-060, Future Considerations); cash after a cancelled expense is out of
+  concept (DR-059).
