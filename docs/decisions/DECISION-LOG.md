@@ -66,8 +66,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0037](ADR-0037-phase-2-commencement-and-p2-000-adoption.md) | Phase 2 Commencement & P2-000 Master Plan Adoption | 2 | ACCEPTED | — |
 | [ADR-0038](ADR-0038-bc-000-business-constitution-framework.md) | BC-000 Business Constitution Framework Adopted | 2 | ACCEPTED | — |
 | [ADR-0039](ADR-0039-bc-001-programs-pricing-and-distribution.md) | BC-001 Programs, Pricing & Distribution Policy Rules Adopted | 2 | ACCEPTED | — |
+| [ADR-0040](ADR-0040-bc-002-registration-installment-and-payer.md) | BC-002 Registration, Installment & Payer Rules Adopted; CDC Governance Added | 2 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0040**.
+Next available ADR number: **ADR-0041**.
 
 ## 4. Maintenance rules
 

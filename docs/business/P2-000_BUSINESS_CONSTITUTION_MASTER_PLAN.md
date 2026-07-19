@@ -70,6 +70,14 @@ coverage. The document set mirrors the Phase-1 rhythm — plan (P2-000) → fram
   propagation (GOV-010, category *Business*) → FROZEN.
 - **Constitutional bound:** every BR obeys BC-000 (Dual Authority §4.0; Integrity Rules
   BCI-1…5). No BR contradicts a DR, a PR, or another BR.
+- **Cross-Document Consistency Review (CDC) — mandatory from BC-002.** Every BC document
+  from BC-002 onward SHALL end with a *Cross-Document Consistency Review* answering
+  exactly two questions: (1) which existing BC rules it depends on; (2) whether it
+  modifies, narrows, or reinterprets any previous BR. The expected answer is **"Consumes
+  only. No modification. No reinterpretation."** Any need to modify, narrow, or reinterpret
+  a prior BR is a signal for an **Amendment** (GOV-004 §5; BC-000 §BCG-3), never a plain
+  new document. CDC introduces no business rule; it is a governance mechanism against
+  semantic drift.
 - **Versioning:** semantic (ADR-0003); DRAFT until first freeze; amendments via
   GOV-004 §5.
 - **Traceability:** every BR cites upstream (F/DR/M **and** governing PR/PC clause) and
@@ -100,4 +108,6 @@ contradiction; a complete matrix; a closure audit with eight gates PASS; and Pha
 | P2-000 | ADOPTED (this document — opens Phase 2, ADR-0037) |
 | BC-000 Business Constitution Framework | **FROZEN** (2026-07-19, ADR-0038 / AUD-P2-002) — Dual Authority §4.0; BB/BCD/BCG/BCP/BCI/BX. **Checkpoint C1 COMPLETE.** |
 | BC-001 Programs, Pricing & Distribution Policy Rules | **FROZEN** (2026-07-19, ADR-0039 / AUD-P2-003) — BR-001…BR-018 (11 categories); RP-1…5; §8 Business Invariants INV-1…6. **Checkpoint C2 OPEN.** |
-| BC-002…BC-008 | NOT STARTED — authored on Owner order, in the §7 sequence |
+| BC-002 Registration, Installment & Payer Rules | **FROZEN** (2026-07-19, ADR-0040 / AUD-P2-004) — BR-019…BR-027 (7 categories); RP-6…10; INV-7…10; first CDC section (§9). |
+| BC-003 Receipt, Voucher & Numbering Rules | NEXT — pending explicit Owner order |
+| BC-004…BC-008 | NOT STARTED — authored on Owner order, in the §7 sequence |

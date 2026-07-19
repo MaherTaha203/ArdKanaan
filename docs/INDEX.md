@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.30.0 |
+| Version | 1.31.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -178,7 +178,10 @@ Gate 8 (Repository Integrity) violation.
 | BC-001 | `docs/business/BC-001_PROGRAMS_PRICING_AND_DISTRIBUTION_POLICY_RULES.md` | Programs, Pricing & Distribution Policy Rules | FROZEN |
 | ADR-0039 | `docs/decisions/ADR-0039-bc-001-programs-pricing-and-distribution.md` | BC-001 Programs, Pricing & Distribution Policy Rules Adopted | ACCEPTED |
 | AUD-P2-003 | `docs/audits/phase-2/AUDIT-P2-BC001.md` | BC-001 Programs, Pricing & Distribution Policy Rules Audit Report | FROZEN |
-| — | `docs/business/` (BC-002…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
+| BC-002 | `docs/business/BC-002_REGISTRATION_INSTALLMENT_AND_PAYER_RULES.md` | Registration, Installment & Payer Rules | FROZEN |
+| ADR-0040 | `docs/decisions/ADR-0040-bc-002-registration-installment-and-payer.md` | BC-002 Registration, Installment & Payer Rules Adopted; CDC Governance Added | ACCEPTED |
+| AUD-P2-004 | `docs/audits/phase-2/AUDIT-P2-BC002.md` | BC-002 Registration, Installment & Payer Rules Audit Report | FROZEN |
+| — | `docs/business/` (BC-003…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 
