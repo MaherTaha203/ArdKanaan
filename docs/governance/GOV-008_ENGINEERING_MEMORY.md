@@ -405,10 +405,34 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
 
 ---
 
+### LES-019 — Open every phase on the same rhythm: Plan (Px-000) → Framework (X-000) → specialized documents
+
+- **Observation:** Phase 1 opened cleanly with P1-000 (master plan) then authored
+  PC-001…PC-008. Opening Phase 2, the Owner directed the identical rhythm: **P2-000**
+  (master plan, opens the phase) → **BC-000** (framework, the layer's constitutional
+  contract) → **BC-001…** (specialized rule documents) → **AUD-P2-NNN** audits → ADRs.
+  The first BC-000 draft had tried to be *both* opener and framework; the Owner split
+  them so the framework is a member document, not the phase opener.
+- **Engineering lesson:** A phase's opener (Px-000) and its layer framework (the -000
+  document of the layer) are **two different artifacts** with two different jobs: the
+  plan sequences and governs the phase; the framework legislates the layer's contract.
+  Keep them separate and in that order across every phase — it makes phase transitions
+  uniform, predictable, and traceable.
+- **Reason:** Collapsing plan and framework into one document couples "how the phase is
+  run" with "how the layer is governed," and makes the opener carry constitutional
+  content it should only reference. Separating them keeps each single-responsibility.
+- **Impact:** Positive — Phase 2 opened via ADR-0037 (adopt P2-000) with BC-000 frozen
+  separately (ADR-0038); the rhythm now matches Phase 1 and is a standing convention.
+- **Future guidance:** For every future phase, author `Px-000` (plan) first as the
+  opener, then the layer's `*-000` framework as its first governed document, then the
+  specialized documents in the plan's sequence. Never let the framework open the phase.
+
+---
+
 ## 4. Maintenance rules
 
 1. Lessons are appended at phase close (GOV-005 §1 step 8) and whenever a
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-019**.
+3. Next available lesson number: **LES-020**.

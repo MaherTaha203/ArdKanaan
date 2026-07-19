@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.28.0 |
+| Version | 1.29.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -29,10 +29,12 @@ here does not officially exist (see GOV-001 §4).
     ├── audits/                   Audit reports, one folder per phase
     │   ├── phase-0/
     │   ├── phase-1a/
-    │   └── phase-1/
+    │   ├── phase-1/
+    │   └── phase-2/
+
     ├── domain/                   Phase 1A — Domain Discovery
     ├── product/                  Phase 1 — Product Constitution   (CLOSED)
-    ├── business/                 Phase 2 — Business Constitution  (RESERVED)
+    ├── business/                 Phase 2 — Business Constitution  (IN PROGRESS)
     ├── ux/                       Phase 3 — UX Constitution        (RESERVED)
     ├── data/                     Phase 4 — DDL Specification      (RESERVED)
     ├── components/               Phase 5 — Component Library Spec (RESERVED)
@@ -163,11 +165,17 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0036 | `docs/decisions/ADR-0036-phase-1-closure-product-constitution-locked.md` | Phase 1 Closure: Product Constitution Frozen & Locked | ACCEPTED |
 | AUD-P1-FINAL | `docs/audits/phase-1/AUDIT-P1-FINAL.md` | Product Constitution Completion Report | FROZEN |
 
-### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
+### 2.3 Phase 2 — Business Constitution (IN PROGRESS — P2-000 adopted 2026-07-19, ADR-0037)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| — | `docs/business/` | Reserved | PENDING |
+| P2-000 | `docs/business/P2-000_BUSINESS_CONSTITUTION_MASTER_PLAN.md` | Business Constitution Master Plan | LIVING |
+| ADR-0037 | `docs/decisions/ADR-0037-phase-2-commencement-and-p2-000-adoption.md` | Phase 2 Commencement & P2-000 Master Plan Adoption | ACCEPTED |
+| AUD-P2-001 | `docs/audits/phase-2/AUDIT-P2-MASTER-PLAN.md` | Phase 2 Commencement & Master Plan Audit Report | FROZEN |
+| BC-000 | `docs/business/BC-000_BUSINESS_CONSTITUTION_FRAMEWORK.md` | Business Constitution Framework | FROZEN |
+| ADR-0038 | `docs/decisions/ADR-0038-bc-000-business-constitution-framework.md` | BC-000 Business Constitution Framework Adopted | ACCEPTED |
+| AUD-P2-002 | `docs/audits/phase-2/AUDIT-P2-BC000.md` | BC-000 Business Constitution Framework Audit Report | FROZEN |
+| — | `docs/business/` (BC-001…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 

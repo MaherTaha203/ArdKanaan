@@ -6,7 +6,7 @@
 | Title | Phase Roadmap |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.6.0 |
+| Version | 1.7.0 |
 | Depends on | GOV-000, GOV-001, GOV-003, GOV-005, GOV-011 |
 
 ---
@@ -30,7 +30,7 @@ until Phases 1–6 are all FROZEN (“documentation freeze”).
 | 0 | **Repository Bootstrap & Governance Platform** | Manifesto, governance, conventions, gates, review process, workflow, traceability, AI execution protocol, engineering memory, repository health dashboard, index, roadmap, decision log, templates; audits AUD-P0-001 + AUD-P0-002 (extension per ADR-0006) | `docs/governance/`, `docs/` | ✅ COMPLETE (extended & re-frozen) |
 | 1A | **Domain Discovery** (inserted by ADR-0007) | Business overview, business entities, business workflows (`WF-01…16`), business rules catalog (`DR-001…090`), unknowns & assumptions register (`UNK`/`ASM`, LIVING); interview Sessions 1–12; audits AUD-P1A-001…016 + **AUD-P1A-FINAL** | `docs/domain/` | ✅ **CLOSED** (frozen 2026-07-18; ADR-0025) |
 | 1 | **Product Constitution** | Governed by **P1-000** (ADR-0027): PC-001…PC-008 — manifesto (`PA`), principles (`PP`, Automation Boundary), mental model (`MMI`), scope/non-scope/anti-patterns, actors (`AX`), language & glossary (`NR`/`GG`), product requirements (`PR-001…033`), traceability matrix, validation & acceptance criteria (`AC-01…22`). Ownership authority: **GOV-012**. Constitution frozen & **locked** (PC-008 §9) | `docs/product/` | ✅ **CLOSED** (frozen & locked 2026-07-18; ADR-0036 / AUD-P1-FINAL) |
-| 2 | **Business Constitution** | Business rules (`BR-NNN`) for programs, teachers, payers, distribution policies, vouchers, operations, statements, balances; calculation rules; immutability rules for stored splits; traceability matrix | `docs/business/` | ⏭️ NEXT — awaiting explicit Owner authorization (GOV-011 §2) |
+| 2 | **Business Constitution** | Governed by **P2-000** (ADR-0037): framework **BC-000** + **BC-001…BC-008** — business rules (`BR-NNN`) for programs, teachers, payers, distribution policies, vouchers, operations, statements, balances; calculation rules; immutability rules for stored splits; traceability matrix. Ownership authority: **GOV-012**. Governed by BC-000 Dual Authority (Truth + Constitutional Legitimacy) | `docs/business/` | 🔵 **IN PROGRESS** — P2-000 adopted 2026-07-19 (ADR-0037); BC-000 frozen (ADR-0038); authoring BC documents |
 | 3 | **UX Constitution** | UX principles (`UX-NNN`), interaction rules, automation rules enforcing F-08, information architecture, language/RTL decisions, traceability matrix | `docs/ux/` | PENDING |
 | 4 | **DDL Specification** | Documented data model (`DB-NNN`): entities, attributes, keys, constraints, integrity rules — as specification documents, **not** executable SQL | `docs/data/` | PENDING |
 | 5 | **Component Library Specification** | Design language + component contracts (`CP-NNN`) — as specification documents, no code | `docs/components/` | PENDING |
