@@ -58,8 +58,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0029](ADR-0029-pc-002-product-principles.md) | PC-002 Product Principles (+ Automation Boundary) Adopted | 1 | ACCEPTED | — |
 | [ADR-0030](ADR-0030-pc-003-product-mental-model.md) | PC-003 Product Mental Model Adopted | 1 | ACCEPTED | — |
 | [ADR-0031](ADR-0031-pc-004-scope-nonscope-antipatterns.md) | PC-004 Scope, Non-Scope & Anti-Patterns Adopted | 1 | ACCEPTED | — |
+| [ADR-0032](ADR-0032-pc-005-actors-and-access-model.md) | PC-005 Actors & Access Model Adopted | 1 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0032**.
+Next available ADR number: **ADR-0033**.
 
 ## 4. Maintenance rules
 

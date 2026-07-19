@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.26.0 |
+| Version | 1.27.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -148,7 +148,10 @@ Gate 8 (Repository Integrity) violation.
 | PC-004 | `docs/product/PC-004_SCOPE_NONSCOPE_ANTIPATTERNS.md` | Scope, Non-Scope & Anti-Patterns | FROZEN |
 | ADR-0031 | `docs/decisions/ADR-0031-pc-004-scope-nonscope-antipatterns.md` | PC-004 Scope, Non-Scope & Anti-Patterns Adopted | ACCEPTED |
 | AUD-P1-005 | `docs/audits/phase-1/AUDIT-P1-PC004.md` | PC-004 Scope, Non-Scope & Anti-Patterns Audit Report | FROZEN |
-| — | `docs/product/` (PC-005…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
+| PC-005 | `docs/product/PC-005_ACTORS_AND_ACCESS_MODEL.md` | Actors & Access Model | FROZEN |
+| ADR-0032 | `docs/decisions/ADR-0032-pc-005-actors-and-access-model.md` | PC-005 Actors & Access Model Adopted | ACCEPTED |
+| AUD-P1-006 | `docs/audits/phase-1/AUDIT-P1-PC005.md` | PC-005 Actors & Access Model Audit Report | FROZEN |
+| — | `docs/product/` (PC-006…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
 
 ### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
 
