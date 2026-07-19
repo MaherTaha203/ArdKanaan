@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.29.0 |
+| Version | 1.30.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -175,7 +175,10 @@ Gate 8 (Repository Integrity) violation.
 | BC-000 | `docs/business/BC-000_BUSINESS_CONSTITUTION_FRAMEWORK.md` | Business Constitution Framework | FROZEN |
 | ADR-0038 | `docs/decisions/ADR-0038-bc-000-business-constitution-framework.md` | BC-000 Business Constitution Framework Adopted | ACCEPTED |
 | AUD-P2-002 | `docs/audits/phase-2/AUDIT-P2-BC000.md` | BC-000 Business Constitution Framework Audit Report | FROZEN |
-| — | `docs/business/` (BC-001…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
+| BC-001 | `docs/business/BC-001_PROGRAMS_PRICING_AND_DISTRIBUTION_POLICY_RULES.md` | Programs, Pricing & Distribution Policy Rules | FROZEN |
+| ADR-0039 | `docs/decisions/ADR-0039-bc-001-programs-pricing-and-distribution.md` | BC-001 Programs, Pricing & Distribution Policy Rules Adopted | ACCEPTED |
+| AUD-P2-003 | `docs/audits/phase-2/AUDIT-P2-BC001.md` | BC-001 Programs, Pricing & Distribution Policy Rules Audit Report | FROZEN |
+| — | `docs/business/` (BC-002…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 

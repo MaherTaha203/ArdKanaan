@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-19 — **Phase 2 — Business Constitution OPENED**; P2-000 adopted, BC-000 framework frozen (ADR-0037/0038 / AUD-P2-001/002)
+**Last refresh:** 2026-07-19 — **BC-001 Programs, Pricing & Distribution Policy Rules FROZEN** (ADR-0039 / AUD-P2-003); Phase 2 Checkpoint C2 open
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 107 / 107 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 110 / 110 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 107 / 107 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 110 / 110 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 18 / 18 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 58 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000, 34 audit reports) + 38 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C1 complete (BC-000 frozen); authoring BC-001…008 | 0 at close | 🟢 |
+| 11 | Frozen documents | 60 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000, BC-001, 35 audit reports) + 39 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C2 open (BC-000, BC-001 frozen); authoring BC-002…008 | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -89,3 +89,4 @@ next phase.
 | 2026-07-18 | **Phase 1 — Product Constitution CLOSED** — PC-001…PC-008 frozen & locked (ADR-0036) | AUD-P1-FINAL | **All indicators 🟢** — EX-1…EX-5 all MET; 101 registered docs; ADR-0001…0036; end-to-end coverage (Domain ▷ PC ▷ PR ▷ AC) with no orphan; Phase 2 remains NEXT awaiting Owner authorization (GOV-011 §2) |
 | 2026-07-19 | **Phase 2 — Business Constitution OPENED** — P2-000 Master Plan adopted (ADR-0037) | AUD-P2-001 | **All indicators 🟢** — GOV-011 §2 entry conditions met (Phase 1 frozen/locked); GOV-012 ownership authority; §3 Constitutional Position; `docs/business/` opened, `docs/audits/phase-2/` created; no domain/product/frozen governance modified |
 | 2026-07-19 | **BC-000 Business Constitution Framework FROZEN — Checkpoint C1 COMPLETE** (ADR-0038) | AUD-P2-002 | **All indicators 🟢** — Dual Authority Doctrine §4.0 (Authority of Truth + Authority of Constitutional Legitimacy); BB-1…4, BCD-1…5, BCG-1…6, BCP-1…9, BCI-1…5, BX-1…6; no BR defined; Business-layer-pure |
+| 2026-07-19 | **BC-001 Programs, Pricing & Distribution Policy Rules FROZEN — Checkpoint C2 open** (ADR-0039) | AUD-P2-003 | **All indicators 🟢** — 18 BR (BR-001…018) in 13-field normal form, 11 categories; RP-1…5; every BR dual-cited; §8 Business Invariants INV-1…6 (derivational, not generative); every in-scope DR (071–079, 028, 031, 016) covered; no scope expansion |
