@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.31.0 |
+| Version | 1.32.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -181,7 +181,10 @@ Gate 8 (Repository Integrity) violation.
 | BC-002 | `docs/business/BC-002_REGISTRATION_INSTALLMENT_AND_PAYER_RULES.md` | Registration, Installment & Payer Rules | FROZEN |
 | ADR-0040 | `docs/decisions/ADR-0040-bc-002-registration-installment-and-payer.md` | BC-002 Registration, Installment & Payer Rules Adopted; CDC Governance Added | ACCEPTED |
 | AUD-P2-004 | `docs/audits/phase-2/AUDIT-P2-BC002.md` | BC-002 Registration, Installment & Payer Rules Audit Report | FROZEN |
-| — | `docs/business/` (BC-003…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
+| BC-003 | `docs/business/BC-003_RECEIPT_VOUCHER_AND_NUMBERING_RULES.md` | Receipt, Voucher & Numbering Rules | FROZEN |
+| ADR-0041 | `docs/decisions/ADR-0041-bc-003-receipt-voucher-and-numbering.md` | BC-003 Receipt, Voucher & Numbering Rules Adopted; CDC/Coverage Conventions Finalized | ACCEPTED |
+| AUD-P2-005 | `docs/audits/phase-2/AUDIT-P2-BC003.md` | BC-003 Receipt, Voucher & Numbering Rules Audit Report | FROZEN |
+| — | `docs/business/` (BC-004…BC-008) | Business Constitution documents | PENDING (authored per P2-000 §7) |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 

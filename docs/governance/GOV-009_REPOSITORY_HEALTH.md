@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-19 — **BC-002 Registration, Installment & Payer Rules FROZEN + CDC governance added** (ADR-0040 / AUD-P2-004); Phase 2 Checkpoint C2 continues (BC-003 next)
+**Last refresh:** 2026-07-19 — **BC-003 Receipt, Voucher & Numbering Rules FROZEN — Checkpoint C2 COMPLETE**; four-line CDC + "Scope intentionally closed" conventions finalized (ADR-0041 / AUD-P2-005)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 113 / 113 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 116 / 116 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 113 / 113 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 116 / 116 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 27 / 27 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 40 / 40 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 62 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000, BC-001, BC-002, 36 audit reports) + 40 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C2 continues (BC-000/001/002 frozen); BC-003 next | 0 at close | 🟢 |
+| 11 | Frozen documents | 64 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-003, 37 audit reports) + 41 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C2 complete (BC-000…003 frozen); BC-004 next (Checkpoint C3) | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -91,3 +91,4 @@ next phase.
 | 2026-07-19 | **BC-000 Business Constitution Framework FROZEN — Checkpoint C1 COMPLETE** (ADR-0038) | AUD-P2-002 | **All indicators 🟢** — Dual Authority Doctrine §4.0 (Authority of Truth + Authority of Constitutional Legitimacy); BB-1…4, BCD-1…5, BCG-1…6, BCP-1…9, BCI-1…5, BX-1…6; no BR defined; Business-layer-pure |
 | 2026-07-19 | **BC-001 Programs, Pricing & Distribution Policy Rules FROZEN — Checkpoint C2 open** (ADR-0039) | AUD-P2-003 | **All indicators 🟢** — 18 BR (BR-001…018) in 13-field normal form, 11 categories; RP-1…5; every BR dual-cited; §8 Business Invariants INV-1…6 (derivational, not generative); every in-scope DR (071–079, 028, 031, 016) covered; no scope expansion |
 | 2026-07-19 | **BC-002 Registration, Installment & Payer Rules FROZEN + CDC governance added** (ADR-0040) | AUD-P2-004 | **All indicators 🟢** — 9 BR (BR-019…027), 7 categories; RP-6…10; INV-7…10; installments divide settlement not obligation; BR-027 grounded in DR-087/071; first §9 Cross-Document Consistency Review ("Consumes only. No modification. No reinterpretation."); CDC clause added to P2-000 §6; consumes BC-001 with meaning intact; DR-021/022/023/024/086/087/089 covered |
+| 2026-07-19 | **BC-003 Receipt, Voucher & Numbering Rules FROZEN — Checkpoint C2 COMPLETE** (ADR-0041) | AUD-P2-005 | **All indicators 🟢** — 13 BR (BR-028…040), 10 categories; RP-11…15; INV-11…15; BR-035 owns effect-arises-at-posting (calculation consumed from BC-001); BR-037 Immutability / BR-040 Lifecycle (single responsibility each); "Scope intentionally closed" adopted; four-line CDC finalized in P2-000 §6; consumes BC-001/BC-002 with meaning intact; DR-006/017/019/023/025/026/043/044/090 covered |
