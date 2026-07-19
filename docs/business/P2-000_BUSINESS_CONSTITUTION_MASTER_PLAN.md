@@ -54,15 +54,22 @@ Data / Testing content is out of scope and deferred to its owning layer.
 | BC-001 | Programs, Pricing & Distribution Policy Rules | How are programs priced and splits fixed? | Business |
 | BC-002 | Registration, Installment & Payer Rules | How are registrations, payers, and installments governed? | Business |
 | BC-003 | Receipt, Voucher & Numbering Rules | How are money-in events recorded and numbered? | Business |
-| BC-004 | Teacher Entitlement, Compensation & Debt Rules | How is teacher entitlement earned, settled, and owed? | Business |
-| BC-005 | Refund & Correction Rules | How are refunds and corrections governed (additive)? | Business |
-| BC-006 | Balances & Party Financial Standing Rules | How are the three balances derived and never merged? | Business |
-| BC-007 | Non-Program Revenue, Expense & Lifecycle Rules | How are center-only revenue/expense and statuses governed? | Business |
-| BC-008 | Phase 2 Traceability Matrix & Coverage | Is every in-scope DR covered by ≥1 BR, every BR grounded? | Business (reflective of BR; L11) |
+| BC-004 | Teacher Entitlement & Debt Rules | When does entitlement arise, what changes it, how is debt defined? | Business |
+| BC-005 | Refund & Adjustment Rules | How are refunds and adjustments governed (additive)? | Business |
+| BC-006 | Teacher Payment & Settlement Rules | How is a teacher paid and a debt settled? | Business |
+| BC-007 | Balances & Party Financial Standing Rules | How are the three balances derived and never merged? | Business |
+| BC-008 | Non-Program Revenue, Expense & Lifecycle Rules | How are center-only revenue/expense and statuses governed? | Business |
+| BC-009 | Phase 2 Traceability Matrix & Coverage | Is every in-scope DR covered by ≥1 BR, every BR grounded? | Business (reflective of BR; L11) |
 
-All BR live in one continuous **BR-NNN** series across BC-001…BC-007; BC-008 proves
+All BR live in one continuous **BR-NNN** series across BC-001…BC-008; BC-009 proves
 coverage. The document set mirrors the Phase-1 rhythm — plan (P2-000) → framework
 (BC-000) → specialized documents (BC-001…) → audits (AUD-P2-NNN) → decisions (ADR).
+
+> **Sequence revision (ADR-0042, Option A).** BC-004 is narrowed to **Entitlement & Debt**;
+> a dedicated **BC-006 Teacher Payment & Settlement Rules** now holds all settlement, which
+> pushed the former BC-006/007/008 down one place (see the renumbering table in ADR-0042).
+> The governing constitutional principle: **Entitlement creates a right; Settlement
+> discharges a right** — two phases, never merged in one document.
 
 ## 6. Governance
 
@@ -85,18 +92,18 @@ coverage. The document set mirrors the Phase-1 rhythm — plan (P2-000) → fram
 - **Versioning:** semantic (ADR-0003); DRAFT until first freeze; amendments via
   GOV-004 §5.
 - **Traceability:** every BR cites upstream (F/DR/M **and** governing PR/PC clause) and
-  is carried in the BC-008 matrix (GOV-006).
+  is carried in the BC-009 matrix (GOV-006).
 
 ## 7. Sequence, dependencies & checkpoints
 
-`BC-000 → {BC-001 → BC-002 → BC-003} → {BC-004 → BC-005} → {BC-006 → BC-007} → BC-008`
+`BC-000 → {BC-001 → BC-002 → BC-003} → {BC-004 → BC-005 → BC-006} → {BC-007 → BC-008} → BC-009`
 (acyclic; BR-NNN accretes; the matrix is the sink).
 
 - **C1 — Framework:** BC-000.
 - **C2 — Money-in:** BC-001, BC-002, BC-003.
-- **C3 — Adjustments & entitlement:** BC-004, BC-005.
-- **C4 — Standing & periphery:** BC-006, BC-007.
-- **C5 — Traceability + phase audit:** BC-008.
+- **C3 — Entitlement, Adjustment & Settlement:** BC-004, BC-005, BC-006.
+- **C4 — Standing & periphery:** BC-007, BC-008.
+- **C5 — Traceability + phase audit:** BC-009.
 
 ## 8. Freeze criterion
 
@@ -114,5 +121,7 @@ contradiction; a complete matrix; a closure audit with eight gates PASS; and Pha
 | BC-001 Programs, Pricing & Distribution Policy Rules | **FROZEN** (2026-07-19, ADR-0039 / AUD-P2-003) — BR-001…BR-018 (11 categories); RP-1…5; §8 Business Invariants INV-1…6. **Checkpoint C2 OPEN.** |
 | BC-002 Registration, Installment & Payer Rules | **FROZEN** (2026-07-19, ADR-0040 / AUD-P2-004) — BR-019…BR-027 (7 categories); RP-6…10; INV-7…10; first CDC section (§9). |
 | BC-003 Receipt, Voucher & Numbering Rules | **FROZEN** (2026-07-19, ADR-0041 / AUD-P2-005) — BR-028…BR-040 (10 categories); RP-11…15; INV-11…15; four-line CDC + "Scope intentionally closed" conventions finalized. |
-| BC-004 Teacher Entitlement, Compensation & Debt Rules | NEXT — pending explicit Owner order |
-| BC-005…BC-008 | NOT STARTED — authored on Owner order, in the §7 sequence |
+| BC-004 Teacher Entitlement & Debt Rules | **FROZEN** (2026-07-19, ADR-0042 / AUD-P2-006) — BR-041…BR-048 (5 categories); RP-16…20; INV-16…20; Constitutional Boundary (entitlement only, never authorizes payment). |
+| BC-005 Refund & Adjustment Rules | NEXT — pending explicit Owner order |
+| BC-006 Teacher Payment & Settlement Rules | NOT STARTED (new, ADR-0042 Option A) |
+| BC-007…BC-009 | NOT STARTED — authored on Owner order, in the §7 sequence |

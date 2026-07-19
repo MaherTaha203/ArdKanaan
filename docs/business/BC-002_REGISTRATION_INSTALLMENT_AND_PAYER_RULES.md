@@ -6,7 +6,7 @@
 | Title | Registration, Installment & Payer Rules |
 | Phase | 2 (Business Constitution) |
 | Status | FROZEN |
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Depends on | BC-000 (framework, Dual Authority); BC-001 (pricing, consumed); P2-000; DOM-004 (DR-021/022/023/024/086/087/089); PC-003/004/005/006/007/008 (frozen); GOV-006/011/012 |
 | Answers | "How are Registrations, Installments, and Payers governed as Business Rules?" |
 
@@ -30,7 +30,7 @@ prevention against the Final Registration Price; and the registration lifecycle
 
 **BC-002 does NOT govern:** the Receipt Voucher's own mechanics, atomicity, and numbering
 (BC-003); revenue split (BC-001/BC-003); refund behavior and refund↔registration effects
-(BC-005); entitlement/balances (BC-004/BC-006); any UX, data, engineering, or test
+(BC-005); entitlement/balances (BC-004/BC-007); any UX, data, engineering, or test
 concern. It consumes BC-001's pricing rules and modifies none.
 
 ## 3. Business Rule Principles
@@ -86,7 +86,7 @@ concern. It consumes BC-001's pricing rules and modifies none.
 - **Authority of Constitutional Legitimacy:** PC-003 (Registration links one Student to
   one Program); PC-004 §1.
 - **Affected Product Concepts:** Registration; Student; Training Program.
-- **Affected Future Documents:** BC-003; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-003; BC-007; Phase 4; Testing.
 - **Verification Method:** inspect any registration — exactly one student and one program.
 
 ### Category — Payer
@@ -154,7 +154,7 @@ concern. It consumes BC-001's pricing rules and modifies none.
 - **Authority of Constitutional Legitimacy:** PC-003 (Registration holds the amount due;
   Receipt records money-in); PC-004 §1.
 - **Affected Product Concepts:** Registration; Receipt Voucher; Final Registration Price.
-- **Affected Future Documents:** BC-003; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-003; BC-007; Phase 4; Testing.
 - **Verification Method:** record two installments on one registration; confirm both are
   valid receipts summing toward the price, and the amount due is unchanged by the split.
 
@@ -244,7 +244,7 @@ concern. It consumes BC-001's pricing rules and modifies none.
 - **Authority of Constitutional Legitimacy:** PC-003 (Registration = one enrolment
   obligation); PC-004 §1.
 - **Affected Product Concepts:** Registration; Training Program.
-- **Affected Future Documents:** BC-003; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-003; BC-007; Phase 4; Testing.
 - **Verification Method:** confirm a same-program return reactivates, while another program
   yields a new registration.
 
@@ -265,14 +265,14 @@ concern. It consumes BC-001's pricing rules and modifies none.
 | BR | Frozen Domain | Product Constitution | Consumes (BC) | Future BC | Future UX | Future Eng | Future Testing |
 |---|---|---|---|---|---|---|---|
 | BR-019 | DR-022 | PC-003/004 | — | BC-003/005 | ✓ | ✓ | ✓ |
-| BR-020 | DR-022/021 | PC-003/004 | — | BC-003/006 | — | ✓ | ✓ |
+| BR-020 | DR-022/021 | PC-003/004 | — | BC-003/007 | — | ✓ | ✓ |
 | BR-021 | DR-021 | PC-003/004/006 | — | BC-003 | ✓ | ✓ | ✓ |
 | BR-022 | DR-089 | PC-005 AX-3 / PC-003/006 | — | BC-003 | ✓ | ✓ | ✓ |
-| BR-023 | DR-023 | PC-003/004 | BC-001 (FRP) | BC-003/006 | ✓ | ✓ | ✓ |
+| BR-023 | DR-023 | PC-003/004 | BC-001 (FRP) | BC-003/007 | ✓ | ✓ | ✓ |
 | BR-024 | DR-024 | PC-003/004 | BC-001 BR-009 | BC-003/005 | ✓ | ✓ | ✓ |
 | BR-025 | DR-086 | PC-003/004 / PP-3 | — | BC-003/005 | ✓ | ✓ | ✓ |
 | BR-026 | DR-087 | PC-003/004 | BC-001 BR-013 | BC-003 | ✓ | ✓ | ✓ |
-| BR-027 | DR-087/071/022 | PC-003/004 | BC-001 BR-001 | BC-003/006 | — | ✓ | ✓ |
+| BR-027 | DR-087/071/022 | PC-003/004 | BC-001 BR-001 | BC-003/007 | — | ✓ | ✓ |
 
 ## 7. Coverage Report
 
@@ -322,3 +322,7 @@ atomic, observable, business-only, and dual-cited. It creates no UI, engineering
 schema, algorithm, validation logic, screen flow, component, code, test, report, or
 accounting implementation; it duplicates no prior BR, expands no product scope, and
 contradicts no Product Constitution statement.
+
+---
+
+*Amendment — ADR-0042 (Option A renumbering): forward-reference document numbers updated (BC-006→BC-007 balances; BC-007→BC-008 non-program). Numbering only changed; constitutional meaning unchanged; no business rule altered.*

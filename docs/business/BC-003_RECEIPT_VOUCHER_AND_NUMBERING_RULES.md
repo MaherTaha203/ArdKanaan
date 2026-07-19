@@ -6,7 +6,7 @@
 | Title | Receipt, Voucher & Numbering Rules |
 | Phase | 2 (Business Constitution) |
 | Status | FROZEN |
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Depends on | BC-000 (framework, Dual Authority); BC-001 (pricing/distribution, consumed); BC-002 (registration/installment, consumed); P2-000 + CDC; DOM-004 (DR-006/017/019/023/025/026/043/044/090); PC-003/004/006/007/008 (frozen); GOV-006/011/012 |
 | Answers | "How is money formally recorded?" |
 
@@ -32,7 +32,7 @@ receipt atomicity; receipt immutability; and the receipt lifecycle.
 the Final Registration Price, installment permission (all BC-001/BC-002, consumed); the
 distribution *calculation* (BC-001, consumed); refund behavior, teacher entitlement,
 payments to teachers, balances derivation, correction/cancellation *mechanics*
-(BC-004/BC-005/BC-006); any engineering, database, UI, API, validation implementation, or
+(BC-004/BC-005/BC-007); any engineering, database, UI, API, validation implementation, or
 test.
 
 ## 3. Business Rule Principles
@@ -69,7 +69,7 @@ test.
   money-in); PC-006 (canonical "Receipt Voucher / سند قبض"; bans "invoice/tax invoice");
   PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher.
-- **Affected Future Documents:** BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-007; Phase 4; Testing.
 - **Verification Method:** inspect any receipt — it is an independent document with its own
   number and date.
 
@@ -83,13 +83,13 @@ test.
 - **Trigger:** the Owner records a payment on the registration.
 - **Required Outcome:** one Receipt Voucher records that payment; program-fee money-in
   enters the records only through a receipt.
-- **Exceptions:** non-program income is not a program-fee receipt (BC-007); refunds are a
+- **Exceptions:** non-program income is not a program-fee receipt (BC-008); refunds are a
   separate Refund Voucher (BC-005).
 - **Authority of Truth:** DR-023.
 - **Authority of Constitutional Legitimacy:** PC-003 (Receipt Voucher; Registration);
   consumes BC-002 BR-023 (installments); PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher; Registration.
-- **Affected Future Documents:** BC-005; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-005; BC-007; Phase 4; Testing.
 - **Verification Method:** confirm each program-fee payment corresponds to exactly one
   receipt on one registration.
 
@@ -109,7 +109,7 @@ test.
 - **Authority of Constitutional Legitimacy:** PC-004 SC-12 / PC-007 PR-018 / PC-008 AC-14
   (unique sequential series per voucher type).
 - **Affected Product Concepts:** Receipt Voucher.
-- **Affected Future Documents:** BC-005; BC-007; Phase 4; Testing.
+- **Affected Future Documents:** BC-005; BC-008; Phase 4; Testing.
 - **Verification Method:** inspect the receipt series — unique, sequential, no reuse or
   duplication.
 
@@ -127,7 +127,7 @@ test.
 - **Authority of Constitutional Legitimacy:** PC-004 SC-12 / PC-007 PR-018; PC-006 (Receipt
   Voucher).
 - **Affected Product Concepts:** Receipt Voucher.
-- **Affected Future Documents:** BC-005; BC-007; Phase 4; Testing.
+- **Affected Future Documents:** BC-005; BC-008; Phase 4; Testing.
 - **Verification Method:** confirm the series never resets and each type has its own
   sequence.
 
@@ -144,7 +144,7 @@ test.
 - **Authority of Truth:** DR-023 (DR-043 posting).
 - **Authority of Constitutional Legitimacy:** PC-003 (Receipt Voucher); PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher.
-- **Affected Future Documents:** BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-007; Phase 4; Testing.
 - **Verification Method:** inspect any receipt — it carries its own date.
 
 ### Category — Voucher Ownership
@@ -164,7 +164,7 @@ test.
 - **Authority of Constitutional Legitimacy:** PC-003 (Receipt references one Student, one
   Program, one Registration); consumes BC-002 BR-020; PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher; Student; Training Program; Registration.
-- **Affected Future Documents:** BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-007; Phase 4; Testing.
 - **Verification Method:** inspect any receipt — exactly one student and one program.
 
 ### Category — Voucher Posting
@@ -185,7 +185,7 @@ test.
 - **Authority of Constitutional Legitimacy:** consumes BC-002 BR-024 (overpayment
   prevention); PC-003 (Receipt Voucher); PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher.
-- **Affected Future Documents:** BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-007; Phase 4; Testing.
 - **Verification Method:** save a receipt; confirm it is immediately Posted with no draft
   state.
 
@@ -216,7 +216,7 @@ test.
   Center Net).
 - **Affected Product Concepts:** Receipt Voucher; The Three Balances; Revenue Distribution
   Policy.
-- **Affected Future Documents:** BC-004; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-004; BC-007; Phase 4; Testing.
 - **Verification Method:** post a receipt; confirm the constitutionally-defined effects
   arise at posting and the stored split never changes afterward.
 
@@ -236,7 +236,7 @@ test.
 - **Authority of Constitutional Legitimacy:** PC-003 (Receipt records one payment);
   PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher.
-- **Affected Future Documents:** BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-007; Phase 4; Testing.
 - **Verification Method:** confirm no receipt spans two students/programs/payments or mixes
   methods.
 
@@ -276,7 +276,7 @@ test.
 - **Authority of Constitutional Legitimacy:** PC-002 PP-3 / PC-007 PR-017 (permanence);
   PC-003.
 - **Affected Product Concepts:** Receipt Voucher; Revenue Distribution Policy.
-- **Affected Future Documents:** BC-005; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-005; BC-007; Phase 4; Testing.
 - **Verification Method:** change a policy after a receipt is posted; confirm the receipt's
   stored split is untouched.
 
@@ -342,17 +342,17 @@ test.
 
 | BR | Frozen Domain | Product Constitution | Consumes (BC) | Future BC | Future UX | Future Eng | Future Testing |
 |---|---|---|---|---|---|---|---|
-| BR-028 | DR-023/090 | PC-003/006/004 | — | BC-006 | ✓ | ✓ | ✓ |
-| BR-029 | DR-023 | PC-003/004 | BC-002 BR-023 | BC-005/006 | ✓ | ✓ | ✓ |
-| BR-030 | DR-090/026 | SC-12 / PR-018 / AC-14 | — | BC-005/007 | — | ✓ | ✓ |
-| BR-031 | DR-026 | SC-12 / PR-018 | — | BC-005/007 | — | ✓ | ✓ |
-| BR-032 | DR-023/043 | PC-003/004 | — | BC-006 | ✓ | ✓ | ✓ |
-| BR-033 | DR-023 | PC-003/004 | BC-002 BR-020 | BC-006 | — | ✓ | ✓ |
-| BR-034 | DR-043 | PC-003/004 | BC-002 BR-024 | BC-006 | ✓ | ✓ | ✓ |
-| BR-035 | DR-017/006 | AP-7 / PR-014 / AC-10 / PC-006 | BC-001 BR-011/012 | BC-004/006 | — | ✓ | ✓ |
-| BR-036 | DR-023/025 | PC-003/004 | — | BC-006 | — | ✓ | ✓ |
+| BR-028 | DR-023/090 | PC-003/006/004 | — | BC-007 | ✓ | ✓ | ✓ |
+| BR-029 | DR-023 | PC-003/004 | BC-002 BR-023 | BC-005/007 | ✓ | ✓ | ✓ |
+| BR-030 | DR-090/026 | SC-12 / PR-018 / AC-14 | — | BC-005/008 | — | ✓ | ✓ |
+| BR-031 | DR-026 | SC-12 / PR-018 | — | BC-005/008 | — | ✓ | ✓ |
+| BR-032 | DR-023/043 | PC-003/004 | — | BC-007 | ✓ | ✓ | ✓ |
+| BR-033 | DR-023 | PC-003/004 | BC-002 BR-020 | BC-007 | — | ✓ | ✓ |
+| BR-034 | DR-043 | PC-003/004 | BC-002 BR-024 | BC-007 | ✓ | ✓ | ✓ |
+| BR-035 | DR-017/006 | AP-7 / PR-014 / AC-10 / PC-006 | BC-001 BR-011/012 | BC-004/007 | — | ✓ | ✓ |
+| BR-036 | DR-023/025 | PC-003/004 | — | BC-007 | — | ✓ | ✓ |
 | BR-037 | DR-044 | PP-3 / AP-3 / PR-004 / AC-03 | — | BC-005 | ✓ | ✓ | ✓ |
-| BR-038 | DR-006 | PP-3 / PR-017 | BC-001 BR-014 | BC-005/006 | — | ✓ | ✓ |
+| BR-038 | DR-006 | PP-3 / PR-017 | BC-001 BR-014 | BC-005/007 | — | ✓ | ✓ |
 | BR-039 | DR-019 | PR-031/032 / AC-21 | — | BC-005 | — | ✓ | ✓ |
 | BR-040 | DR-043/044/019 | PP-3 / AP-3 / AC-03 | — | BC-005 | ✓ | ✓ | ✓ |
 
@@ -370,7 +370,7 @@ test.
 *calculation* (DR-005/013/015) is consumed from BC-001, not re-formalized;
 cancellation/correction *mechanics* (DR-045…048) and refund reversal (DR-036…042) belong
 to **BC-005**; teacher entitlement from posted receipts (DR-015/029) belongs to **BC-004**;
-balances derivation to **BC-006**. Non-program-revenue receipts (DR-080…082) are **BC-007**.
+balances derivation to **BC-007**. Non-program-revenue receipts (DR-080…082) are **BC-008**.
 
 **Scope intentionally closed.** No additional frozen Domain Rules belong to this document.
 
@@ -409,3 +409,7 @@ accounting implementation. It re-formalizes no Registration, Pricing, Installmen
 Guardian, Payer, distribution-calculation, refund, entitlement, or balance rule — all are
 consumed exactly as frozen. It duplicates no prior BR, expands no product scope, and
 contradicts no Product Constitution statement.
+
+---
+
+*Amendment — ADR-0042 (Option A renumbering): forward-reference document numbers updated (BC-006→BC-007 balances; BC-007→BC-008 non-program). Numbering only changed; constitutional meaning unchanged; no business rule altered.*

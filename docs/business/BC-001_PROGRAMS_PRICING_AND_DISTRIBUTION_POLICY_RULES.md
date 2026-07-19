@@ -6,7 +6,7 @@
 | Title | Programs, Pricing & Distribution Policy Rules |
 | Phase | 2 (Business Constitution) |
 | Status | FROZEN |
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Depends on | BC-000 (framework, Dual Authority); P2-000; DOM-004 (DR-016/028/031/071–079 + supporting); PC-003/004/006/007/008 (frozen); GOV-006/011/012 |
 | Answers | "How are Training Programs, Pricing, and Revenue Distribution governed as Business Rules?" |
 
@@ -30,8 +30,8 @@ teacher/center percentage split; distribution immutability; and program operatio
 constraints (Open/Closed, documentary dates, per-Teacher×Program independence).
 
 **BC-001 does NOT govern:** how receipts, refunds, corrections, entitlement, payments,
-debts, or balances *behave* (BC-003…BC-006); registration lifecycle beyond price
-(BC-002); non-program revenue and expenses (BC-007); any UX, data, engineering, or test
+debts, or balances *behave* (BC-003…BC-007); registration lifecycle beyond price
+(BC-002); non-program revenue and expenses (BC-008); any UX, data, engineering, or test
 concern. It defines no capacity or cohort behavior (frozen as Future Considerations —
 out of V1 scope; no scope expansion).
 
@@ -68,7 +68,7 @@ out of V1 scope; no scope expansion).
 - **Authority of Constitutional Legitimacy:** PC-003 (Training Program); PC-004 §1
   (in-scope); PC-006 (canonical "Training Program").
 - **Affected Product Concepts:** Training Program.
-- **Affected Future Documents:** BC-002…BC-006; Phase 4 Data; Phase 3 UX; Testing.
+- **Affected Future Documents:** BC-002…BC-007; Phase 4 Data; Phase 3 UX; Testing.
 - **Verification Method:** inspect any two Programs — no shared financial attribute
   exists.
 
@@ -86,7 +86,7 @@ out of V1 scope; no scope expansion).
 - **Authority of Constitutional Legitimacy:** PC-003 (Training Program = one run);
   PC-006 (bans "course template/catalog item").
 - **Affected Product Concepts:** Training Program.
-- **Affected Future Documents:** BC-006 (balances); Phase 4; Testing.
+- **Affected Future Documents:** BC-007 (balances); Phase 4; Testing.
 - **Verification Method:** confirm same-named Programs have fully separate financial
   records.
 
@@ -335,7 +335,7 @@ out of V1 scope; no scope expansion).
   Balance); PC-004 §1.
 - **Affected Product Concepts:** Receipt Voucher; Teacher Balance; Revenue Distribution
   Policy.
-- **Affected Future Documents:** BC-003; BC-004; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-003; BC-004; BC-007; Phase 4; Testing.
 - **Verification Method:** for a sample receipt, confirm Teacher Share = round-half-up
   (amount × teacher %).
 
@@ -357,7 +357,7 @@ out of V1 scope; no scope expansion).
 - **Authority of Constitutional Legitimacy:** PC-004 AP-7 / PC-007 PR-014 / PC-008 AC-10
   (never merge/offset); PC-006 (Cash Balance / Teacher Payables / Center Net Balance).
 - **Affected Product Concepts:** Receipt Voucher; The Three Balances; Center Net Balance.
-- **Affected Future Documents:** BC-003; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-003; BC-007; Phase 4; Testing.
 - **Verification Method:** for any receipt, confirm Teacher Share + Center Share = amount
   exactly, and the three balances are reported separately.
 
@@ -400,7 +400,7 @@ out of V1 scope; no scope expansion).
 - **Authority of Constitutional Legitimacy:** PC-007 PR-014 / PC-008 AC-10 (never offset
   across programs); PC-003 (Teacher Balance per Teacher×Program).
 - **Affected Product Concepts:** Teacher Balance; Teacher Debt; Training Program.
-- **Affected Future Documents:** BC-004; BC-006; Phase 4; Testing.
+- **Affected Future Documents:** BC-004; BC-007; Phase 4; Testing.
 - **Verification Method:** confirm clearing one program's entitlement affects that
   program only.
 
@@ -430,8 +430,8 @@ order while each rule keeps its permanent number.
 
 | BR | Frozen Domain | Product Constitution | Future BC | Future UX | Future Engineering | Future Testing |
 |---|---|---|---|---|---|---|
-| BR-001 | DR-071 | PC-003/004/006 | BC-002…006 | ✓ | ✓ | ✓ |
-| BR-002 | DR-071 | PC-003/006 | BC-006 | — | ✓ | ✓ |
+| BR-001 | DR-071 | PC-003/004/006 | BC-002…007 | ✓ | ✓ | ✓ |
+| BR-002 | DR-071 | PC-003/006 | BC-007 | — | ✓ | ✓ |
 | BR-003 | DR-071 | PC-003/004 | BC-002 | ✓ | ✓ | ✓ |
 | BR-004 | DR-071/031 | PC-003 | BC-004 | — | ✓ | ✓ |
 | BR-005 | DR-072 | PC-003/004 | BC-002 | — | ✓ | ✓ |
@@ -440,14 +440,14 @@ order while each rule keeps its permanent number.
 | BR-008 | DR-074 | PC-003/004/006 | BC-002/003 | ✓ | ✓ | ✓ |
 | BR-009 | DR-074/024 | PC-003/004 | BC-003/005 | — | ✓ | ✓ |
 | BR-010 | DR-076/013 | PC-003/006 | BC-003/004 | — | ✓ | ✓ |
-| BR-011 | DR-028 | PC-003/004 | BC-003/004/006 | — | ✓ | ✓ |
-| BR-012 | DR-028/016 | PC-004 AP-7 / PR-014 / AC-10 / PC-006 | BC-003/006 | — | ✓ | ✓ |
+| BR-011 | DR-028 | PC-003/004 | BC-003/004/007 | — | ✓ | ✓ |
+| BR-012 | DR-028/016 | PC-004 AP-7 / PR-014 / AC-10 / PC-006 | BC-003/007 | — | ✓ | ✓ |
 | BR-013 | DR-075 | PC-002 PP-3 / AP-3 / PR-004 / AC-03 | BC-003/005 | ✓ | ✓ | ✓ |
 | BR-014 | DR-076 | PC-004 AP-3 / PR-017 / PC-003 | BC-003/004 | — | ✓ | ✓ |
 | BR-015 | DR-077 | PC-004/003 | BC-002 | ✓ | ✓ | — |
 | BR-016 | DR-078 | PC-003/004 | BC-002/003/005 | ✓ | ✓ | ✓ |
 | BR-017 | DR-079 | PC-003/004 | BC-003 | ✓ | ✓ | ✓ |
-| BR-018 | DR-031/016 | PR-014 / AC-10 / PC-003 | BC-004/006 | — | ✓ | ✓ |
+| BR-018 | DR-031/016 | PR-014 / AC-10 / PC-003 | BC-004/007 | — | ✓ | ✓ |
 
 ## 7. Coverage Report
 
@@ -502,3 +502,7 @@ form, each atomic, observable, business-only, and dual-cited (Truth + Constituti
 Legitimacy). It creates **no** UI, engineering, API, schema, algorithm, validation
 logic, screen flow, component, code, test, report, or accounting implementation. No BR
 duplicates another, expands product scope, or contradicts the Product Constitution.
+
+---
+
+*Amendment — ADR-0042 (Option A renumbering): forward-reference document numbers updated (BC-006→BC-007 balances; BC-007→BC-008 non-program). Numbering only changed; constitutional meaning unchanged; no business rule altered.*
