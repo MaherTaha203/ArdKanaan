@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.27.0 |
+| Version | 1.28.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -31,7 +31,7 @@ here does not officially exist (see GOV-001 §4).
     │   ├── phase-1a/
     │   └── phase-1/
     ├── domain/                   Phase 1A — Domain Discovery
-    ├── product/                  Phase 1 — Product Constitution   (IN PROGRESS)
+    ├── product/                  Phase 1 — Product Constitution   (CLOSED)
     ├── business/                 Phase 2 — Business Constitution  (RESERVED)
     ├── ux/                       Phase 3 — UX Constitution        (RESERVED)
     ├── data/                     Phase 4 — DDL Specification      (RESERVED)
@@ -129,7 +129,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0025 | `docs/decisions/ADR-0025-phase-1a-closure-and-phase-1-authorization.md` | Phase 1A Closure & Phase 1 Authorization | ACCEPTED |
 | AUD-P1A-FINAL | `docs/audits/phase-1a/AUDIT-P1A-FINAL.md` | Domain Discovery Completion Report | FROZEN |
 
-### 2.2 Phase 1 — Product Constitution (IN PROGRESS — P1-000 adopted 2026-07-18, ADR-0027)
+### 2.2 Phase 1 — Product Constitution (CLOSED — frozen & locked 2026-07-18, ADR-0036 / AUD-P1-FINAL)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
@@ -151,7 +151,17 @@ Gate 8 (Repository Integrity) violation.
 | PC-005 | `docs/product/PC-005_ACTORS_AND_ACCESS_MODEL.md` | Actors & Access Model | FROZEN |
 | ADR-0032 | `docs/decisions/ADR-0032-pc-005-actors-and-access-model.md` | PC-005 Actors & Access Model Adopted | ACCEPTED |
 | AUD-P1-006 | `docs/audits/phase-1/AUDIT-P1-PC005.md` | PC-005 Actors & Access Model Audit Report | FROZEN |
-| — | `docs/product/` (PC-006…PC-008) | Product Constitution documents | PENDING (authored per P1-000 §9) |
+| PC-006 | `docs/product/PC-006_PRODUCT_LANGUAGE_AND_GLOSSARY.md` | Product Language & Glossary | FROZEN |
+| ADR-0033 | `docs/decisions/ADR-0033-pc-006-product-language-and-glossary.md` | PC-006 Product Language & Glossary Adopted | ACCEPTED |
+| AUD-P1-007 | `docs/audits/phase-1/AUDIT-P1-PC006.md` | PC-006 Product Language & Glossary Audit Report | FROZEN |
+| PC-007 | `docs/product/PC-007_PRODUCT_REQUIREMENTS_AND_TRACEABILITY.md` | Product Requirements & Traceability | FROZEN |
+| ADR-0034 | `docs/decisions/ADR-0034-pc-007-product-requirements-and-traceability.md` | PC-007 Product Requirements & Traceability Adopted | ACCEPTED |
+| AUD-P1-008 | `docs/audits/phase-1/AUDIT-P1-PC007.md` | PC-007 Product Requirements & Traceability Audit Report | FROZEN |
+| PC-008 | `docs/product/PC-008_PRODUCT_VALIDATION_AND_ACCEPTANCE_CRITERIA.md` | Product Validation & Acceptance Criteria | FROZEN |
+| ADR-0035 | `docs/decisions/ADR-0035-pc-008-product-validation-and-acceptance.md` | PC-008 Product Validation & Acceptance Criteria Adopted | ACCEPTED |
+| AUD-P1-009 | `docs/audits/phase-1/AUDIT-P1-PC008.md` | PC-008 Product Validation & Acceptance Criteria Audit Report | FROZEN |
+| ADR-0036 | `docs/decisions/ADR-0036-phase-1-closure-product-constitution-locked.md` | Phase 1 Closure: Product Constitution Frozen & Locked | ACCEPTED |
+| AUD-P1-FINAL | `docs/audits/phase-1/AUDIT-P1-FINAL.md` | Product Constitution Completion Report | FROZEN |
 
 ### 2.3 Phase 2 — Business Constitution (NOT YET OPEN)
 

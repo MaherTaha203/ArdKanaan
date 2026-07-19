@@ -380,10 +380,35 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
 
 ---
 
+### LES-018 — A governing plan's document titles may evolve during authoring; reconcile in the tracker, don't force the plan
+
+- **Observation:** P1-000 §9 planned PC-007 as *Product Requirements* and PC-008 as a
+  *Traceability Matrix*. During authoring the Owner directed PC-007 to become *Product
+  Requirements **& Traceability*** (absorbing the matrix) and PC-008 to become *Product
+  Validation & Acceptance Criteria* (a validation/closure document ending in the
+  Constitutional Lock). The planned intent — full requirement coverage, full
+  traceability, a formal closure gate — was delivered in full, just repartitioned
+  across the last two documents.
+- **Engineering lesson:** A LIVING master plan is a forecast, not a contract on titles.
+  When the deliverable's *intent* is honored but its *packaging* shifts, record the
+  plan-vs-actual reconciliation explicitly in the tracker rather than either rewriting
+  the frozen ADRs or pretending the plan predicted the final split.
+- **Reason:** Silent divergence between a plan and what shipped erodes traceability;
+  an explicit reconciliation note preserves it and shows every planned obligation was
+  met.
+- **Impact:** Positive — P1-000 §11 carries a plan-vs-actual note; the four checkpoints
+  map cleanly onto the eight frozen documents; AUD-P1-FINAL confirms EX-1…EX-5.
+- **Future guidance:** At each phase close, diff the governing plan's promised
+  deliverables against what was frozen. Where titles or partitioning changed, add a
+  one-paragraph reconciliation to the plan's tracker and confirm no promised obligation
+  was dropped — then close.
+
+---
+
 ## 4. Maintenance rules
 
 1. Lessons are appended at phase close (GOV-005 §1 step 8) and whenever a
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-018**.
+3. Next available lesson number: **LES-019**.

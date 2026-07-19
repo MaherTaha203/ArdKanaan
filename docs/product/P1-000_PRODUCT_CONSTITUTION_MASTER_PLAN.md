@@ -128,4 +128,14 @@ decomposition) · measurable completion (the acceptance criteria above) · layer
 | PC-003 Product Mental Model | **FROZEN** (2026-07-18, ADR-0030 / AUD-P1-004) — 19 concepts; §0 The Product's World; MMI-1…MMI-9. **Checkpoint C1 COMPLETE.** |
 | PC-004 Scope, Non-Scope & Anti-Patterns | **FROZEN** (2026-07-18, ADR-0031 / AUD-P1-005) — SC-1…12, NS-1…12, AP-1…8, Boundary Tests, Extension Classification, Future-Extension tiers. **Checkpoint C2 OPEN.** |
 | PC-005 Actors & Access Model | **FROZEN** (2026-07-18, ADR-0032 / AUD-P1-006) — 3 actor kinds; 4 actors; access model AX-1…AX-5 |
-| PC-006…PC-008 | NOT STARTED — authored on Owner order, in the §9 sequence |
+| PC-006 Product Language & Glossary | **FROZEN** (2026-07-18, ADR-0033 / AUD-P1-007) — NR-1…NR-4, GG-1…GG-4, 25-term glossary. **Checkpoint C2 COMPLETE.** |
+| PC-007 Product Requirements & Traceability | **FROZEN** (2026-07-18, ADR-0034 / AUD-P1-008) — PR-001…033, traceability matrix, Constitutional Coverage Report. **Checkpoint C3 COMPLETE.** |
+| PC-008 Product Validation & Acceptance Criteria | **FROZEN** (2026-07-18, ADR-0035 / AUD-P1-009) — AC-01…022, Exit Criteria EX-1…EX-5, Constitutional Lock. **Checkpoint C4 COMPLETE.** |
+| **Phase 1 — Product Constitution** | ✅ **CLOSED** (2026-07-18, ADR-0036 / AUD-P1-FINAL) — PC-001…PC-008 frozen & **locked**; EX-1…EX-5 all MET |
+
+> **Note on plan-vs-actual (§9 titles):** PC-007 was authored as *Product Requirements
+> **& Traceability*** (absorbing the planned traceability matrix), and PC-008 as
+> *Product Validation & Acceptance Criteria* (the Owner-directed validation/closure
+> document). Requirements coverage and traceability are fully delivered (PC-007 §4–§6);
+> acceptance and the constitutional lock are delivered by PC-008. All four checkpoints
+> are complete.

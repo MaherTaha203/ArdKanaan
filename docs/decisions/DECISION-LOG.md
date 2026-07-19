@@ -59,8 +59,12 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0030](ADR-0030-pc-003-product-mental-model.md) | PC-003 Product Mental Model Adopted | 1 | ACCEPTED | — |
 | [ADR-0031](ADR-0031-pc-004-scope-nonscope-antipatterns.md) | PC-004 Scope, Non-Scope & Anti-Patterns Adopted | 1 | ACCEPTED | — |
 | [ADR-0032](ADR-0032-pc-005-actors-and-access-model.md) | PC-005 Actors & Access Model Adopted | 1 | ACCEPTED | — |
+| [ADR-0033](ADR-0033-pc-006-product-language-and-glossary.md) | PC-006 Product Language & Glossary Adopted | 1 | ACCEPTED | — |
+| [ADR-0034](ADR-0034-pc-007-product-requirements-and-traceability.md) | PC-007 Product Requirements & Traceability Adopted | 1 | ACCEPTED | — |
+| [ADR-0035](ADR-0035-pc-008-product-validation-and-acceptance.md) | PC-008 Product Validation & Acceptance Criteria Adopted | 1 | ACCEPTED | — |
+| [ADR-0036](ADR-0036-phase-1-closure-product-constitution-locked.md) | Phase 1 Closure: Product Constitution Frozen & Locked | 1 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0033**.
+Next available ADR number: **ADR-0037**.
 
 ## 4. Maintenance rules
 

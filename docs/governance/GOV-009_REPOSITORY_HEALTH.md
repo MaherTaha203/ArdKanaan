@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-18 — **PC-005 Actors & Access Model FROZEN** (ADR-0032 / AUD-P1-006); Checkpoint C2 in progress
+**Last refresh:** 2026-07-18 — **Phase 1 — Product Constitution CLOSED**; PC-001…PC-008 frozen & locked (ADR-0036 / AUD-P1-FINAL)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 90 / 90 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 101 / 101 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 90 / 90 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 101 / 101 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-005 atoms cite upstream | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 48 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-005, 28 audit reports) + 32 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 1 IN PROGRESS — Checkpoint C2 (PC-004, PC-005 frozen; PC-006 next) | 0 at close | 🟢 |
+| 11 | Frozen documents | 55 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, 32 audit reports) + 36 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | none — Phase 1 CLOSED; Phase 2 NEXT, awaiting explicit Owner authorization (GOV-011 §2) | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -83,3 +83,7 @@ next phase.
 | 2026-07-18 | **PC-003 Product Mental Model FROZEN — Checkpoint C1 COMPLETE** (ADR-0030) | AUD-P1-004 | **All indicators 🟢** — 19 concepts (1:1 DOM-002); §0 The Product's World; Registration as first-class abstraction; Party Financial Standing; MMI-1…MMI-9 |
 | 2026-07-18 | **PC-004 Scope/Non-Scope/Anti-Patterns FROZEN — Checkpoint C2 open** (ADR-0031) | AUD-P1-005 | **All indicators 🟢** — SC-1…12, NS-1…12, AP-1…8, Boundary Tests BT-1…7, Extension Classification (Data/Capability/Behavior/Implementation), Future-Extension tiers |
 | 2026-07-18 | **PC-005 Actors & Access Model FROZEN** (ADR-0032) | AUD-P1-006 | **All indicators 🟢** — 3 actor kinds (System User/Party/Contact); Owner sole user; access model AX-1…AX-5 (single-user, no roles; guarantee vs mechanism) |
+| 2026-07-18 | **PC-006 Product Language & Glossary FROZEN — Checkpoint C2 COMPLETE** (ADR-0033) | AUD-P1-007 | **All indicators 🟢** — NR-1…NR-4 (canonical vs aliases), GG-1…GG-4 glossary governance, 25-term glossary with "Why banned" column; 1:1 with PC-003/DOM-002 |
+| 2026-07-18 | **PC-007 Product Requirements & Traceability FROZEN — Checkpoint C3 COMPLETE** (ADR-0034) | AUD-P1-008 | **All indicators 🟢** — 33 PR (PR-001…033) across 9 categories; full traceability matrix; §6 Constitutional Coverage Report — each PC-001…006 at 100% |
+| 2026-07-18 | **PC-008 Product Validation & Acceptance Criteria FROZEN — Checkpoint C4 COMPLETE** (ADR-0035) | AUD-P1-009 | **All indicators 🟢** — 22 AC (AC-01…022), 100% PR coverage; Constitution Completion Statement; Exit Criteria EX-1…EX-5; Constitutional Lock (§9) |
+| 2026-07-18 | **Phase 1 — Product Constitution CLOSED** — PC-001…PC-008 frozen & locked (ADR-0036) | AUD-P1-FINAL | **All indicators 🟢** — EX-1…EX-5 all MET; 101 registered docs; ADR-0001…0036; end-to-end coverage (Domain ▷ PC ▷ PR ▷ AC) with no orphan; Phase 2 remains NEXT awaiting Owner authorization (GOV-011 §2) |
