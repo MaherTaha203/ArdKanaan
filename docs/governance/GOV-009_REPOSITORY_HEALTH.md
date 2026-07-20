@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-19 — **BC-006 Teacher Payment & Settlement Rules FROZEN — Checkpoint C3 COMPLETE** (ADR-0044 / AUD-P2-008); Transformation layer self-contained; LES-020 (Architectural Saturation) recorded; Checkpoint C4 open
+**Last refresh:** 2026-07-19 — **BC-007 Balances & Party Financial Standing Rules FROZEN** (ADR-0045 / AUD-P2-009); Observation layer (Layer 3) opened, self-contained; Checkpoint C4 continues (BC-008 next)
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 125 / 125 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 128 / 128 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 125 / 125 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 128 / 128 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 66 / 66 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 73 / 73 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 70 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-006, 40 audit reports) + 44 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C3 COMPLETE (BC-000…006 frozen); C4 open, BC-007 next | 0 at close | 🟢 |
+| 11 | Frozen documents | 72 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-007, 41 audit reports) + 45 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C4 open (BC-000…007 frozen); BC-008 next, then C5 (BC-009) | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -95,3 +95,4 @@ next phase.
 | 2026-07-19 | **BC-004 Teacher Entitlement & Debt Rules FROZEN + Phase 2 resequenced (Option A)** (ADR-0042) | AUD-P2-006 | **All indicators 🟢** — 8 BR (BR-041…048), 5 categories; RP-16…20; INV-16…20; Constitutional Boundary (entitlement only; never authorizes payment); BR-046 neutral (debt revealed when settlement exceeds entitlement); settlement split to new BC-006; BC-001/002/003 forward-refs amended to v1.0.1 (numeric only — every DR-/PC-/PR- token unchanged); DR-015/029/031/062…067/069 covered |
 | 2026-07-19 | **BC-005 Refund & Adjustment Rules FROZEN** (ADR-0043) | AUD-P2-007 | **All indicators 🟢** — 9 BR (BR-049…057), 9 categories; RP-21…25; INV-21…25; Constitutional Boundary (refund/adjustment only; never authorizes settlement); BR-054 scoped to document's own effects; BR-055 implementation-neutral; BR-057 field-classification constitutional; consumes BC-002/003/004 with meaning intact; DR-036/037/040/041/042/045/046/047/048/085 covered |
 | 2026-07-19 | **BC-006 Teacher Payment & Settlement Rules FROZEN — Checkpoint C3 COMPLETE** (ADR-0044) | AUD-P2-008 | **All indicators 🟢** — 9 BR (BR-058…066), 6 categories; RP-26…30; INV-26…30; Settlement definition + Principle #1; four-filter review PASS (Rule/Document/Set/Constitutional Independence); Transformation layer self-contained; BR-059 numbering consumed; BR-062 derived readings; INV-27 testable; DR-030/032/033/034/068/070 covered; **LES-020 (Architectural Saturation Principle)** recorded (BC-006 Reference Case) |
+| 2026-07-19 | **BC-007 Balances & Party Financial Standing Rules FROZEN — Observation layer opened** (ADR-0045) | AUD-P2-009 | **All indicators 🟢** — 7 BR (BR-067…073), 7 categories; RP-31…35; INV-31…35; Observation definition + Principle #1 ("Aggregation is a mechanism of revelation, never a source of truth"); four-filter review PASS; self-contained (no forward dependency; dependency direction Creation→Transformation→Observation); BR-067 reveals from constitutional truths; BR-070 principle-level; DR-009/010/011/012/016/035 covered |

@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.35.0 |
+| Version | 1.36.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -193,7 +193,10 @@ Gate 8 (Repository Integrity) violation.
 | BC-006 | `docs/business/BC-006_TEACHER_PAYMENT_AND_SETTLEMENT_RULES.md` | Teacher Payment & Settlement Rules | FROZEN |
 | ADR-0044 | `docs/decisions/ADR-0044-bc-006-teacher-payment-and-settlement.md` | BC-006 Teacher Payment & Settlement Rules Adopted; Checkpoint C3 Complete | ACCEPTED |
 | AUD-P2-008 | `docs/audits/phase-2/AUDIT-P2-BC006.md` | BC-006 Teacher Payment & Settlement Rules Audit Report | FROZEN |
-| — | `docs/business/` (BC-007 Balances · BC-008 Non-Program · BC-009 Traceability) | Business Constitution documents (Option A, Checkpoint C4/C5) | PENDING (authored per P2-000 §7) |
+| BC-007 | `docs/business/BC-007_BALANCES_AND_PARTY_FINANCIAL_STANDING_RULES.md` | Balances & Party Financial Standing Rules | FROZEN |
+| ADR-0045 | `docs/decisions/ADR-0045-bc-007-balances-and-party-financial-standing.md` | BC-007 Balances & Party Financial Standing Rules Adopted | ACCEPTED |
+| AUD-P2-009 | `docs/audits/phase-2/AUDIT-P2-BC007.md` | BC-007 Balances & Party Financial Standing Rules Audit Report | FROZEN |
+| — | `docs/business/` (BC-008 Non-Program · BC-009 Traceability) | Business Constitution documents (Option A, Checkpoint C4/C5) | PENDING (authored per P2-000 §7) |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 
