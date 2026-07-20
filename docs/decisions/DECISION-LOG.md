@@ -69,8 +69,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0040](ADR-0040-bc-002-registration-installment-and-payer.md) | BC-002 Registration, Installment & Payer Rules Adopted; CDC Governance Added | 2 | ACCEPTED | — |
 | [ADR-0041](ADR-0041-bc-003-receipt-voucher-and-numbering.md) | BC-003 Receipt, Voucher & Numbering Rules Adopted; CDC/Coverage Conventions Finalized | 2 | ACCEPTED | — |
 | [ADR-0042](ADR-0042-bc-004-entitlement-and-phase-2-resequence.md) | BC-004 Teacher Entitlement & Debt Rules Adopted; Phase 2 Resequenced (Option A) | 2 | ACCEPTED | — |
+| [ADR-0043](ADR-0043-bc-005-refund-and-adjustment.md) | BC-005 Refund & Adjustment Rules Adopted | 2 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0043**.
+Next available ADR number: **ADR-0044**.
 
 ## 4. Maintenance rules
 

@@ -122,6 +122,6 @@ contradiction; a complete matrix; a closure audit with eight gates PASS; and Pha
 | BC-002 Registration, Installment & Payer Rules | **FROZEN** (2026-07-19, ADR-0040 / AUD-P2-004) — BR-019…BR-027 (7 categories); RP-6…10; INV-7…10; first CDC section (§9). |
 | BC-003 Receipt, Voucher & Numbering Rules | **FROZEN** (2026-07-19, ADR-0041 / AUD-P2-005) — BR-028…BR-040 (10 categories); RP-11…15; INV-11…15; four-line CDC + "Scope intentionally closed" conventions finalized. |
 | BC-004 Teacher Entitlement & Debt Rules | **FROZEN** (2026-07-19, ADR-0042 / AUD-P2-006) — BR-041…BR-048 (5 categories); RP-16…20; INV-16…20; Constitutional Boundary (entitlement only, never authorizes payment). |
-| BC-005 Refund & Adjustment Rules | NEXT — pending explicit Owner order |
-| BC-006 Teacher Payment & Settlement Rules | NOT STARTED (new, ADR-0042 Option A) |
+| BC-005 Refund & Adjustment Rules | **FROZEN** (2026-07-19, ADR-0043 / AUD-P2-007) — BR-049…BR-057 (9 categories); RP-21…25; INV-21…25; Constitutional Boundary (refund/adjustment only, never authorizes settlement). |
+| BC-006 Teacher Payment & Settlement Rules | NEXT — pending explicit Owner order |
 | BC-007…BC-009 | NOT STARTED — authored on Owner order, in the §7 sequence |

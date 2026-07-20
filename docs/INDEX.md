@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.33.0 |
+| Version | 1.34.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -187,7 +187,10 @@ Gate 8 (Repository Integrity) violation.
 | BC-004 | `docs/business/BC-004_TEACHER_ENTITLEMENT_AND_DEBT_RULES.md` | Teacher Entitlement & Debt Rules | FROZEN |
 | ADR-0042 | `docs/decisions/ADR-0042-bc-004-entitlement-and-phase-2-resequence.md` | BC-004 Teacher Entitlement & Debt Rules Adopted; Phase 2 Resequenced (Option A) | ACCEPTED |
 | AUD-P2-006 | `docs/audits/phase-2/AUDIT-P2-BC004.md` | BC-004 Teacher Entitlement & Debt Rules Audit Report | FROZEN |
-| — | `docs/business/` (BC-005 Refund & Adjustment · BC-006 Teacher Payment & Settlement · BC-007 Balances · BC-008 Non-Program · BC-009 Traceability) | Business Constitution documents (Option A) | PENDING (authored per P2-000 §7) |
+| BC-005 | `docs/business/BC-005_REFUND_AND_ADJUSTMENT_RULES.md` | Refund & Adjustment Rules | FROZEN |
+| ADR-0043 | `docs/decisions/ADR-0043-bc-005-refund-and-adjustment.md` | BC-005 Refund & Adjustment Rules Adopted | ACCEPTED |
+| AUD-P2-007 | `docs/audits/phase-2/AUDIT-P2-BC005.md` | BC-005 Refund & Adjustment Rules Audit Report | FROZEN |
+| — | `docs/business/` (BC-006 Teacher Payment & Settlement · BC-007 Balances · BC-008 Non-Program · BC-009 Traceability) | Business Constitution documents (Option A) | PENDING (authored per P2-000 §7) |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 

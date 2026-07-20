@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-19 — **BC-004 Teacher Entitlement & Debt Rules FROZEN**; Phase 2 resequenced (Option A: settlement → new BC-006); BC-001/002/003 forward-refs amended (numeric only) (ADR-0042 / AUD-P2-006)
+**Last refresh:** 2026-07-19 — **BC-005 Refund & Adjustment Rules FROZEN** (ADR-0043 / AUD-P2-007); Phase 2 Checkpoint C3 continues (BC-006 Settlement next); pattern confirmed: BC-003 creates facts · BC-004 derives rights · BC-005 reverses facts
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 119 / 119 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 122 / 122 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 119 / 119 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 122 / 122 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
-| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 48 / 48 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
+| 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 57 / 57 BR dual-cited (Truth + Constitutional Legitimacy) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 66 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-004, 38 audit reports) + 42 ACCEPTED ADRs | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C3 open (BC-000…004 frozen); BC-005 next, then BC-006 (settlement) | 0 at close | 🟢 |
+| 11 | Frozen documents | 68 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-005, 39 audit reports) + 43 ACCEPTED ADRs | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | Phase 2 IN PROGRESS — Checkpoint C3 open (BC-000…005 frozen); BC-006 (settlement) next | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -93,3 +93,4 @@ next phase.
 | 2026-07-19 | **BC-002 Registration, Installment & Payer Rules FROZEN + CDC governance added** (ADR-0040) | AUD-P2-004 | **All indicators 🟢** — 9 BR (BR-019…027), 7 categories; RP-6…10; INV-7…10; installments divide settlement not obligation; BR-027 grounded in DR-087/071; first §9 Cross-Document Consistency Review ("Consumes only. No modification. No reinterpretation."); CDC clause added to P2-000 §6; consumes BC-001 with meaning intact; DR-021/022/023/024/086/087/089 covered |
 | 2026-07-19 | **BC-003 Receipt, Voucher & Numbering Rules FROZEN — Checkpoint C2 COMPLETE** (ADR-0041) | AUD-P2-005 | **All indicators 🟢** — 13 BR (BR-028…040), 10 categories; RP-11…15; INV-11…15; BR-035 owns effect-arises-at-posting (calculation consumed from BC-001); BR-037 Immutability / BR-040 Lifecycle (single responsibility each); "Scope intentionally closed" adopted; four-line CDC finalized in P2-000 §6; consumes BC-001/BC-002 with meaning intact; DR-006/017/019/023/025/026/043/044/090 covered |
 | 2026-07-19 | **BC-004 Teacher Entitlement & Debt Rules FROZEN + Phase 2 resequenced (Option A)** (ADR-0042) | AUD-P2-006 | **All indicators 🟢** — 8 BR (BR-041…048), 5 categories; RP-16…20; INV-16…20; Constitutional Boundary (entitlement only; never authorizes payment); BR-046 neutral (debt revealed when settlement exceeds entitlement); settlement split to new BC-006; BC-001/002/003 forward-refs amended to v1.0.1 (numeric only — every DR-/PC-/PR- token unchanged); DR-015/029/031/062…067/069 covered |
+| 2026-07-19 | **BC-005 Refund & Adjustment Rules FROZEN** (ADR-0043) | AUD-P2-007 | **All indicators 🟢** — 9 BR (BR-049…057), 9 categories; RP-21…25; INV-21…25; Constitutional Boundary (refund/adjustment only; never authorizes settlement); BR-054 scoped to document's own effects; BR-055 implementation-neutral; BR-057 field-classification constitutional; consumes BC-002/003/004 with meaning intact; DR-036/037/040/041/042/045/046/047/048/085 covered |
