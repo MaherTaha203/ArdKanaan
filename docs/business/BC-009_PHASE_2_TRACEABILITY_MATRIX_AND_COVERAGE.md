@@ -6,7 +6,7 @@
 | Title | Phase 2 Traceability Matrix & Coverage |
 | Phase | 2 (Business Constitution) |
 | Status | DRAFT |
-| Version | 0.1.0 (draft — awaiting constitutional review) |
+| Version | 0.2.0 (draft — Revision-1 applied; awaiting constitutional freeze review) |
 | Depends on | BC-000 (framework + §8 BX-1…BX-6); BC-001…BC-008 (frozen, the proof subjects); P2-000 §5/§7/§8; DOM-004 (DR-001…090, frozen); PC-001…PC-008 (frozen); GOV-006 (traceability), GOV-004 §5 (amendment) |
 | Answers | "How is the constitutional completeness, traceability, and closure of the Phase 2 Business Constitution objectively demonstrated?" |
 
@@ -55,15 +55,16 @@ new rule.
 | Business Rules total | **87** (BR-001…BR-087, contiguous) | unique `BR-NNN` headings in BC-001…008 |
 | BR per document | BC-001 18 · BC-002 9 · BC-003 13 · BC-004 8 · BC-005 9 · BC-006 9 · BC-007 7 · BC-008 14 | 18+9+13+8+9+9+7+14 = 87 |
 | Business Rule Principles | **40** (RP-1…RP-40) | unique `RP-NN` |
-| Business Invariants | **40** (INV-1…INV-40) | unique `INV-NN` |
+| Business Invariants (frozen BC-001…008) | **40** (INV-1…INV-40); BC-009 declares its own meta-invariant **INV-41** (§11) | unique `INV-NN` |
 | Frozen Domain Rules | **90** (DR-001…DR-090) | DOM-004 |
-| In-scope DR covered by ≥1 BR | **76** | §6 union |
-| DR accounted out of BR-scope | **14** | §7 disposition |
+| In-scope DR covered by ≥1 BR (§6) | **76** | §6 union |
+| DR Refined Forward / Superseded (§7) | **3** (DR-008, DR-038, DR-039) | §7 relationship (b) |
+| DR out of BR-scope by disposition (§7) | **11** | §7 relationship (c) |
 | BR dual-cited (Truth + Legitimacy) | **87 / 87** | §8 |
 | Orphan BR (missing DR or PC) | **0** | §8 |
 | Uncovered in-scope DR | **0** | §7 |
-| Coverage exceptions | **0** | §11 |
-| Amendment candidates | **0** | §12 |
+| Coverage exceptions | **0** | §12 |
+| Amendment candidates | **0** | §13 |
 
 ## 5. Scope of this document
 
@@ -111,31 +112,49 @@ coverage each frozen document declared.
 
 ## 7. Constitutional completeness verification
 
-The 14 frozen Domain Rules **not** listed in §6 are **out of Business-Rule scope by an
-objective, citable disposition** — none is an uncovered in-scope business behavior. Each
-disposition is anchored to the frozen text named in the last column (reproducible; no
-interpretation).
+A frozen Domain Rule stands in exactly **one** constitutional relationship to the frozen
+Business-Rule set. BC-009 keeps these relationships **explicitly distinct** and never conflates
+them; in particular, a DR whose constitutional responsibility has been **absorbed into later
+frozen Domain Rules** is **never presented as "covered"** — it is classified as **Refined
+Forward** (its live responsibility now sits in the successor DRs, which are themselves covered in
+§6). BC-009 **documents the constitutional relationship only; it does not reinterpret it.**
+
+**Relationship (a) — Covered (§6):** 76 in-scope Domain Rules, each covered by ≥1 Business Rule.
+These are the operative business behaviors of Phase 2.
+
+**Relationship (b) — Refined Forward / Superseded by frozen Domain Rules:** the DR's
+constitutional responsibility has been absorbed into **later frozen Domain Rules**; the parent DR
+is **not** counted as covered, and its live behavior is proven only through its covered
+successors.
+
+| DR | Statement (DOM-004) | Relationship | Successor frozen DR (and their §6 coverage) — from the parent's own frozen text |
+|---|---|---|---|
+| DR-008 | Outgoing money is a payment voucher | **Refined Forward** | → DR-030 (teacher payment, BR-058) and DR-049…054 (expense, BR-077…081); per DR-008 Unknown-status |
+| DR-038 | Entitlement reflects net revenue after refunds | **Refined Forward** | → DR-062 (BR-042), DR-063 (BR-044), DR-064 (BR-045); per DR-038 Unknown-status |
+| DR-039 | Refunded, already-paid teacher share becomes a debt | **Refined Forward** | → DR-065 (BR-046), DR-066 (BR-047), DR-067/069 (BR-048), DR-068 (BR-064), DR-070 (BR-065); per DR-039 Unknown-status |
+
+**Relationship (c) — Out of Business-Rule scope by a citable disposition:** the DR is not a
+Phase-2 business behavior at all; it is accounted for by the frozen text named in the last
+column. None is superseded and none is an uncovered behavior.
 
 | DR | Statement (DOM-004) | Disposition | Anchor (frozen citation) |
 |---|---|---|---|
-| DR-001 | One center, one owner | **Foundational structural axiom** — the fixed shape of the business; owned by the Product Constitution and consumed as a universal precondition, not a discrete behavior. | DR-001 "root rule"; PC-005 (Owner sole user), PC-001 |
-| DR-002 | One teacher per program | **Consumed as supporting Authority of Truth** inside a covered BR. | BC-001 BR-001 Authority of Truth: "DR-071 (DR-002/003/004 supporting)" |
-| DR-003 | One distribution policy per program | **Consumed as supporting Authority** + encoded as Business Invariant. | BC-001 BR-001 (as above); BC-001 §8 INV (one policy per program) |
-| DR-004 | Receipt belongs to one program | **Consumed as supporting Authority** of BR-001; program-fee receipt scope. | BC-001 BR-001 (as above) |
+| DR-001 | One center, one owner | **Foundational structural axiom** — the fixed shape of the business; owned by the Product Constitution, consumed as a universal precondition, not a discrete behavior. | DR-001 "root rule"; PC-005 (Owner sole user), PC-001 |
+| DR-002 | One teacher per program | **Consumed as a supporting Authority of Truth** inside a covered BR (actively cited, not superseded). | BC-001 BR-001 Authority of Truth: "DR-071 (DR-002/003/004 supporting)" |
+| DR-003 | One distribution policy per program | **Consumed as a supporting Authority** + encoded as a Business Invariant. | BC-001 BR-001 (as above); BC-001 §8 INV (one policy per program) |
+| DR-004 | Receipt belongs to one program | **Consumed as a supporting Authority** of BR-001 (program-fee receipt scope). | BC-001 BR-001 (as above) |
 | DR-005 | Split calculated automatically at receipt | **Meta-derivation principle** — realized across the posting/distribution BRs, not a discrete rule. | Realized by BC-003 BR-035 + BC-001 BR-008/010/011/012; reinforced by DR-027 |
 | DR-007 | Nothing computable entered by hand | **Meta-derivation principle (the Absolute Rule)** — realized by every derivation/reveal BR. | Realized across all BRs; explicitly by BC-007 BR-071/BR-072 (full derivability) |
-| DR-008 | Outgoing money is a payment voucher | **Parent rule realized via covered concrete instances.** | DR-008 Unknown-status → DR-030 (teacher payment, BR-058) and DR-049…054 (expense, BR-077…081) |
-| DR-013 | V1 compensation = percentage of posted receipts (sum 100%) | **Consumed as supporting Authority** + encoded as Invariant. | Cited in BC-001 BR-010 (DR-076/013) & BC-004 BR-042 (DR-013/…); BC-001 §8 INV (shares total 100%) |
-| DR-014 | Rounding belongs exclusively to the currency | **Negative/boundary rule** (the business defines no rounding of its own); realized via the covered rounding rule. | DR-014 → DR-028 (round-half-up), covered by BC-003 BR-011 |
+| DR-013 | V1 compensation = percentage of posted receipts (sum 100%) | **Consumed as a supporting Authority** (actively cited) + encoded as a Business Invariant. | Cited in BC-001 BR-010 (DR-076/013) & BC-004 BR-042 (DR-013/062/031); BC-001 §8 INV (shares total 100%) |
+| DR-014 | Rounding belongs exclusively to the currency | **Negative / boundary rule** — the business defines no rounding of its own; the rounding-direction aspect was refined to DR-028 (covered, BR-011). | DR-014 text; DR-014 Unknown-status → DR-028; BC-003 BR-011 |
 | DR-018 | Operations is an activity view that **creates no business logic** | **Out of Business-Constitution scope** — a system-activity view; a BR here would contradict DR-018. Belongs to Phase 3 (UX). | DR-018 text ("creates no business logic"); ADR-0010 |
 | DR-020 | Every operation has a source + financial-impact flag | **Out of Business-Constitution scope** — presentation/structure of the activity view; Phase 3 (UX). | DR-018/DR-020; ADR-0010 §5/§6/§8 |
 | DR-027 | V1 Simplicity Principle (what is NOT in V1) | **Negative scope-exclusion** — forbids behavior; honored by the absence of those behaviors + Invariants, never by adding a BR. | DR-027 text ("reinforces DR-005/DR-006"); BC-002 (one student), BC-001 BR-004 (one program) |
-| DR-038 | Entitlement reflects net revenue after refunds | **Refined-forward** — the concrete behavior lives in its covered successor DRs. | DR-038 Unknown-status → DR-062 (BR-042), DR-063 (BR-044), DR-064 (BR-045) |
-| DR-039 | Refunded, already-paid teacher share becomes a debt | **Refined-forward** — behavior lives in its covered successor DRs. | DR-039 Unknown-status → DR-065…070 (BR-046/047/048/064/065) |
 
-**Result:** every frozen Domain Rule is either (a) covered by ≥1 BR (§6, 76 DRs) or
-(b) accounted for out of BR-scope by a citable disposition (14 DRs). 76 + 14 = 90 = all frozen
-DRs. **No constitutional gap exists inside Phase 2. No Amendment candidate arises.**
+**Tally.** 90 frozen DR = **76 Covered (§6)** + **3 Refined Forward** (DR-008, DR-038, DR-039)
++ **11 out-of-scope by disposition** (relationship c). 76 + 3 + 11 = 90. Every frozen Domain Rule
+stands in exactly one explicit relationship; **no constitutional gap exists inside Phase 2, and
+no Amendment candidate arises.**
 
 *Workflows.* The Phase-1A workflows WF-01…WF-16 are narrative sequences over the same entities
 and financial state-transitions; each money-moving step a workflow performs is owned atomically
@@ -267,13 +286,25 @@ Legitimacy (PC)**. Reproduce with `grep -hnE '^\| BR-[0-9]+ \|' docs/business/BC
 | BR-087 | DR-088 | PP-3 / PC-003 |
 
 **87 / 87 Business Rules are dual-cited.** No BR lacks an Authority of Truth; no BR lacks an
-Authority of Constitutional Legitimacy. **Zero orphan Business Rules.** No citation above is
-reinterpreted — each is copied from the frozen document's own §6 matrix.
+Authority of Constitutional Legitimacy. **Zero orphan Business Rules.**
+
+**Verbatim-reproduction verification.** Every entry above is **copied directly** from the
+originating frozen document's own §6 matrix — the evidence is **normalized in layout only** (the
+supporting *Consumes / Future* columns are omitted; the `(… consumed)` parentheticals of BR-059
+are preserved). BC-009 **does not reinterpret, summarize, infer, or strengthen** any citation. A
+field-by-field comparison of the (BR, Authority of Truth, Authority of Constitutional Legitimacy)
+triple against `grep -hnE '^\| BR-[0-9]+ \|' docs/business/BC-00[1-8]_*.md` matches for all 87
+rows. Had any entry failed verbatim reproduction, BC-009 would have **STOPPED** and flagged it as
+an Amendment candidate (§13); none did.
 
 ## 9. Constitutional closure verification against BX-1…BX-6 (BC-000 §8)
 
-BC-009 **demonstrates** satisfaction; it does **not** declare closure. Constitutional closure
-is authorized only by a separate Owner Engineering Order.
+**Proof is separate from authorization.** BC-009 **demonstrates** — with reproducible evidence —
+that every closure condition is satisfied **except** those that constitutionally require BC-009's
+own propagation (its freeze and the closure audit); those two cannot be self-satisfied by a
+document under review, and BC-009 does not pretend otherwise. BC-009 **never declares Phase 2
+closed.** Constitutional closure is authorized **only** by a separate Owner Engineering Order
+issued **after** successful propagation.
 
 | BX | Criterion (BC-000 §8) | Objective demonstration | State |
 |---|---|---|---|
@@ -305,24 +336,48 @@ Every claim in this document is regenerable from the frozen repository with no i
 
 No claim in BC-009 requires reading anything beyond the frozen artifacts named above.
 
-## 11. Coverage exceptions
+## 11. Constitutional Invariant *(derivational, not generative)*
 
-**None.** Every in-scope Domain Rule is covered (§6); every out-of-scope Domain Rule is
-accounted for by a citable disposition (§7). No exception is carried.
+Continuing the frozen invariant sequence (INV-1…INV-40 across BC-001…BC-008), BC-009 declares
+one self-referential meta-invariant. It is **derivational**: it restates the sink principle and
+introduces no business truth.
 
-## 12. Amendment candidates
+- **INV-41 — Constitutional Reproducibility.**
+  - **Rule:** Every statement contained in BC-009 shall be objectively reproducible from frozen
+    constitutional artifacts. BC-009 shall contain no constitutional truth that is not already
+    established by frozen constitutional documents.
+  - **Business Rationale:** BC-009 is constitutional proof only; it is never a constitutional
+    source.
+  - **Verification Method:** Select any statement in BC-009 and demonstrate that it can be
+    reproduced directly from frozen constitutional artifacts without interpretation (see the §10
+    reproduction commands; the §8 verbatim check exercises this for the full traceability matrix).
+
+## 12. Coverage exceptions
+
+**None.** Every in-scope Domain Rule is covered (§6); every Refined-Forward Domain Rule is proven
+through its covered successors (§7 b); every remaining Domain Rule is accounted for by a citable
+disposition (§7 c). No exception is carried.
+
+## 13. Amendment candidates
 
 **None.** No gap, contradiction, orphan, or uncovered in-scope behavior was discovered. Had one
 been found, BC-009 would have **STOPPED** and recorded it here as an Amendment candidate under
 GOV-004 §5 / BC-000 §BCG-3, without repairing it.
 
-## 13. Strict-scope self-check
+## 14. Strict-scope self-check
 
 BC-009 defines **no** Business Rule, **no** Domain Rule, and **no** terminology; it introduces
 no business behavior, workflow, lifecycle, responsibility, implementation guidance, UX guidance,
-or reporting guidance. It reinterprets no Product Constitution statement and repairs no gap. It
-is **constitutional proof only** — the sink of BC-001…BC-008 — and every statement it makes is
+or reporting guidance. Its single invariant (INV-41) is **derivational**, not generative — it
+restates the sink principle and adds no constitutional truth. It reinterprets no Product
+Constitution statement, presents no Refined-Forward Domain Rule as "covered," and repairs no gap.
+It is **constitutional proof only** — the sink of BC-001…BC-008 — and every statement it makes is
 directly auditable from the frozen constitutional artifacts.
+
+**Revision-1 validation:** ✓ zero Business Rules introduced · ✓ zero Domain Rules introduced ·
+✓ zero constitutional interpretations (relationships documented, never reinterpreted) · ✓ every
+statement reproducible (§10; §8 verbatim check; INV-41) · ✓ proof kept separate from
+authorization (§9) · ✓ the document remains the constitutional sink of Phase 2.
 
 ---
 
