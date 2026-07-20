@@ -125,5 +125,5 @@ contradiction; a complete matrix; a closure audit with eight gates PASS; and Pha
 | BC-005 Refund & Adjustment Rules | **FROZEN** (2026-07-19, ADR-0043 / AUD-P2-007) — BR-049…BR-057 (9 categories); RP-21…25; INV-21…25; Constitutional Boundary (refund/adjustment only, never authorizes settlement). |
 | BC-006 Teacher Payment & Settlement Rules | **FROZEN** (2026-07-19, ADR-0044 / AUD-P2-008) — BR-058…BR-066 (6 categories); RP-26…30; INV-26…30; Settlement definition; four-filter review PASS. **Checkpoint C3 COMPLETE.** |
 | BC-007 Balances & Party Financial Standing Rules | **FROZEN** (2026-07-19, ADR-0045 / AUD-P2-009) — BR-067…BR-073 (7 categories); RP-31…35; INV-31…35; Observation definition; self-contained (no forward dependency); four-filter review PASS. First Observation-layer document. |
-| BC-008 Non-Program Revenue, Expense & Lifecycle Rules | NEXT (Checkpoint C4) — pending explicit Owner order |
-| BC-009 Phase 2 Traceability Matrix & Coverage | NOT STARTED (Checkpoint C5) |
+| BC-008 Non-Program Revenue, Expense & Lifecycle Rules | **FROZEN** (2026-07-20, ADR-0046 / AUD-P2-010) — BR-074…BR-087 (7 categories); RP-36…40; INV-36…40; Creation-layer (creates center-only facts; lifecycle governed within that frame); Principle #1 + Constitutional Boundary; no forward dependency. **Checkpoint C4 COMPLETE.** |
+| BC-009 Phase 2 Traceability Matrix & Coverage | NEXT (Checkpoint C5) — pending explicit Owner order |
