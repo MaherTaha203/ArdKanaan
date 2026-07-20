@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.37.0 |
+| Version | 1.38.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -199,7 +199,9 @@ Gate 8 (Repository Integrity) violation.
 | BC-008 | `docs/business/BC-008_NON_PROGRAM_REVENUE_EXPENSE_AND_LIFECYCLE_RULES.md` | Non-Program Revenue, Expense & Lifecycle Rules | FROZEN |
 | ADR-0046 | `docs/decisions/ADR-0046-bc-008-non-program-revenue-expense-and-lifecycle.md` | BC-008 Non-Program Revenue, Expense & Lifecycle Rules Adopted; Checkpoint C4 Complete | ACCEPTED |
 | AUD-P2-010 | `docs/audits/phase-2/AUDIT-P2-BC008.md` | BC-008 Non-Program Revenue, Expense & Lifecycle Rules Audit Report | FROZEN |
-| — | `docs/business/` (BC-009 Traceability) | Business Constitution traceability matrix (Option A, Checkpoint C5) | PENDING (authored per P2-000 §7) |
+| BC-009 | `docs/business/BC-009_PHASE_2_TRACEABILITY_MATRIX_AND_COVERAGE.md` | Phase 2 Traceability Matrix & Coverage | FROZEN |
+| ADR-0047 | `docs/decisions/ADR-0047-bc-009-phase-2-traceability-matrix-and-coverage.md` | BC-009 Phase 2 Traceability Matrix & Coverage Adopted; Checkpoint C5 Complete | ACCEPTED |
+| AUD-P2-011 | `docs/audits/phase-2/AUDIT-P2-BC009.md` | BC-009 Phase 2 Traceability Matrix & Coverage Audit Report | FROZEN |
 
 ### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
 

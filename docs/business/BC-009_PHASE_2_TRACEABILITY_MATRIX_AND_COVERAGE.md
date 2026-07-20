@@ -5,8 +5,8 @@
 | Doc ID | BC-009 |
 | Title | Phase 2 Traceability Matrix & Coverage |
 | Phase | 2 (Business Constitution) |
-| Status | DRAFT |
-| Version | 0.2.0 (draft — Revision-1 applied; awaiting constitutional freeze review) |
+| Status | FROZEN |
+| Version | 1.0.0 |
 | Depends on | BC-000 (framework + §8 BX-1…BX-6); BC-001…BC-008 (frozen, the proof subjects); P2-000 §5/§7/§8; DOM-004 (DR-001…090, frozen); PC-001…PC-008 (frozen); GOV-006 (traceability), GOV-004 §5 (amendment) |
 | Answers | "How is the constitutional completeness, traceability, and closure of the Phase 2 Business Constitution objectively demonstrated?" |
 
@@ -381,7 +381,8 @@ authorization (§9) · ✓ the document remains the constitutional sink of Phase
 
 ---
 
-*DRAFT — awaiting constitutional review. Not frozen. No ADR published, no register updated, no
-frozen document modified. On approval, BC-009 is propagated (freeze + ADR-0047 + closure audit
-AUD-P2-011 + registers) and Phase 2 constitutional closure is authorized by a separate Owner
-Engineering Order.*
+*FROZEN (v1.0.0, ADR-0047 / AUD-P2-011). BC-009 is the constitutional sink of Phase 2 — proof,
+never production. Its freeze completes Checkpoint C5 and satisfies BX-5's matrix requirement.
+**Freezing BC-009 does not declare Phase 2 closed:** constitutional closure (and the opening of
+Phase 3) is authorized only by a separate Owner Engineering Order issued after this propagation
+is verified — preserving the separation of Proof from Authorization.*

@@ -73,8 +73,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0044](ADR-0044-bc-006-teacher-payment-and-settlement.md) | BC-006 Teacher Payment & Settlement Rules Adopted; Checkpoint C3 Complete | 2 | ACCEPTED | — |
 | [ADR-0045](ADR-0045-bc-007-balances-and-party-financial-standing.md) | BC-007 Balances & Party Financial Standing Rules Adopted | 2 | ACCEPTED | — |
 | [ADR-0046](ADR-0046-bc-008-non-program-revenue-expense-and-lifecycle.md) | BC-008 Non-Program Revenue, Expense & Lifecycle Rules Adopted; Checkpoint C4 Complete | 2 | ACCEPTED | — |
+| [ADR-0047](ADR-0047-bc-009-phase-2-traceability-matrix-and-coverage.md) | BC-009 Phase 2 Traceability Matrix & Coverage Adopted; Checkpoint C5 Complete | 2 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0047**.
+Next available ADR number: **ADR-0048**.
 
 ## 4. Maintenance rules
 
