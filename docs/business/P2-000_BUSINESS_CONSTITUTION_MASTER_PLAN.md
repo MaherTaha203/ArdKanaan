@@ -116,7 +116,7 @@ contradiction; a complete matrix; a closure audit with eight gates PASS; and Pha
 
 | Doc | Status |
 |---|---|
-| P2-000 | ADOPTED (this document — opens Phase 2, ADR-0037) |
+| P2-000 | ADOPTED (this document — opened Phase 2, ADR-0037). **Phase 2 CLOSED & LOCKED 2026-07-20 (ADR-0048 / AUD-P2-FINAL); BX-1…BX-6 all MET; BC-000…BC-009 frozen & locked. Plan fulfilled.** |
 | BC-000 Business Constitution Framework | **FROZEN** (2026-07-19, ADR-0038 / AUD-P2-002) — Dual Authority §4.0; BB/BCD/BCG/BCP/BCI/BX. **Checkpoint C1 COMPLETE.** |
 | BC-001 Programs, Pricing & Distribution Policy Rules | **FROZEN** (2026-07-19, ADR-0039 / AUD-P2-003) — BR-001…BR-018 (11 categories); RP-1…5; §8 Business Invariants INV-1…6. **Checkpoint C2 OPEN.** |
 | BC-002 Registration, Installment & Payer Rules | **FROZEN** (2026-07-19, ADR-0040 / AUD-P2-004) — BR-019…BR-027 (7 categories); RP-6…10; INV-7…10; first CDC section (§9). |

@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.38.0 |
+| Version | 1.39.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -30,12 +30,13 @@ here does not officially exist (see GOV-001 §4).
     │   ├── phase-0/
     │   ├── phase-1a/
     │   ├── phase-1/
-    │   └── phase-2/
+    │   ├── phase-2/
+    │   └── phase-3/
 
     ├── domain/                   Phase 1A — Domain Discovery
     ├── product/                  Phase 1 — Product Constitution   (CLOSED)
-    ├── business/                 Phase 2 — Business Constitution  (IN PROGRESS)
-    ├── ux/                       Phase 3 — UX Constitution        (RESERVED)
+    ├── business/                 Phase 2 — Business Constitution  (CLOSED & LOCKED)
+    ├── ux/                       Phase 3 — UX Constitution        (IN PROGRESS)
     ├── data/                     Phase 4 — DDL Specification      (RESERVED)
     ├── components/               Phase 5 — Component Library Spec (RESERVED)
     └── screens/                  Phase 6 — Screen Blueprints      (RESERVED)
@@ -165,7 +166,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0036 | `docs/decisions/ADR-0036-phase-1-closure-product-constitution-locked.md` | Phase 1 Closure: Product Constitution Frozen & Locked | ACCEPTED |
 | AUD-P1-FINAL | `docs/audits/phase-1/AUDIT-P1-FINAL.md` | Product Constitution Completion Report | FROZEN |
 
-### 2.3 Phase 2 — Business Constitution (IN PROGRESS — P2-000 adopted 2026-07-19, ADR-0037)
+### 2.3 Phase 2 — Business Constitution (CLOSED & LOCKED — frozen & locked 2026-07-20, ADR-0048 / AUD-P2-FINAL)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
@@ -202,12 +203,17 @@ Gate 8 (Repository Integrity) violation.
 | BC-009 | `docs/business/BC-009_PHASE_2_TRACEABILITY_MATRIX_AND_COVERAGE.md` | Phase 2 Traceability Matrix & Coverage | FROZEN |
 | ADR-0047 | `docs/decisions/ADR-0047-bc-009-phase-2-traceability-matrix-and-coverage.md` | BC-009 Phase 2 Traceability Matrix & Coverage Adopted; Checkpoint C5 Complete | ACCEPTED |
 | AUD-P2-011 | `docs/audits/phase-2/AUDIT-P2-BC009.md` | BC-009 Phase 2 Traceability Matrix & Coverage Audit Report | FROZEN |
+| ADR-0048 | `docs/decisions/ADR-0048-phase-2-closure-and-phase-3-authorization.md` | Phase 2 Constitutional Closure & Lock; Phase 3 Authorization | ACCEPTED |
+| AUD-P2-FINAL | `docs/audits/phase-2/AUDIT-P2-FINAL.md` | Business Constitution Completion Report (Phase 2 Closure) | FROZEN |
 
-### 2.4 Phase 3 — UX Constitution (NOT YET OPEN)
+### 2.4 Phase 3 — UX Constitution (IN PROGRESS — P3-000 adopted 2026-07-20, ADR-0049)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| — | `docs/ux/` | Reserved | PENDING |
+| P3-000 | `docs/ux/P3-000_UX_CONSTITUTION_MASTER_PLAN.md` | UX Constitution Master Plan | LIVING |
+| ADR-0049 | `docs/decisions/ADR-0049-phase-3-commencement-and-p3-000-adoption.md` | Phase 3 Commencement & P3-000 UX Constitution Master Plan Adoption | ACCEPTED |
+| AUD-P3-001 | `docs/audits/phase-3/AUDIT-P3-MASTER-PLAN.md` | Phase 3 Commencement & UX Constitution Master Plan Audit Report | FROZEN |
+| — | `docs/ux/` (UX-001 … UX-007) | UX Constitution documents (Checkpoints UC1…UC4) | PENDING (authored per P3-000 §7) |
 
 ### 2.5 Phase 4 — DDL Specification (NOT YET OPEN)
 
