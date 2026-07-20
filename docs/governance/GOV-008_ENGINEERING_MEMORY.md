@@ -429,10 +429,40 @@ Impact · Future guidance**. IDs are `LES-NNN`, sequential, never reused.
 
 ---
 
+### LES-020 — Architectural Saturation Principle (design-rhythm governance rule)
+
+- **Governance rule (general, reusable):**
+  > *A constitutional document enters authoring only after its review framework is capable
+  > of detecting every known category of architectural responsibility leak. Beyond that
+  > point, additional pre-authoring design is presumed to provide diminishing architectural
+  > value unless it introduces a genuinely new responsibility boundary.*
+- **Observation (Reference Case — BC-006):** Before authoring BC-006, the pre-authoring
+  design accreted a central question, Principle #1, a Settlement definition, INV-26, and a
+  four-filter review framework (Rule / Document / Set / Constitutional Independence). Once
+  those four filters could reject every known leak category — rule-level (state-transition),
+  document-level (voucher-form coupling), cross-layer (Observation leakage), and
+  foundational (originating a new truth) — the framework was *saturated*: any further
+  principle would only restate the same property, `BC-006 must discharge constitutional
+  truths, never originate them`. Authoring then began at BR-058 with no further design.
+- **Engineering lesson:** Pre-authoring design has a natural stopping point. Stop when the
+  review framework can detect every known category of responsibility leak for that document;
+  beyond it, keep designing only if a genuinely new responsibility boundary appears.
+- **Relationship to LES-019:** the two rules govern different rhythms — **LES-020** governs
+  *Framework Design → Rule Authoring* **within** one document; **LES-019** governs
+  *a completed document/phase → the next phase*. They must not be conflated: one is
+  intra-document, the other project-level.
+- **Impact:** Positive — BC-006 was authored once, passed all four filters and eight gates
+  on the first audit (AUD-P2-008), and closed Checkpoint C3 without a design reopening.
+- **Future guidance:** For any future constitutional document, treat the review framework's
+  ability to reject every known leak category as the signal to begin authoring. BC-006 is
+  the validated exemplar; the principle itself is general and applies to any layer.
+
+---
+
 ## 4. Maintenance rules
 
 1. Lessons are appended at phase close (GOV-005 §1 step 8) and whenever a
    noteworthy engineering event occurs mid-phase.
 2. Each lesson cites the phase and, where relevant, the audit report that
    documents the triggering event.
-3. Next available lesson number: **LES-020**.
+3. Next available lesson number: **LES-021**.
