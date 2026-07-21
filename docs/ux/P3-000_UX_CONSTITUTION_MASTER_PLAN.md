@@ -83,23 +83,26 @@ interaction, or design-language content is authored in this master plan.
 
 | Doc | Mission (only) | Layer |
 |---|---|---|
-| UX-001 | UX Principles & Interaction Doctrine — the phase's founding principles; enforcement of the automation boundary (F-08: nothing computable is asked of the Owner) at the presentation layer | UX |
-| UX-002 | Actors & Access Presentation — how the single-Owner access model (PC-005) is presented; no roles/permissions UI invented | UX |
-| UX-003 | Information Architecture & Navigation — the structure by which frozen concepts (PC-003) and records are found and moved between | UX |
-| UX-004 | Workspace Architecture — how the Owner's day-to-day work is organized into workspaces/areas over the frozen entities | UX |
-| UX-005 | Interaction & Forms Rules — how each business action is performed and how its Business Rules (BR-NNN) surface as guidance/validation, without adding behavior | UX |
-| UX-006 | Language, RTL & Accessibility — Arabic-first RTL presentation, terminology bound to PC-006, and accessibility/usability rules | UX |
-| UX-007 | UX Traceability Matrix & Coverage — the UX sink: every UX rule traced to the Business Rule(s) it presents and the Product Constitution it serves; proof, not production | UX |
+| UX-001 | UX Constitutional Philosophy & Layer Responsibility — the constitutional responsibility of the UX layer; principles (UXP) + invariants (UXV) | UX |
+| UX-002 | Information Architecture — the structure through which the frozen concepts (PC-003) become perceivable, locatable, and findable (consumes PC-003, never redefines it) | UX |
+| UX-003 | Workspace Architecture — how the Owner's day-to-day work is organized into working areas over the information architecture | UX |
+| UX-004 | Interaction & Forms Rules — how each business action is performed and how its Business Rules (BR-NNN) surface as guidance/validation, without adding behavior | UX |
+| UX-005 | Language, RTL & Accessibility — Arabic-first RTL presentation, terminology bound to PC-006, and accessibility/usability rules | UX |
+| UX-006 | UX Traceability Matrix & Coverage — the UX sink: every UX rule traced to the Business Rule(s) it presents and the Product Constitution it serves; proof, not production | UX |
 
 *(This map is LIVING: documents may be split or merged during the phase by an Owner-approved update
-to P3-000, never by silent drift.)*
+to P3-000, never by silent drift. **Amendment history:** the provisional "UX-001 Principles &
+Interaction Doctrine" was frozen as UX-001 Constitutional Philosophy (interaction rules deferred to
+UX-004); the provisional "UX-002 Actors & Access Presentation" was **retired at Architectural
+Discovery** — its responsibility is covered by PC-005 + UXV-05 — and UX-002 was redefined as
+Information Architecture; the remaining documents shifted to this six-document map, ADR-0051.)*
 
 ## 8. Phase checkpoints
 
-- **UC1 — Foundation:** UX-001, UX-002.
-- **UC2 — Structure:** UX-003, UX-004.
-- **UC3 — Interaction & language:** UX-005, UX-006.
-- **UC4 — Traceability + phase audit:** UX-007.
+- **UC1 — Foundation:** UX-001 (Philosophy), UX-002 (Information Architecture).
+- **UC2 — Structure & interaction:** UX-003 (Workspace), UX-004 (Interaction & Forms).
+- **UC3 — Language & accessibility:** UX-005.
+- **UC4 — Traceability + phase audit:** UX-006 (the UX sink).
 
 ## 9. Quality gates
 
@@ -123,7 +126,7 @@ Every UX-NNN atom carries a dual citation, mirroring the constitution's rigor at
 
 UX introduces no atom of behavior; a UX rule that cannot cite a frozen Business Rule (or a frozen
 Product/Domain statement) as its Authority of Behavior is out of scope. The phase's final document
-(UX-007) is the coverage sink: it demonstrates that every in-scope Business Rule that requires
+(UX-006) is the coverage sink: it demonstrates that every in-scope Business Rule that requires
 presentation is presented by ≥1 UX rule, and that no UX rule originates behavior.
 
 ## 11. Phase governance
@@ -141,8 +144,8 @@ presentation is presented by ≥1 UX rule, and that no UX rule originates behavi
 Phase 3 closes only when the UX exit criteria **UXX-1…UXX-6** all hold: every planned UX document
 FROZEN; every in-scope Business Rule that requires presentation is presented by ≥1 UX rule; zero
 UX rule originates or modifies behavior; no contradiction with the frozen constitutions; a complete
-UX traceability matrix (UX-007); and a closure audit with eight gates PASS — after which Phase 4
-can begin with no further UX interpretation. **Proof precedes Authorization:** UX-007 demonstrates
+UX traceability matrix (UX-006); and a closure audit with eight gates PASS — after which Phase 4
+can begin with no further UX interpretation. **Proof precedes Authorization:** UX-006 demonstrates
 satisfaction; closure is declared only by a separate Owner Engineering Order.
 
 ## 13. Progress tracker (LIVING)
@@ -150,10 +153,10 @@ satisfaction; closure is declared only by a separate Owner Engineering Order.
 | Doc | Status |
 |---|---|
 | P3-000 | ADOPTED (this document — opens Phase 3, ADR-0049) |
-| UX-001 UX Constitutional Philosophy & Layer Responsibility | **FROZEN** (2026-07-20, ADR-0050 / AUD-P3-002) — framework of Phase 3; 5 principles (UXP-01…05) + 5 invariants (UXV-01…05); philosophy-only. **Checkpoint UC1 begun.** *(Scope refined from the provisional "Principles & Interaction Doctrine" label: interaction rules relocated to later documents — administrative map refinement.)* |
-| UX-002 Actors & Access Presentation | NOT STARTED (Checkpoint UC1) |
-| UX-003 Information Architecture & Navigation | NOT STARTED (Checkpoint UC2) |
-| UX-004 Workspace Architecture | NOT STARTED (Checkpoint UC2) |
-| UX-005 Interaction & Forms Rules | NOT STARTED (Checkpoint UC3) |
-| UX-006 Language, RTL & Accessibility | NOT STARTED (Checkpoint UC3) |
-| UX-007 UX Traceability Matrix & Coverage | NOT STARTED (Checkpoint UC4) |
+| UX-001 UX Constitutional Philosophy & Layer Responsibility | **FROZEN** (2026-07-20, ADR-0050 / AUD-P3-002) — framework of Phase 3; 5 principles (UXP-01…05) + 5 invariants (UXV-01…05); philosophy-only. |
+| UX-002 Information Architecture | **FROZEN** (2026-07-20, ADR-0051 / AUD-P3-003) — first structural document; IA-01…IA-07 (information domains, grouping, hierarchy, entry points, informational relationships, discoverability); consumes PC-003, organizes information not work. **Checkpoint UC1 COMPLETE.** *(Redefined via Architectural Discovery from the retired "Actors & Access Presentation", covered by PC-005 + UXV-05.)* |
+| UX-003 Workspace Architecture | NOT STARTED (Checkpoint UC2) — NEXT |
+| UX-004 Interaction & Forms Rules | NOT STARTED (Checkpoint UC2) |
+| UX-005 Language, RTL & Accessibility | NOT STARTED (Checkpoint UC3) |
+| UX-006 UX Traceability Matrix & Coverage | NOT STARTED (Checkpoint UC4) |
+| ~~Actors & Access Presentation~~ | RETIRED at Architectural Discovery — responsibility covered by PC-005 + UXV-05 (ADR-0051) |

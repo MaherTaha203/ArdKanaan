@@ -77,8 +77,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0048](ADR-0048-phase-2-closure-and-phase-3-authorization.md) | Phase 2 Constitutional Closure & Lock; Phase 3 Authorization | 2 → 3 | ACCEPTED | — |
 | [ADR-0049](ADR-0049-phase-3-commencement-and-p3-000-adoption.md) | Phase 3 Commencement & P3-000 UX Constitution Master Plan Adoption | 3 | ACCEPTED | — |
 | [ADR-0050](ADR-0050-ux-001-frozen-constitutional-philosophy.md) | UX-001 Frozen — Constitutional Philosophy of the User Experience Layer | 3 | ACCEPTED | — |
+| [ADR-0051](ADR-0051-ux-002-information-architecture.md) | UX-002 Frozen — Information Architecture of the User Experience Layer | 3 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0051**.
+Next available ADR number: **ADR-0052**.
 
 ## 4. Maintenance rules
 

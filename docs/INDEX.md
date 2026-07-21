@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.40.0 |
+| Version | 1.41.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -216,7 +216,10 @@ Gate 8 (Repository Integrity) violation.
 | UX-001 | `docs/ux/UX-001_UX_CONSTITUTIONAL_PHILOSOPHY_AND_LAYER_RESPONSIBILITY.md` | UX Constitutional Philosophy & Layer Responsibility | FROZEN |
 | ADR-0050 | `docs/decisions/ADR-0050-ux-001-frozen-constitutional-philosophy.md` | UX-001 Frozen — Constitutional Philosophy of the User Experience Layer | ACCEPTED |
 | AUD-P3-002 | `docs/audits/phase-3/AUDIT-P3-UX001.md` | UX-001 Constitutional Philosophy Audit Report | FROZEN |
-| — | `docs/ux/` (UX-002 … UX-007) | UX Constitution documents (Checkpoints UC1…UC4) | PENDING (authored per P3-000 §7) |
+| UX-002 | `docs/ux/UX-002_INFORMATION_ARCHITECTURE.md` | Information Architecture | FROZEN |
+| ADR-0051 | `docs/decisions/ADR-0051-ux-002-information-architecture.md` | UX-002 Frozen — Information Architecture of the User Experience Layer | ACCEPTED |
+| AUD-P3-003 | `docs/audits/phase-3/AUDIT-P3-UX002.md` | UX-002 Information Architecture Audit Report | FROZEN |
+| — | `docs/ux/` (UX-003 … UX-006) | UX Constitution documents (Checkpoints UC2…UC4) | PENDING (authored per P3-000 §7) |
 
 ### 2.5 Phase 4 — DDL Specification (NOT YET OPEN)
 
