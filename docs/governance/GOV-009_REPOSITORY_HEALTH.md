@@ -21,22 +21,22 @@ cannot be backed by evidence is a Gate 6 DEFECT.
 
 ## 2. Dashboard
 
-**Last refresh:** 2026-07-20 — **Phase 2 CLOSED & LOCKED** (ADR-0048 / AUD-P2-FINAL): BX-1…BX-6 met; BC-000…BC-009 frozen & locked as the single business reference. **Phase 3 (UX Constitution) OPEN** — P3-000 Master Plan adopted (ADR-0049 / AUD-P3-001)
+**Last refresh:** 2026-07-20 — **UX-001 FROZEN** (ADR-0050 / AUD-P3-002): the constitutional philosophy of the UX layer (framework of Phase 3; UX analog of BC-000). 5 principles (UXP-01…05) + 5 invariants (UXV-01…05); philosophy-only; upstream-immutable. **Checkpoint UC1 begun**; UX-002 next
 
 | # | Indicator | Value | Target | Status |
 |---|---|---|---|---|
-| 1 | Documentation completeness (registered docs present / planned for open phases) | 139 / 139 | 100% | 🟢 |
+| 1 | Documentation completeness (registered docs present / planned for open phases) | 142 / 142 | 100% | 🟢 |
 | 2 | Architecture consistency (structure matches IDX-001 §1; phase boundaries intact) | conformant | conformant | 🟢 |
 | 3 | Business consistency (facts F-01…F-09 uncontradicted across repo) | 0 contradictions | 0 | 🟢 |
 | 4 | UX consistency (no rule violating M-07/F-08) | 0 violations | 0 | 🟢 |
-| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 139 / 139 docs conformant | 100% | 🟢 |
+| 5 | Design consistency (canonical headers / document design; registered files non-empty) | 142 / 142 docs conformant | 100% | 🟢 |
 | 6 | Terminology consistency (banned-synonym occurrences outside defining rules) | 0 | 0 | 🟢 |
 | 7 | Traceability coverage (atoms with required upstream citations) | 9 / 9 F-atoms cite M; 90 / 90 DR-atoms cite upstream; PC-001…PC-008 atoms cite upstream; 33 / 33 PR cite constitution; 22 / 22 AC trace to PR; 87 / 87 BR dual-cited (Truth + Constitutional Legitimacy); BC-009 sink proves coverage/traceability/completeness (0 orphan BR, 0 gap) | 100% | 🟢 |
 | 8 | Broken references (relative links that fail to resolve) | 0 | 0 | 🟢 |
 | 9 | Technical debt (accepted deviations awaiting repair) | 0 items | 0 | 🟢 |
 | 10 | Open decisions (ADRs in PROPOSED state) | 0 | 0 | 🟢 |
-| 11 | Frozen documents | 78 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-009 [locked], 45 audit reports) + 49 ACCEPTED ADRs; P3-000 is LIVING | n/a | 🟢 |
-| 12 | Pending reviews (phases open, awaiting gates) | **Phase 2 CLOSED & LOCKED** (BC-000…009); **Phase 3 (UX Constitution) IN PROGRESS** — P3-000 adopted; UC1…UC4 not started (UX-001 next, pending explicit Owner order) | 0 at close | 🟢 |
+| 11 | Frozen documents | 80 (GOV-000…GOV-007, GOV-010, GOV-011, GOV-012, DOM-001…DOM-004, PC-001…PC-008, BC-000…BC-009 [locked], UX-001, 46 audit reports) + 50 ACCEPTED ADRs; P3-000 is LIVING | n/a | 🟢 |
+| 12 | Pending reviews (phases open, awaiting gates) | **Phase 2 CLOSED & LOCKED** (BC-000…009); **Phase 3 (UX Constitution) IN PROGRESS** — P3-000 adopted; **UX-001 FROZEN (UC1 begun)**; UX-002 next, pending explicit Owner order | 0 at close | 🟢 |
 | 13 | Open domain unknowns (DOM-005) | 5 (**0 HIGH**, 3 MEDIUM, 2 LOW); **0 assumptions pending**; 25 resolved; all 5 open items formally deferred at Phase 1A close (AUD-P1A-FINAL §4) | HIGH = 0 before Phase 1 freeze (ADR-0007 §7) | 🟢 |
 
 Status legend: 🟢 at target · 🟡 deviation, repair scheduled · 🔴 deviation blocking
@@ -99,3 +99,4 @@ next phase.
 | 2026-07-20 | **BC-008 Non-Program Revenue, Expense & Lifecycle Rules FROZEN — Checkpoint C4 COMPLETE** (ADR-0046) | AUD-P2-010 | **All indicators 🟢** — 14 BR (BR-074…087), 7 categories; RP-36…40; INV-36…40; Creation-layer (creates center-only facts; lifecycle within frame); Principle #1 (center-only isolation) + Constitutional Boundary; BR-086 blocks only future business creation; BR-087 governs only the three current statuses; no forward dependency (facts BC-007 already reveals); DR-049…061/080…084/088 covered; Creation layer complete (BC-001/002/003/008); only BC-009 (C5) remains |
 | 2026-07-20 | **BC-009 Phase 2 Traceability Matrix & Coverage FROZEN — Checkpoint C5 COMPLETE** (ADR-0047) | AUD-P2-011 | **All indicators 🟢** — constitutional sink (proof, not production; 0 BR/0 DR introduced); DR→BR coverage (76 in-scope) + BR→DR/PC matrix (87, **0 orphan**, verbatim-verified) + completeness (90 = 76 covered + 3 refined-forward + 11 disposition; **0 gap**) + BX-1…BX-6 objectively demonstrated; INV-41 (Constitutional Reproducibility, derivational); every planned Phase-2 doc (BC-000…009) frozen. **Phase 2 NOT declared closed** — closure/Phase-3 opening await a separate Owner order (Proof ≠ Authorization) |
 | 2026-07-20 | **Phase 2 CLOSED & LOCKED; Phase 3 (UX Constitution) OPENED — P3-000 adopted** (ADR-0048 / ADR-0049) | AUD-P2-FINAL / AUD-P3-001 | **All indicators 🟢** — administrative authorization only (no constitutional truth introduced; no BR/PC/governance modified). BX-1…BX-6 all MET; BC-000…BC-009 frozen & locked as the single business reference (amendments only via GOV-004 §5). Phase 3 opened under GOV-011 §2; P3-000 UX Constitution Master Plan adopted (LIVING, `docs/ux/`); UX-layer-pure (Business ▷ UX per GOV-012); document map UX-001…UX-007 + checkpoints UC1…UC4 declared, none authored. Proof (BC-009) separate from Authorization (ADR-0048) preserved |
+| 2026-07-20 | **UX-001 Constitutional Philosophy FROZEN — Checkpoint UC1 begun** (ADR-0050) | AUD-P3-002 | **All indicators 🟢** — framework of Phase 3 (UX analog of BC-000); answers one question (constitutional responsibility of the UX layer). Strong opening definition (window & hand); 5 principles (UXP-01…05, the stance) + 5 invariants (UXV-01…05, testable) sharply separated; §8 recast as Propagation Rule. Revision-1 (simplify: 11→5 principles, 7→5 invariants, design-guidance removed) + Revision-2 (UX presents but does not own product language; UXV-02 narrowed to business-presenting/-initiating elements) incorporated. Philosophy-only (0 BR/PR/DR; 0 screens/components/visuals); upstream-immutable |

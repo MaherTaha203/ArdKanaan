@@ -150,7 +150,7 @@ satisfaction; closure is declared only by a separate Owner Engineering Order.
 | Doc | Status |
 |---|---|
 | P3-000 | ADOPTED (this document — opens Phase 3, ADR-0049) |
-| UX-001 UX Principles & Interaction Doctrine | NOT STARTED (Checkpoint UC1) — pending explicit Owner order |
+| UX-001 UX Constitutional Philosophy & Layer Responsibility | **FROZEN** (2026-07-20, ADR-0050 / AUD-P3-002) — framework of Phase 3; 5 principles (UXP-01…05) + 5 invariants (UXV-01…05); philosophy-only. **Checkpoint UC1 begun.** *(Scope refined from the provisional "Principles & Interaction Doctrine" label: interaction rules relocated to later documents — administrative map refinement.)* |
 | UX-002 Actors & Access Presentation | NOT STARTED (Checkpoint UC1) |
 | UX-003 Information Architecture & Navigation | NOT STARTED (Checkpoint UC2) |
 | UX-004 Workspace Architecture | NOT STARTED (Checkpoint UC2) |

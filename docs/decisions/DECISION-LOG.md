@@ -76,8 +76,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0047](ADR-0047-bc-009-phase-2-traceability-matrix-and-coverage.md) | BC-009 Phase 2 Traceability Matrix & Coverage Adopted; Checkpoint C5 Complete | 2 | ACCEPTED | — |
 | [ADR-0048](ADR-0048-phase-2-closure-and-phase-3-authorization.md) | Phase 2 Constitutional Closure & Lock; Phase 3 Authorization | 2 → 3 | ACCEPTED | — |
 | [ADR-0049](ADR-0049-phase-3-commencement-and-p3-000-adoption.md) | Phase 3 Commencement & P3-000 UX Constitution Master Plan Adoption | 3 | ACCEPTED | — |
+| [ADR-0050](ADR-0050-ux-001-frozen-constitutional-philosophy.md) | UX-001 Frozen — Constitutional Philosophy of the User Experience Layer | 3 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0050**.
+Next available ADR number: **ADR-0051**.
 
 ## 4. Maintenance rules
 
