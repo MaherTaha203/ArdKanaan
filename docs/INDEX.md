@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.42.0 |
+| Version | 1.43.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -87,6 +87,9 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P0-004 | `docs/audits/phase-0/AUDIT-P0-DECISION-PROTOCOL.md` | Phase 0 Owner Decision Protocol Audit Report | FROZEN |
 | ADR-0026 | `docs/decisions/ADR-0026-adopt-layer-ownership-constitution.md` | Adopt GOV-012 Layer Ownership Constitution | ACCEPTED |
 | AUD-P0-005 | `docs/audits/phase-0/AUDIT-P0-LAYER-OWNERSHIP.md` | Layer Ownership Constitution Adoption Audit Report | FROZEN |
+| GOV-013 | `docs/governance/GOV-013_MULTI_AGENT_REVIEW_PROTOCOL.md` | Multi-Agent Review Protocol | FROZEN |
+| ADR-0053 | `docs/decisions/ADR-0053-gov-013-multi-agent-review-protocol.md` | GOV-013 Multi-Agent Review Protocol Adopted; GOV-004 §2 Amended; GOV-001 §9 Hook Added | ACCEPTED |
+| AUD-P0-006 | `docs/audits/phase-0/AUDIT-P0-MULTI-AGENT-REVIEW.md` | GOV-013 Multi-Agent Review Protocol Adoption Audit Report | FROZEN |
 
 ### 2.1a Phase 1A — Domain Discovery (CLOSED — frozen 2026-07-18, ADR-0025 / AUD-P1A-FINAL)
 

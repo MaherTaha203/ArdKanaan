@@ -6,9 +6,9 @@
 | Title | Repository Governance |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 2.2.0 |
+| Version | 2.3.0 |
 | Depends on | GOV-000 |
-| Referenced by | IDX-001, GOV-002…GOV-009, RDM-001, ADR-0001, ADR-0002, ADR-0006 |
+| Referenced by | IDX-001, GOV-002…GOV-009, GOV-013, RDM-001, ADR-0001, ADR-0002, ADR-0006 |
 
 ---
 
@@ -108,3 +108,7 @@ configurability beyond the stated business model) must be **rejected** at review
    through the Owner Decision Protocol (GOV-010): the Owner is the sole decision
    authority, propagation is all-or-nothing, and hidden impacts are engineering
    defects.
+6. Constitutional documents are reviewed exclusively through the Multi-Agent
+   Review Protocol (GOV-013): independent specialized agents, evidence-based
+   findings, and the Constitutional Readiness Gate precede every Owner approval
+   and propagation *(added by ADR-0053)*.

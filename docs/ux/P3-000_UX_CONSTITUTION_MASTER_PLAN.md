@@ -131,9 +131,10 @@ presentation is presented by ≥1 UX rule, and that no UX rule originates behavi
 
 ## 11. Phase governance
 
-- **One document at a time:** DRAFT → Owner review (often Revision-1) → explicit propagation order
-  → propagate (freeze + ADR + audit + registers + verify + commit + push). No propagation without
-  an explicit Owner Engineering Order (GOV-010).
+- **One document at a time, reviewed under GOV-013:** every UX constitutional document follows the
+  Multi-Agent Review Protocol's lifecycle and Readiness Gate (GOV-013 MR-07/MR-08 — referenced,
+  never restated here); no propagation without an explicit Owner Engineering Order (GOV-010).
+  *(Aligned by ADR-0053; earlier wording embedded the pre-codification cycle.)*
 - **Frozen material is read-only:** BC-000…BC-009, PC-001…008, DOM-001…005, and frozen governance
   are consumed, never modified. Any required change proceeds only through GOV-004 §5 amendment.
 - **Cross-Document Consistency Review (CDC)** applies to every UX document: *Consumes only. No

@@ -6,7 +6,7 @@
 | Title | Review Process |
 | Phase | 0 |
 | Status | FROZEN |
-| Version | 1.1.0 |
+| Version | 1.2.0 |
 | Depends on | GOV-001, GOV-003, GOV-007 |
 | Referenced by | GOV-005, GOV-007, TPL-003, ADR-0006 |
 
@@ -19,8 +19,14 @@ phase from Phase 0 through Final Audit.
 
 ## 2. Roles
 
-This is a single-operator engineering effort; one person (or agent) acts in all
-roles, but **must switch roles explicitly and sequentially**, never merging them:
+For the **phase-gate roles of this section** (Gates 1–8, the Quality Director, and
+the AI Execution Supervisor), this is a single-operator engineering effort: one
+person (or agent) acts in these roles, but **must switch roles explicitly and
+sequentially**, never merging them. **The review of constitutional documents is
+governed instead by GOV-013 (Multi-Agent Review Protocol): independent specialized
+agents, no self-review, and the Constitutional Readiness Gate — the single-operator
+premise does not apply there** *(amendment — ADR-0053, adopted atomically with
+GOV-013)*:
 
 | Role | Responsibility |
 |---|---|

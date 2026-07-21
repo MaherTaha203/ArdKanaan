@@ -79,8 +79,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0050](ADR-0050-ux-001-frozen-constitutional-philosophy.md) | UX-001 Frozen — Constitutional Philosophy of the User Experience Layer | 3 | ACCEPTED | — |
 | [ADR-0051](ADR-0051-ux-002-information-architecture.md) | UX-002 Frozen — Information Architecture of the User Experience Layer | 3 | ACCEPTED | — |
 | [ADR-0052](ADR-0052-ux-003-workspace-architecture.md) | UX-003 Frozen — Workspace Architecture of the User Experience Layer | 3 | ACCEPTED | — |
+| [ADR-0053](ADR-0053-gov-013-multi-agent-review-protocol.md) | GOV-013 Multi-Agent Review Protocol Adopted; GOV-004 §2 Amended; GOV-001 §9 Hook Added | 0 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0053**.
+Next available ADR number: **ADR-0054**.
 
 ## 4. Maintenance rules
 
