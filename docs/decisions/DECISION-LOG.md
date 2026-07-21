@@ -78,8 +78,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0049](ADR-0049-phase-3-commencement-and-p3-000-adoption.md) | Phase 3 Commencement & P3-000 UX Constitution Master Plan Adoption | 3 | ACCEPTED | — |
 | [ADR-0050](ADR-0050-ux-001-frozen-constitutional-philosophy.md) | UX-001 Frozen — Constitutional Philosophy of the User Experience Layer | 3 | ACCEPTED | — |
 | [ADR-0051](ADR-0051-ux-002-information-architecture.md) | UX-002 Frozen — Information Architecture of the User Experience Layer | 3 | ACCEPTED | — |
+| [ADR-0052](ADR-0052-ux-003-workspace-architecture.md) | UX-003 Frozen — Workspace Architecture of the User Experience Layer | 3 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0052**.
+Next available ADR number: **ADR-0053**.
 
 ## 4. Maintenance rules
 

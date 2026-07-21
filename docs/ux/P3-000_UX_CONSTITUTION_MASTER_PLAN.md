@@ -155,8 +155,8 @@ satisfaction; closure is declared only by a separate Owner Engineering Order.
 | P3-000 | ADOPTED (this document — opens Phase 3, ADR-0049) |
 | UX-001 UX Constitutional Philosophy & Layer Responsibility | **FROZEN** (2026-07-20, ADR-0050 / AUD-P3-002) — framework of Phase 3; 5 principles (UXP-01…05) + 5 invariants (UXV-01…05); philosophy-only. |
 | UX-002 Information Architecture | **FROZEN** (2026-07-20, ADR-0051 / AUD-P3-003) — first structural document; IA-01…IA-07 (information domains, grouping, hierarchy, entry points, informational relationships, discoverability); consumes PC-003, organizes information not work. **Checkpoint UC1 COMPLETE.** *(Redefined via Architectural Discovery from the retired "Actors & Access Presentation", covered by PC-005 + UXV-05.)* |
-| UX-003 Workspace Architecture | NOT STARTED (Checkpoint UC2) — NEXT |
-| UX-004 Interaction & Forms Rules | NOT STARTED (Checkpoint UC2) |
+| UX-003 Workspace Architecture | **FROZEN** (2026-07-20, ADR-0052 / AUD-P3-004) — WA-01…WA-09; six workspaces WS-01…WS-06 derived one-per-frozen-BC-purpose-family; 17 actions assigned exactly once; invariants WA-04 (single membership), WA-08 (completeness), WA-09 (observation is never a workspace). First document under the Autonomous Constitutional Engineering Contract. **Checkpoint UC2 begun.** |
+| UX-004 Interaction & Forms Rules | NEXT (Checkpoint UC2) — pending explicit Owner order (Stage 1 — Architectural Discovery) |
 | UX-005 Language, RTL & Accessibility | NOT STARTED (Checkpoint UC3) |
 | UX-006 UX Traceability Matrix & Coverage | NOT STARTED (Checkpoint UC4) |
 | ~~Actors & Access Presentation~~ | RETIRED at Architectural Discovery — responsibility covered by PC-005 + UXV-05 (ADR-0051) |

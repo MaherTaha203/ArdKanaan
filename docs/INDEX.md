@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.41.0 |
+| Version | 1.42.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -219,7 +219,10 @@ Gate 8 (Repository Integrity) violation.
 | UX-002 | `docs/ux/UX-002_INFORMATION_ARCHITECTURE.md` | Information Architecture | FROZEN |
 | ADR-0051 | `docs/decisions/ADR-0051-ux-002-information-architecture.md` | UX-002 Frozen — Information Architecture of the User Experience Layer | ACCEPTED |
 | AUD-P3-003 | `docs/audits/phase-3/AUDIT-P3-UX002.md` | UX-002 Information Architecture Audit Report | FROZEN |
-| — | `docs/ux/` (UX-003 … UX-006) | UX Constitution documents (Checkpoints UC2…UC4) | PENDING (authored per P3-000 §7) |
+| UX-003 | `docs/ux/UX-003_WORKSPACE_ARCHITECTURE.md` | Workspace Architecture | FROZEN |
+| ADR-0052 | `docs/decisions/ADR-0052-ux-003-workspace-architecture.md` | UX-003 Frozen — Workspace Architecture of the User Experience Layer | ACCEPTED |
+| AUD-P3-004 | `docs/audits/phase-3/AUDIT-P3-UX003.md` | UX-003 Workspace Architecture Audit Report | FROZEN |
+| — | `docs/ux/` (UX-004 … UX-006) | UX Constitution documents (Checkpoints UC2…UC4) | PENDING (authored per P3-000 §7) |
 
 ### 2.5 Phase 4 — DDL Specification (NOT YET OPEN)
 
