@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.44.0 |
+| Version | 1.45.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -168,6 +168,8 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P1-009 | `docs/audits/phase-1/AUDIT-P1-PC008.md` | PC-008 Product Validation & Acceptance Criteria Audit Report | FROZEN |
 | ADR-0036 | `docs/decisions/ADR-0036-phase-1-closure-product-constitution-locked.md` | Phase 1 Closure: Product Constitution Frozen & Locked | ACCEPTED |
 | AUD-P1-FINAL | `docs/audits/phase-1/AUDIT-P1-FINAL.md` | Product Constitution Completion Report | FROZEN |
+| PLP-001 | `docs/product/PLP-001_PRODUCT_UI_LANGUAGE_POLICY.md` | Product UI Language Policy (post-closure gap-fill; modifies no locked PC document) | FROZEN |
+| ADR-0055 | `docs/decisions/ADR-0055-plp-001-product-ui-language-policy.md` | PLP-001 Product UI Language Policy Adopted; Language-Selection Ownership Gap Filled | ACCEPTED |
 
 ### 2.3 Phase 2 — Business Constitution (CLOSED & LOCKED — frozen & locked 2026-07-20, ADR-0048 / AUD-P2-FINAL)
 

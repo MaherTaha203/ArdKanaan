@@ -81,8 +81,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0052](ADR-0052-ux-003-workspace-architecture.md) | UX-003 Frozen — Workspace Architecture of the User Experience Layer | 3 | ACCEPTED | — |
 | [ADR-0053](ADR-0053-gov-013-multi-agent-review-protocol.md) | GOV-013 Multi-Agent Review Protocol Adopted; GOV-004 §2 Amended; GOV-001 §9 Hook Added | 0 | ACCEPTED | — |
 | [ADR-0054](ADR-0054-ux-004-interaction-and-forms-rules.md) | UX-004 Frozen — Interaction & Forms Rules of the User Experience Layer | 3 | ACCEPTED | — |
+| [ADR-0055](ADR-0055-plp-001-product-ui-language-policy.md) | PLP-001 Product UI Language Policy Adopted; Language-Selection Ownership Gap Filled | 1 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0055**.
+Next available ADR number: **ADR-0056**.
 
 ## 4. Maintenance rules
 
