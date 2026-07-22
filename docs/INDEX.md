@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.45.0 |
+| Version | 1.46.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -230,7 +230,10 @@ Gate 8 (Repository Integrity) violation.
 | UX-004 | `docs/ux/UX-004_INTERACTION_AND_FORMS_RULES.md` | Interaction & Forms Rules | FROZEN |
 | ADR-0054 | `docs/decisions/ADR-0054-ux-004-interaction-and-forms-rules.md` | UX-004 Frozen — Interaction & Forms Rules of the User Experience Layer | ACCEPTED |
 | AUD-P3-005 | `docs/audits/phase-3/AUDIT-P3-UX004.md` | UX-004 Interaction & Forms Rules Audit Report | FROZEN |
-| — | `docs/ux/` (UX-005 … UX-006) | UX Constitution documents (Checkpoints UC3…UC4) | PENDING (authored per P3-000 §7) |
+| UX-005 | `docs/ux/UX-005_LANGUAGE_RTL_AND_ACCESSIBILITY.md` | Language, RTL & Accessibility | FROZEN |
+| ADR-0056 | `docs/decisions/ADR-0056-ux-005-language-rtl-and-accessibility.md` | UX-005 Frozen — Language, RTL & Accessibility of the User Experience Layer | ACCEPTED |
+| AUD-P3-006 | `docs/audits/phase-3/AUDIT-P3-UX005.md` | UX-005 Language, RTL & Accessibility Audit Report | FROZEN |
+| — | `docs/ux/` (UX-006) | UX Traceability sink (Checkpoint UC4) | PENDING (authored per P3-000 §7) |
 
 ### 2.5 Phase 4 — DDL Specification (NOT YET OPEN)
 
