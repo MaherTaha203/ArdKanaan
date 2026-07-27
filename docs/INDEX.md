@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.47.0 |
+| Version | 1.48.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -37,7 +37,7 @@ here does not officially exist (see GOV-001 §4).
     ├── product/                  Phase 1 — Product Constitution   (CLOSED)
     ├── business/                 Phase 2 — Business Constitution  (CLOSED & LOCKED)
     ├── ux/                       Phase 3 — UX Constitution        (CLOSED)
-    ├── data/                     Phase 4 — DDL Specification      (RESERVED)
+    ├── data/                     Phase 4 — DDL Specification      (IN PROGRESS)
     ├── components/               Phase 5 — Component Library Spec (RESERVED)
     └── screens/                  Phase 6 — Screen Blueprints      (RESERVED)
 ```
@@ -240,11 +240,13 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0059 | `docs/decisions/ADR-0059-phase-3-closure-ux-constitution.md` | Phase 3 Closure — UX Constitution Complete & Frozen | ACCEPTED |
 | AUD-P3-FINAL | `docs/audits/phase-3/AUDIT-P3-FINAL.md` | UX Constitution Completion Report | FROZEN |
 
-### 2.5 Phase 4 — DDL Specification (NOT YET OPEN)
+### 2.5 Phase 4 — DDL Specification (IN PROGRESS — P4-000 adopted 2026-07-22, ADR-0060)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| — | `docs/data/` | Reserved | PENDING |
+| P4-000 | `docs/data/P4-000_DDL_SPECIFICATION_MASTER_PLAN.md` | DDL Specification Master Plan | LIVING |
+| ADR-0060 | `docs/decisions/ADR-0060-phase-4-commencement-and-p4-000-adoption.md` | Phase 4 Commencement & P4-000 DDL Specification Master Plan Adoption | ACCEPTED |
+| — | `docs/data/` (DAT-NNN / DB atoms) | DDL Specification documents (Checkpoints DC1…DC4) | PENDING (authored per P4-000 §4) |
 
 ### 2.6 Phase 5 — Component Library Specification (NOT YET OPEN)
 
