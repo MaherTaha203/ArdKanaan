@@ -83,8 +83,11 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0054](ADR-0054-ux-004-interaction-and-forms-rules.md) | UX-004 Frozen — Interaction & Forms Rules of the User Experience Layer | 3 | ACCEPTED | — |
 | [ADR-0055](ADR-0055-plp-001-product-ui-language-policy.md) | PLP-001 Product UI Language Policy Adopted; Language-Selection Ownership Gap Filled | 1 | ACCEPTED | — |
 | [ADR-0056](ADR-0056-ux-005-language-rtl-and-accessibility.md) | UX-005 Frozen — Language, RTL & Accessibility of the User Experience Layer | 3 | ACCEPTED | — |
+| [ADR-0057](ADR-0057-ux-006-ux-traceability-matrix-and-coverage.md) | UX-006 Frozen — UX Traceability Matrix & Coverage (the UX sink) | 3 | ACCEPTED | — |
+| [ADR-0058](ADR-0058-ux-002-ia-08-activity-view-amendment.md) | UX-002 IA-08 (The Activity View) Amendment Adopted (v1.1.0) | 3 | ACCEPTED | — |
+| [ADR-0059](ADR-0059-phase-3-closure-ux-constitution.md) | Phase 3 Closure — UX Constitution Complete & Frozen | 3 → 4 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0057**.
+Next available ADR number: **ADR-0060**.
 
 ## 4. Maintenance rules
 

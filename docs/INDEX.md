@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.46.0 |
+| Version | 1.47.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -36,7 +36,7 @@ here does not officially exist (see GOV-001 §4).
     ├── domain/                   Phase 1A — Domain Discovery
     ├── product/                  Phase 1 — Product Constitution   (CLOSED)
     ├── business/                 Phase 2 — Business Constitution  (CLOSED & LOCKED)
-    ├── ux/                       Phase 3 — UX Constitution        (IN PROGRESS)
+    ├── ux/                       Phase 3 — UX Constitution        (CLOSED)
     ├── data/                     Phase 4 — DDL Specification      (RESERVED)
     ├── components/               Phase 5 — Component Library Spec (RESERVED)
     └── screens/                  Phase 6 — Screen Blueprints      (RESERVED)
@@ -211,7 +211,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0048 | `docs/decisions/ADR-0048-phase-2-closure-and-phase-3-authorization.md` | Phase 2 Constitutional Closure & Lock; Phase 3 Authorization | ACCEPTED |
 | AUD-P2-FINAL | `docs/audits/phase-2/AUDIT-P2-FINAL.md` | Business Constitution Completion Report (Phase 2 Closure) | FROZEN |
 
-### 2.4 Phase 3 — UX Constitution (IN PROGRESS — P3-000 adopted 2026-07-20, ADR-0049)
+### 2.4 Phase 3 — UX Constitution (CLOSED — UX Constitution frozen 2026-07-22, ADR-0059 / AUD-P3-FINAL)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
@@ -221,7 +221,7 @@ Gate 8 (Repository Integrity) violation.
 | UX-001 | `docs/ux/UX-001_UX_CONSTITUTIONAL_PHILOSOPHY_AND_LAYER_RESPONSIBILITY.md` | UX Constitutional Philosophy & Layer Responsibility | FROZEN |
 | ADR-0050 | `docs/decisions/ADR-0050-ux-001-frozen-constitutional-philosophy.md` | UX-001 Frozen — Constitutional Philosophy of the User Experience Layer | ACCEPTED |
 | AUD-P3-002 | `docs/audits/phase-3/AUDIT-P3-UX001.md` | UX-001 Constitutional Philosophy Audit Report | FROZEN |
-| UX-002 | `docs/ux/UX-002_INFORMATION_ARCHITECTURE.md` | Information Architecture | FROZEN |
+| UX-002 | `docs/ux/UX-002_INFORMATION_ARCHITECTURE.md` | Information Architecture (v1.1.0 — includes IA-08, amended by ADR-0058) | FROZEN |
 | ADR-0051 | `docs/decisions/ADR-0051-ux-002-information-architecture.md` | UX-002 Frozen — Information Architecture of the User Experience Layer | ACCEPTED |
 | AUD-P3-003 | `docs/audits/phase-3/AUDIT-P3-UX002.md` | UX-002 Information Architecture Audit Report | FROZEN |
 | UX-003 | `docs/ux/UX-003_WORKSPACE_ARCHITECTURE.md` | Workspace Architecture | FROZEN |
@@ -233,7 +233,12 @@ Gate 8 (Repository Integrity) violation.
 | UX-005 | `docs/ux/UX-005_LANGUAGE_RTL_AND_ACCESSIBILITY.md` | Language, RTL & Accessibility | FROZEN |
 | ADR-0056 | `docs/decisions/ADR-0056-ux-005-language-rtl-and-accessibility.md` | UX-005 Frozen — Language, RTL & Accessibility of the User Experience Layer | ACCEPTED |
 | AUD-P3-006 | `docs/audits/phase-3/AUDIT-P3-UX005.md` | UX-005 Language, RTL & Accessibility Audit Report | FROZEN |
-| — | `docs/ux/` (UX-006) | UX Traceability sink (Checkpoint UC4) | PENDING (authored per P3-000 §7) |
+| UX-006 | `docs/ux/UX-006_UX_TRACEABILITY_MATRIX_AND_COVERAGE.md` | UX Traceability Matrix & Coverage (the UX sink) | FROZEN |
+| ADR-0057 | `docs/decisions/ADR-0057-ux-006-ux-traceability-matrix-and-coverage.md` | UX-006 Frozen — UX Traceability Matrix & Coverage | ACCEPTED |
+| AUD-P3-007 | `docs/audits/phase-3/AUDIT-P3-UX006.md` | UX-006 UX Traceability Matrix & Coverage Audit Report | FROZEN |
+| ADR-0058 | `docs/decisions/ADR-0058-ux-002-ia-08-activity-view-amendment.md` | UX-002 IA-08 (The Activity View) Amendment Adopted (v1.1.0) | ACCEPTED |
+| ADR-0059 | `docs/decisions/ADR-0059-phase-3-closure-ux-constitution.md` | Phase 3 Closure — UX Constitution Complete & Frozen | ACCEPTED |
+| AUD-P3-FINAL | `docs/audits/phase-3/AUDIT-P3-FINAL.md` | UX Constitution Completion Report | FROZEN |
 
 ### 2.5 Phase 4 — DDL Specification (NOT YET OPEN)
 

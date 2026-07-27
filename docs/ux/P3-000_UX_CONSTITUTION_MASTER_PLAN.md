@@ -5,7 +5,7 @@
 | Doc ID | P3-000 |
 | Title | UX Constitution Master Plan |
 | Phase | 3 (UX Constitution) |
-| Status | LIVING (governing plan for the phase; subordinate to GOV-011) |
+| Status | LIVING — **Phase 3 CLOSED** (2026-07-22, ADR-0059 / AUD-P3-FINAL); governing plan, subordinate to GOV-011 |
 | Version | 1.0.0 |
 | Depends on | BC-000…BC-009 (frozen & locked); PC-001…PC-008 (frozen & locked); DOM-001…005 + DR-001…090 (frozen); GOV-011, GOV-012, GOV-003, GOV-004, GOV-006, GOV-010 |
 | Answers | "How is Phase 3 (UX Constitution) structured, sequenced, and governed?" |
@@ -158,6 +158,8 @@ satisfaction; closure is declared only by a separate Owner Engineering Order.
 | UX-002 Information Architecture | **FROZEN** (2026-07-20, ADR-0051 / AUD-P3-003) — first structural document; IA-01…IA-07 (information domains, grouping, hierarchy, entry points, informational relationships, discoverability); consumes PC-003, organizes information not work. **Checkpoint UC1 COMPLETE.** *(Redefined via Architectural Discovery from the retired "Actors & Access Presentation", covered by PC-005 + UXV-05.)* |
 | UX-003 Workspace Architecture | **FROZEN** (2026-07-20, ADR-0052 / AUD-P3-004) — WA-01…WA-09; six workspaces WS-01…WS-06 derived one-per-frozen-BC-purpose-family; 17 actions assigned exactly once; invariants WA-04 (single membership), WA-08 (completeness), WA-09 (observation is never a workspace). First document under the Autonomous Constitutional Engineering Contract. **Checkpoint UC2 begun.** |
 | UX-004 Interaction & Forms Rules | **FROZEN** (2026-07-21, ADR-0054 / AUD-P3-005) — IX-01…IX-10; five action classes covering all 17 WA-06 actions exactly once; invariants incl. nothing-derivable-requested-or-accepted (IX-08) and workflow integrity with the three-criterion test (IX-10). First adoption under GOV-013 (Panel + Gate READY). **Checkpoint UC2 COMPLETE.** |
-| UX-005 Language, RTL & Accessibility | NEXT (Checkpoint UC3) — pending explicit Owner order (GOV-013 Stage 1 — Architectural Discovery) |
-| UX-006 UX Traceability Matrix & Coverage | NOT STARTED (Checkpoint UC4) |
+| UX-005 Language, RTL & Accessibility | **FROZEN** (2026-07-22, ADR-0056 / AUD-P3-006) — LA-01…LA-10 (three facets + LA-10 boundary rule) + LAV-01…LAV-06; language selection → Product (PLP-001); accessibility guarantee → Product (GOV-012 #30); UX owns presentation only. Three Readiness Verifications (NR→NR→READY). **Checkpoint UC3 COMPLETE.** |
+| UX-006 UX Traceability Matrix & Coverage | **FROZEN** (2026-07-22, ADR-0057 / AUD-P3-007) — the UX coverage sink; proof, never production; §5 0 orphan + §6 0 gap (17/17 actions; every revealed fact homed); DR-018/DR-020 delegation closed via UX-002 IA-08 (amendment ADR-0058, v1.1.0). **Checkpoint UC4 COMPLETE.** |
+
+**Phase 3 (UX Constitution) is CLOSED** (ADR-0059 / AUD-P3-FINAL): UX-001…UX-006 FROZEN (UX-002 v1.1.0); UC1–UC4 COMPLETE; the single authoritative source of UX behavior, amendments only via GOV-004 §5. Phase 4 (DDL Specification) is NEXT, pending explicit Owner authorization (GOV-011 §2).
 | ~~Actors & Access Presentation~~ | RETIRED at Architectural Discovery — responsibility covered by PC-005 + UXV-05 (ADR-0051) |

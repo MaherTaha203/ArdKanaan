@@ -6,8 +6,8 @@
 | Title | Information Architecture |
 | Phase | 3 (UX Constitution) |
 | Status | FROZEN |
-| Version | 1.0.0 |
-| Depends on | UX-001 (frozen — philosophy & invariants); PC-003 (frozen — Product Mental Model, **consumed only**); via UX-001: BC-000…BC-009, PC-001…008, DOM, GOV-012 |
+| Version | 1.1.0 |
+| Depends on | UX-001 (frozen — philosophy & invariants); PC-003 (frozen — Product Mental Model, **consumed only**); **DOM-004 DR-018/DR-020 via the BC-009 §7 / §9 BX-6 delegation to UX** (IA-08); via UX-001: BC-000…BC-009, PC-001…008, DOM, GOV-012 |
 | Answers | "How is information organized from the Owner's perspective so that the Owner can understand it, locate it, and navigate through it?" |
 
 ---
@@ -27,9 +27,11 @@ It says nothing about how those concepts are *found* or *moved through*. UX-002 
 question: **how that frozen world is organized so one Owner can understand it, locate any part of
 it, and navigate between its parts.**
 
-- **Consumes PC-003 only.** Every domain, grouping, hierarchy, and relationship below is *derived
-  from* a PC-003 concept and cites it. PC-003 is **never** redefined, reinterpreted, expanded, corrected, or
-  replaced (UX-001 §2; MMI integrity untouched).
+- **Consumes PC-003 as its primary source.** Every domain, grouping, hierarchy, and relationship
+  below is *derived from* a PC-003 concept and cites it — with a **single explicit exception, IA-08
+  (The Activity View)**, which additionally consumes **DOM-004 DR-018/DR-020** under the **BC-009 §7 /
+  §9 BX-6** delegation of those rules to the UX layer. PC-003 is **never** redefined, reinterpreted,
+  expanded, corrected, or replaced (UX-001 §2; MMI integrity untouched).
 - **Owner's perspective, not the product's model.** UX-002 does not restate what a Program or a
   Teacher *is*; it fixes how the Owner *reaches and traverses* them. The concepts remain PC-003's;
   only their **organization for perception** is fixed here.
@@ -170,16 +172,37 @@ findable chronologically; **Party Financial Standing** gathers all of a party's 
 
 No business fact is orphaned; none has two homes; nothing reveals a value it did not derive.
 
+## 7a. The Activity View — IA-08 *(added by amendment ADR-0058; consumes DR-018 / DR-020)*
+
+**IA-08 — The Activity View.** The **Activity Record** (IA-03 cluster 5; homed at the context, L0) is
+revealed to the Owner through an **Activity View** — a chronological reading of recorded events. This
+atom discharges the two Domain Rules that **BC-009 (§7 disposition / §9 BX-6) explicitly delegates to
+the UX layer**, consuming each exactly as frozen and redefining no Activity Record semantics:
+
+- **DR-018 — the view creates no business logic.** The Activity View is a *reveal* of the Activity
+  Record (whose append-only nature is fixed upstream by DR-019); it originates, computes, and stores
+  nothing (UXV-01, UXV-03). It is the context-level information home's chronological face — **not** a
+  second home (IA-07) and **not** work (WA-09).
+- **DR-020 — each row carries its Source and Financial-Impact, standalone.** Every activity row
+  **presents** the two things the Owner must see without opening the underlying record: its **Source**
+  (the originating record, action, or event the row reflects, exactly as DR-020 defines that source)
+  and its **Financial-Impact** indication. Each row is understandable on its own.
+
+The Activity View is **information presentation, not work**, confers no authority (UXV-04), and
+reveals only values the business derived (UXV-03). *(Consumes: DR-018, DR-020 [DOM-004] (append-only
+per DR-019), delegated to UX by BC-009 §7 / §9 BX-6; PC-003 §A context; obeys UXV-01/03/04.)*
+
 ## 8. Boundaries
 
 > **This document organizes information. It does not organize work.** Organizing the Owner's work
 > into working areas is UX-003 (Workspace Architecture); organizing movement is later still. UX-002
 > fixes only how information is structured to be understood and found.
 
-**UX-002 owns** — the constitutional structure of information, all derived from PC-003: primary
+**UX-002 owns** — the constitutional structure of information, derived from PC-003: primary
 information domains (IA-01), secondary information structures (IA-02), information grouping (IA-03),
-information hierarchy (IA-04), entry points (IA-05), informational relationships (IA-06), and
-information discoverability (IA-07).
+information hierarchy (IA-04), entry points (IA-05), informational relationships (IA-06),
+information discoverability (IA-07), and the **Activity View (IA-08)** — the reveal of the Activity
+Record discharging the DOM-004 DR-018/DR-020 delegation (BC-009 §7 / §9 BX-6).
 
 **UX-002 never owns** — Business Rules; Product Rules; **mental-model definitions** (PC-003 is
 consumed, never redefined); **the organization of work or tasks** (UX-003); the organization of
@@ -190,7 +213,8 @@ implementation.
 ## 9. Dependencies
 
 - **Consumes (exactly as frozen, modifies nothing):** **PC-003** (the concepts organized here) and
-  **UX-001** (the philosophy and invariants every IA decision obeys).
+  **UX-001** (the philosophy and invariants every IA decision obeys); and, **for IA-08 only,
+  DOM-004 DR-018/DR-020** via the **BC-009 §7 / §9 BX-6** delegation of those rules to the UX layer.
 - **Produces (the structural foundation later documents obey):** UX-003 (Workspace Architecture)
   organizes work *over* this IA; UX-004 (Interaction & Forms) surfaces actions *within* it; UX-005
   (Language / RTL / Accessibility) labels and orients it; UX-006 (Traceability) maps every UX element
@@ -201,8 +225,10 @@ implementation.
 ## 10. Strict-Scope Self-Check
 
 Every section of UX-002 answers only *"how is information constitutionally organized?"* It fixes
-information domains, grouping, hierarchy, entry points, informational relationships, and
-discoverability — each **derived from and citing PC-003**, and each obeying UX-001's invariants.
+information domains, grouping, hierarchy, entry points, informational relationships,
+discoverability, and the **Activity View (IA-08)** — each **derived from and citing PC-003**, except
+IA-08, which additionally consumes the **DOM-004 DR-018/DR-020** delegated to UX by **BC-009 §7 / §9
+BX-6**; and each obeying UX-001's invariants.
 **This document organizes information; it does not organize work.** It **redefines no PC-003
 concept**, introduces **no** Business or Product rule, and defines **no** workspace, screen, menu,
 navigation component, layout, form, interaction, visual language, accessibility rule, or engineering
@@ -210,8 +236,12 @@ decision. It consumes PC-003 and UX-001 exactly as frozen and modifies nothing u
 
 ---
 
-*FROZEN (v1.0.0, ADR-0051 / AUD-P3-003). UX-002 is the Information-Architecture foundation of Phase 3
-— the organizing structure through which the frozen PC-003 concepts become perceivable, locatable,
-and findable. It is now the frozen structural authority every later UX document consumes and cites;
-no further modification is permitted except through the Constitutional Amendment process (GOV-004 §5
-/ BC-000 §BCG-3).*
+*FROZEN v1.1.0 — the Information-Architecture foundation of Phase 3, the organizing structure through
+which the frozen PC-003 concepts become perceivable, locatable, and findable; the frozen structural
+authority every later UX document consumes and cites. Originally frozen at v1.0.0 (ADR-0051 /
+AUD-P3-003); amended to **v1.1.0 by ADR-0058** (GOV-004 §5), adding **IA-08 (The Activity View)** to
+discharge the DR-018/DR-020 presentation requirements that BC-009 (§7 / §9 BX-6) delegates to the UX
+layer — pure information presentation, redefining no Activity Record semantics and changing no
+business/product ownership (verified by the UX-006 Readiness Verification, 6/6 SOUND). No further
+modification is permitted except through the Constitutional Amendment process (GOV-004 §5 / BC-000
+§BCG-3).*
