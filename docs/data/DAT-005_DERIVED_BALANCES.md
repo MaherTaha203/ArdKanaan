@@ -52,7 +52,7 @@ consumed) and persists nothing.
   2. **Each derived Attribute is anchored to an already-frozen subject** (an Attribute must belong to an
      entity, DAT-001 §3). The three center-level balances attach to the **frozen Training-Center singleton**
      (DOM-002 §1/§2 — referenced, never re-created as a stored entity, which would be a forbidden second
-     source of truth, DR-018); the teacher quantities attach to the **Teacher×Program** pairing realized by
+     source of truth); the teacher quantities attach to the **Teacher×Program** pairing realized by
      the frozen Program (DB-022) under its permanent Program→Teacher relationship (DAT-003 DB-049/DB-032,
      Teacher DB-002); the registration readings to the frozen Registration (DB-038); Student×Program
      Net-Paid to the frozen Student (DB-001) at Student×Program scope. *(A stored balance would be a
