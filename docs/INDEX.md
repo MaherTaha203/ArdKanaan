@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.48.0 |
+| Version | 1.49.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -240,13 +240,16 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0059 | `docs/decisions/ADR-0059-phase-3-closure-ux-constitution.md` | Phase 3 Closure — UX Constitution Complete & Frozen | ACCEPTED |
 | AUD-P3-FINAL | `docs/audits/phase-3/AUDIT-P3-FINAL.md` | UX Constitution Completion Report | FROZEN |
 
-### 2.5 Phase 4 — DDL Specification (IN PROGRESS — P4-000 adopted 2026-07-22, ADR-0060)
+### 2.5 Phase 4 — DDL Specification (IN PROGRESS — P4-000 adopted 2026-07-22, ADR-0060; DC1 COMPLETE — DAT-001 FROZEN 2026-07-28, ADR-0061)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| P4-000 | `docs/data/P4-000_DDL_SPECIFICATION_MASTER_PLAN.md` | DDL Specification Master Plan | LIVING |
+| P4-000 | `docs/data/P4-000_DDL_SPECIFICATION_MASTER_PLAN.md` | DDL Specification Master Plan | LIVING (v1.1.0) |
+| DAT-001 | `docs/data/DAT-001_DATA_MODEL_CONSTITUTION.md` | Data Model Constitution (of the Logical Data Model) | FROZEN (v1.0.0) |
 | ADR-0060 | `docs/decisions/ADR-0060-phase-4-commencement-and-p4-000-adoption.md` | Phase 4 Commencement & P4-000 DDL Specification Master Plan Adoption | ACCEPTED |
-| — | `docs/data/` (DAT-NNN / DB atoms) | DDL Specification documents (Checkpoints DC1…DC4) | PENDING (authored per P4-000 §4) |
+| ADR-0061 | `docs/decisions/ADR-0061-dat-001-data-model-constitution-adoption.md` | DAT-001 Data Model Constitution Adoption & Freeze | ACCEPTED |
+| AUD-P4-001 | `docs/audits/phase-4/AUDIT-P4-DAT001.md` | DAT-001 Data Model Constitution Audit Report | FROZEN |
+| — | `docs/data/` (DAT-002…N / DB atoms) | Entity/attribute specs + DDL traceability sink (Checkpoints DC2…DC4) | PENDING (authored per P4-000 §4) |
 
 ### 2.6 Phase 5 — Component Library Specification (NOT YET OPEN)
 

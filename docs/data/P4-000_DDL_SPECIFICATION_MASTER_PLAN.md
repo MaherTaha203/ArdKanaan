@@ -6,7 +6,7 @@
 | Title | DDL Specification Master Plan |
 | Phase | 4 (DDL Specification) |
 | Status | LIVING |
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 | Depends on | GOV-011 (§Phase 4 — the only legal phase spec); GOV-012 (layer ownership); GOV-003 (gates); GOV-004 (review); GOV-006 (traceability); GOV-013 (review protocol); BC-000…BC-009 (frozen & locked); PC-001…PC-008 + PLP-001 (frozen); UX-001…UX-006 (frozen); DOM-001…005 + DR-001…090 (frozen) |
 | Answers | "How is Phase 4 — the specification of the product's complete data model — scoped, structured, governed, and closed?" |
 | Governed by | GOV-011 §2 (phase-entry law) · GOV-013 (Multi-Agent Review Protocol) |
@@ -27,7 +27,7 @@ Business (BC-000…009) ─┐
 Product  (PC + PLP-001)├─ consumed as frozen ──► Phase 4: DDL Specification (DAT-NNN / DB atoms)
 Domain   (DOM/DR)      ┘                                   │ consumed, never modified
 UX       (UX-001…006) ─ (informs Screen/Component phases)  ▼
-                                              Phase 7+ Database (executable DDL, later)
+                                              Phase 10 Database (executable DDL, later)
 ```
 
 Phase 4 **documents** the data model that already-frozen truth requires; it **implements nothing**.
@@ -65,7 +65,7 @@ modifies nothing upstream** (CDC).
 | Doc | Working title | Responsibility |
 |---|---|---|
 | **P4-000** | DDL Specification Master Plan | this governing plan (LIVING) |
-| **DAT-001** | Data Model Framework | the framework: DB-atom taxonomy, naming, the entity/attribute/key/constraint/integrity-rule discipline (the DDL analog of BC-000) |
+| **DAT-001** | Data Model Constitution | **FROZEN v1.0.0 (ADR-0061)** — the framework: six-kind DB-atom taxonomy, the Authority Boundary (what may become persisted truth), and technology-neutral logical representation (the DDL analog of BC-000) |
 | **DAT-002…00N** | Entity & attribute specifications | the entities, their attributes, keys, and relationships — one coherent family per frozen concept cluster (parties, programs/registrations, vouchers, balances, activity timeline) |
 | **DAT-00N** | Constraints & integrity rules | keys, uniqueness, referential integrity, immutability, append-only, derived-vs-stored discipline |
 | **DAT-final** | DDL Traceability Matrix & Coverage (sink) | proof: every DB atom → its BR/PR/DR; every representation-requiring frozen rule → its DB atom; 0 orphan / 0 gap (the DDL analog of BC-009 / UX-006) |
@@ -75,7 +75,7 @@ per GOV-013 — the plan does not pre-commit the decomposition.)*
 
 ## 5. Checkpoints
 
-- **DC1** — Framework: DAT-001 (DB-atom taxonomy & discipline).
+- **DC1** — Framework: DAT-001 (DB-atom taxonomy & discipline). ✅ **COMPLETE** (DAT-001 FROZEN v1.0.0, ADR-0061 / AUD-P4-001).
 - **DC2** — Entities & attributes: the core data structures.
 - **DC3** — Constraints & integrity: keys, referential integrity, immutability/append-only, the
   stored-vs-derived line (three balances **derived**; receipt splits **stored & immutable**).
@@ -96,7 +96,7 @@ per GOV-013 — the plan does not pre-commit the decomposition.)*
 - **Consumes (as frozen, modifies nothing):** BC-000…BC-009; PC-001…PC-008 + PLP-001; DOM/DR;
   UX-001…UX-006; GOV-011/012/003/004/006/013.
 - **Produces:** DAT-NNN specification documents carrying **DB-NNN** atoms + the DDL traceability sink.
-- **Out of scope (Phase 7+ / other phases):** executable DDL and database implementation (Phase 10);
+- **Out of scope (Phase 10 / other phases):** executable DDL and database implementation (Phase 10);
   component contracts (Phase 5); screen blueprints (Phase 6); any RDBMS/ORM/technology choice; any new
   business/product/domain truth.
 
@@ -108,7 +108,9 @@ adoption, `docs/data/` and `docs/audits/phase-4/` open, and P4-000 becomes the L
 
 ---
 
-*LIVING (v1.0.0, ADR-0060). The DDL Specification Master Plan — the governing plan of Phase 4,
-subordinate to GOV-011. It introduces no data structure itself; it governs the DAT-NNN documents (DB
-atoms) that will, and the DDL traceability sink that proves them. No executable SQL, in this document
-or the phase it plans. Updated as Phase-4 checkpoints open and close (GOV-005).*
+*LIVING (v1.1.0, ADR-0060; refreshed ADR-0061). The DDL Specification Master Plan — the governing plan
+of Phase 4, subordinate to GOV-011. It introduces no data structure itself; it governs the DAT-NNN
+documents (DB atoms) that will, and the DDL traceability sink that proves them. No executable SQL, in
+this document or the phase it plans. Updated as Phase-4 checkpoints open and close (GOV-005) — v1.1.0
+records DC1 COMPLETE (DAT-001 FROZEN), corrects the DAT-001 working title to "Data Model Constitution",
+and names the database phase "Phase 10" throughout.*
