@@ -90,8 +90,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0061](ADR-0061-dat-001-data-model-constitution-adoption.md) | DAT-001 Data Model Constitution Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 | [ADR-0062](ADR-0062-dr-091-person-record-identity-amendment.md) | DR-091 Person-Record Identity — DOM-004 Post-Closure Amendment (v3.10.0) | 4 | ACCEPTED | — |
 | [ADR-0063](ADR-0063-dat-002-party-entities-adoption.md) | DAT-002 Party Entities (Student & Teacher) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
+| [ADR-0064](ADR-0064-dat-003-programs-and-registrations-adoption.md) | DAT-003 Programs & Registrations (+ Revenue Distribution Policy) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0064**.
+Next available ADR number: **ADR-0065**.
 
 ## 4. Maintenance rules
 
