@@ -92,8 +92,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0063](ADR-0063-dat-002-party-entities-adoption.md) | DAT-002 Party Entities (Student & Teacher) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 | [ADR-0064](ADR-0064-dat-003-programs-and-registrations-adoption.md) | DAT-003 Programs & Registrations (+ Revenue Distribution Policy) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 | [ADR-0065](ADR-0065-dat-004-vouchers-adoption.md) | DAT-004 Vouchers (Receipt · Payment · Refund · Expense Return · Expense Category) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
+| [ADR-0066](ADR-0066-dat-005-derived-balances-adoption.md) | DAT-005 Derived Balances (three balances · entitlement/outstanding/debt · standing) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0066**.
+Next available ADR number: **ADR-0067**.
 
 ## 4. Maintenance rules
 
