@@ -5,11 +5,12 @@
 | Doc ID | DAT-004 |
 | Title | Vouchers |
 | Phase | 4 (DDL Specification) |
-| Status | DRAFT |
-| Version | 0.2.0 |
+| Status | FROZEN |
+| Version | 1.0.0 |
+| Frozen by | ADR-0065 (AUD-P4-004) |
 | Depends on | DAT-001 (framework); DAT-002 (Student DB-001, Teacher DB-002 — FROZEN); DAT-003 (Program DB-022, Revenue Distribution Policy DB-033, Registration DB-038 — FROZEN); P4-000; BC-003, BC-005, BC-006, BC-008 (frozen & locked); BC-007 (balances "store nothing"); PC-003…PC-008; DOM-002 (§7, §8, §13, §14, §15, §15a); DOM-004 (DR-006/015/016/017/019/021/023/024/025/026/028/030/032/034/036/037/040/041/042/043/044/045/046/047/048/049…061/074…085/090); GOV-006/011/012/013 |
 | Answers | "What are the financial voucher entities — Receipt, Payment, Refund, Expense Return, Expense Category — their stored facts, relationships, identity, constraints, and lifecycle integrity, expressed as logical Data Atoms over frozen truth?" |
-| Governed by | GOV-013 — Multi-Agent Review Protocol (Stage 2 — Constitutional Draft) |
+| Governed by | GOV-013 — Multi-Agent Review Protocol (full lifecycle: Discovery → Draft → Stage-3 Self-Hardening → Readiness Verification) |
 
 ---
 
@@ -96,7 +97,7 @@ DB-052).
 | **DB-061** | Integrity rule | **Voucher immutability** — a Posted voucher's financial attributes are never edited or deleted; correction is by **cancellation + a new voucher**, never in place; descriptive (non-financial) fields may be edited with logging | DR-044; DR-048; DAT-001 DV-3 |
 | **DB-062** | Integrity rule | **Numbering generation** — each per-type series advances monotonically and gap-free and **never resets** (not yearly, not ever), from an Owner-specified go-live start | DR-026; DR-090 |
 | **DB-063** | Integrity rule | **Cancellation preservation** — a cancelled voucher **preserves the original** (never deleted, never hidden); its reversal is effected through **new events**, its ledger mechanics consumed from BC-005 (the stored cancellation date/reason/actor are DB-057…DB-059) | DR-047; BC-005 BR-054; BC-005 BR-056 |
-| **DB-064** | Integrity rule | **Cancellation ordering** — a voucher may not be cancelled while a later **dependent** voucher draws on it; dependents are cancelled **newest-first** (a teacher-payment or refund before the receipt/revenue it drew from; an expense-return before its expense) | DR-046; BC-005 BR-055 |
+| **DB-064** | Integrity rule | **Cancellation ordering** — a voucher may not be cancelled while a later **dependent** voucher draws on it; dependents are cancelled **newest-first** (a teacher-payment before the receipt it drew from, a refund before the recognized revenue it drew from; an expense-return before its expense) | DR-046; BC-005 BR-055 |
 | **DB-065** | Integrity rule | **Append-only history** — every posted or cancelled voucher is an append-only event on the immutable activity timeline; corrections are new appended events, never overwrites (the timeline entity is DAT-006) | DR-019; DAT-001 DV-4 |
 
 ### 3.2 Receipt Voucher (سند قبض) — incoming money; the only voucher carrying the split snapshot
@@ -128,7 +129,7 @@ DB-052).
 | **DB-083** | Attribute | **Payment-voucher number** — the sequential number in the independent payment series | stored | DR-090; DR-026; DOM-002 §8 |
 | **DB-084** | Attribute | **Payment amount** — the whole-shekel amount paid out | stored | DR-025; BC-006 BR-060; DOM-002 §8 |
 | **DB-085** | Attribute | **Payment date** — the voucher's own date, fixed at posting | stored | DR-043; DOM-002 §8 |
-| **DB-086** | Attribute | **Payment kind** — the discriminator {teacher payment, center expense} | stored | DOM-002 §8 |
+| **DB-086** | Attribute | **Payment kind** — the discriminator {teacher payment, center expense} | stored | DR-030; DR-052; DOM-002 §8 |
 | **DB-087** | Attribute | **Payment operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-043; DR-047; DOM-002 §8 |
 | **DB-088** | Identity | A Payment Voucher record denotes **one distinct payout act**, known by its own number within the payment series (unique/non-reused per DB-055); surrogate = Phase-10 | — | DOM-002 §8; DR-090 |
 | **DB-089** | Constraint | **Kind-conditioned structure** — kind ∈ {teacher payment, center expense}; a **teacher-payment** references exactly one Program (one Teacher×Program) and carries no expense category; a **center-expense** references exactly one Expense Category, carries no program/teacher, and never owns a revenue split | — | DOM-002 §8; DR-032; DR-051; BC-006 BR-059 |
@@ -165,7 +166,7 @@ DB-052).
 |---|---|---|---|---|
 | **DB-106** | Entity | **Expense Category** — an Owner-maintained, expandable classification list; it **owns only its name** and is **not a financial voucher** (no number, no money, no balance) | stored | DOM-002 §14; BC-008 BR-079; DR-051 |
 | **DB-107** | Attribute | **Category name** — the label of the expense category | stored | DOM-002 §14; DR-051 |
-| **DB-108** | Identity | An Expense Category record denotes **one distinct category**, known by its name; it applies only to center-expense Payment Vouchers; surrogate = Phase-10 | — | DOM-002 §14 |
+| **DB-108** | Identity | An Expense Category record denotes **one distinct category**, known by its name; it applies only to center-expense Payment Vouchers; surrogate = Phase-10 | — | DR-051; DOM-002 §14 |
 | **DB-109** | Constraint | A center-expense Payment Voucher carries **exactly one** Expense Category; the category itself holds no money, balance, or voucher (per-category spending totals are **derived**, §5) | — | DOM-002 §14; DR-051; DR-052 |
 
 ## 4. Relationships (declared here — both endpoints exist in or before DAT-004)
@@ -269,13 +270,13 @@ DB-110…DB-117. Continuous numbering resumes at **DB-118** in DAT-005.
 
 ---
 
-*DRAFT (v0.2.0) — the third Phase-4 entity-specification document, authored under GOV-013 over the frozen
-voucher truth (BC-003/005/006/008) and the DAT-001 framework. **65 Data Atoms (DB-053…DB-117)** across five
-voucher entities; the load-bearing atoms are the immutable split snapshot (DB-073/DB-074) and its fixity
-(DB-081). Stage-3 Adversarial Self-Hardening (five hypotheses) confirmed the non-program-as-Receipt-variant
-model faithful (H1 CLEAN) and the Authority Boundary CLEAN (H3); repairs applied — the Cancelled-status
-citation re-anchored to DR-047 (H2), the §4/§9 homing justification corrected (H5), the cancellation
-date/reason/actor promoted to stored Attributes DB-057…DB-059 and DB-063 reduced to integrity-only, and a
-revenue-source value-domain Constraint DB-077 added (H4). Not frozen; not propagated. Subject to
-Constitutional Readiness Verification (Panel + Judge), the Readiness Gate, and Owner Approval before any
-freeze.*
+*FROZEN v1.0.0 (ADR-0065 / AUD-P4-004) — the third Phase-4 entity-specification document, authored under
+GOV-013 over the frozen voucher truth (BC-003/005/006/008) and the DAT-001 framework. **65 Data Atoms
+(DB-053…DB-117)** across five voucher entities; the load-bearing atoms are the immutable split snapshot
+(DB-073/DB-074) and its fixity (DB-081), stored because a frozen authority (DR-006) commands it while every
+running balance is excluded as derived (DAT-005). Introduces no new truth (DV-8). Full GOV-013 lifecycle:
+Discovery → Draft → Stage-3 Adversarial Self-Hardening (H1 non-program-as-Receipt-variant CLEAN; H3
+Authority Boundary CLEAN; H2/H4/H5 repairs — cancellation metadata promoted to stored Attributes
+DB-057…DB-059, revenue-source domain Constraint DB-077 added) → Constitutional Readiness Verification
+(4-lens Panel + independent Judge; two DV-1 citation orphans repaired — DR-030/DR-052 on DB-086, DR-051 on
+DB-108 — clearing 0-orphan) → Owner Approval. Amendments only via GOV-004 §5.*

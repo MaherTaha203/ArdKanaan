@@ -240,7 +240,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0059 | `docs/decisions/ADR-0059-phase-3-closure-ux-constitution.md` | Phase 3 Closure — UX Constitution Complete & Frozen | ACCEPTED |
 | AUD-P3-FINAL | `docs/audits/phase-3/AUDIT-P3-FINAL.md` | UX Constitution Completion Report | FROZEN |
 
-### 2.5 Phase 4 — DDL Specification (IN PROGRESS — P4-000 adopted 2026-07-22, ADR-0060; DC1 COMPLETE — DAT-001 FROZEN 2026-07-28, ADR-0061; DC2 — DAT-002 Party Entities FROZEN 2026-07-28, ADR-0063; DAT-003 Programs & Registrations FROZEN 2026-07-28, ADR-0064; DR-091 identity amendment ADR-0062)
+### 2.5 Phase 4 — DDL Specification (IN PROGRESS — P4-000 adopted 2026-07-22, ADR-0060; DC1 COMPLETE — DAT-001 FROZEN 2026-07-28, ADR-0061; DC2 — DAT-002 Party Entities FROZEN 2026-07-28, ADR-0063; DAT-003 Programs & Registrations FROZEN 2026-07-28, ADR-0064; DAT-004 Vouchers FROZEN 2026-07-28, ADR-0065; DR-091 identity amendment ADR-0062)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
@@ -248,14 +248,17 @@ Gate 8 (Repository Integrity) violation.
 | DAT-001 | `docs/data/DAT-001_DATA_MODEL_CONSTITUTION.md` | Data Model Constitution (of the Logical Data Model) | FROZEN (v1.0.0) |
 | DAT-002 | `docs/data/DAT-002_PARTY_ENTITIES.md` | Party Entities (Student & Teacher) — DB-001…DB-021 | FROZEN (v1.0.0) |
 | DAT-003 | `docs/data/DAT-003_PROGRAMS_AND_REGISTRATIONS.md` | Programs & Registrations (+ Revenue Distribution Policy) — DB-022…DB-052 | FROZEN (v1.0.0) |
+| DAT-004 | `docs/data/DAT-004_VOUCHERS.md` | Vouchers (Receipt · Payment · Refund · Expense Return · Expense Category) — DB-053…DB-117 | FROZEN (v1.0.0) |
 | ADR-0060 | `docs/decisions/ADR-0060-phase-4-commencement-and-p4-000-adoption.md` | Phase 4 Commencement & P4-000 DDL Specification Master Plan Adoption | ACCEPTED |
 | ADR-0061 | `docs/decisions/ADR-0061-dat-001-data-model-constitution-adoption.md` | DAT-001 Data Model Constitution Adoption & Freeze | ACCEPTED |
 | ADR-0062 | `docs/decisions/ADR-0062-dr-091-person-record-identity-amendment.md` | DR-091 Person-Record Identity — DOM-004 Post-Closure Amendment | ACCEPTED |
 | ADR-0063 | `docs/decisions/ADR-0063-dat-002-party-entities-adoption.md` | DAT-002 Party Entities Adoption & Freeze | ACCEPTED |
 | ADR-0064 | `docs/decisions/ADR-0064-dat-003-programs-and-registrations-adoption.md` | DAT-003 Programs & Registrations Adoption & Freeze | ACCEPTED |
+| ADR-0065 | `docs/decisions/ADR-0065-dat-004-vouchers-adoption.md` | DAT-004 Vouchers Adoption & Freeze | ACCEPTED |
 | AUD-P4-001 | `docs/audits/phase-4/AUDIT-P4-DAT001.md` | DAT-001 Data Model Constitution Audit Report | FROZEN |
 | AUD-P4-002 | `docs/audits/phase-4/AUDIT-P4-DAT002.md` | DAT-002 Party Entities Audit Report | FROZEN |
 | AUD-P4-003 | `docs/audits/phase-4/AUDIT-P4-DAT003.md` | DAT-003 Programs & Registrations Audit Report | FROZEN |
+| AUD-P4-004 | `docs/audits/phase-4/AUDIT-P4-DAT004.md` | DAT-004 Vouchers Audit Report | FROZEN |
 | — | `docs/data/` (DAT-002…N / DB atoms) | Entity/attribute specs + DDL traceability sink (Checkpoints DC2…DC4) | PENDING (authored per P4-000 §4) |
 
 ### 2.6 Phase 5 — Component Library Specification (NOT YET OPEN)

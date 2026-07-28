@@ -68,7 +68,8 @@ modifies nothing upstream** (CDC).
 | **DAT-001** | Data Model Constitution | **FROZEN v1.0.0 (ADR-0061)** — the framework: six-kind DB-atom taxonomy, the Authority Boundary (what may become persisted truth), and technology-neutral logical representation (the DDL analog of BC-000) |
 | **DAT-002** | Party Entities (Student & Teacher) | **FROZEN v1.0.0 (ADR-0063)** — the two anchor party entities and their attribute/identity/constraint/integrity atoms (DB-001…DB-021) |
 | **DAT-003** | Programs & Registrations (+ Revenue Distribution Policy) | **FROZEN v1.0.0 (ADR-0064)** — the offering, its owned Policy, and the enrolment obligation, plus the first Relationship atoms (DB-022…DB-052) |
-| **DAT-004…00N** | Entity & attribute specifications | the remaining entities, their attributes, keys, and relationships — one coherent family per frozen concept cluster (vouchers, balances[derived], activity timeline) |
+| **DAT-004** | Vouchers (Receipt · Payment · Refund · Expense Return · Expense Category) | **FROZEN v1.0.0 (ADR-0065)** — the five money-movement voucher entities + the immutable split snapshot (DB-053…DB-117) |
+| **DAT-005…00N** | Entity & attribute specifications | the remaining families — derived balances (the three balances, teacher entitlement/debt, party standing) and the activity timeline |
 | **DAT-00N** | Constraints & integrity rules | keys, uniqueness, referential integrity, immutability, append-only, derived-vs-stored discipline |
 | **DAT-final** | DDL Traceability Matrix & Coverage (sink) | proof: every DB atom → its BR/PR/DR; every representation-requiring frozen rule → its DB atom; 0 orphan / 0 gap (the DDL analog of BC-009 / UX-006) |
 

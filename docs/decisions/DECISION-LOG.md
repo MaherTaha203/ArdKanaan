@@ -91,8 +91,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0062](ADR-0062-dr-091-person-record-identity-amendment.md) | DR-091 Person-Record Identity — DOM-004 Post-Closure Amendment (v3.10.0) | 4 | ACCEPTED | — |
 | [ADR-0063](ADR-0063-dat-002-party-entities-adoption.md) | DAT-002 Party Entities (Student & Teacher) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 | [ADR-0064](ADR-0064-dat-003-programs-and-registrations-adoption.md) | DAT-003 Programs & Registrations (+ Revenue Distribution Policy) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
+| [ADR-0065](ADR-0065-dat-004-vouchers-adoption.md) | DAT-004 Vouchers (Receipt · Payment · Refund · Expense Return · Expense Category) Adoption & Freeze (v1.0.0) | 4 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0065**.
+Next available ADR number: **ADR-0066**.
 
 ## 4. Maintenance rules
 
