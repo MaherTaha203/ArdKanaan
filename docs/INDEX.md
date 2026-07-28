@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.49.0 |
+| Version | 1.50.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -99,7 +99,7 @@ Gate 8 (Repository Integrity) violation.
 | DOM-001 | `docs/domain/DOMAIN-001_BUSINESS_OVERVIEW.md` | Business Overview | FROZEN |
 | DOM-002 | `docs/domain/DOMAIN-002_BUSINESS_ENTITIES.md` | Business Entities | FROZEN |
 | DOM-003 | `docs/domain/DOMAIN-003_BUSINESS_WORKFLOWS.md` | Business Workflows | FROZEN |
-| DOM-004 | `docs/domain/DOMAIN-004_BUSINESS_RULES_CATALOG.md` | Business Rules Catalog | FROZEN |
+| DOM-004 | `docs/domain/DOMAIN-004_BUSINESS_RULES_CATALOG.md` | Business Rules Catalog (DR-001…091; DR-091 added ADR-0062) | FROZEN (v3.10.0) |
 | DOM-005 | `docs/domain/DOMAIN-005_UNKNOWNS_AND_ASSUMPTIONS.md` | Unknowns & Assumptions | LIVING |
 | ADR-0008 | `docs/decisions/ADR-0008-session-1-owner-decisions.md` | Session 1 Owner Decisions: Compensation, Rounding, Entitlement, Balances | ACCEPTED |
 | AUD-P1A-001 | `docs/audits/phase-1a/AUDIT-P1A-DOMAIN.md` | Phase 1A Domain Discovery Audit Report | FROZEN |
@@ -248,6 +248,7 @@ Gate 8 (Repository Integrity) violation.
 | DAT-001 | `docs/data/DAT-001_DATA_MODEL_CONSTITUTION.md` | Data Model Constitution (of the Logical Data Model) | FROZEN (v1.0.0) |
 | ADR-0060 | `docs/decisions/ADR-0060-phase-4-commencement-and-p4-000-adoption.md` | Phase 4 Commencement & P4-000 DDL Specification Master Plan Adoption | ACCEPTED |
 | ADR-0061 | `docs/decisions/ADR-0061-dat-001-data-model-constitution-adoption.md` | DAT-001 Data Model Constitution Adoption & Freeze | ACCEPTED |
+| ADR-0062 | `docs/decisions/ADR-0062-dr-091-person-record-identity-amendment.md` | DR-091 Person-Record Identity — DOM-004 Post-Closure Amendment | ACCEPTED |
 | AUD-P4-001 | `docs/audits/phase-4/AUDIT-P4-DAT001.md` | DAT-001 Data Model Constitution Audit Report | FROZEN |
 | — | `docs/data/` (DAT-002…N / DB atoms) | Entity/attribute specs + DDL traceability sink (Checkpoints DC2…DC4) | PENDING (authored per P4-000 §4) |
 

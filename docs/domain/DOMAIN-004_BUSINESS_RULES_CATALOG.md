@@ -6,8 +6,8 @@
 | Title | Business Rules Catalog |
 | Phase | 1A |
 | Status | FROZEN |
-| Version | 3.9.0 |
-| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), ADR-0024 (Session 12 final boundary confirmations), DOM-001, DOM-002, DOM-003 |
+| Version | 3.10.0 |
+| Depends on | GOV-001 (F-01…F-09), ADR-0008 (owner decisions D2–D6), ADR-0009 (V1 scope), ADR-0010 (Operations definition), ADR-0013 (Session 3 decisions), ADR-0014 (rounding rule), ADR-0015 (Session 4 teacher payments), ADR-0016 (Session 5 student refunds), ADR-0017 (register restructure), ADR-0018 (Session 6 corrections & cancellations), ADR-0019 (Session 7 expense categories), ADR-0020 (Session 8 expense returns), ADR-0021 (Session 9 refund entitlement & teacher debt), ADR-0022 (Session 10 program definition, pricing & policy), ADR-0023 (Session 11 business boundary & operational completeness), ADR-0024 (Session 12 final boundary confirmations), ADR-0062 (post-closure amendment — DR-091 person-record identity, for Phase-4 DAT-002), DOM-001, DOM-002, DOM-003 |
 | Referenced by | DOM-005; Phase 1+ documents MUST reconcile with this catalog (ADR-0007 §3) |
 
 ---
@@ -1170,6 +1170,31 @@ stage; see ADR-0018 S6-D6 and §Future considerations.)*
 - **Possible exceptions:** the exact per-type numbering scheme and go-live starting
   numbers are a design/go-live detail (as with Refund Voucher numbering,
   ADR-0017 §2), not a domain rule.
+- **Unknown status:** —
+
+### DR-091 — Person-record identity: the name is the essential identifying attribute; distinctness is Owner-maintained
+- **Description:** Every person record — Student, Teacher, and any Guardian contact
+  held on a student — carries, as its **essential identifying attribute**, the
+  **name** by which the individual is known: the minimum required for a record to
+  denote a person. Each person record denotes **one distinct real individual**.
+  V1 imposes **no automatic natural-key uniqueness or de-duplication rule** — there
+  is no national-ID, phone-unique, or "same X ⇒ same person" constraint; the sole
+  Owner-operator maintains distinctness by judgment (a name alone is not unique —
+  two individuals may share one). Beyond the name, a person record holds only such
+  further attributes as are **separately frozen** (the Guardian contact group,
+  DR-089; the Teacher operational status, DR-083); no other descriptive field is
+  mandated in V1.
+- **Reason:** A person record cannot function without the person's name; but the
+  center is a single-operator V1 (PA-2) where automatic identity-matching would add
+  weight without value (M-08) — distinctness is human judgment, not a system rule.
+  Minimal frozen identity avoids inventing fields the business has not required.
+  (→ ADR-0062; unblocks the Phase-4 DAT-002 person entities, whose identity atoms
+  now cite this rule.)
+- **Dependencies:** DR-021 (Student is the core person entity), DR-002 (each program
+  belongs to exactly one teacher), DR-083 (teacher status), DR-089 (guardian contact).
+- **Possible exceptions:** any machine-level unique identifier (surrogate key) is a
+  Phase-10 implementation concern, never a business/natural key; no storage type,
+  format, or validation is fixed here.
 - **Unknown status:** —
 
 ---
