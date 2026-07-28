@@ -33,10 +33,11 @@ DAT-004 — Vouchers:  Receipt (DB-063) · Payment (DB-078) · Refund (DB-086) �
 DAT-005 (derived balances — the three balances, entitlement, debt, standings) → DAT-006 (activity timeline)
 ```
 
-Every voucher anchor — Student (DB-001), Teacher (DB-002), Program (DB-022), Registration (DB-038) — is
-already frozen, so every voucher relationship is **homed here**, in the dependent's document (DAT-001
-§3.1). The running **balances** those vouchers move are **derived revelations** that "store nothing"
-(BC-007) and belong to **DAT-005** (§5).
+Every voucher relationship is **homed here** because both endpoints exist in or before DAT-004 (DAT-001
+§3.1): the external anchors — Student (DB-001), Teacher (DB-002), Program (DB-022), Registration (DB-038)
+— are already frozen, and the two internal anchors (Expense Category, the center-expense Payment Voucher)
+are defined in this document. The running **balances** those vouchers move are **derived revelations**
+that "store nothing" (BC-007) and belong to **DAT-005** (§5).
 
 ## 2. Scope
 
@@ -87,7 +88,7 @@ DB-052).
 | **DB-053** | Constraint | A financial voucher's money amount is a **whole-shekel** value — decimals/fractions are never used | DR-025; DAT-001 §5 |
 | **DB-054** | Constraint | Where a voucher records a payment method, its value-domain = exactly **{cash, bank transfer}** — one method per voucher, never mixed | DR-025 |
 | **DB-055** | Constraint | Each financial-voucher **type** bears an official number that is **unique and never reused or duplicated within its own independent per-type series** | DR-090 |
-| **DB-056** | Constraint | A financial voucher's operational-status **value-domain = exactly {Posted, Cancelled}** | DR-043; DR-045 |
+| **DB-056** | Constraint | A financial voucher's operational-status **value-domain = exactly {Posted, Cancelled}** | DR-043; DR-047; BC-005 BR-056 |
 | **DB-057** | Integrity rule | **Posted-on-save** — recording a financial voucher posts it immediately (no Draft state in V1); posting is the act that gives rise to its effects | DR-043; BR-034 |
 | **DB-058** | Integrity rule | **Voucher immutability** — a Posted voucher's financial attributes are never edited or deleted; correction is by **cancellation + a new voucher**, never in place; descriptive (non-financial) fields may be edited with logging | DR-044; DR-048; DAT-001 DV-3 |
 | **DB-059** | Integrity rule | **Numbering generation** — each per-type series advances monotonically and gap-free and **never resets** (not yearly, not ever), from an Owner-specified go-live start | DR-026; DR-090 |
@@ -108,7 +109,7 @@ DB-052).
 | **DB-069** | Attribute | **Revenue source** — the mandatory source of the income (program fee / exam / certificate-issuance / book-material); no generic or unattributed receipt exists | stored | BR-074; BR-075; DOM-002 §15a |
 | **DB-070** | Attribute | **Teacher Share** — the teacher portion of the applied split, captured as the **immutable snapshot on the voucher** at posting (program-fee source); a stored fact mandated by DR-006, **not** the running Teacher Payables balance | stored | DR-006; BR-038; DOM-002 §7; DAT-001 §4 |
 | **DB-071** | Attribute | **Center Share** — the center portion of the applied split, captured as the **immutable snapshot on the voucher** at posting (program-fee source); a stored fact mandated by DR-006, **not** the running Center Net balance | stored | DR-006; BR-038; DOM-002 §7; DAT-001 §4 |
-| **DB-072** | Attribute | **Receipt operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | BR-040; DR-045 |
+| **DB-072** | Attribute | **Receipt operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | BR-040; DR-043; DR-047 |
 | **DB-073** | Identity | A Receipt Voucher record denotes **one distinct incoming payment**, known by its own identity; its receipt number is unique and never reused within the receipt series (per DB-055); no natural-key uniqueness imposed (surrogate = Phase-10) | — | BR-028; DR-090; DR-026 |
 | **DB-074** | Constraint | **Receipt atomicity** — a receipt records exactly one payment; a **program-fee** receipt binds exactly one Student and one Program **via that student's one Registration**; it never spans two students, two programs, or two payments | — | BR-033; BR-036; DR-023 |
 | **DB-075** | Constraint | **Split conservation** — for a program-fee receipt, **Teacher Share + Center Share = receipt amount** exactly; rounding never creates an independent difference | — | DR-028; DR-006 |
@@ -124,7 +125,7 @@ DB-052).
 | **DB-080** | Attribute | **Payment amount** — the whole-shekel amount paid out | stored | DR-025; BC-006 BR-060; DOM-002 §8 |
 | **DB-081** | Attribute | **Payment date** — the voucher's own date, fixed at posting | stored | DR-043; DOM-002 §8 |
 | **DB-082** | Attribute | **Payment kind** — the discriminator {teacher payment, center expense} | stored | DOM-002 §8 |
-| **DB-083** | Attribute | **Payment operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-045; DOM-002 §8 |
+| **DB-083** | Attribute | **Payment operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-043; DR-047; DOM-002 §8 |
 | **DB-084** | Identity | A Payment Voucher record denotes **one distinct payout act**, known by its own number within the payment series (unique/non-reused per DB-055); surrogate = Phase-10 | — | DOM-002 §8; DR-090 |
 | **DB-085** | Constraint | **Kind-conditioned structure** — kind ∈ {teacher payment, center expense}; a **teacher-payment** references exactly one Program (one Teacher×Program) and carries no expense category; a **center-expense** references exactly one Expense Category, carries no program/teacher, and never owns a revenue split | — | DOM-002 §8; DR-032; DR-051; BC-006 BR-059 |
 
@@ -137,7 +138,7 @@ DB-052).
 | **DB-088** | Attribute | **Refund amount** — the whole-shekel refunded amount | stored | DR-025; DR-042; DOM-002 §13 |
 | **DB-089** | Attribute | **Refund date** — the voucher's own date, fixed at posting | stored | DR-043; DOM-002 §13 |
 | **DB-090** | Attribute | **Refund reason** — a **mandatory** recorded reason for the refund | stored | BC-005 BR-050; DR-042; DOM-002 §13 |
-| **DB-091** | Attribute | **Refund operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-045; DOM-002 §13 |
+| **DB-091** | Attribute | **Refund operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-043; DR-047; DOM-002 §13 |
 | **DB-092** | Identity | A Refund Voucher record denotes **one distinct refund act**, known by its own number within the refund series (unique/non-reused per DB-055); surrogate = Phase-10 | — | DOM-002 §13; DR-090 |
 | **DB-093** | Constraint | **Refund reference** — a Refund Voucher references exactly **one Student and one Program (Student×Program)** and is **never allocated or matched to any individual Receipt Voucher or Registration** (no receipt-matching of any kind) | — | BC-005 BR-052; DR-040 |
 | **DB-094** | Integrity rule | **Refund–registration independence** — posting or cancelling a refund **never** automatically changes a registration's Active/Ended-Withdrawn status, in either direction | — | BC-005 BR-053; DR-085 |
@@ -150,7 +151,7 @@ DB-052).
 | **DB-096** | Attribute | **Expense-return number** — the sequential number in the independent expense-return series | stored | DR-090; DR-055 |
 | **DB-097** | Attribute | **Expense-return amount** — the whole-shekel amount returned | stored | DR-025; DOM-002 §15 |
 | **DB-098** | Attribute | **Expense-return date** — the voucher's own date, fixed at posting | stored | DR-043; DOM-002 §15 |
-| **DB-099** | Attribute | **Expense-return operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-045; DOM-002 §15 |
+| **DB-099** | Attribute | **Expense-return operational status** — Posted / Cancelled (shared value-domain, DB-056) | stored | DR-043; DR-047; DOM-002 §15 |
 | **DB-100** | Identity | An Expense Return record denotes **one distinct return act**, known by its own number within the expense-return series (unique/non-reused per DB-055); surrogate = Phase-10 | — | DOM-002 §15; DR-090 |
 | **DB-101** | Constraint | **Expense-return reference & ceiling** — references exactly one **Posted, non-cancelled center-expense Payment Voucher**; the sum of returns against one expense may **never exceed** that expense; a return never spans two expenses and never mutates the original | — | BC-008 BR-084; BC-008 BR-085; DR-057; DR-058; DR-059 |
 
@@ -163,7 +164,7 @@ DB-052).
 | **DB-104** | Identity | An Expense Category record denotes **one distinct category**, known by its name; it applies only to center-expense Payment Vouchers; surrogate = Phase-10 | — | DOM-002 §14 |
 | **DB-105** | Constraint | A center-expense Payment Voucher carries **exactly one** Expense Category; the category itself holds no money, balance, or voucher (per-category spending totals are **derived**, §5) | — | DOM-002 §14; DR-051; DR-052 |
 
-## 4. Relationships (declared here — every anchor is already frozen)
+## 4. Relationships (declared here — both endpoints exist in or before DAT-004)
 
 Per DAT-001 §3.1 each Relationship fixes **ownership** (anchor → dependent), **cardinality**, and
 **referential meaning**; the cascade/mechanism is Phase-10. Referential integrity (no dependent references
@@ -249,8 +250,9 @@ in DAT-005.
 
 ## 9. Self-validation
 
-- **Correctly ordered** — every voucher anchor (Student, Teacher, Program, Registration) is already frozen,
-  so all relationships are homed here.
+- **Correctly ordered** — every relationship is homed here because both endpoints exist in or before
+  DAT-004: the external anchors (Student, Teacher, Program, Registration) are frozen, and the two internal
+  anchors (Expense Category, the center-expense Payment Voucher) are defined here.
 - **Six-kind discipline** — each atom is exactly one kind; the shared discipline factors the cross-cutting
   numbering/posting/immutability/cancellation rules once; the status and method value-domains are
   Constraints; the immutabilities and snapshot fixity are Integrity rules.
