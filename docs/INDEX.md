@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.51.0 |
+| Version | 1.52.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -31,14 +31,16 @@ here does not officially exist (see GOV-001 §4).
     │   ├── phase-1a/
     │   ├── phase-1/
     │   ├── phase-2/
-    │   └── phase-3/
+    │   ├── phase-3/
+    │   ├── phase-4/
+    │   └── phase-5/
 
     ├── domain/                   Phase 1A — Domain Discovery
     ├── product/                  Phase 1 — Product Constitution   (CLOSED)
     ├── business/                 Phase 2 — Business Constitution  (CLOSED & LOCKED)
     ├── ux/                       Phase 3 — UX Constitution        (CLOSED)
-    ├── data/                     Phase 4 — DDL Specification      (IN PROGRESS)
-    ├── components/               Phase 5 — Component Library Spec (RESERVED)
+    ├── data/                     Phase 4 — DDL Specification      (CLOSED)
+    ├── components/               Phase 5 — Component Library Spec (OPEN)
     └── screens/                  Phase 6 — Screen Blueprints      (RESERVED)
 ```
 
@@ -269,11 +271,12 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P4-FINAL | `docs/audits/phase-4/AUDIT-P4-FINAL.md` | Phase 4 (DDL Specification) Closure Audit — CLOSURE-READY | FROZEN |
 | — | `docs/data/` (DAT-002…DAT-006 / DB-001…DB-159) | Entity/attribute specs + DDL traceability sink | COMPLETE (all frozen; Phase 4 CLOSED, ADR-0068) |
 
-### 2.6 Phase 5 — Component Library Specification (NOT YET OPEN)
+### 2.6 Phase 5 — Component Library Specification (**OPEN** — Phase 5 opened 2026-07-29, ADR-0069; P5-000 adopted LIVING v1.0.0; entry conditions met per GOV-011 §2 — Phase 4 CLOSED, gates passed, Owner authorization)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
-| — | `docs/components/` | Reserved | PENDING |
+| P5-000 | `docs/components/P5-000_COMPONENT_LIBRARY_SPECIFICATION_MASTER_PLAN.md` | Component Library Specification Master Plan | LIVING (v1.0.0) |
+| ADR-0069 | `docs/decisions/ADR-0069-phase-5-commencement-and-p5-000-adoption.md` | Phase 5 Commencement & P5-000 Master Plan Adoption | ACCEPTED |
 
 ### 2.7 Phase 6 — Screen Blueprints (NOT YET OPEN)
 
