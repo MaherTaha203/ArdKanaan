@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.53.0 |
+| Version | 1.54.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -278,6 +278,7 @@ Gate 8 (Repository Integrity) violation.
 | P5-000 | `docs/components/P5-000_COMPONENT_LIBRARY_SPECIFICATION_MASTER_PLAN.md` | Component Library Specification Master Plan | LIVING (v1.1.0) |
 | ADR-0069 | `docs/decisions/ADR-0069-phase-5-commencement-and-p5-000-adoption.md` | Phase 5 Commencement & P5-000 Master Plan Adoption | ACCEPTED |
 | ADR-0070 | `docs/decisions/ADR-0070-phase-5-visual-exploration-mechanism.md` | Phase 5 Visual Exploration Mechanism Authorized (non-authoritative design-evaluation vehicles) | ACCEPTED |
+| ADR-0071 | `docs/decisions/ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md` | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity + Vercel light palette, light-only) | ACCEPTED |
 
 ### 2.7 Phase 6 — Screen Blueprints (NOT YET OPEN)
 
