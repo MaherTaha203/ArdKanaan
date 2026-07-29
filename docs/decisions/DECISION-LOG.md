@@ -97,9 +97,10 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0068](ADR-0068-phase-4-closure-ddl-specification.md) | Phase 4 Closure — DDL Specification Complete & Frozen (DAT-001…DAT-006, DB-001…DB-159; AUD-P4-FINAL) | 4 (→ 5) | ACCEPTED | — |
 | [ADR-0069](ADR-0069-phase-5-commencement-and-p5-000-adoption.md) | Phase 5 Commencement & P5-000 Component Library Specification Master Plan Adoption | 5 | ACCEPTED | — |
 | [ADR-0070](ADR-0070-phase-5-visual-exploration-mechanism.md) | Phase 5 Visual Exploration Mechanism Authorized (non-authoritative design-evaluation vehicles; amends P5-000 §5 → v1.1.0) | 5 | ACCEPTED | — |
-| [ADR-0071](ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md) | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity structure + Vercel-style light monochrome palette, light-only); fixes direction only, freezes no token | 5 | ACCEPTED | — |
+| [ADR-0071](ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md) | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity structure + Vercel-style light monochrome palette, light-only); fixes direction only, freezes no token | 5 | ACCEPTED (palette descriptors partially amended by ADR-0072 — reclassified non-authoritative; Sophisticated Operational Simplicity structural direction + LIGHT constraint remain live) | — |
+| [ADR-0072](ADR-0072-cmp-001-adoption-freeze-and-adr-0071-palette-amendment.md) | Phase-5 CC1 — CMP-001 Design Language Constitution Adoption & Freeze (v1.0.0); ADR-0071 Palette-Descriptor Amendment (partial) | 5 | ACCEPTED | ADR-0071 (partial: palette descriptors reclassified non-authoritative; structural direction + LIGHT remain live) |
 
-Next available ADR number: **ADR-0072**.
+Next available ADR number: **ADR-0073**.
 
 ## 4. Maintenance rules
 

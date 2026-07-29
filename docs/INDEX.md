@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.54.0 |
+| Version | 1.55.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -271,14 +271,16 @@ Gate 8 (Repository Integrity) violation.
 | AUD-P4-FINAL | `docs/audits/phase-4/AUDIT-P4-FINAL.md` | Phase 4 (DDL Specification) Closure Audit — CLOSURE-READY | FROZEN |
 | — | `docs/data/` (DAT-002…DAT-006 / DB-001…DB-159) | Entity/attribute specs + DDL traceability sink | COMPLETE (all frozen; Phase 4 CLOSED, ADR-0068) |
 
-### 2.6 Phase 5 — Component Library Specification (**OPEN** — Phase 5 opened 2026-07-29, ADR-0069; P5-000 adopted LIVING v1.0.0; entry conditions met per GOV-011 §2 — Phase 4 CLOSED, gates passed, Owner authorization)
+### 2.6 Phase 5 — Component Library Specification (**OPEN** — Phase 5 opened 2026-07-29, ADR-0069; P5-000 adopted LIVING v1.0.0; entry conditions met per GOV-011 §2 — Phase 4 CLOSED, gates passed, Owner authorization) · **CC1 COMPLETE — CMP-001 Design Language Constitution FROZEN v1.0.0 (2026-07-29, ADR-0072)**
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
 | P5-000 | `docs/components/P5-000_COMPONENT_LIBRARY_SPECIFICATION_MASTER_PLAN.md` | Component Library Specification Master Plan | LIVING (v1.1.0) |
+| CMP-001 | `docs/components/CMP-001_DESIGN_LANGUAGE_CONSTITUTION.md` | Design Language Constitution — Phase-5 framework (CC1); Presentation Boundary, five-kind CP-atom taxonomy, token architecture, design-decision process, CMV-01…12; decides no visual value, authors no CP atom | **FROZEN v1.0.0** |
 | ADR-0069 | `docs/decisions/ADR-0069-phase-5-commencement-and-p5-000-adoption.md` | Phase 5 Commencement & P5-000 Master Plan Adoption | ACCEPTED |
 | ADR-0070 | `docs/decisions/ADR-0070-phase-5-visual-exploration-mechanism.md` | Phase 5 Visual Exploration Mechanism Authorized (non-authoritative design-evaluation vehicles) | ACCEPTED |
-| ADR-0071 | `docs/decisions/ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md` | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity + Vercel light palette, light-only) | ACCEPTED |
+| ADR-0071 | `docs/decisions/ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md` | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity + Vercel light palette, light-only) | ACCEPTED (palette descriptors partially amended by ADR-0072 — reclassified non-authoritative; structural direction + LIGHT remain live) |
+| ADR-0072 | `docs/decisions/ADR-0072-cmp-001-adoption-freeze-and-adr-0071-palette-amendment.md` | Phase-5 CC1 — CMP-001 Adoption & Freeze (v1.0.0); ADR-0071 Palette-Descriptor Amendment (partial) | ACCEPTED |
 
 ### 2.7 Phase 6 — Screen Blueprints (NOT YET OPEN)
 
