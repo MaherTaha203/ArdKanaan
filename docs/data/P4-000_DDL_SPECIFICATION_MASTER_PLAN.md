@@ -70,7 +70,7 @@ modifies nothing upstream** (CDC).
 | **DAT-003** | Programs & Registrations (+ Revenue Distribution Policy) | **FROZEN v1.0.0 (ADR-0064)** — the offering, its owned Policy, and the enrolment obligation, plus the first Relationship atoms (DB-022…DB-052) |
 | **DAT-004** | Vouchers (Receipt · Payment · Refund · Expense Return · Expense Category) | **FROZEN v1.0.0 (ADR-0065)** — the five money-movement voucher entities + the immutable split snapshot (DB-053…DB-117) |
 | **DAT-005** | Derived Balances (three balances · entitlement/outstanding/debt · standing) | **FROZEN v1.0.0 (ADR-0066)** — the derivation basis + invariants of every derived financial quantity, storing nothing (DB-118…DB-143) |
-| **DAT-006…00N** | Entity & attribute specifications | the remaining family — the activity timeline (append-only operations history) |
+| **DAT-006** | Activity Timeline (append-only Operations event log) | **FROZEN v1.0.0 (ADR-0067)** — the stored append-only activity record; hybrid Authority Boundary (DB-144…DB-159). **Final entity document — DAT-001…DAT-006 COMPLETE, DB-001…DB-159** |
 | **DAT-00N** | Constraints & integrity rules | keys, uniqueness, referential integrity, immutability, append-only, derived-vs-stored discipline |
 | **DAT-final** | DDL Traceability Matrix & Coverage (sink) | proof: every DB atom → its BR/PR/DR; every representation-requiring frozen rule → its DB atom; 0 orphan / 0 gap (the DDL analog of BC-009 / UX-006) |
 
