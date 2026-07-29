@@ -5,7 +5,7 @@
 | Doc ID | P4-000 |
 | Title | DDL Specification Master Plan |
 | Phase | 4 (DDL Specification) |
-| Status | LIVING |
+| Status | CLOSED (Phase 4 closed 2026-07-28, ADR-0068 / AUD-P4-FINAL) |
 | Version | 1.1.0 |
 | Depends on | GOV-011 (§Phase 4 — the only legal phase spec); GOV-012 (layer ownership); GOV-003 (gates); GOV-004 (review); GOV-006 (traceability); GOV-013 (review protocol); BC-000…BC-009 (frozen & locked); PC-001…PC-008 + PLP-001 (frozen); UX-001…UX-006 (frozen); DOM-001…005 + DR-001…090 (frozen) |
 | Answers | "How is Phase 4 — the specification of the product's complete data model — scoped, structured, governed, and closed?" |
@@ -112,7 +112,7 @@ adoption, `docs/data/` and `docs/audits/phase-4/` open, and P4-000 becomes the L
 
 ---
 
-*LIVING (v1.1.0, ADR-0060; refreshed ADR-0061). The DDL Specification Master Plan — the governing plan
+*CLOSED (v1.1.0, ADR-0060; refreshed ADR-0061; **Phase 4 CLOSED 2026-07-28, ADR-0068 / AUD-P4-FINAL** — DAT-001…DAT-006 frozen, DB-001…DB-159 complete). The DDL Specification Master Plan — the governing plan
 of Phase 4, subordinate to GOV-011. It introduces no data structure itself; it governs the DAT-NNN
 documents (DB atoms) that will, and the DDL traceability sink that proves them. No executable SQL, in
 this document or the phase it plans. Updated as Phase-4 checkpoints open and close (GOV-005) — v1.1.0

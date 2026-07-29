@@ -240,7 +240,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0059 | `docs/decisions/ADR-0059-phase-3-closure-ux-constitution.md` | Phase 3 Closure — UX Constitution Complete & Frozen | ACCEPTED |
 | AUD-P3-FINAL | `docs/audits/phase-3/AUDIT-P3-FINAL.md` | UX Constitution Completion Report | FROZEN |
 
-### 2.5 Phase 4 — DDL Specification (IN PROGRESS — P4-000 adopted 2026-07-22, ADR-0060; DC1 COMPLETE — DAT-001 FROZEN 2026-07-28, ADR-0061; DC2 — DAT-002 Party Entities FROZEN 2026-07-28, ADR-0063; DAT-003 Programs & Registrations FROZEN 2026-07-28, ADR-0064; DAT-004 Vouchers FROZEN 2026-07-28, ADR-0065; DAT-005 Derived Balances FROZEN 2026-07-28, ADR-0066; DAT-006 Activity Timeline FROZEN 2026-07-28, ADR-0067 — entity set DAT-001…DAT-006 COMPLETE, DB-001…DB-159; DR-091 identity amendment ADR-0062)
+### 2.5 Phase 4 — DDL Specification (**CLOSED 2026-07-28, ADR-0068 / AUD-P4-FINAL** — logical data model complete & frozen: DAT-001…DAT-006, DB-001…DB-159 contiguous; P4-000 adopted ADR-0060; DAT-001 ADR-0061; DAT-002 ADR-0063; DAT-003 ADR-0064; DAT-004 ADR-0065; DAT-005 ADR-0066; DAT-006 ADR-0067; DR-091 identity amendment ADR-0062; next gate Phase 10 — physical DDL/implementation, pending Owner authorization)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|
@@ -259,13 +259,15 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0065 | `docs/decisions/ADR-0065-dat-004-vouchers-adoption.md` | DAT-004 Vouchers Adoption & Freeze | ACCEPTED |
 | ADR-0066 | `docs/decisions/ADR-0066-dat-005-derived-balances-adoption.md` | DAT-005 Derived Balances Adoption & Freeze | ACCEPTED |
 | ADR-0067 | `docs/decisions/ADR-0067-dat-006-activity-timeline-adoption.md` | DAT-006 Activity Timeline Adoption & Freeze | ACCEPTED |
+| ADR-0068 | `docs/decisions/ADR-0068-phase-4-closure-ddl-specification.md` | Phase 4 Closure — DDL Specification Complete & Frozen | ACCEPTED |
 | AUD-P4-001 | `docs/audits/phase-4/AUDIT-P4-DAT001.md` | DAT-001 Data Model Constitution Audit Report | FROZEN |
 | AUD-P4-002 | `docs/audits/phase-4/AUDIT-P4-DAT002.md` | DAT-002 Party Entities Audit Report | FROZEN |
 | AUD-P4-003 | `docs/audits/phase-4/AUDIT-P4-DAT003.md` | DAT-003 Programs & Registrations Audit Report | FROZEN |
 | AUD-P4-004 | `docs/audits/phase-4/AUDIT-P4-DAT004.md` | DAT-004 Vouchers Audit Report | FROZEN |
 | AUD-P4-005 | `docs/audits/phase-4/AUDIT-P4-DAT005.md` | DAT-005 Derived Balances Audit Report | FROZEN |
 | AUD-P4-006 | `docs/audits/phase-4/AUDIT-P4-DAT006.md` | DAT-006 Activity Timeline Audit Report | FROZEN |
-| — | `docs/data/` (DAT-002…N / DB atoms) | Entity/attribute specs + DDL traceability sink (Checkpoints DC2…DC4) | PENDING (authored per P4-000 §4) |
+| AUD-P4-FINAL | `docs/audits/phase-4/AUDIT-P4-FINAL.md` | Phase 4 (DDL Specification) Closure Audit — CLOSURE-READY | FROZEN |
+| — | `docs/data/` (DAT-002…DAT-006 / DB-001…DB-159) | Entity/attribute specs + DDL traceability sink | COMPLETE (all frozen; Phase 4 CLOSED, ADR-0068) |
 
 ### 2.6 Phase 5 — Component Library Specification (NOT YET OPEN)
 

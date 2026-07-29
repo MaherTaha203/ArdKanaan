@@ -26,6 +26,7 @@ Multi-Agent Review Protocol; the phase is governed by **P4-000** (LIVING).
 ## Checkpoints (P4-000 §5)
 
 - **DC1 — Framework:** DAT-001. ✅ **COMPLETE.**
-- **DC2 — Entities & attributes:** DAT-002 (Parties) ✅ **FROZEN**; DAT-003 (Programs & Registrations) ✅ **FROZEN**; DAT-004 (Vouchers) ✅ **FROZEN**; DAT-005 (Derived Balances) ✅ **FROZEN**; DAT-006 (Activity Timeline) ✅ **FROZEN**. **Entity set DAT-001…DAT-006 COMPLETE (DB-001…DB-159).** Formal Phase-4 closure pending a separate Owner order.
+- **DC2 — Entities & attributes:** DAT-002 (Parties) ✅ **FROZEN**; DAT-003 (Programs & Registrations) ✅ **FROZEN**; DAT-004 (Vouchers) ✅ **FROZEN**; DAT-005 (Derived Balances) ✅ **FROZEN**; DAT-006 (Activity Timeline) ✅ **FROZEN**. **Entity set DAT-001…DAT-006 COMPLETE (DB-001…DB-159).**
+- **✅ PHASE 4 CLOSED** — 2026-07-28 (**ADR-0068 / AUD-P4-FINAL**): the logical data model is complete and frozen (DB-001…DB-159 contiguous, 0 gaps/dupes/orphans; AUD-P4-FINAL CLOSURE-READY). Amendments only via GOV-004 §5. Next gate: Phase 10 (physical DDL/implementation), pending a separate Owner authorization.
 - **DC3 — Constraints & integrity:** keys, referential integrity, immutability/append-only, stored-vs-derived.
 - **DC4 — Traceability + phase audit:** the DDL sink (proof precedes authorization).
