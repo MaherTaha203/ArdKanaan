@@ -5,8 +5,8 @@
 | Doc ID | P5-000 |
 | Title | Component Library Specification Master Plan |
 | Phase | 5 (Component Library Specification) |
-| Status | LIVING (Phase 5 opened 2026-07-29, ADR-0069) |
-| Version | 1.0.0 |
+| Status | LIVING (Phase 5 opened 2026-07-29, ADR-0069; §5 Visual Exploration Mechanism authorized 2026-07-29, ADR-0070) |
+| Version | 1.1.0 |
 | Depends on | GOV-011 (§Phase 5 — the only legal phase spec); GOV-012 (layer ownership); GOV-003 (gates); GOV-004 (amendment/review); GOV-006 (traceability); GOV-010 (Owner Decision Protocol); GOV-013 (Multi-Agent Review Protocol); UX-001…UX-006 (frozen); PLP-001 (frozen); PC-001…PC-008 (frozen & locked); BC-000…BC-009 (frozen & locked); DAT-001…DAT-006 (frozen) |
 | Answers | "How is Phase 5 — the specification of the product's design language and component contracts — scoped, structured, governed, Owner-approved, and closed?" |
 | Governed by | GOV-011 §2 (phase-entry law) · GOV-010 (Owner Decision Protocol) · GOV-013 (Multi-Agent Review Protocol) |
@@ -96,20 +96,27 @@ Owner approval may **accept** an option, **reject all**, **combine** alternative
 modifications**, or **request new alternatives**. Only after explicit approval is a decision recorded
 (an ADR and the corresponding CMP/CP atom). This protocol is the Phase-5 expression of GOV-010.
 
-## 5. Visual exploration under specification-only governance — **OPEN, NOT YET AUTHORIZED**
+## 5. Visual Exploration Mechanism (VEM) — **AUTHORIZED (ADR-0070)**
 
 - **The constraint (exact).** GOV-011 §Phase 5 and `docs/components/README.md` fix Phase 5 as
   specification with **no code, no HTML, no CSS**; RDM-001 §3 forbids the entire implementation track
   (the HTML prototype is **Phase 7**) until Documentation Freeze (all of Phases 1–6 frozen).
-- **The tension.** Step 4.F (visual comparison for materially-visual decisions) may require
-  non-production visual artifacts, which the specification-only rule does not currently permit.
-- **Stance (per the Owner Engineering Order's Visual Exploration Rule).** This document does **not**
-  create that exception. A **minimum governance-compliant mechanism** for temporary,
-  explicitly-non-authoritative visual exploration is presented to the Owner as a **separate governance
-  proposal** (ADR-0069 §Notes). Until the Owner authorizes it, materially-visual decisions are
-  evaluated by structured description only; any exploratory visual remains non-authoritative and is
-  **never cited by a CP or SC atom**. The exception is created **only** on explicit Owner
-  authorization (GOV-004 §5 / GOV-011 §Conflict rule).
+- **The mechanism (authorized by the Owner, ADR-0070).** A **visual exploration** is a temporary,
+  explicitly **NON-AUTHORITATIVE** artifact produced solely to help the Owner *see and compare* design
+  alternatives during the design-decision protocol (§4). It runs under six rules:
+  - **VEM-1** — outside the authoritative CMP/CP set (no Doc-ID, unregistered, not CMP/CP/SC content);
+  - **VEM-2** — never authority by itself (nothing is approved by being shown);
+  - **VEM-3** — never cited as frozen truth;
+  - **VEM-4** — never production (does not open/advance Phase 7+; every value is a placeholder only);
+  - **VEM-5** — purpose-bound and **visibly marked NON-AUTHORITATIVE**;
+  - **VEM-6** — authoritative **only** via an explicit Owner-approved decision **transcribed** into a
+    CMP/CP specification (ADR + atom); the exploration itself never becomes authority.
+- **Placement & lifecycle.** Explorations are ephemeral decision-support artifacts delivered/rendered
+  for the Owner and are **not committed into the authoritative `docs/` tree**; any retained exploration
+  sits in a clearly-marked non-authoritative location by a separate decision, and is archived or
+  discarded after its decision is taken.
+- **Preserved guarantees.** Authoritative Phase-5 output remains specification-only (P5-1), and the
+  implementation track stays gated (GOV-011 §2 / Documentation Freeze); the VEM changes neither.
 
 ## 6. Document map *(indicative — refined per a Stage-1 Architectural Discovery under GOV-013)*
 
@@ -169,8 +176,8 @@ the LIVING governing plan.
 
 ---
 
-*LIVING (v1.0.0, ADR-0069). The Component Library Specification Master Plan — the governing plan of
-Phase 5, subordinate to GOV-011. It decides no design characteristic and authors no CP atom; it governs
+*LIVING (v1.1.0, ADR-0069; §5 Visual Exploration Mechanism authorized ADR-0070). The Component Library
+Specification Master Plan — the governing plan of Phase 5, subordinate to GOV-011. It decides no design characteristic and authors no CP atom; it governs
 the CMP-NNN documents (CP atoms) that will — each only after its upstream Owner design decision is
 approved — and the Component traceability sink that proves them. No code, HTML, or CSS, in this document
 or the phase it plans. Updated as Phase-5 design decisions are approved and checkpoints open and close
