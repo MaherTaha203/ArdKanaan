@@ -6,7 +6,7 @@
 | Title | Activity Timeline |
 | Phase | 4 (DDL Specification) |
 | Status | DRAFT |
-| Version | 0.1.0 |
+| Version | 0.2.0 |
 | Depends on | DAT-001 (framework); DAT-002 (Teacher DB-002, teacher-status-transition pointer DB-021 — FROZEN); DAT-003 (Program DB-022, Registration DB-038 — FROZEN); DAT-004 (voucher entities + statuses + cancellation metadata DB-057…DB-059, append-only pointer DB-065 — FROZEN); DAT-005 (derived balances — FROZEN); P4-000; BC-007/BC-008; DOM-002 (§9 Operations — System Activity View; §17 Operational Status Lifecycle); DOM-004 (DR-007/018/019/020/047/048/088/090); ADR-0010; GOV-006/011/012/013 |
 | Answers | "What is the append-only Activity Timeline (Operations) — the stored record of every business event, its attributes, its relationship to the originating source, its identity, and its append-only / never-a-second-source-of-truth invariants — expressed as logical Data Atoms over frozen truth?" |
 | Governed by | GOV-013 — Multi-Agent Review Protocol (Stage 2 — Constitutional Draft) |
@@ -92,9 +92,9 @@ Each atom is one of DAT-001's six kinds and cites ≥1 frozen authority. Numberi
 | Atom | Kind | Statement | Class | Cites |
 |---|---|---|---|---|
 | **DB-144** | Entity | **Activity Timeline Event (Operation)** — the append-only stored record of one business event that happened inside the system; it records and displays events, holding no business authority | stored | DAT-001 §4; DR-018; DR-019; DR-020; DOM-002 §9; DAT-004 DB-065; DAT-002 DB-021 |
-| **DB-145** | Attribute | **Occurrence timestamp** — the recording moment of the act; the timeline's chronological ordering key (distinct from a voucher's own document date, DAT-004 DB-068) | stored | DR-019; DAT-001 §4; DOM-002 §9 |
+| **DB-145** | Attribute | **Occurrence timestamp** — the recording moment of the act; the timeline's own chronological ordering key. It is **distinct from, and never re-stores, a source's own business dates** (the voucher document date DAT-004 DB-068, the cancellation date DB-057), which stay authoritative on the source and are referenced/projected | stored | DR-019; DAT-001 §4; DOM-002 §9 |
 | **DB-146** | Attribute | **Operation type** — the event's verb (e.g. *created, posted, cancelled, edited, closed, reopened, ended, reactivated, set-inactive, set-active, settings-changed, backup, restore*); the event's own kind, carried by no source; for a binary status change it records the transition (§2 decision 3) | stored | DR-020; DR-019; ADR-0010 |
-| **DB-147** | Attribute | **Actor** — the party who performed the act (the Owner, the single user — F-02); recording the actor is mandated for cancellations (DR-047) and descriptive edits (DR-048); may be constant in V1 | stored | DR-020; DR-047; DR-048; F-02 |
+| **DB-147** | Attribute | **Actor** — the party who performed the act (the Owner, the single user — F-02). Stored on the event **only where the actor is homed nowhere else** (descriptive edits DR-048, status changes, other non-voucher operations); for a **voucher cancellation** the actor is already authoritative on the voucher (DAT-004 DB-059) and is **referenced, never re-stored** | stored | DR-047; DR-048; F-02 |
 | **DB-148** | Attribute | **Descriptive-edit change record** — for a DR-048 descriptive-field edit (e.g. Payer Name, notes), the edited-field identifier and its **old value → new value**; this is the **sole home** of the old value (the source retains only the new value) | stored | DR-048; DR-019; DAT-004 §5 |
 | **DB-149** | Attribute | **Financial-impact flag** — whether the operation affects money (*yes / no*); a revelation fully determined by the operation type and source, not stored (avoiding a second source of truth) | derived | DR-020; ADR-0010; DAT-001 §4 |
 | **DB-150** | Attribute | **"What happened" display descriptor** — re-presents the source's own facts (amount, split, party, program name, cancellation date/reason/actor) by reference so the Owner understands the row without opening the source; a projection, never a stored copy | derived | DR-020; DR-018; DOM-002 §9 |
@@ -115,18 +115,18 @@ Integrity rule, its mechanism deferred to Phase 10.
 
 | Atom | Statement | Cites |
 |---|---|---|
-| **DB-153** | **Source value-domain** — because the timeline records *everything that happened inside the system* (DR-018), an Operation's source is any originating record of the model (the five voucher types, Training Program, Teacher, Registration) or a named system facility (Settings, Backup, System — DR-020); an operation never exists without exactly one source | DR-018; DR-020 |
+| **DB-153** | **Source value-domain** — because the timeline records *everything that happened inside the system* (DR-018), an Operation's source is any originating record of the model (the frozen voucher entities of DAT-004, Training Program, Teacher, Registration) or a named system facility (Settings, Backup, System). DR-020's Phase-1A source enumeration is **illustrative** and predates the Refund Voucher, Expense Return, and Registration lifecycle; the governing authority for their inclusion is **DR-018** (on which DR-020 depends), not a reinterpretation of DR-020. An operation never exists without exactly one source | DR-018; DR-020 |
 | **DB-154** | **Operation-type value-domain** — the operation type is one of a closed set of recognized event verbs (posted / cancelled / created / edited / the status-change verbs / settings-changed / backup / restore); enables the DR-020 distinguishability | DR-020; ADR-0010 |
 | **DB-155** | **Financial-impact value-domain** = exactly **{affects money, does not affect money}** | DR-020; ADR-0010 |
+| **DB-156** | **Never a second source of truth / no business logic** — a static Authority-Boundary invariant: the timeline originates no business rule and re-authors no source fact; every business rule belongs to the originating entity; facts already stored elsewhere are referenced, never re-stored (consistent with the DAT-005 DB-141 precedent) | DR-018; DAT-001 §4; DAT-001 DV-8 |
 
 ### 3.4 Integrity rules
 
 | Atom | Statement | Cites |
 |---|---|---|
-| **DB-156** | **Append-only / insert-only** — the timeline is insert-only: no update, no delete; existing operations are never edited or deleted; history never disappears | DR-019; DAT-001 DV-4 |
-| **DB-157** | **Corrections generate new operations** — a mistake is corrected by appending a **new** operation, never by editing or removing an existing event | DR-019; ADR-0010 |
-| **DB-158** | **Never a second source of truth / no business logic** — the timeline originates no business rule and re-authors no source fact; every business rule belongs to the originating entity; facts already stored elsewhere are referenced, never re-stored | DR-018; DAT-001 §4; DAT-001 DV-8 |
-| **DB-159** | **Auto-generated, never hand-entered** — an operation arises as a byproduct of the originating act, never keyed in by hand; it is auto-generated **and stored** (like sequential numbers/timestamps, DV-5), not recomputed on read | DR-007; DR-018 |
+| **DB-157** | **Append-only / insert-only** — the timeline is insert-only: no update, no delete; existing operations are never edited or deleted; history never disappears | DR-019; DAT-001 DV-4 |
+| **DB-158** | **Corrections generate new operations** — a mistake is corrected by appending a **new** operation, never by editing or removing an existing event | DR-019; ADR-0010 |
+| **DB-159** | **Auto-generated, never hand-entered** — an operation arises as a byproduct of the originating act, never keyed in by hand; it is auto-generated **and stored** (like sequential numbers/timestamps, DV-5), not recomputed on read (the "never hand-entered" half rests on DR-007/DR-018; the "stored, not recomputed" half on DAT-001 §4 / DV-5) | DR-007; DR-018; DAT-001 §4; DAT-001 DV-5 |
 
 ## 4. Authority Boundary application
 
@@ -146,8 +146,8 @@ DR-018 ("never a second source of truth"):
 
 - **DV-1 (Traceability).** Every atom cites ≥1 frozen authority; **0 orphan**.
 - **DV-2 (Authority Boundary).** Only the event's own facts are stored (DB-145…DB-148); source-owned facts
-  and the financial-impact flag are referenced/derived (DB-149/DB-150/DB-158), never re-authored.
-- **DV-4 (Append-only timeline).** Insert-only, no update/delete (DB-156); corrections append (DB-157).
+  and the financial-impact flag are referenced/derived (DB-149/DB-150/DB-156), never re-authored.
+- **DV-4 (Append-only timeline).** Insert-only, no update/delete (DB-157); corrections append (DB-158).
 - **DV-6 (Relationship meaning).** DB-152 fixes ownership + cardinality + referential meaning ("about this
   source"), never a bare key.
 - **DV-7 (Technology neutrality).** No table/column/type/key/index/SQL/log-file/sequence mechanism; the
@@ -159,9 +159,9 @@ DR-018 ("never a second source of truth"):
 ## 6. Atom register
 
 **DB-144…DB-159** (this document): Entity DB-144; Attributes DB-145…DB-150 (stored DB-145…DB-148; derived
-DB-149/DB-150); Identity DB-151; Relationship DB-152; Constraints DB-153…DB-155; Integrity rules
-DB-156…DB-159. **DAT-006 is the final Phase-4 entity-specification document — the DB-atom sequence completes
-at DB-159.**
+DB-149/DB-150); Identity DB-151; Relationship DB-152; Constraints DB-153…DB-156 (incl. DB-156, the
+never-a-second-source-of-truth Authority-Boundary invariant); Integrity rules DB-157…DB-159. **DAT-006 is
+the final Phase-4 entity-specification document — the DB-atom sequence completes at DB-159.**
 
 ## 7. Dependencies & boundaries
 
@@ -192,5 +192,10 @@ Timeline** (Operations), 16 Data Atoms (DB-144…DB-159). A **stored** append-on
 metadata and the DR-048 edit old→new, and **references** every source-owned fact (DR-018: never a second
 source of truth). Status transitions are recorded via the operation-type verb, not a stored from→to;
 the financial-impact flag is derived. Introduces no new truth (DV-8). Completes the Phase-4 DB-atom sequence
-at DB-159. Not frozen; not propagated. Subject to Stage 3 (Adversarial Self-Hardening), Constitutional
-Readiness Verification (Panel + Judge), the Readiness Gate, and Owner Approval before any freeze.*
+at DB-159. Stage-3 Adversarial Self-Hardening (five hypotheses) **refuted the amendment risk** — the
+source-domain inclusion of Registration/Refund/Expense-Return is faithful consumption of DR-018 (on which
+DR-020 depends), not an amendment (H3); repairs applied — the actor/timestamp rescoped to reference (never
+re-store) the voucher's cancellation actor/date (DAT-004 DB-057/DB-059, H5), "never a second source of
+truth" reclassified as a Constraint DB-156 matching DAT-005 DB-141 (H4), and citation precision on
+DB-147/DB-153/DB-159 (H2). Not frozen; not propagated. Subject to Constitutional Readiness Verification
+(Panel + Judge), the Readiness Gate, and Owner Approval before any freeze.*
