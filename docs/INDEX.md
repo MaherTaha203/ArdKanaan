@@ -240,7 +240,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0059 | `docs/decisions/ADR-0059-phase-3-closure-ux-constitution.md` | Phase 3 Closure — UX Constitution Complete & Frozen | ACCEPTED |
 | AUD-P3-FINAL | `docs/audits/phase-3/AUDIT-P3-FINAL.md` | UX Constitution Completion Report | FROZEN |
 
-### 2.5 Phase 4 — DDL Specification (**CLOSED 2026-07-28, ADR-0068 / AUD-P4-FINAL** — logical data model complete & frozen: DAT-001…DAT-006, DB-001…DB-159 contiguous; P4-000 adopted ADR-0060; DAT-001 ADR-0061; DAT-002 ADR-0063; DAT-003 ADR-0064; DAT-004 ADR-0065; DAT-005 ADR-0066; DAT-006 ADR-0067; DR-091 identity amendment ADR-0062; next gate Phase 10 — physical DDL/implementation, pending Owner authorization)
+### 2.5 Phase 4 — DDL Specification (**CLOSED 2026-07-28, ADR-0068 / AUD-P4-FINAL** — logical data model complete & frozen: DAT-001…DAT-006, DB-001…DB-159 contiguous; P4-000 adopted ADR-0060; DAT-001 ADR-0061; DAT-002 ADR-0063; DAT-003 ADR-0064; DAT-004 ADR-0065; DAT-005 ADR-0066; DAT-006 ADR-0067; DR-091 identity amendment ADR-0062; next phase Phase 5 — Component Library Specification (per GOV-011 §3; physical database is Phase 10, reached later via Phases 5→9), pending Owner authorization)
 
 | Doc ID | File | Title | Status |
 |---|---|---|---|

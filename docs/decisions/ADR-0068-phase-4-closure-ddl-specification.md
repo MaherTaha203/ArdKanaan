@@ -4,10 +4,16 @@
 |---|---|
 | ADR | 0068 |
 | Title | Phase 4 Closure — DDL Specification Complete & Frozen |
-| Phase | 4 (→ 10) |
+| Phase | 4 (→ 5) |
 | Status | ACCEPTED |
 | Supersedes | — |
 | Superseded by | — |
+
+> **Correction (2026-07-28, post-adoption, meaning-preserving):** the successor wording in this ADR was
+> corrected from "Phase 10" to **Phase 5 — Component Library Specification**, the immediate successor per the
+> authoritative GOV-011 §3 sequence (Phase 4 → 5 → 6 → Documentation Freeze → 7 → 8 → 9 → 10). Phase 10
+> (Database) — where the frozen DAT specs are physically implemented — is reached later via Phases 5→9. This
+> corrects a sequence mislabel only; no substantive closure decision or frozen content changed.
 
 ## Context
 
@@ -33,9 +39,11 @@ Formal Closure). The cancelled Owner Discovery Interview has no authority and pl
 3. **Deferrals remain explicit.** The teacher-debt discharge record (UNK-026), statement/period presentation
    scope (UNK-013), non-program refundability / amount-due (UNK-029/030), and teacher-share deductions
    (UNK-021) remain explicit deferrals in the frozen layer; the data layer resolved none of them silently.
-4. **The successor phase (Phase 10 — physical database / implementation) is NEXT — NOT opened here.** Per
-   GOV-011 §2, it opens only on a **separate explicit Owner authorization**; this ADR begins no
-   implementation, physical SQL/DDL, schema migration, or any successor phase.
+4. **The successor phase (Phase 5 — Component Library Specification) is NEXT — NOT opened here.** Per GOV-011
+   §3 the sequence is Phase 4 → 5 → 6 → Documentation Freeze → 7 → 8 → 9 → 10; the physical database (Phase
+   10) is reached later via Phases 5→9. Per GOV-011 §2, any next phase opens only on a **separate explicit
+   Owner authorization**; this ADR begins no implementation, physical SQL/DDL, schema migration, or any
+   successor phase.
 5. **No constitutional change** is introduced by closure — it is an administrative declaration that the
    frozen logical data model is complete; no BC/PC/PLP/DOM/DR content and no substantive DAT content is
    modified.
@@ -45,8 +53,8 @@ Formal Closure). The cancelled Owner Discovery Interview has no authority and pl
 - Phase 4 joins Phase 1 (Product), Phase 2 (Business), and Phase 3 (UX) as a closed, frozen constitution
   layer; the logical data model is the DDL analog of those constitutions, ready to govern Phase-10
   implementation.
-- The documentation pipeline's next gate is **Phase 10 (physical DDL / implementation)**, pending Owner
-  authorization.
+- The documentation pipeline's next gate is **Phase 5 — Component Library Specification**, pending Owner
+  authorization; the physical database (Phase 10) is reached later via Phases 5→9.
 - Registers updated in this commit: IDX-001 (Phase 4 → CLOSED; AUD-P4-FINAL + ADR-0068 registered),
   DECISION-LOG (next → ADR-0069), GOV-009 (Phase 4 CLOSED; counts + refresh + history row), ROADMAP (Phase 4
   → ✅ COMPLETE), P4-000 (status → CLOSED), docs/data/README.
