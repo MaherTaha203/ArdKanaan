@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-panel: var(--panel);
+  --color-highlight: var(--highlight);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --shadow-soft: var(--shadow-soft);
+  --font-sans: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --background: oklch(0.978 0.008 95.41);
+  --foreground: oklch(0.265 0.02 44.12);
+  --muted-foreground: oklch(0.51 0.018 42.66);
+  --panel: oklch(0.992 0.004 95.41);
+  --highlight: oklch(0.958 0.013 88.31);
+  --border: oklch(0.892 0.014 82.74);
+  --accent: oklch(0.596 0.133 167.6);
+  --shadow-soft: 0 24px 48px -28px rgba(52, 45, 30, 0.22);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(27, 153, 139, 0.07), transparent 38%),
+    linear-gradient(180deg, #faf8f1 0%, #f4f0e4 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
