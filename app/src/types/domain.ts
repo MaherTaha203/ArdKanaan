@@ -16,3 +16,13 @@ export type StudentStatementLine = {
   amountReceived: number
   remainingBalance: number
 }
+
+// Money Out — an outgoing center expense. Never linked to a student or course.
+export type PaymentVoucherLine = {
+  id: string
+  voucherNumber: number
+  voucherDate: string
+  expenseType: string
+  amount: number
+  notes: string
+}
