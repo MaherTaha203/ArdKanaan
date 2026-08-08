@@ -1,28 +1,59 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
+
+/* Ard Kanaan — the financial WORKSPACE visual language.
+   Warm bone foundation · Kan'an olive identity · restrained burnt-gold (in) / clay (out).
+   Arabic-first · RTL · Light. Editorial serif headings + tabular English financial digits.
+   No glassmorphism, no card wall, no dashboard KPI grid. */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
   --color-panel: var(--panel);
   --color-highlight: var(--highlight);
   --color-border: var(--border);
-  --color-accent: var(--accent);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--olive);
+  --color-olive: var(--olive);
+  --color-olive-ink: var(--olive-ink);
+  --color-olive-weak: var(--olive-weak);
+  --color-gold: var(--gold);
+  --color-gold-weak: var(--gold-weak);
+  --color-clay: var(--clay);
+  --color-clay-weak: var(--clay-weak);
+
   --shadow-soft: var(--shadow-soft);
+
   --font-sans: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+  --font-serif: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', 'Segoe UI', serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
 }
 
 :root {
   color-scheme: light;
-  --background: oklch(0.978 0.008 95.41);
-  --foreground: oklch(0.265 0.02 44.12);
-  --muted-foreground: oklch(0.51 0.018 42.66);
-  --panel: oklch(0.992 0.004 95.41);
-  --highlight: oklch(0.958 0.013 88.31);
-  --border: oklch(0.892 0.014 82.74);
-  --accent: oklch(0.596 0.133 167.6);
-  --shadow-soft: 0 24px 48px -28px rgba(52, 45, 30, 0.22);
+
+  --background: #f4f0e7; /* bone */
+  --foreground: #221f18; /* ink */
+  --muted-foreground: #69624f; /* ink-2 */
+  --faint: #9d9581; /* ink-3 */
+  --panel: #fbf9f3;
+  --highlight: #eae3d3; /* bone-2 */
+  --border: #e2dac8;
+  --border-strong: #d0c6af;
+
+  --olive: #31513a;
+  --olive-ink: #22392a;
+  --olive-weak: #e4eade;
+  --gold: #ad7e27;
+  --gold-weak: #f1e7c9;
+  --clay: #9a4326;
+  --clay-weak: #f1e0d6;
+
+  --shadow-soft: 0 22px 44px -32px rgba(40, 34, 18, 0.4);
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -35,18 +66,17 @@
 
 html {
   direction: rtl;
-  background: var(--background);
+  background: var(--highlight);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(27, 153, 139, 0.07), transparent 38%),
-    linear-gradient(180deg, #faf8f1 0%, #f4f0e4 100%);
+  background: var(--highlight);
   color: var(--foreground);
   font-family: var(--font-sans);
+  line-height: 1.55;
 }
 
 a {
@@ -58,8 +88,23 @@ input,
 textarea,
 select {
   font: inherit;
+  color: inherit;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Financial figures: tabular English digits, isolated from RTL flow. */
+.figure {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  unicode-bidi: isolate;
+}
+
+/* Editorial Arabic headings. */
+.editorial {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0;
 }

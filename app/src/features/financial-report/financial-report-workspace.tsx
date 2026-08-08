@@ -1,149 +1,155 @@
-import { useEffect } from 'react'
+import { useMemo } from 'react'
 
+import { RotateCw } from 'lucide-react'
+
+import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
+import { PositionPanel } from '@/components/shell/position-panel'
+import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { appEnv } from '@/lib/env'
+import { Money } from '@/components/ui/money'
+import {
+  financialTotals,
+  movementsNewestFirst,
+  paymentCount,
+  receiptCount,
+} from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
-import { useFinancialReportStore } from '@/store/use-financial-report-store'
 import type { FinancialMovement } from '@/types/domain'
+import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-function movementTypeLabel(movement: FinancialMovement) {
-  return movement.movementType === 'receipt' ? 'قبض' : 'صرف'
+function partyAndContext(movement: FinancialMovement) {
+  const party = movement.movementType === 'receipt' ? movement.partyName ?? '—' : 'المركز'
+  return movement.context ? `${party} · ${movement.context}` : party
 }
 
-function movementReference(movement: FinancialMovement) {
-  const noun = movement.movementType === 'receipt' ? 'سند قبض' : 'سند صرف'
-  return `${noun} رقم ${formatNumber(movement.voucherNumber)}`
-}
+export function FinancialReportWorkspace() {
+  const movements = useWorkspaceStore((state) => state.movements)
+  const isLoading = useWorkspaceStore((state) => state.isLoading)
+  const loaded = useWorkspaceStore((state) => state.loaded)
+  const error = useWorkspaceStore((state) => state.error)
+  const clearError = useWorkspaceStore((state) => state.clearError)
+  const reload = useWorkspaceStore((state) => state.load)
 
-function movementDescription(movement: FinancialMovement) {
-  if (movement.movementType === 'receipt') {
-    const party = movement.partyName ?? '—'
-    return movement.context ? `${party} · ${movement.context}` : party
-  }
+  const totals = useMemo(() => financialTotals(movements), [movements])
+  const ordered = useMemo(() => movementsNewestFirst(movements), [movements])
 
-  return movement.context ?? '—'
-}
-
-function SummaryFigure({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col gap-1 px-5 py-4">
-      <span className="text-xs tracking-[0.18em] text-muted-foreground">{label}</span>
-      <span className="text-2xl font-semibold text-foreground">{formatNumber(value)}</span>
+    <div>
+      <RouteHeader
+        eyebrow="التقرير المالي"
+        title="الموقف والحركة"
+        description="عرضٌ مشتقٌّ من القبض والصرف — لا يُنشئ حقيقة مالية، ولا يخزّن رصيدًا، وكل حركة تقود إلى سندها الأصلي."
+        actions={
+          <Button variant="outline" onClick={() => void reload()} disabled={isLoading}>
+            <RotateCw className="size-4" />
+            {isLoading ? 'جاري التحديث...' : 'تحديث'}
+          </Button>
+        }
+      />
+
+      <ConfigNotice />
+      <ErrorNotice message={error} onDismiss={clearError} />
+
+      <div className="mb-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+        <PositionPanel
+          net={totals.net}
+          totalIn={totals.totalIn}
+          totalOut={totals.totalOut}
+          label="صافي الموقف"
+          context="وارد − صادر"
+        />
+
+        <section className="rounded-lg border border-border bg-panel">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-base font-semibold text-foreground">ملخّص</h2>
+          </div>
+          <div className="flex flex-wrap gap-x-10 gap-y-4 px-5 py-5">
+            <SummaryFigure label="عدد الحركات" value={movements.length} />
+            <SummaryFigure label="سندات قبض" value={receiptCount(movements)} />
+            <SummaryFigure label="سندات صرف" value={paymentCount(movements)} />
+          </div>
+        </section>
+      </div>
+
+      <section className="rounded-lg border border-border bg-panel">
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="text-base font-semibold text-foreground">سجل الحركات — من الأحدث</h2>
+        </div>
+        <div className="overflow-x-auto px-5 py-2">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="text-[11px] tracking-wide text-faint">
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
+                  النوع
+                </th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
+                  رقم السند
+                </th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
+                  التاريخ
+                </th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
+                  البيان
+                </th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
+                  المبلغ
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordered.length > 0 ? (
+                ordered.map((movement) => {
+                  const isReceipt = movement.movementType === 'receipt'
+                  return (
+                    <tr key={`${movement.movementType}-${movement.id}`}>
+                      <td className="border-b border-border px-2 py-3">
+                        <span
+                          className={`inline-block rounded-sm border px-2 py-0.5 text-[11.5px] ${
+                            isReceipt
+                              ? 'border-olive text-olive'
+                              : 'border-clay text-clay'
+                          }`}
+                        >
+                          {isReceipt ? 'قبض' : 'صرف'}
+                        </span>
+                      </td>
+                      <td className="figure border-b border-border px-2 py-3">
+                        {formatNumber(movement.voucherNumber)}
+                      </td>
+                      <td className="border-b border-border px-2 py-3">
+                        {formatDate(movement.voucherDate)}
+                      </td>
+                      <td className="border-b border-border px-2 py-3 text-muted-foreground">
+                        {partyAndContext(movement)}
+                      </td>
+                      <td className="figure border-b border-border px-2 py-3 text-end">
+                        {formatNumber(movement.amount)}
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-2 py-12 text-center text-sm text-faint">
+                    {loaded && !isLoading
+                      ? 'لا توجد حركات مالية لعرضها.'
+                      : 'جاري تحميل الحركات المالية...'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   )
 }
 
-export function FinancialReportWorkspace() {
-  const {
-    movements,
-    totalReceipts,
-    totalPayments,
-    netBalance,
-    isLoading,
-    loaded,
-    error,
-    loadReport,
-    clearError,
-  } = useFinancialReportStore()
-
-  useEffect(() => {
-    void loadReport()
-  }, [loadReport])
-
+function SummaryFigure({ label, value }: { label: string; value: number }) {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-col px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-        <header className="mb-8 flex flex-col gap-4 border-b border-border/70 pb-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <span className="inline-flex w-fit rounded-full border border-border bg-panel px-3 py-1 text-xs tracking-[0.24em] text-muted-foreground">
-              التقرير المالي
-            </span>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              التقرير المالي
-            </h1>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-              طبقة عرض مشتقة فقط من سندات القبض والصرف. لا تنشئ حقيقة مالية جديدة، ولا تخزّن الرصيد، وكل حركة قابلة للتتبع إلى سندها الأصلي.
-            </p>
-          </div>
-
-          <Button variant="outline" onClick={() => void loadReport()} disabled={isLoading}>
-            {isLoading ? 'جاري التحديث...' : 'تحديث'}
-          </Button>
-        </header>
-
-        {!appEnv.isSupabaseConfigured ? (
-          <div className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-7 text-amber-900">
-            التطبيق جاهز تقنيًا لكن الاتصال بقاعدة البيانات يحتاج إلى استكمال بيانات البيئة المحلية
-            قبل عرض التقرير.
-          </div>
-        ) : null}
-
-        {error ? (
-          <div className="mb-6 flex flex-col gap-3 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
-            <span>{error}</span>
-            <Button variant="ghost" className="justify-start text-red-700" onClick={clearError}>
-              إخفاء
-            </Button>
-          </div>
-        ) : null}
-
-        <Card className="mb-6 bg-background">
-          <div className="grid divide-y divide-border/70 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:[&>*]:border-border/70">
-            <SummaryFigure label="إجمالي المقبوضات" value={totalReceipts} />
-            <SummaryFigure label="إجمالي المصروفات" value={totalPayments} />
-            <SummaryFigure label="صافي الرصيد" value={netBalance} />
-          </div>
-        </Card>
-
-        <Card className="bg-background">
-          <CardHeader>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">سجل الحركات المالية</h2>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  الحركات الداخلة والخارجة في سجل واحد، كل حركة مرتبطة برقم سندها الأصلي.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-panel px-4 py-3 text-xs text-muted-foreground">
-                {formatNumber(movements.length)} حركة/حركات
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-hidden rounded-3xl border border-border bg-panel">
-              <div className="grid grid-cols-[0.8fr_0.9fr_0.7fr_1.8fr_0.9fr] gap-2 border-b border-border/80 bg-highlight px-4 py-3 text-xs font-medium text-muted-foreground">
-                <span>رقم السند</span>
-                <span>التاريخ</span>
-                <span>النوع</span>
-                <span>البيان</span>
-                <span>المبلغ</span>
-              </div>
-
-              {movements.length > 0 ? (
-                <div className="divide-y divide-border/80">
-                  {movements.map((movement) => (
-                    <div
-                      key={`${movement.movementType}-${movement.id}`}
-                      className="grid grid-cols-[0.8fr_0.9fr_0.7fr_1.8fr_0.9fr] gap-2 px-4 py-4 text-sm text-foreground"
-                    >
-                      <span title={movementReference(movement)}>{formatNumber(movement.voucherNumber)}</span>
-                      <span>{formatDate(movement.voucherDate)}</span>
-                      <span>{movementTypeLabel(movement)}</span>
-                      <span className="text-muted-foreground">{movementDescription(movement)}</span>
-                      <span>{formatNumber(movement.amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="px-4 py-12 text-center text-sm leading-7 text-muted-foreground">
-                  {loaded ? 'لا توجد حركات مالية لعرضها.' : 'جاري تحميل الحركات المالية...'}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+    <div>
+      <div className="text-[11px] text-faint">{label}</div>
+      <Money value={value} currency={false} className="text-2xl text-foreground" />
+    </div>
   )
 }
