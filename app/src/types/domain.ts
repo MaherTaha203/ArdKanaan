@@ -26,3 +26,15 @@ export type PaymentVoucherLine = {
   amount: number
   notes: string
 }
+
+// Financial Report — a derived movement. Never a source of truth.
+// party_name = student name (receipts); context = course (receipts) or expense type (payments).
+export type FinancialMovement = {
+  id: string
+  movementType: 'receipt' | 'payment'
+  voucherNumber: number
+  voucherDate: string
+  amount: number
+  partyName: string | null
+  context: string | null
+}

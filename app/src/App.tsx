@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { ReceiptText, Wallet } from 'lucide-react'
+import { FileText, ReceiptText, Wallet } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { FinancialReportWorkspace } from '@/features/financial-report/financial-report-workspace'
 import { MoneyInWorkspace } from '@/features/receipt-voucher/money-in-workspace'
 import { MoneyOutWorkspace } from '@/features/payment-voucher/money-out-workspace'
 
-type Section = 'money-in' | 'money-out'
+type Section = 'money-in' | 'money-out' | 'report'
 
 function App() {
   const [section, setSection] = useState<Section>('money-in')
@@ -18,7 +19,7 @@ function App() {
             <span className="text-base font-semibold text-foreground">أرض كنعان</span>
             <span className="text-xs text-muted-foreground">مركز تدريب · دفتر مالي</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant={section === 'money-in' ? 'default' : 'ghost'}
               onClick={() => setSection('money-in')}
@@ -33,11 +34,20 @@ function App() {
               <Wallet className="size-4" />
               سند صرف
             </Button>
+            <Button
+              variant={section === 'report' ? 'default' : 'ghost'}
+              onClick={() => setSection('report')}
+            >
+              <FileText className="size-4" />
+              التقرير المالي
+            </Button>
           </div>
         </div>
       </nav>
 
-      {section === 'money-in' ? <MoneyInWorkspace /> : <MoneyOutWorkspace />}
+      {section === 'money-in' ? <MoneyInWorkspace /> : null}
+      {section === 'money-out' ? <MoneyOutWorkspace /> : null}
+      {section === 'report' ? <FinancialReportWorkspace /> : null}
     </div>
   )
 }
