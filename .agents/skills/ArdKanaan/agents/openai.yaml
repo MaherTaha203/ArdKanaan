@@ -1,6 +1,0 @@
-interface:
-  display_name: "ArdKanaan"
-  short_description: "Repo-specific patterns and workflows for ArdKanaan"
-  default_prompt: "Use the ArdKanaan repo skill to follow existing architecture, testing, and workflow conventions."
-policy:
-  allow_implicit_invocation: true
