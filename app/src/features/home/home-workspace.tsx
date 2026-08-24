@@ -6,7 +6,9 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { PositionPanel } from '@/components/shell/position-panel'
 import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
+import { SkeletonRows } from '@/components/ui/skeleton'
 import {
   aggregateStudents,
   attentionList,
@@ -23,7 +25,6 @@ export function HomeWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
   const movements = useWorkspaceStore((state) => state.movements)
-  const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
@@ -74,8 +75,8 @@ export function HomeWorkspace() {
             )} سند صرف`}
           />
 
-          <section className="rounded-lg border border-border bg-panel">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <Card>
+            <CardHeader>
               <h2 className="text-base font-semibold text-foreground">
                 يحتاج انتباهك — طلاب عليهم متبقٍّ
               </h2>
@@ -86,9 +87,11 @@ export function HomeWorkspace() {
               >
                 كل الطلاب
               </button>
-            </div>
-            <div className="px-5 py-2">
-              {attention.length > 0 ? (
+            </CardHeader>
+            <CardContent className="px-5 py-2">
+              {!loaded ? (
+                <SkeletonRows rows={3} />
+              ) : attention.length > 0 ? (
                 attention.map((item) => (
                   <div
                     key={item.student.id}
@@ -115,18 +118,16 @@ export function HomeWorkspace() {
                 ))
               ) : (
                 <p className="py-8 text-center text-sm text-faint">
-                  {loaded && !isLoading
-                    ? 'لا مبالغ متبقية — كل التسجيلات مكتملة.'
-                    : 'جاري تحميل بيانات المركز...'}
+                  لا مبالغ متبقية — كل التسجيلات مكتملة.
                 </p>
               )}
-            </div>
-          </section>
+            </CardContent>
+          </Card>
         </div>
 
         <aside>
-          <section className="rounded-lg border border-border bg-panel">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <Card>
+            <CardHeader>
               <h2 className="text-base font-semibold text-foreground">الحركة المالية</h2>
               <button
                 type="button"
@@ -135,9 +136,11 @@ export function HomeWorkspace() {
               >
                 التقرير
               </button>
-            </div>
-            <div className="px-5 py-2">
-              {recent.length > 0 ? (
+            </CardHeader>
+            <CardContent className="px-5 py-2">
+              {!loaded ? (
+                <SkeletonRows rows={4} />
+              ) : recent.length > 0 ? (
                 recent.map((movement) => {
                   const isReceipt = movement.movementType === 'receipt'
                   return (
@@ -172,8 +175,8 @@ export function HomeWorkspace() {
               ) : (
                 <p className="py-8 text-center text-sm text-faint">لا توجد حركات لعرضها بعد.</p>
               )}
-            </div>
-          </section>
+            </CardContent>
+          </Card>
         </aside>
       </div>
     </div>

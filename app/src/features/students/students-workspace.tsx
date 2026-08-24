@@ -5,9 +5,12 @@ import { ArrowDownLeft, Search } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
+import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
+import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
@@ -30,9 +33,9 @@ export function StudentsWorkspace() {
   )
 
   const filtered = useMemo(() => {
-    const term = query.trim()
+    const term = normalizeArabic(query)
     if (!term) return aggregates
-    return aggregates.filter((item) => item.student.name.includes(term))
+    return aggregates.filter((item) => normalizeArabic(item.student.name).includes(term))
   }, [aggregates, query])
 
   const activeId = selectedStudentId ?? aggregates[0]?.student.id ?? null
@@ -59,17 +62,23 @@ export function StudentsWorkspace() {
       <div className="grid gap-6 md:grid-cols-[300px_minmax(0,1fr)]">
         <div>
           <div className="mb-3 flex items-center gap-2 rounded-md border border-border bg-panel px-3 py-2">
-            <Search className="size-4 flex-none text-faint" />
+            <Search aria-hidden className="size-4 flex-none text-faint" />
             <input
+              type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              aria-label="ابحث عن طالب"
               placeholder="ابحث عن طالب…"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border bg-panel">
-            {filtered.length > 0 ? (
+          <Card className="overflow-hidden">
+            {!loaded ? (
+              <div className="p-3">
+                <SkeletonRows rows={6} />
+              </div>
+            ) : filtered.length > 0 ? (
               filtered.map((item) => (
                 <StudentRow
                   key={item.student.id}
@@ -79,14 +88,12 @@ export function StudentsWorkspace() {
                 />
               ))
             ) : (
-              <p className="px-4 py-8 text-center text-sm text-faint">
-                {loaded ? 'لا نتائج مطابقة.' : 'جاري التحميل...'}
-              </p>
+              <p className="px-4 py-8 text-center text-sm text-faint">لا نتائج مطابقة.</p>
             )}
-          </div>
+          </Card>
         </div>
 
-        <div className="rounded-lg border border-border bg-panel p-6">
+        <Card className="p-6">
           {active ? (
             <>
               <div className="mb-6 flex flex-wrap items-center gap-4 border-b-2 border-foreground/85 pb-5">
@@ -180,7 +187,7 @@ export function StudentsWorkspace() {
               {loaded ? 'لا يوجد طلاب بعد — سجّل سند قبض لإنشاء أول طالب.' : 'جاري التحميل...'}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )

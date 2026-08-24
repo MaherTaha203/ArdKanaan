@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect } from 'react'
+import { useEffect } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowDownLeft } from 'lucide-react'
@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 
 import { ActionSheet } from '@/components/shell/action-sheet'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -27,29 +28,6 @@ function buildDefaults(studentName: string | null): ReceiptVoucherFormValues {
     payerName: '',
     notes: '',
   }
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null
-  return <p className="mt-1.5 text-xs text-clay">{message}</p>
-}
-
-function Field({
-  label,
-  children,
-  error,
-}: {
-  label: string
-  children: ReactNode
-  error?: string
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-[13px] text-muted-foreground">{label}</label>
-      {children}
-      <FieldError message={error} />
-    </div>
-  )
 }
 
 export function ReceiptSheet() {
@@ -94,54 +72,77 @@ export function ReceiptSheet() {
       </p>
 
       {error ? (
-        <div className="mb-4 rounded-md border border-clay/30 bg-clay-weak px-4 py-3 text-sm text-clay">
+        <div
+          role="alert"
+          className="mb-4 rounded-md border border-clay/30 bg-clay-weak px-4 py-3 text-sm text-clay"
+        >
           {error}
         </div>
       ) : null}
 
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
         <Field label="اسم الطالب" error={form.formState.errors.studentName?.message}>
-          <Input placeholder="اكتب اسم الطالب" {...form.register('studentName')} />
+          {(control) => (
+            <Input placeholder="اكتب اسم الطالب" {...control} {...form.register('studentName')} />
+          )}
         </Field>
 
         <Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>
-          <Input placeholder="نص حر" {...form.register('courseName')} />
+          {(control) => (
+            <Input placeholder="نص حر" {...control} {...form.register('courseName')} />
+          )}
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="قيمة الدورة" error={form.formState.errors.courseValue?.message}>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              className="figure"
-              {...form.register('courseValue', { valueAsNumber: true })}
-            />
+            {(control) => (
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                className="figure"
+                {...control}
+                {...form.register('courseValue', { valueAsNumber: true })}
+              />
+            )}
           </Field>
 
           <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>
-            <Input
-              type="number"
-              min="0.01"
-              step="0.01"
-              className="figure"
-              {...form.register('amountReceived', { valueAsNumber: true })}
-            />
+            {(control) => (
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                className="figure"
+                {...control}
+                {...form.register('amountReceived', { valueAsNumber: true })}
+              />
+            )}
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>
-            <Input type="date" className="figure" {...form.register('paymentDate')} />
+            {(control) => (
+              <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />
+            )}
           </Field>
 
           <Field label="اسم الدافع" error={form.formState.errors.payerName?.message}>
-            <Input placeholder="الاسم المدفوع باسمه" {...form.register('payerName')} />
+            {(control) => (
+              <Input
+                placeholder="الاسم المدفوع باسمه"
+                {...control}
+                {...form.register('payerName')}
+              />
+            )}
           </Field>
         </div>
 
         <Field label="الملاحظات" error={form.formState.errors.notes?.message}>
-          <Textarea placeholder="أدخل الملاحظات" {...form.register('notes')} />
+          {(control) => (
+            <Textarea placeholder="أدخل الملاحظات" {...control} {...form.register('notes')} />
+          )}
         </Field>
 
         <Button type="submit" size="lg" className="w-full" disabled={isSaving}>
