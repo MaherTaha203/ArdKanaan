@@ -6,7 +6,9 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { PositionPanel } from '@/components/shell/position-panel'
 import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
+import { SkeletonRows } from '@/components/ui/skeleton'
 import {
   financialTotals,
   movementsNewestFirst,
@@ -59,23 +61,23 @@ export function FinancialReportWorkspace() {
           context="وارد − صادر"
         />
 
-        <section className="rounded-lg border border-border bg-panel">
-          <div className="border-b border-border px-5 py-4">
+        <Card>
+          <CardHeader>
             <h2 className="text-base font-semibold text-foreground">ملخّص</h2>
-          </div>
-          <div className="flex flex-wrap gap-x-10 gap-y-4 px-5 py-5">
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-x-10 gap-y-4 px-5 py-5">
             <SummaryFigure label="عدد الحركات" value={movements.length} />
             <SummaryFigure label="سندات قبض" value={receiptCount(movements)} />
             <SummaryFigure label="سندات صرف" value={paymentCount(movements)} />
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       </div>
 
-      <section className="rounded-lg border border-border bg-panel">
-        <div className="border-b border-border px-5 py-4">
+      <Card>
+        <CardHeader>
           <h2 className="text-base font-semibold text-foreground">سجل الحركات — من الأحدث</h2>
-        </div>
-        <div className="overflow-x-auto px-5 py-2">
+        </CardHeader>
+        <CardContent className="overflow-x-auto px-5 py-2">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="text-[11px] tracking-wide text-faint">
@@ -97,7 +99,13 @@ export function FinancialReportWorkspace() {
               </tr>
             </thead>
             <tbody>
-              {ordered.length > 0 ? (
+              {!loaded ? (
+                <tr>
+                  <td colSpan={5} className="px-2 py-3">
+                    <SkeletonRows rows={5} />
+                  </td>
+                </tr>
+              ) : ordered.length > 0 ? (
                 ordered.map((movement) => {
                   const isReceipt = movement.movementType === 'receipt'
                   return (
@@ -131,16 +139,14 @@ export function FinancialReportWorkspace() {
               ) : (
                 <tr>
                   <td colSpan={5} className="px-2 py-12 text-center text-sm text-faint">
-                    {loaded && !isLoading
-                      ? 'لا توجد حركات مالية لعرضها.'
-                      : 'جاري تحميل الحركات المالية...'}
+                    لا توجد حركات مالية لعرضها.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 
 import { RouteHeader } from '@/components/shell/route-header'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { appEnv } from '@/lib/env'
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -14,13 +15,13 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 function Group({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   return (
-    <section className="rounded-lg border border-border bg-panel">
-      <div className="border-b border-border px-5 py-4">
+    <Card>
+      <CardHeader className="block">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         {note ? <p className="mt-1 text-[12.5px] leading-6 text-faint">{note}</p> : null}
-      </div>
-      <div className="px-5 py-1.5">{children}</div>
-    </section>
+      </CardHeader>
+      <CardContent className="px-5 py-1.5">{children}</CardContent>
+    </Card>
   )
 }
 

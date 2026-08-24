@@ -84,6 +84,7 @@ export function AppShell() {
                 key={item.route}
                 type="button"
                 onClick={() => navigate(item.route)}
+                aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-3 rounded-md px-2.5 py-2.5 text-sm transition ${
                   active
                     ? 'bg-background font-semibold text-olive-ink'
@@ -214,6 +215,7 @@ function MobileNavButton({
     <button
       type="button"
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       className={`flex flex-1 flex-col items-center gap-1 rounded-md py-1.5 text-[10px] transition ${
         active ? 'bg-white/12 text-white' : 'text-[#cdd3c5] hover:text-white'
       }`}
