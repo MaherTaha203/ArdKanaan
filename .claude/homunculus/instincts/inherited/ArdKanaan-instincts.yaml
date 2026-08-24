@@ -1,0 +1,147 @@
+# Instincts generated from https://github.com/MaherTaha203/ArdKanaan
+# Generated: 2026-08-24T19:00:11.494Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: ArdKanaan-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(app-ui): DRY, responsive, and accessibility improvements to the prototype workspace
+
+---
+id: ArdKanaan-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Commit Length
+
+## Action
+
+Write moderate-length commit messages (~88 characters)
+
+## Evidence
+
+- Average commit message length: 88 chars
+- Based on 1 commits
+
+---
+id: ArdKanaan-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: ArdKanaan-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: ArdKanaan-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: ArdKanaan-arch-feature-based
+trigger: "when adding a new feature"
+confidence: 0.85
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Arch Feature Based
+
+## Action
+
+Create a new folder in src/features/ with all related code colocated
+
+## Evidence
+
+- Feature-based module organization detected
+- Structure: src/features/[feature-name]/
+
+---
+id: ArdKanaan-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/MaherTaha203/ArdKanaan
+---
+
+# ArdKanaan Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
