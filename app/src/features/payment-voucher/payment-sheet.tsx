@@ -18,11 +18,15 @@ import { useMoneyOutStore } from '@/store/use-money-out-store'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-const defaultValues: PaymentVoucherFormValues = {
-  paymentDate: todayIsoDate(),
-  expenseType: '',
-  amount: 0,
-  notes: '',
+function buildDefaults(): PaymentVoucherFormValues {
+  // Built per-mount (not a module-level constant) so the date is today's whenever
+  // the sheet opens — not frozen at bundle-load time for a long-lived tab.
+  return {
+    paymentDate: todayIsoDate(),
+    expenseType: '',
+    amount: 0,
+    notes: '',
+  }
 }
 
 export function PaymentSheet() {
@@ -38,7 +42,7 @@ export function PaymentSheet() {
 
   const form = useForm<PaymentVoucherFormValues>({
     resolver: zodResolver(paymentVoucherFormSchema),
-    defaultValues,
+    defaultValues: buildDefaults(),
   })
 
   useEffect(() => {

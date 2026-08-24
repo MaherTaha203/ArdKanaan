@@ -12,8 +12,9 @@ type FieldProps = {
   /**
    * Render prop that receives the control props (id + aria) to spread onto the
    * input/textarea/select, so the label is programmatically associated and the
-   * error is announced. Spread these BEFORE react-hook-form's register() so name
-   * and ref still win: {(control) => <Input {...control} {...register('x')} />}.
+   * error is announced. These keys (id, aria-*) are disjoint from what
+   * react-hook-form's register() returns (name, ref, onChange, onBlur), so spread
+   * order is safe: {(control) => <Input {...control} {...register('x')} />}.
    */
   children: (control: FieldControl) => ReactNode
 }

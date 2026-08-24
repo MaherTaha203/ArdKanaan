@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useId, useRef } from 'react'
+import { type ReactNode, useEffect, useId, useLayoutEffect, useRef } from 'react'
 
 import { X } from 'lucide-react'
 
@@ -21,8 +21,15 @@ const FOCUSABLE =
 export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
-
+  // Read onClose through a ref so the setup/teardown effect can run once (mount/
+  // unmount) without re-arming — and losing the real pre-open focus target — if
+  // the onClose identity ever changes while the sheet is open.
+  const onCloseRef = useRef(onClose)
   useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  useLayoutEffect(() => {
     const panel = panelRef.current
     const previouslyFocused = document.activeElement as HTMLElement | null
     const previousOverflow = document.body.style.overflow
@@ -40,7 +47,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
 
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (event.key !== 'Tab' || !panel) return
@@ -70,7 +77,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
       document.body.style.overflow = previousOverflow
       previouslyFocused?.focus?.()
     }
-  }, [onClose])
+  }, [])
 
   return (
     <div

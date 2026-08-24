@@ -11,6 +11,9 @@ import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
+
+// Below this residual, a course row is treated as fully paid (guards float noise).
+const REMAINING_EPSILON = 0.0001
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
@@ -214,7 +217,7 @@ function StudentRow({
         {item.student.name.charAt(0)}
       </span>
       <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
-      {item.remaining > 0.0001 ? (
+      {item.remaining > REMAINING_EPSILON ? (
         <Money value={item.remaining} currency={false} className="text-xs text-clay" />
       ) : null}
     </button>
