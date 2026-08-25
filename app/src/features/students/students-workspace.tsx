@@ -11,11 +11,28 @@ import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
+import { useShellStore } from '@/store/use-shell-store'
+import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 // Below this residual, a course row is treated as fully paid (guards float noise).
 const REMAINING_EPSILON = 0.0001
-import { useShellStore } from '@/store/use-shell-store'
-import { useWorkspaceStore } from '@/store/use-workspace-store'
+
+type StudentStatus = 'ok' | 'due' | 'none'
+
+// Derived, from voucher-sourced figures only. "Due" = still owes; "none" = nothing
+// paid yet; "ok" = settled. There is no due-date in the data model, so no "late"
+// state is invented here.
+function statusOf(item: StudentAggregate): StudentStatus {
+  if (item.remaining <= REMAINING_EPSILON) return 'ok'
+  if (item.paid <= REMAINING_EPSILON) return 'none'
+  return 'due'
+}
+
+const STATUS_BAR: Record<StudentStatus, string> = {
+  ok: 'bg-olive',
+  due: 'bg-gold',
+  none: 'bg-border-strong',
+}
 
 export function StudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
@@ -35,13 +52,25 @@ export function StudentsWorkspace() {
     [students, statementLines],
   )
 
+  // Smart order: the most urgent (largest remaining) first, then by name. This is a
+  // presentation ordering only — it never changes any figure.
+  const sorted = useMemo(
+    () =>
+      aggregates
+        .slice()
+        .sort(
+          (a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar'),
+        ),
+    [aggregates],
+  )
+
   const filtered = useMemo(() => {
     const term = normalizeArabic(query)
-    if (!term) return aggregates
-    return aggregates.filter((item) => normalizeArabic(item.student.name).includes(term))
-  }, [aggregates, query])
+    if (!term) return sorted
+    return sorted.filter((item) => normalizeArabic(item.student.name).includes(term))
+  }, [sorted, query])
 
-  const activeId = selectedStudentId ?? aggregates[0]?.student.id ?? null
+  const activeId = selectedStudentId ?? sorted[0]?.student.id ?? null
   const active = useMemo(
     () => aggregates.find((item) => item.student.id === activeId) ?? null,
     [aggregates, activeId],
@@ -70,8 +99,11 @@ export function StudentsWorkspace() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id)
+              }}
               aria-label="ابحث عن طالب"
-              placeholder="ابحث عن طالب…"
+              placeholder="ابحث عن طالب… (Enter لفتح الأول)"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
@@ -88,6 +120,7 @@ export function StudentsWorkspace() {
                   item={item}
                   active={item.student.id === activeId}
                   onSelect={() => selectStudent(item.student.id)}
+                  onQuickReceive={() => openReceiveFor(item.student.name)}
                 />
               ))
             ) : (
@@ -200,27 +233,51 @@ function StudentRow({
   item,
   active,
   onSelect,
+  onQuickReceive,
 }: {
   item: StudentAggregate
   active: boolean
   onSelect: () => void
+  onQuickReceive: () => void
 }) {
+  const status = statusOf(item)
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-start last:border-b-0 transition ${
-        active ? 'bg-highlight shadow-[inset_3px_0_0_var(--olive)]' : 'hover:bg-highlight'
+    <div
+      className={`relative flex items-center gap-2 border-b border-border last:border-b-0 transition ${
+        active ? 'bg-highlight' : 'hover:bg-highlight'
       }`}
     >
-      <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">
-        {item.student.name.charAt(0)}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
-      {item.remaining > REMAINING_EPSILON ? (
-        <Money value={item.remaining} currency={false} className="text-xs text-clay" />
-      ) : null}
-    </button>
+      <span
+        aria-hidden
+        className={`absolute inset-y-2 start-0 w-[3px] rounded-e ${active ? 'bg-olive' : STATUS_BAR[status]}`}
+      />
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-current={active ? 'true' : undefined}
+        className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-1 ps-4 text-start"
+      >
+        <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">
+          {item.student.name.charAt(0)}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
+        {item.remaining > REMAINING_EPSILON ? (
+          <Money value={item.remaining} currency={false} className="text-xs text-clay" />
+        ) : (
+          <span className="text-[11px] text-olive">مكتمل</span>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={onQuickReceive}
+        aria-label={`سند قبض لـ ${item.student.name}`}
+        title="سند قبض"
+        className="me-2 flex flex-none items-center gap-1 rounded-md px-2 py-1 text-[12px] text-gold transition hover:bg-gold-weak"
+      >
+        <ArrowDownLeft className="size-3.5" />
+        قبض
+      </button>
+    </div>
   )
 }
 

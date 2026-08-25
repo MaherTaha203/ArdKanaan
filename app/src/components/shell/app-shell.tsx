@@ -14,6 +14,7 @@ import {
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
 import { GlanceWorkspace } from '@/features/glance/glance-workspace'
+import { Toaster } from '@/components/ui/toast'
 import { StudentsWorkspace } from '@/features/students/students-workspace'
 import { FinancialReportWorkspace } from '@/features/financial-report/financial-report-workspace'
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
@@ -160,6 +161,9 @@ export function AppShell() {
       {/* Action overlays (receipt / payment). */}
       {overlay === 'receive' ? <ReceiptSheet /> : null}
       {overlay === 'expense' ? <PaymentSheet /> : null}
+
+      {/* Transient confirmation toasts. */}
+      <Toaster />
 
       {/* Mobile bottom navigation — always present. */}
       <nav
