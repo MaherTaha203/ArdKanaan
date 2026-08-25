@@ -100,8 +100,9 @@ the old one and repair all downstream documents in the same commit.
 | [ADR-0071](ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md) | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity structure + Vercel-style light monochrome palette, light-only); fixes direction only, freezes no token | 5 | ACCEPTED (palette descriptors partially amended by ADR-0072 — reclassified non-authoritative; Sophisticated Operational Simplicity structural direction + LIGHT constraint remain live) | — |
 | [ADR-0072](ADR-0072-cmp-001-adoption-freeze-and-adr-0071-palette-amendment.md) | Phase-5 CC1 — CMP-001 Design Language Constitution Adoption & Freeze (v1.0.0); ADR-0071 Palette-Descriptor Amendment (partial) | 5 | ACCEPTED | ADR-0071 (partial: palette descriptors reclassified non-authoritative; structural direction + LIGHT remain live) |
 | [ADR-0073](ADR-0073-curated-ecc-adoption.md) | Curated ECC Reviewer/Rule Adoption — 19 non-authoritative, review-only developer aids (4 hardened reviewers + 15 reference rules) under `.claude/agents/ecc/` + `.claude/rules/ecc/`; installer rejected; `database-reviewer` deferred; Owner-Decision ADR (administrative tooling; GOV-013 Panel not invoked) | 5 | ACCEPTED | — |
+| [ADR-0074](ADR-0074-product-work-line-authorization.md) | Product Work-Line Authorization — the `app/` prototype may be evolved toward a usable product under the approved B+ UX direction, ahead of the documentation pipeline; NON-AUTHORITATIVE (creates no CP atom / design authority), opens/advances no phase, financial firewall absolute, reconciled to CMP/CP/SC specs on Documentation Freeze; Owner-Decision ADR (GOV-013 Panel not invoked) | 5 | ACCEPTED | — |
 
-Next available ADR number: **ADR-0074**.
+Next available ADR number: **ADR-0075**.
 
 ## 4. Maintenance rules
 
