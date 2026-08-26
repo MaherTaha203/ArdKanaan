@@ -16,6 +16,7 @@ import {
 import { todayIsoDate } from '@/lib/format'
 import { useMoneyOutStore } from '@/store/use-money-out-store'
 import { useShellStore } from '@/store/use-shell-store'
+import { useToastStore } from '@/components/ui/use-toast-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 function buildDefaults(): PaymentVoucherFormValues {
@@ -55,6 +56,7 @@ export function PaymentSheet() {
 
     await reloadWorkspace()
     navigate('report')
+    useToastStore.getState().show('تم تسجيل سند الصرف بنجاح')
     closeOverlay()
   }
 

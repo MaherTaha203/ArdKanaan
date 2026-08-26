@@ -95,6 +95,15 @@ select {
   min-height: 100vh;
 }
 
+/* Keyboard focus — a visible ring for any interactive element that does not set its
+   own focus style. Components that manage focus themselves (e.g. Button) opt out with
+   focus-visible:outline-none and render their own ring. */
+:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 /* Financial figures: tabular English digits, isolated from RTL flow. */
 .figure {
   font-family: var(--font-mono);

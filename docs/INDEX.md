@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.56.0 |
+| Version | 1.57.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -282,6 +282,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0071 | `docs/decisions/ADR-0071-phase-5-visual-direction-operational-simplicity-vercel-light.md` | First Phase-5 Design Decision — General Visual Direction (Operational-Simplicity + Vercel light palette, light-only) | ACCEPTED (palette descriptors partially amended by ADR-0072 — reclassified non-authoritative; structural direction + LIGHT remain live) |
 | ADR-0072 | `docs/decisions/ADR-0072-cmp-001-adoption-freeze-and-adr-0071-palette-amendment.md` | Phase-5 CC1 — CMP-001 Adoption & Freeze (v1.0.0); ADR-0071 Palette-Descriptor Amendment (partial) | ACCEPTED |
 | ADR-0073 | `docs/decisions/ADR-0073-curated-ecc-adoption.md` | Curated ECC Reviewer/Rule Adoption — 19 non-authoritative developer aids under `.claude/agents/ecc/` + `.claude/rules/ecc/` (administrative tooling; installer rejected; `database-reviewer` deferred; opens/advances no phase) | ACCEPTED |
+| ADR-0074 | `docs/decisions/ADR-0074-product-work-line-authorization.md` | Product Work-Line Authorization — `app/` prototype evolved toward a usable product under the approved B+ UX direction, ahead of the documentation pipeline; NON-AUTHORITATIVE (no CP atom / no design authority), opens/advances no phase, financial firewall absolute, reconciled to CMP/CP/SC on Documentation Freeze (Owner-Decision ADR) | ACCEPTED |
 
 ### 2.7 Phase 6 — Screen Blueprints (NOT YET OPEN)
 

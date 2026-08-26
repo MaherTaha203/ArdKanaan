@@ -16,6 +16,7 @@ import {
 import { todayIsoDate } from '@/lib/format'
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useShellStore } from '@/store/use-shell-store'
+import { useToastStore } from '@/components/ui/use-toast-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 function buildDefaults(studentName: string | null): ReceiptVoucherFormValues {
@@ -62,6 +63,7 @@ export function ReceiptSheet() {
     if (activeStudent) {
       selectStudent(activeStudent.id)
     }
+    useToastStore.getState().show('تم تسجيل سند القبض بنجاح')
     closeOverlay()
   }
 
