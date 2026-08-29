@@ -29,9 +29,9 @@ function statusOf(item: StudentAggregate): StudentStatus {
 }
 
 const STATUS_BAR: Record<StudentStatus, string> = {
-  ok: 'bg-olive',
-  due: 'bg-gold',
-  none: 'bg-border-strong',
+  ok: 'bg-gold', // settled — emerald
+  due: 'bg-warn', // still owes — amber
+  none: 'bg-border-strong', // nothing paid yet — neutral
 }
 
 export function StudentsWorkspace() {
@@ -93,7 +93,7 @@ export function StudentsWorkspace() {
 
       <div className="grid gap-6 md:grid-cols-[300px_minmax(0,1fr)]">
         <div>
-          <div className="mb-3 flex items-center gap-2 rounded-md border border-border bg-panel px-3 py-2">
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm transition focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
             <Search aria-hidden className="size-4 flex-none text-faint" />
             <input
               type="search"
@@ -132,25 +132,25 @@ export function StudentsWorkspace() {
         <Card className="p-6">
           {active ? (
             <>
-              <div className="mb-6 flex flex-wrap items-center gap-4 border-b-2 border-foreground/85 pb-5">
-                <span className="editorial grid size-14 flex-none place-items-center rounded-full bg-olive text-2xl text-[#f7f4ea]">
+              <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
+                <span className="editorial grid size-14 flex-none place-items-center rounded-full bg-olive text-2xl text-white">
                   {active.student.name.charAt(0)}
                 </span>
                 <div className="min-w-0">
                   <h2 className="editorial text-2xl text-foreground">{active.student.name}</h2>
-                  <div className="text-[12.5px] text-muted-foreground">
+                  <div className="text-[13px] text-muted-foreground">
                     {formatNumber(active.courses)} دورة · آخر حركة{' '}
                     {active.lastActivity ? formatDate(active.lastActivity) : '—'}
                   </div>
                 </div>
                 <div className="ms-auto flex gap-8">
                   <RecordFigure label="المدفوع" value={active.paid} tone="ink" />
-                  <RecordFigure label="المتبقّي" value={active.remaining} tone="clay" />
+                  <RecordFigure label="المتبقّي" value={active.remaining} tone="warn" />
                 </div>
               </div>
 
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-foreground">
+                <h3 className="text-base font-bold text-foreground">
                   البيان المالي — مشتق من السندات
                 </h3>
                 <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}>
@@ -262,9 +262,12 @@ function StudentRow({
         </span>
         <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
         {item.remaining > REMAINING_EPSILON ? (
-          <Money value={item.remaining} currency={false} className="text-xs text-clay" />
+          <Money value={item.remaining} currency={false} className="text-xs font-semibold text-warn" />
         ) : (
-          <span className="text-[11px] text-olive">مكتمل</span>
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gold">
+            <span className="size-1.5 rounded-full bg-gold" aria-hidden />
+            مكتمل
+          </span>
         )}
       </button>
       <button
@@ -272,7 +275,7 @@ function StudentRow({
         onClick={onQuickReceive}
         aria-label={`سند قبض لـ ${item.student.name}`}
         title="سند قبض"
-        className="me-2 flex flex-none items-center gap-1 rounded-md px-2 py-1 text-[12px] text-gold transition hover:bg-gold-weak"
+        className="me-2 flex flex-none items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium text-gold transition hover:bg-gold-weak"
       >
         <ArrowDownLeft className="size-3.5" />
         قبض
@@ -288,15 +291,15 @@ function RecordFigure({
 }: {
   label: string
   value: number
-  tone: 'ink' | 'clay'
+  tone: 'ink' | 'warn'
 }) {
   return (
     <div>
-      <div className="text-[11px] text-faint">{label}</div>
+      <div className="text-[11px] font-medium text-faint">{label}</div>
       <Money
         value={value}
         currency={false}
-        className={`text-xl ${tone === 'clay' && value > 0 ? 'text-clay' : 'text-foreground'}`}
+        className={`text-xl font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`}
       />
     </div>
   )

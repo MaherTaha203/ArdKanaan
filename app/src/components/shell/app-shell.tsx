@@ -1,15 +1,6 @@
 import { useEffect, type ComponentType } from 'react'
 
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  FileText,
-  Home,
-  LogOut,
-  PanelsTopLeft,
-  Settings,
-  Users,
-} from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
 
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
@@ -21,25 +12,29 @@ import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { useShellStore, type ShellRoute } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-// The B+ shell. A calm wide "glance" is the landing (route 'home'); the "cockpit"
-// (routes students / report / settings) is a persistent working surface reached by
-// a lens rail. The store's route model is reused unchanged: 'home' → glance,
-// everything else → the cockpit with that route as the active lens.
+// The shell speaks the reference's light "clear-sky" language: a single white top
+// bar carries the brand, the primary navigation as plain text links, and the day's
+// money actions as a blue pill + a quiet button. No mode toggle, no icon rail — one
+// calm bar, a wide canvas, and a touch-friendly bottom bar on mobile. The store's
+// route model (home / students / report / settings + receive / expense overlays) is
+// reused unchanged.
 
-type LensItem = {
-  route: Exclude<ShellRoute, 'home'>
+type NavItem = {
+  route: ShellRoute
   label: string
   icon: ComponentType<{ className?: string }>
 }
 
-const LENSES: LensItem[] = [
+const NAV: NavItem[] = [
+  { route: 'home', label: 'الإطلالة', icon: Home },
   { route: 'students', label: 'الطلاب', icon: Users },
   { route: 'report', label: 'التقرير المالي', icon: FileText },
-  { route: 'settings', label: 'الإعدادات', icon: Settings },
 ]
 
-function CockpitView({ route }: { route: Exclude<ShellRoute, 'home'> }) {
+function CurrentView({ route }: { route: ShellRoute }) {
   switch (route) {
+    case 'home':
+      return <GlanceWorkspace />
     case 'students':
       return <StudentsWorkspace />
     case 'report':
@@ -63,100 +58,79 @@ export function AppShell() {
     if (!loaded) void load()
   }, [loaded, load])
 
-  const isGlance = route === 'home'
-
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background">
-      {/* Top bar — always present. Brand → glance; centre mode toggle; utilities. */}
-      <header className="flex flex-none items-center gap-3 border-b border-border bg-panel px-4 py-2.5 md:px-6">
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Top bar — white, hairline base, always present. */}
+      <header className="sticky top-0 z-20 flex flex-none items-center gap-2 border-b border-border bg-panel/95 px-4 py-3 backdrop-blur md:gap-4 md:px-8">
         <button
           type="button"
           onClick={() => navigate('home')}
-          className="editorial text-lg text-olive-ink transition hover:opacity-80"
+          className="flex items-baseline gap-2 transition hover:opacity-80"
         >
-          أرض كنعان
+          <span className="editorial text-[19px] text-foreground">أرض كنعان</span>
+          <span className="hidden text-[11px] font-medium tracking-wide text-faint sm:inline">
+            بيئة العمل المالية
+          </span>
         </button>
-        <span className="hidden text-[11px] tracking-[0.08em] text-faint sm:inline">
-          بيئة العمل المالية
-        </span>
 
-        <div className="mx-auto flex items-center gap-1 rounded-full bg-highlight p-1">
-          <ModeChip active={isGlance} icon={Home} label="الإطلالة" onClick={() => navigate('home')} />
-          <ModeChip
-            active={!isGlance}
-            icon={PanelsTopLeft}
-            label="القُمرة"
-            onClick={() => navigate('students')}
-          />
+        {/* Primary navigation — plain text links (desktop). */}
+        <nav aria-label="التنقل" className="ms-6 hidden items-center gap-1 md:flex">
+          {NAV.map((item) => (
+            <NavLink
+              key={item.route}
+              label={item.label}
+              active={route === item.route}
+              onClick={() => navigate(item.route)}
+            />
+          ))}
+        </nav>
+
+        {/* Actions — the day's money moves + utilities. */}
+        <div className="ms-auto flex items-center gap-1.5 md:gap-2">
+          <button
+            type="button"
+            onClick={() => openOverlay('receive')}
+            className="hidden items-center gap-2 rounded-full bg-olive px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-olive-ink sm:inline-flex"
+          >
+            <ArrowDownLeft className="size-4" />
+            سند قبض
+          </button>
+          <button
+            type="button"
+            onClick={() => openOverlay('expense')}
+            className="hidden items-center gap-2 rounded-full border border-border-strong px-4 py-2 text-[13px] font-semibold text-muted-foreground transition hover:border-olive hover:text-olive sm:inline-flex"
+          >
+            <ArrowUpRight className="size-4" />
+            سند صرف
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('settings')}
+            aria-label="الإعدادات"
+            aria-current={route === 'settings' ? 'page' : undefined}
+            className={`rounded-full p-2 transition hover:bg-highlight ${
+              route === 'settings' ? 'text-olive' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Settings className="size-[18px]" />
+          </button>
+          <button
+            type="button"
+            onClick={leave}
+            aria-label="خروج"
+            className="rounded-full p-2 text-muted-foreground transition hover:bg-highlight hover:text-foreground"
+          >
+            <LogOut className="size-[18px]" />
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => navigate('settings')}
-          aria-label="الإعدادات"
-          aria-current={route === 'settings' ? 'page' : undefined}
-          className="rounded-md p-2 text-muted-foreground transition hover:bg-highlight hover:text-foreground md:hidden"
-        >
-          <Settings className="size-[18px]" />
-        </button>
-        <button
-          type="button"
-          onClick={leave}
-          aria-label="خروج"
-          className="rounded-md p-2 text-muted-foreground transition hover:bg-highlight hover:text-foreground"
-        >
-          <LogOut className="size-[18px]" />
-        </button>
       </header>
 
-      {/* Body */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        {isGlance ? (
-          <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[1200px] px-4 pb-28 pt-8 md:px-8 md:pb-10">
-              <GlanceWorkspace />
-            </div>
-          </main>
-        ) : (
-          <>
-            {/* Lens rail — the persistent cockpit chrome (desktop). */}
-            <nav
-              aria-label="عدسات القُمرة"
-              className="hidden w-16 flex-none flex-col items-center gap-1 border-e border-border bg-panel py-4 md:flex"
-            >
-              {LENSES.map((lens) => (
-                <RailButton
-                  key={lens.route}
-                  icon={lens.icon}
-                  label={lens.label}
-                  active={route === lens.route}
-                  onClick={() => navigate(lens.route)}
-                />
-              ))}
-              <div className="mt-auto flex flex-col items-center gap-1 border-t border-border pt-3">
-                <RailButton
-                  icon={ArrowDownLeft}
-                  label="سند قبض"
-                  tone="gold"
-                  onClick={() => openOverlay('receive')}
-                />
-                <RailButton
-                  icon={ArrowUpRight}
-                  label="سند صرف"
-                  tone="clay"
-                  onClick={() => openOverlay('expense')}
-                />
-              </div>
-            </nav>
-
-            <main className="flex-1 overflow-y-auto">
-              <div className="mx-auto w-full max-w-[1200px] px-4 pb-28 pt-6 md:px-8 md:pb-10 md:pt-8">
-                <CockpitView route={route} />
-              </div>
-            </main>
-          </>
-        )}
-      </div>
+      {/* Canvas — one wide, calm column. */}
+      <main className="flex-1">
+        <div className="mx-auto w-full max-w-[1160px] px-4 pb-28 pt-8 md:px-8 md:pb-14 md:pt-10">
+          <CurrentView route={route} />
+        </div>
+      </main>
 
       {/* Action overlays (receipt / payment). */}
       {overlay === 'receive' ? <ReceiptSheet /> : null}
@@ -165,10 +139,10 @@ export function AppShell() {
       {/* Transient confirmation toasts. */}
       <Toaster />
 
-      {/* Mobile bottom navigation — always present. */}
+      {/* Mobile bottom navigation — always present, touch-first. */}
       <nav
         aria-label="التنقل"
-        className="flex flex-none items-stretch justify-around border-t border-border bg-panel px-1 py-1.5 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 flex flex-none items-stretch justify-around border-t border-border bg-panel/95 px-1 py-1.5 backdrop-blur md:hidden"
       >
         <MobileNavButton active={route === 'home'} icon={Home} label="الإطلالة" onClick={() => navigate('home')} />
         <MobileNavButton
@@ -177,7 +151,7 @@ export function AppShell() {
           label="الطلاب"
           onClick={() => navigate('students')}
         />
-        <MobileNavButton icon={ArrowDownLeft} label="قبض" onClick={() => openOverlay('receive')} />
+        <MobileNavButton icon={ArrowDownLeft} label="قبض" accent onClick={() => openOverlay('receive')} />
         <MobileNavButton icon={ArrowUpRight} label="صرف" onClick={() => openOverlay('expense')} />
         <MobileNavButton
           active={route === 'report'}
@@ -190,62 +164,19 @@ export function AppShell() {
   )
 }
 
-function ModeChip({
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: ComponentType<{ className?: string }>
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
+function NavLink({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={active}
-      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition ${
-        active
-          ? 'bg-panel text-olive-ink shadow-[0_1px_2px_rgba(40,34,18,0.12)]'
-          : 'text-muted-foreground hover:text-foreground'
-      }`}
-    >
-      <Icon className="size-4" />
-      {label}
-    </button>
-  )
-}
-
-function RailButton({
-  icon: Icon,
-  label,
-  active,
-  tone,
-  onClick,
-}: {
-  icon: ComponentType<{ className?: string }>
-  label: string
-  active?: boolean
-  tone?: 'gold' | 'clay'
-  onClick: () => void
-}) {
-  const toneClass = tone === 'gold' ? 'text-gold' : tone === 'clay' ? 'text-clay' : ''
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
       aria-current={active ? 'page' : undefined}
-      className={`grid size-11 place-items-center rounded-lg transition ${
+      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
         active
-          ? 'bg-olive-weak text-olive-ink'
-          : `hover:bg-highlight ${toneClass || 'text-muted-foreground'}`
+          ? 'bg-olive-weak text-olive'
+          : 'text-muted-foreground hover:bg-highlight hover:text-foreground'
       }`}
     >
-      <Icon className="size-[19px]" />
+      {label}
     </button>
   )
 }
@@ -254,23 +185,34 @@ function MobileNavButton({
   icon: Icon,
   label,
   active,
+  accent,
   onClick,
 }: {
   icon: ComponentType<{ className?: string }>
   label: string
   active?: boolean
+  accent?: boolean
   onClick: () => void
 }) {
+  const color = accent
+    ? 'text-olive'
+    : active
+      ? 'text-olive'
+      : 'text-muted-foreground hover:text-foreground'
   return (
     <button
       type="button"
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
-      className={`flex flex-1 flex-col items-center gap-1 rounded-md py-1.5 text-[10px] transition ${
-        active ? 'text-olive-ink' : 'text-muted-foreground hover:text-foreground'
-      }`}
+      className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium transition ${color}`}
     >
-      <Icon className="size-5" />
+      <span
+        className={`grid size-8 place-items-center rounded-full transition ${
+          active || accent ? 'bg-olive-weak' : ''
+        }`}
+      >
+        <Icon className="size-[18px]" />
+      </span>
       {label}
     </button>
   )

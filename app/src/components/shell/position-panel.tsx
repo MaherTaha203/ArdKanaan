@@ -20,36 +20,29 @@ export function PositionPanel({ net, totalIn, totalOut, label, context }: Positi
   const outPercent = total > 0 ? (totalOut / total) * 100 : 0
 
   return (
-    <div className="relative overflow-hidden rounded-lg bg-olive px-6 py-6 text-[#f1efe6] sm:px-8 sm:py-7">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-1/3 start-[-10%] h-[90%] w-1/2 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(173,126,39,0.28), transparent 62%)',
-        }}
+    <div className="rounded-2xl border border-border bg-panel px-6 py-6 shadow-card sm:px-8 sm:py-7">
+      <div className="text-[12px] font-bold tracking-wide text-olive">{label}</div>
+      <Money
+        value={net}
+        currencyClassName="text-faint"
+        className="mt-2 block text-[clamp(2.4rem,6vw,3.6rem)] font-semibold leading-none tracking-tight text-foreground"
       />
-      <div className="relative">
-        <div className="text-xs tracking-[0.16em] text-[#bcc4b2]">{label}</div>
-        <Money
-          value={net}
-          currencyClassName="text-[#c9d0c0]"
-          className="mt-1 block text-[clamp(2.4rem,6vw,3.6rem)] leading-none tracking-tight text-[#f7f4ea]"
-        />
-        <div className="mt-1 text-[12.5px] text-[#c9d0c0]">{context}</div>
+      <div className="mt-2 text-[13px] text-muted-foreground">{context}</div>
 
-        <div className="mt-6">
-          <div className="flex h-3.5 overflow-hidden rounded-sm bg-white/12">
-            <div className="h-full bg-gold" style={{ width: `${inPercent}%` }} />
-            <div className="h-full" style={{ width: `${outPercent}%`, background: '#c98b64' }} />
-          </div>
-          <div className="mt-2 flex justify-between text-[12px]">
-            <span className="text-[#cfd6c6]">
-              وارد <b className="figure text-[#e7c877]">{formatNumber(totalIn)}</b>
-            </span>
-            <span className="text-[#cfd6c6]">
-              صادر <b className="figure text-[#e0b199]">{formatNumber(totalOut)}</b>
-            </span>
-          </div>
+      <div className="mt-6">
+        <div className="flex h-3 overflow-hidden rounded-full bg-highlight">
+          <div className="h-full bg-gold" style={{ width: `${inPercent}%` }} />
+          <div className="h-full bg-clay" style={{ width: `${outPercent}%` }} />
+        </div>
+        <div className="mt-3 flex justify-between text-[13px]">
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-2 rounded-full bg-gold" aria-hidden />
+            وارد <b className="figure font-semibold text-gold">{formatNumber(totalIn)}</b>
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-2 rounded-full bg-clay" aria-hidden />
+            صادر <b className="figure font-semibold text-clay">{formatNumber(totalOut)}</b>
+          </span>
         </div>
       </div>
     </div>

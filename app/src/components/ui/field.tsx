@@ -36,12 +36,12 @@ export function Field({ label, error, children }: FieldProps) {
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-[13px] text-muted-foreground">
+      <label htmlFor={id} className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
         {label}
       </label>
       {children(control)}
       {error ? (
-        <p id={errorId} className="mt-1.5 text-xs text-clay">
+        <p id={errorId} className="mt-1.5 text-xs font-medium text-clay">
           {error}
         </p>
       ) : null}

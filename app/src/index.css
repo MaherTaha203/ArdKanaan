@@ -1,10 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
-/* Ard Kanaan — the financial WORKSPACE visual language.
-   Warm bone foundation · Kan'an olive identity · restrained burnt-gold (in) / clay (out).
-   Arabic-first · RTL · Light. Editorial serif headings + tabular English financial digits.
-   No glassmorphism, no card wall, no dashboard KPI grid. */
+/* Ard Kanaan — the financial WORKSPACE visual language, "clear-sky" light system.
+   White canvas · slate ink · one confident blue primary · restrained semantic accents
+   (emerald = money-in / settled, red = money-out / error, amber = attention / still-owed).
+   Arabic-first (Cairo) with tabular Latin financial figures (Inter). RTL · Light.
+   Pill actions, softly rounded surfaces, generous whitespace, minimal borders, low shadow.
+   No dashboard KPI wall, no card-in-card, no decorative gradients. */
 
 @theme inline {
   --color-background: var(--background);
@@ -16,43 +18,53 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
-  --color-accent: var(--olive);
-  --color-olive: var(--olive);
-  --color-olive-ink: var(--olive-ink);
-  --color-olive-weak: var(--olive-weak);
-  --color-gold: var(--gold);
-  --color-gold-weak: var(--gold-weak);
-  --color-clay: var(--clay);
-  --color-clay-weak: var(--clay-weak);
+  /* Semantic accent roles are kept under their existing token names so every
+     bg-olive / text-clay / bg-gold-weak utility in the components keeps working —
+     only the concrete hue behind each role changes. */
+  --color-accent: var(--brand);
+  --color-olive: var(--brand); /* primary / brand / active */
+  --color-olive-ink: var(--brand-ink); /* darker brand — hover / pressed */
+  --color-olive-weak: var(--brand-weak); /* soft brand tint surface */
+  --color-gold: var(--in); /* money-in / settled / success */
+  --color-gold-weak: var(--in-weak);
+  --color-clay: var(--out); /* money-out / error */
+  --color-clay-weak: var(--out-weak);
+  --color-warn: var(--warn); /* attention / still-owed / due */
+  --color-warn-weak: var(--warn-weak);
 
+  --shadow-card: var(--shadow-card);
   --shadow-soft: var(--shadow-soft);
 
-  --font-sans: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
-  --font-serif: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', 'Segoe UI', serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+  --font-sans: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  --font-serif: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  --font-mono: 'Inter', ui-monospace, 'SF Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
 }
 
 :root {
   color-scheme: light;
 
-  --background: #f4f0e7; /* bone */
-  --foreground: #221f18; /* ink */
-  --muted-foreground: #69624f; /* ink-2 */
-  --faint: #9d9581; /* ink-3 */
-  --panel: #fbf9f3;
-  --highlight: #eae3d3; /* bone-2 */
-  --border: #e2dac8;
-  --border-strong: #d0c6af;
+  --background: #f8fafc; /* slate-50 — the calm canvas */
+  --foreground: #0f172a; /* slate-900 — ink */
+  --muted-foreground: #475569; /* slate-600 */
+  --faint: #94a3b8; /* slate-400 — eyebrows, captions, hints */
+  --panel: #ffffff; /* white — every surface / card / bar */
+  --highlight: #f1f5f9; /* slate-100 — hover + subtle fill */
+  --border: #e2e8f0; /* slate-200 — hairline */
+  --border-strong: #cbd5e1; /* slate-300 — inputs, table heads */
 
-  --olive: #31513a;
-  --olive-ink: #22392a;
-  --olive-weak: #e4eade;
-  --gold: #ad7e27;
-  --gold-weak: #f1e7c9;
-  --clay: #9a4326;
-  --clay-weak: #f1e0d6;
+  --brand: #2563eb; /* blue-600 */
+  --brand-ink: #1d4ed8; /* blue-700 */
+  --brand-weak: #eff6ff; /* blue-50 */
 
-  --shadow-soft: 0 22px 44px -32px rgba(40, 34, 18, 0.4);
+  --in: #059669; /* emerald-600 */
+  --in-weak: #ecfdf5; /* emerald-50 */
+  --out: #dc2626; /* red-600 */
+  --out-weak: #fef2f2; /* red-50 */
+  --warn: #b45309; /* amber-700 — legible as text on white, clear as a bar */
+  --warn-weak: #fffbeb; /* amber-50 */
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -18px rgba(15, 23, 42, 0.14);
+  --shadow-soft: 0 24px 50px -28px rgba(15, 23, 42, 0.3);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -66,17 +78,19 @@
 
 html {
   direction: rtl;
-  background: var(--highlight);
+  background: var(--background);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--highlight);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  line-height: 1.55;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
 }
 
 a {
@@ -95,25 +109,28 @@ select {
   min-height: 100vh;
 }
 
-/* Keyboard focus — a visible ring for any interactive element that does not set its
-   own focus style. Components that manage focus themselves (e.g. Button) opt out with
-   focus-visible:outline-none and render their own ring. */
+/* Keyboard focus — a visible blue ring for any interactive element that does not set
+   its own focus style. Components that manage focus themselves (e.g. Button) opt out
+   with focus-visible:outline-none and render their own ring. */
 :focus-visible {
-  outline: 2px solid var(--olive);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* Financial figures: tabular English digits, isolated from RTL flow. */
+/* Financial figures: crisp tabular Latin (Inter) digits, isolated from RTL flow. */
 .figure {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
   unicode-bidi: isolate;
+  letter-spacing: 0;
 }
 
-/* Editorial Arabic headings. */
+/* Display headings: the confident, bold geometric Arabic voice (Cairo). */
 .editorial {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
 }

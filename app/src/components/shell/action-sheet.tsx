@@ -81,7 +81,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
 
   return (
     <div
-      className="absolute inset-0 z-30 flex"
+      className="fixed inset-0 z-40 flex"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -90,17 +90,17 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
         type="button"
         aria-label="إغلاق"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[rgba(28,25,16,0.32)]"
+        className="absolute inset-0 cursor-default bg-[rgba(15,23,42,0.4)] backdrop-blur-[2px]"
       />
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative flex h-full w-full max-w-[440px] flex-col overflow-y-auto border-e border-border bg-panel shadow-soft outline-none"
+        className="relative flex h-full w-full max-w-[460px] flex-col overflow-y-auto border-e border-border bg-panel shadow-soft outline-none"
       >
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
             {eyebrow ? (
-              <div className="mb-1 text-[11px] tracking-[0.2em] text-faint">{eyebrow}</div>
+              <div className="mb-1 text-[12px] font-bold tracking-wide text-olive">{eyebrow}</div>
             ) : null}
             <h2 id={titleId} className="editorial text-2xl text-foreground">
               {title}
@@ -109,7 +109,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground transition hover:bg-highlight hover:text-foreground"
+            className="rounded-full p-1.5 text-muted-foreground transition hover:bg-highlight hover:text-foreground"
             aria-label="إغلاق"
           >
             <X className="size-5" />
