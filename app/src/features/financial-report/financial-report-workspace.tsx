@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
-import { RotateCw } from 'lucide-react'
+import { Printer, RotateCw } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { PositionPanel } from '@/components/shell/position-panel'
 import { RouteHeader } from '@/components/shell/route-header'
+import { FinancialReportPrint } from '@/features/print/financial-report-print'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
@@ -35,6 +36,8 @@ export function FinancialReportWorkspace() {
   const totals = useMemo(() => financialTotals(movements), [movements])
   const ordered = useMemo(() => movementsNewestFirst(movements), [movements])
 
+  const [printing, setPrinting] = useState(false)
+
   return (
     <div>
       <RouteHeader
@@ -42,10 +45,16 @@ export function FinancialReportWorkspace() {
         title="الموقف والحركة"
         description="عرضٌ مشتقٌّ من القبض والصرف — لا يُنشئ حقيقة مالية، ولا يخزّن رصيدًا، وكل حركة تقود إلى سندها الأصلي."
         actions={
-          <Button variant="outline" onClick={() => void reload()} disabled={isLoading}>
-            <RotateCw className="size-4" />
-            {isLoading ? 'جاري التحديث...' : 'تحديث'}
-          </Button>
+          <>
+            <Button variant="quiet" onClick={() => setPrinting(true)} disabled={!loaded || movements.length === 0}>
+              <Printer className="size-4" />
+              طباعة
+            </Button>
+            <Button variant="outline" onClick={() => void reload()} disabled={isLoading}>
+              <RotateCw className="size-4" />
+              {isLoading ? 'جاري التحديث...' : 'تحديث'}
+            </Button>
+          </>
         }
       />
 
@@ -156,6 +165,18 @@ export function FinancialReportWorkspace() {
           </table>
         </CardContent>
       </Card>
+
+      {printing ? (
+        <FinancialReportPrint
+          net={totals.net}
+          totalIn={totals.totalIn}
+          totalOut={totals.totalOut}
+          receiptCount={receiptCount(movements)}
+          paymentCount={paymentCount(movements)}
+          movements={ordered}
+          onClose={() => setPrinting(false)}
+        />
+      ) : null}
     </div>
   )
 }

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 
-import { ArrowDownLeft, Search } from 'lucide-react'
+import { ArrowDownLeft, Printer, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
+import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
@@ -46,6 +47,7 @@ export function StudentsWorkspace() {
   const openReceiveFor = useShellStore((state) => state.openReceiveFor)
 
   const [query, setQuery] = useState('')
+  const [printing, setPrinting] = useState(false)
 
   const aggregates = useMemo(
     () => aggregateStudents(students, statementLines),
@@ -153,10 +155,16 @@ export function StudentsWorkspace() {
                 <h3 className="text-base font-bold text-foreground">
                   البيان المالي — مشتق من السندات
                 </h3>
-                <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}>
-                  <ArrowDownLeft className="size-4" />
-                  استلام مبلغ
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}>
+                    <Printer className="size-4" />
+                    طباعة البيان
+                  </Button>
+                  <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}>
+                    <ArrowDownLeft className="size-4" />
+                    استلام مبلغ
+                  </Button>
+                </div>
               </div>
 
               <div className="overflow-x-auto">
@@ -225,6 +233,17 @@ export function StudentsWorkspace() {
           )}
         </Card>
       </div>
+
+      {printing && active ? (
+        <StudentStatementPrint
+          studentName={active.student.name}
+          paid={active.paid}
+          remaining={active.remaining}
+          courses={active.courses}
+          lines={activeLines}
+          onClose={() => setPrinting(false)}
+        />
+      ) : null}
     </div>
   )
 }

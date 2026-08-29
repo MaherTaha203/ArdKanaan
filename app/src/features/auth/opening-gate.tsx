@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { ArrowLeft } from 'lucide-react'
 
+import { FalconFrieze } from '@/components/brand/falcon-frieze'
 import { formatNumber } from '@/lib/format'
 import { financialTotals } from '@/lib/aggregate'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
+
+const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
 
 function FootStat({ label, value }: { label: string; value: number }) {
   return (
@@ -32,19 +35,25 @@ export function OpeningGate() {
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[1.1fr_0.9fr]">
-      {/* Brand side — airy, light, blue-tinted. */}
+      {/* Brand side — airy, light, blue-tinted, led by the emblem. */}
       <section className="relative flex flex-col justify-between overflow-hidden bg-olive-weak px-8 py-12 sm:px-12 lg:px-16 lg:py-16">
         <div className="relative">
-          <div className="text-[12px] font-bold tracking-wide text-olive">بيئة العمل المالية</div>
-          <div className="editorial mt-4 text-[clamp(2.6rem,6vw,4.4rem)] text-foreground">
+          <img
+            src={EMBLEM_SRC}
+            alt="شعار أرض كنعان — شجرة الحياة الكنعانيّة"
+            className="w-[clamp(168px,22vw,288px)] rounded-2xl object-cover shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] ring-1 ring-white/70"
+          />
+          <div className="mt-7 text-[12px] font-bold tracking-wide text-olive">بيئة العمل المالية</div>
+          <div className="editorial mt-2 text-[clamp(2.4rem,5.5vw,4rem)] text-foreground">
             أرض كنعان
           </div>
           <p className="mt-4 max-w-[38ch] text-[15px] leading-8 text-muted-foreground">
             بيئةُ عملٍ ماليةٌ مبنيّةٌ لمركزٍ تدريبيّ — لا لوحةُ إدارة، بل مساحةٌ تُدار منها الحركةُ
             المالية كلها بوضوح.
           </p>
+          <FalconFrieze color="#8a5a3c" height={20} className="mt-6 max-w-[300px] opacity-80" />
         </div>
-        <div className="relative mt-12 flex flex-wrap gap-x-10 gap-y-5 border-t border-border pt-7">
+        <div className="relative mt-10 flex flex-wrap gap-x-10 gap-y-5 border-t border-border pt-7">
           <FootStat label="الوارد" value={totals.totalIn} />
           <FootStat label="الصادر" value={totals.totalOut} />
           <FootStat label="الموقف" value={totals.net} />
