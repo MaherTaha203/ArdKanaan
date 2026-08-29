@@ -1,20 +1,17 @@
 import { create } from 'zustand'
 
-// Navigation + session state for the workspace shell. This is UI state only.
-// The "session" here is a visual boundary — it is NOT a security mechanism.
-// Real authentication / RLS is a separate, owner-authorized decision.
+// Navigation + overlay state for the workspace shell — UI state only.
+// Authentication now lives in use-auth-store (real Supabase Auth), and Postgres
+// RLS is the security boundary; this store no longer models a "session".
 
 export type ShellRoute = 'home' | 'students' | 'report' | 'settings'
 export type ShellOverlay = 'receive' | 'expense' | null
 
 type ShellStore = {
-  authed: boolean
   route: ShellRoute
   selectedStudentId: string | null
   overlay: ShellOverlay
   receivePrefillName: string | null
-  enter: () => void
-  leave: () => void
   navigate: (route: ShellRoute) => void
   selectStudent: (studentId: string) => void
   openOverlay: (overlay: Exclude<ShellOverlay, null>) => void
@@ -23,13 +20,10 @@ type ShellStore = {
 }
 
 export const useShellStore = create<ShellStore>((set) => ({
-  authed: false,
   route: 'home',
   selectedStudentId: null,
   overlay: null,
   receivePrefillName: null,
-  enter: () => set({ authed: true, route: 'home' }),
-  leave: () => set({ authed: false, overlay: null }),
   navigate: (route) => set({ route, overlay: null }),
   selectStudent: (studentId) =>
     set({ selectedStudentId: studentId, route: 'students', overlay: null }),

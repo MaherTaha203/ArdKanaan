@@ -11,7 +11,13 @@ export function getSupabaseBrowserClient() {
   }
 
   if (!browserClient) {
-    browserClient = createClient(appEnv.supabaseUrl, appEnv.supabaseAnonKey)
+    browserClient = createClient(appEnv.supabaseUrl, appEnv.supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    })
   }
 
   return browserClient
