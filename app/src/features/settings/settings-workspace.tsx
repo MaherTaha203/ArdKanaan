@@ -58,12 +58,12 @@ export function SettingsWorkspace() {
         >
           <Row label="الحالة">
             <span
-              className={`inline-flex items-center gap-2 ${
-                connected ? 'text-olive' : 'text-clay'
+              className={`inline-flex items-center gap-2 font-medium ${
+                connected ? 'text-gold' : 'text-clay'
               }`}
             >
               <span
-                className={`size-2 rounded-full ${connected ? 'bg-olive' : 'bg-clay'}`}
+                className={`size-2 rounded-full ${connected ? 'bg-gold' : 'bg-clay'}`}
               />
               {connected ? 'متصل' : 'غير مهيأ في هذه البيئة'}
             </span>

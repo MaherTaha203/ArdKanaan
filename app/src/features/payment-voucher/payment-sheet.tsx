@@ -69,7 +69,7 @@ export function PaymentSheet() {
       {error ? (
         <div
           role="alert"
-          className="mb-4 rounded-md border border-clay/30 bg-clay-weak px-4 py-3 text-sm text-clay"
+          className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
           {error}
         </div>

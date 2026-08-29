@@ -30,15 +30,18 @@ export function Toaster() {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-auto flex max-w-[90vw] items-center gap-3 rounded-full bg-olive-ink px-4 py-2.5 text-[13px] text-[#f2efe4] shadow-soft"
+        className="pointer-events-auto flex max-w-[90vw] items-center gap-3 rounded-full bg-foreground px-5 py-3 text-[13px] font-medium text-white shadow-soft"
       >
-        <Icon className="size-4 flex-none text-gold-weak" aria-hidden />
+        <Icon
+          className={`size-4 flex-none ${tone === 'success' ? 'text-emerald-400' : 'text-sky-300'}`}
+          aria-hidden
+        />
         <span className="truncate">{message}</span>
         <button
           type="button"
           onClick={dismiss}
           aria-label="إغلاق الإشعار"
-          className="-me-1 rounded-full p-1 text-[#cdd3c5] transition hover:bg-white/10 hover:text-white"
+          className="-me-1 rounded-full p-1 text-white/60 transition hover:bg-white/15 hover:text-white"
         >
           <X className="size-3.5" />
         </button>
