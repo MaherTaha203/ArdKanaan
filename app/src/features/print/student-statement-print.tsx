@@ -1,5 +1,6 @@
 import { PrintPreview } from '@/components/print/print-preview'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
+import { formatVoucherNo } from '@/lib/voucher'
 import type { StudentStatementLine } from '@/types/domain'
 
 type StudentStatementPrintProps = {
@@ -78,7 +79,7 @@ export function StudentStatementPrint({
             <tr key={line.id} className={INK}>
               <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(line.voucherDate)}</td>
               <td className={`border-b ${HAIR} px-2 py-2.5`}>
-                سند قبض رقم <span className="figure">{formatNumber(line.voucherNumber)}</span>
+                سند قبض — رقم <span className="figure">{formatVoucherNo(line.voucherNumber)}</span>
               </td>
               <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>{line.courseName}</td>
               <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end`}>

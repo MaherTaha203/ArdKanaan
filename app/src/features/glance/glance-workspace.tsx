@@ -44,11 +44,8 @@ export function GlanceWorkspace() {
       <ErrorNotice message={error} onDismiss={clearError} />
 
       <header className="space-y-1.5">
-        <div className="text-[12px] font-bold tracking-wide text-olive">إطلالة اليوم</div>
-        <h1 className="editorial text-[clamp(1.8rem,3vw,2.5rem)] text-foreground">أهلًا في أرض كنعان</h1>
-        <p className="text-[14px] leading-7 text-muted-foreground">
-          نظرةٌ سريعة على نقد المركز ومَن يحتاج متابعةً اليوم.
-        </p>
+        <div className="text-[12px] font-bold tracking-wide text-olive">أرض كنعان</div>
+        <h1 className="editorial text-[clamp(1.8rem,3vw,2.5rem)] text-foreground">الإطلالة</h1>
       </header>
 
       {/* The one figure. Cash on hand = derived net (receipts − payments). */}
@@ -90,9 +87,7 @@ export function GlanceWorkspace() {
       {/* The short attention list. */}
       <Card>
         <CardHeader>
-          <h2 className="text-base font-semibold text-foreground">
-            يحتاج انتباهك اليوم — طلاب عليهم متبقٍّ
-          </h2>
+          <h2 className="text-base font-semibold text-foreground">طلاب عليهم متبقٍّ</h2>
           <button
             type="button"
             onClick={() => navigate('students')}
@@ -126,9 +121,7 @@ export function GlanceWorkspace() {
               </div>
             ))
           ) : (
-            <p className="py-8 text-center text-sm text-faint">
-              لا مبالغ متبقية — كل التسجيلات مكتملة.
-            </p>
+            <p className="py-8 text-center text-sm text-faint">لا مبالغ متبقية.</p>
           )}
         </CardContent>
       </Card>

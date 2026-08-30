@@ -11,6 +11,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
+import { formatVoucherNo } from '@/lib/voucher'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -67,9 +68,18 @@ export function StudentsWorkspace() {
   )
 
   const filtered = useMemo(() => {
-    const term = normalizeArabic(query)
-    if (!term) return sorted
-    return sorted.filter((item) => normalizeArabic(item.student.name).includes(term))
+    const trimmed = query.trim()
+    if (!trimmed) return sorted
+    const term = normalizeArabic(trimmed)
+    const digits = trimmed.replace(/\D/g, '')
+    return sorted.filter((item) => {
+      const { name, phone, idNumber } = item.student
+      if (normalizeArabic(name).includes(term)) return true
+      if (digits.length === 0) return false
+      const phoneHit = phone ? phone.replace(/\D/g, '').includes(digits) : false
+      const idHit = idNumber ? idNumber.replace(/\D/g, '').includes(digits) : false
+      return phoneHit || idHit
+    })
   }, [sorted, query])
 
   const activeId = selectedStudentId ?? sorted[0]?.student.id ?? null
@@ -84,11 +94,7 @@ export function StudentsWorkspace() {
 
   return (
     <div>
-      <RouteHeader
-        eyebrow="الطلاب"
-        title="سجلّات الطلاب"
-        description="الطالب سجلٌّ كامل: هويّته، بيانه المالي المشتق، وحركته. اختر طالبًا من الفهرس."
-      />
+      <RouteHeader eyebrow="الطلاب" title="سجلّات الطلاب" />
 
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} />
@@ -105,7 +111,7 @@ export function StudentsWorkspace() {
                 if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id)
               }}
               aria-label="ابحث عن طالب"
-              placeholder="ابحث عن طالب… (Enter لفتح الأول)"
+              placeholder="بحث بالاسم أو الهاتف أو رقم الهوية"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
@@ -144,6 +150,26 @@ export function StudentsWorkspace() {
                     {formatNumber(active.courses)} دورة · آخر حركة{' '}
                     {active.lastActivity ? formatDate(active.lastActivity) : '—'}
                   </div>
+                  {active.student.idNumber || active.student.phone ? (
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12.5px] text-faint">
+                      {active.student.idNumber ? (
+                        <span>
+                          رقم الهوية{' '}
+                          <span className="figure text-muted-foreground" dir="ltr">
+                            {active.student.idNumber}
+                          </span>
+                        </span>
+                      ) : null}
+                      {active.student.phone ? (
+                        <span>
+                          الهاتف{' '}
+                          <span className="figure text-muted-foreground" dir="ltr">
+                            {active.student.phone}
+                          </span>
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="ms-auto flex gap-8">
                   <RecordFigure label="المدفوع" value={active.paid} tone="ink" />
@@ -199,7 +225,7 @@ export function StudentsWorkspace() {
                             {formatDate(line.voucherDate)}
                           </td>
                           <td className="border-b border-border px-2 py-3">
-                            سند قبض رقم {formatNumber(line.voucherNumber)}
+                            سند قبض — رقم {formatVoucherNo(line.voucherNumber)}
                           </td>
                           <td className="border-b border-border px-2 py-3 text-muted-foreground">
                             {line.courseName}
@@ -218,7 +244,7 @@ export function StudentsWorkspace() {
                     ) : (
                       <tr>
                         <td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">
-                          لا توجد حركة لعرضها لهذا الطالب.
+                          لا توجد حركة.
                         </td>
                       </tr>
                     )}
@@ -228,7 +254,7 @@ export function StudentsWorkspace() {
             </>
           ) : (
             <div className="py-16 text-center text-sm text-faint">
-              {loaded ? 'لا يوجد طلاب بعد — سجّل سند قبض لإنشاء أول طالب.' : 'جاري التحميل...'}
+              {loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}
             </div>
           )}
         </Card>

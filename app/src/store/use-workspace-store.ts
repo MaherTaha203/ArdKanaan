@@ -1,7 +1,12 @@
 import { create } from 'zustand'
 
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import type { FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type {
+  CancelledVoucher,
+  FinancialMovement,
+  Student,
+  StudentStatementLine,
+} from '@/types/domain'
 
 // The workspace read model. It only READS the two sources of truth through their
 // derived views; it never writes and never stores a balance. Writes stay in the
@@ -11,6 +16,7 @@ type WorkspaceStore = {
   students: Student[]
   statementLines: StudentStatementLine[]
   movements: FinancialMovement[]
+  cancelledVouchers: CancelledVoucher[]
   isLoading: boolean
   loaded: boolean
   error: string | null
@@ -21,6 +27,7 @@ type WorkspaceStore = {
 type StudentRow = {
   id: string
   name: string
+  id_number: string | null
   phone: string | null
   notes: string | null
 }
@@ -48,7 +55,7 @@ type MovementRow = {
 }
 
 function normalizeStudent(row: StudentRow): Student {
-  return { id: row.id, name: row.name, phone: row.phone, notes: row.notes }
+  return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes }
 }
 
 function normalizeStatementLine(row: StatementRow): StudentStatementLine {
@@ -77,10 +84,27 @@ function normalizeMovement(row: MovementRow): FinancialMovement {
   }
 }
 
+type CancelledRow = MovementRow & { cancelled_at: string; cancel_reason: string | null }
+
+function normalizeCancelled(row: CancelledRow): CancelledVoucher {
+  return {
+    id: row.id,
+    movementType: row.movement_type,
+    voucherNumber: row.voucher_number,
+    voucherDate: row.voucher_date,
+    amount: Number(row.amount),
+    partyName: row.party_name,
+    context: row.context,
+    cancelledAt: row.cancelled_at,
+    cancelReason: row.cancel_reason,
+  }
+}
+
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   students: [],
   statementLines: [],
   movements: [],
+  cancelledVouchers: [],
   isLoading: false,
   loaded: false,
   error: null,
@@ -100,8 +124,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const [studentsResult, statementResult, movementsResult] = await Promise.all([
-        supabase.from('students').select('id, name, phone, notes').order('name', { ascending: true }),
+      const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
+        supabase
+          .from('students')
+          .select('id, name, id_number, phone, notes')
+          .order('name', { ascending: true }),
         supabase
           .from('student_statement_lines')
           .select(
@@ -114,11 +141,18 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
           .select('id, movement_type, voucher_number, voucher_date, amount, party_name, context')
           .order('voucher_date', { ascending: true })
           .order('created_at', { ascending: true }),
+        supabase
+          .from('cancelled_vouchers')
+          .select(
+            'id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason',
+          )
+          .order('cancelled_at', { ascending: false }),
       ])
 
       if (studentsResult.error) throw studentsResult.error
       if (statementResult.error) throw statementResult.error
       if (movementsResult.error) throw movementsResult.error
+      if (cancelledResult.error) throw cancelledResult.error
 
       set({
         students: (studentsResult.data ?? []).map((row) => normalizeStudent(row as StudentRow)),
@@ -126,6 +160,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
           normalizeStatementLine(row as StatementRow),
         ),
         movements: (movementsResult.data ?? []).map((row) => normalizeMovement(row as MovementRow)),
+        cancelledVouchers: (cancelledResult.data ?? []).map((row) =>
+          normalizeCancelled(row as CancelledRow),
+        ),
         isLoading: false,
         loaded: true,
       })

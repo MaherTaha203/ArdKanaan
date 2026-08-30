@@ -1,6 +1,15 @@
-import { useEffect, type ComponentType } from 'react'
+import { useEffect, useRef, useState, type ComponentType } from 'react'
 
-import { ArrowDownLeft, ArrowUpRight, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronDown,
+  FileText,
+  Home,
+  LogOut,
+  Settings,
+  Users,
+} from 'lucide-react'
 
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
@@ -10,7 +19,7 @@ import { StudentsWorkspace } from '@/features/students/students-workspace'
 import { FinancialReportWorkspace } from '@/features/financial-report/financial-report-workspace'
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useShellStore, type ShellRoute } from '@/store/use-shell-store'
+import { useShellStore, type ReportView, type ShellRoute } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 // The shell speaks the reference's light "clear-sky" language: a single white top
@@ -29,7 +38,12 @@ type NavItem = {
 const NAV: NavItem[] = [
   { route: 'home', label: 'الإطلالة', icon: Home },
   { route: 'students', label: 'الطلاب', icon: Users },
-  { route: 'report', label: 'التقرير المالي', icon: FileText },
+]
+
+const REPORT_MENU: { view: ReportView; label: string }[] = [
+  { view: 'general', label: 'التقرير العام' },
+  { view: 'receipts', label: 'تقرير القبض' },
+  { view: 'payments', label: 'تقرير الصرف' },
 ]
 
 function CurrentView({ route }: { route: ShellRoute }) {
@@ -47,8 +61,10 @@ function CurrentView({ route }: { route: ShellRoute }) {
 
 export function AppShell() {
   const route = useShellStore((state) => state.route)
+  const reportView = useShellStore((state) => state.reportView)
   const overlay = useShellStore((state) => state.overlay)
   const navigate = useShellStore((state) => state.navigate)
+  const navigateReport = useShellStore((state) => state.navigateReport)
   const openOverlay = useShellStore((state) => state.openOverlay)
   const signOut = useAuthStore((state) => state.signOut)
 
@@ -69,9 +85,6 @@ export function AppShell() {
           className="flex items-baseline gap-2 transition hover:opacity-80"
         >
           <span className="editorial text-[19px] text-foreground">أرض كنعان</span>
-          <span className="hidden text-[11px] font-medium tracking-wide text-faint sm:inline">
-            بيئة العمل المالية
-          </span>
         </button>
 
         {/* Primary navigation — plain text links (desktop). */}
@@ -84,6 +97,7 @@ export function AppShell() {
               onClick={() => navigate(item.route)}
             />
           ))}
+          <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} />
         </nav>
 
         {/* Actions — the day's money moves + utilities. */}
@@ -179,6 +193,85 @@ function NavLink({ label, active, onClick }: { label: string; active: boolean; o
     >
       {label}
     </button>
+  )
+}
+
+// The financial report as a dropdown: التقرير المالي ▾ → العام / القبض / الصرف.
+// Each item routes to the report and sets its view; all three read the same
+// derived movements.
+function ReportNav({
+  active,
+  reportView,
+  onPick,
+}: {
+  active: boolean
+  reportView: ReportView
+  onPick: (view: ReportView) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDoc(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false)
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-current={active ? 'page' : undefined}
+        className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+          active
+            ? 'bg-olive-weak text-olive'
+            : 'text-muted-foreground hover:bg-highlight hover:text-foreground'
+        }`}
+      >
+        التقرير المالي
+        <ChevronDown className={`size-4 transition ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          className="absolute start-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg"
+        >
+          {REPORT_MENU.map((item) => (
+            <button
+              key={item.view}
+              type="button"
+              role="menuitemradio"
+              aria-checked={active && reportView === item.view}
+              onClick={() => {
+                onPick(item.view)
+                setOpen(false)
+              }}
+              className={`flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm transition hover:bg-highlight ${
+                active && reportView === item.view
+                  ? 'font-semibold text-olive'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              <FileText className="size-4 flex-none opacity-70" />
+              {item.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   )
 }
 

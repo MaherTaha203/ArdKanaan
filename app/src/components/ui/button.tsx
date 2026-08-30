@@ -12,6 +12,8 @@ const buttonVariants = cva(
         default: 'bg-olive px-5 py-2.5 text-sm text-white shadow-sm hover:bg-olive-ink',
         // Money-in — emerald pill.
         gold: 'bg-gold px-5 py-2.5 text-sm text-white shadow-sm hover:brightness-95',
+        // Destructive — clay/red pill (cancel, remove).
+        destructive: 'bg-clay px-5 py-2.5 text-sm text-white shadow-sm hover:brightness-95',
         // Neutral filled — near-black pill (strong secondary).
         outline:
           'border border-border bg-panel px-5 py-2.5 text-sm text-foreground shadow-sm hover:bg-highlight',

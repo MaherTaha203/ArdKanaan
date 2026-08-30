@@ -1,8 +1,12 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 
 import { RouteHeader } from '@/components/shell/route-header'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { appEnv } from '@/lib/env'
+import { Input } from '@/components/ui/input'
+import { BackupRestore } from '@/features/settings/backup-restore'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useAuthStore } from '@/store/use-auth-store'
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -13,79 +17,127 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function Group({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
+function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card>
       <CardHeader className="block">
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        {note ? <p className="mt-1 text-[12.5px] leading-6 text-faint">{note}</p> : null}
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
       </CardHeader>
-      <CardContent className="px-5 py-1.5">{children}</CardContent>
+      <CardContent className="px-6 py-1.5">{children}</CardContent>
     </Card>
   )
 }
 
+const MIN_PASSWORD = 6
+
 export function SettingsWorkspace() {
-  const connected = appEnv.isSupabaseConfigured
+  const session = useAuthStore((state) => state.session)
+  const signOut = useAuthStore((state) => state.signOut)
+  const email = session?.user?.email ?? '—'
+
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
+
+  async function handleChangePassword(event: React.FormEvent) {
+    event.preventDefault()
+    if (password.length < MIN_PASSWORD) {
+      setMessage({ tone: 'error', text: 'كلمة المرور قصيرة' })
+      return
+    }
+    if (password !== confirm) {
+      setMessage({ tone: 'error', text: 'كلمتا المرور غير متطابقتين' })
+      return
+    }
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) {
+      setMessage({ tone: 'error', text: 'تعذّر تغيير كلمة المرور' })
+      return
+    }
+    setIsSaving(true)
+    setMessage(null)
+    const { error } = await supabase.auth.updateUser({ password })
+    setIsSaving(false)
+    if (error) {
+      setMessage({ tone: 'error', text: 'تعذّر تغيير كلمة المرور' })
+      return
+    }
+    setPassword('')
+    setConfirm('')
+    setMessage({ tone: 'ok', text: 'تم تغيير كلمة المرور' })
+  }
 
   return (
     <div>
-      <RouteHeader
-        eyebrow="الإعدادات"
-        title="إعدادات المركز"
-        description="مساحة مقيّدة تعرض ما هو قائم فعلًا فقط — لا لوحة إدارة."
-      />
+      <RouteHeader eyebrow="الإعدادات" title="الإعدادات" />
 
       <div className="grid max-w-[760px] gap-6">
-        <Group title="المركز والمشغّل">
-          <Row label="اسم المركز">أرض كنعان</Row>
-          <Row label="نوع الاستخدام">مركز تدريبي واحد · مشغّل واحد</Row>
-          <Row label="المشغّل">أمين المركز</Row>
-        </Group>
-
-        <Group title="اللغة والعرض" note="سياسات ثابتة على مستوى المنتج.">
-          <Row label="اللغة">العربية</Row>
-          <Row label="الاتجاه">من اليمين إلى اليسار (RTL)</Row>
-          <Row label="السمة">فاتحة</Row>
-          <Row label="عرض الأرقام">
-            <span className="figure">0-9</span> أرقام إنجليزية دائمًا
+        <Group title="المالية">
+          <Row label="العملة">شيكل (₪)</Row>
+          <Row label="تنسيق التاريخ">
+            <span className="figure">DD/MM/YYYY</span>
           </Row>
+          <Row label="ترقيم سندات القبض">تلقائيّ متسلسل</Row>
+          <Row label="ترقيم سندات الصرف">تلقائيّ متسلسل</Row>
         </Group>
 
-        <Group
-          title="الاتصال بقاعدة البيانات"
-          note="مصدر البيانات هو Supabase. لا تُعرض المفاتيح هنا."
-        >
-          <Row label="الحالة">
-            <span
-              className={`inline-flex items-center gap-2 font-medium ${
-                connected ? 'text-gold' : 'text-clay'
-              }`}
-            >
-              <span
-                className={`size-2 rounded-full ${connected ? 'bg-gold' : 'bg-clay'}`}
-              />
-              {connected ? 'متصل' : 'غير مهيأ في هذه البيئة'}
+        <Group title="النسخ الاحتياطي والاستعادة">
+          <BackupRestore />
+        </Group>
+
+        <Group title="الحساب">
+          <Row label="البريد">
+            <span className="figure" dir="ltr">
+              {email}
             </span>
           </Row>
-        </Group>
 
-        <Group
-          title="نموذج الحقيقة المالية"
-          note="ثوابت دستورية (ARK-002) — للعرض فقط، غير قابلة للتعديل من الإعدادات."
-        >
-          <Row label="مصدر الحقيقة">سندات القبض والصرف فقط</Row>
-          <Row label="البيان والتقرير">مشتقّان دائمًا — لا يُخزَّن رصيد</Row>
-          <Row label="التصحيح">يتم بتصحيح السند، لا بتعديل البيان</Row>
-        </Group>
+          <div className="border-b border-border py-4 last:border-b-0">
+            <div className="mb-2 text-[13px] text-muted-foreground">تغيير كلمة المرور</div>
+            <form onSubmit={handleChangePassword} className="flex flex-wrap items-center gap-2">
+              <Input
+                type="password"
+                autoComplete="new-password"
+                placeholder="كلمة مرور جديدة"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value)
+                  if (message) setMessage(null)
+                }}
+                className="max-w-[200px]"
+              />
+              <Input
+                type="password"
+                autoComplete="new-password"
+                placeholder="تأكيد كلمة المرور"
+                value={confirm}
+                onChange={(event) => {
+                  setConfirm(event.target.value)
+                  if (message) setMessage(null)
+                }}
+                className="max-w-[200px]"
+              />
+              <Button type="submit" size="sm" disabled={isSaving}>
+                {isSaving ? 'جارٍ الحفظ…' : 'تحديث'}
+              </Button>
+              {message ? (
+                <span
+                  className={`text-sm font-medium ${
+                    message.tone === 'ok' ? 'text-gold' : 'text-clay'
+                  }`}
+                >
+                  {message.text}
+                </span>
+              ) : null}
+            </form>
+          </div>
 
-        <Group
-          title="المصادقة والأمان"
-          note="دخولٌ مؤمَّن عبر Supabase Auth، والوصول إلى البيانات محكومٌ بسياسات RLS على مستوى الصفوف."
-        >
-          <Row label="المصادقة">Supabase Auth — بريد وكلمة مرور</Row>
-          <Row label="RLS">مُفعَّلة — الوصول للمُصادَقين فقط</Row>
-          <Row label="صلاحية المشغّل">قراءة وإضافة فقط — لا تعديل ولا حذف للسندات</Row>
+          <div className="py-4">
+            <Button variant="quiet" size="sm" onClick={() => void signOut()}>
+              تسجيل الخروج
+            </Button>
+          </div>
         </Group>
       </div>
     </div>

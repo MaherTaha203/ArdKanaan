@@ -1,6 +1,9 @@
 export type Student = {
   id: string
   name: string
+  // National/identity number — text, so leading zeros are preserved and it is
+  // never treated as an amount. Part of the student's identity, not a financial field.
+  idNumber: string | null
   phone: string | null
   notes: string | null
 }
@@ -37,4 +40,18 @@ export type FinancialMovement = {
   amount: number
   partyName: string | null
   context: string | null
+}
+
+// A cancelled voucher — excluded from every active total, kept for review. Derived
+// from the cancelled_vouchers view; never counted anywhere.
+export type CancelledVoucher = {
+  id: string
+  movementType: 'receipt' | 'payment'
+  voucherNumber: number
+  voucherDate: string
+  amount: number
+  partyName: string | null
+  context: string | null
+  cancelledAt: string
+  cancelReason: string | null
 }
