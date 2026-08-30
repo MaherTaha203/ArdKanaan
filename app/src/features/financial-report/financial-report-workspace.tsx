@@ -6,6 +6,7 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { PositionPanel } from '@/components/shell/position-panel'
 import { RouteHeader } from '@/components/shell/route-header'
 import { FinancialReportPrint } from '@/features/print/financial-report-print'
+import { VoucherPrint } from '@/features/print/voucher-print'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
@@ -72,6 +73,7 @@ export function FinancialReportWorkspace() {
 
   const [period, setPeriod] = useState<Period>('all')
   const [printing, setPrinting] = useState(false)
+  const [printingVoucher, setPrintingVoucher] = useState<FinancialMovement | null>(null)
 
   const start = periodStartIso(period)
   const periodLabel = PERIODS.find((item) => item.id === period)?.label ?? 'الكل'
@@ -191,7 +193,13 @@ export function FinancialReportWorkspace() {
           <h2 className="text-base font-bold text-foreground">سجل الحركات — من الأحدث</h2>
         </CardHeader>
         <CardContent className="overflow-x-auto px-6 py-2">
-          <MovementTable view={view} loaded={loaded} movements={viewMovements} allEmpty={movements.length === 0} />
+          <MovementTable
+            view={view}
+            loaded={loaded}
+            movements={viewMovements}
+            allEmpty={movements.length === 0}
+            onPrintVoucher={setPrintingVoucher}
+          />
         </CardContent>
       </Card>
 
@@ -210,6 +218,10 @@ export function FinancialReportWorkspace() {
           periodLabel={periodLabel}
           onClose={() => setPrinting(false)}
         />
+      ) : null}
+
+      {printingVoucher ? (
+        <VoucherPrint movement={printingVoucher} onClose={() => setPrintingVoucher(null)} />
       ) : null}
     </div>
   )
@@ -318,14 +330,17 @@ function MovementTable({
   loaded,
   movements,
   allEmpty,
+  onPrintVoucher,
 }: {
   view: ReportView
   loaded: boolean
   movements: FinancialMovement[]
   allEmpty: boolean
+  onPrintVoucher: (movement: FinancialMovement) => void
 }) {
   const showType = view === 'general'
-  const colCount = showType ? 5 : 4
+  // Columns: [النوع?] رقم · تاريخ · بيان · مبلغ · إجراء(طباعة)
+  const colCount = (showType ? 5 : 4) + 1
 
   return (
     <table className="w-full border-collapse text-sm">
@@ -347,6 +362,9 @@ function MovementTable({
           </th>
           <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
             المبلغ
+          </th>
+          <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
+            <span className="sr-only">طباعة</span>
           </th>
         </tr>
       </thead>
@@ -398,6 +416,17 @@ function MovementTable({
                 >
                   {isReceipt ? '+' : '−'}
                   {formatNumber(movement.amount)}
+                </td>
+                <td className="border-b border-border px-2 py-3.5 text-end">
+                  <button
+                    type="button"
+                    onClick={() => onPrintVoucher(movement)}
+                    aria-label={`طباعة ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`}
+                    title="طباعة السند"
+                    className="rounded-full p-1.5 text-faint transition hover:bg-highlight hover:text-olive"
+                  >
+                    <Printer className="size-4" />
+                  </button>
                 </td>
               </tr>
             )
