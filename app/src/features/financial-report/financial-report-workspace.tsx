@@ -17,6 +17,7 @@ import {
   receiptCount,
 } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
+import { formatVoucherNo } from '@/lib/voucher'
 import type { FinancialMovement } from '@/types/domain'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
@@ -79,7 +80,6 @@ export function FinancialReportWorkspace() {
       <RouteHeader
         eyebrow="التقرير المالي"
         title="الموقف والحركة"
-        description="عرضٌ مشتقٌّ من القبض والصرف — لا يُنشئ حقيقة مالية، ولا يخزّن رصيدًا، وكل حركة تقود إلى سندها الأصلي."
         actions={
           <>
             <Button variant="quiet" onClick={() => setPrinting(true)} disabled={!loaded || movements.length === 0}>
@@ -194,7 +194,7 @@ export function FinancialReportWorkspace() {
                         </span>
                       </td>
                       <td className="figure border-b border-border px-2 py-3.5 text-muted-foreground">
-                        {formatNumber(movement.voucherNumber)}
+                        {formatVoucherNo(movement.voucherNumber)}
                       </td>
                       <td className="border-b border-border px-2 py-3.5">
                         {formatDate(movement.voucherDate)}

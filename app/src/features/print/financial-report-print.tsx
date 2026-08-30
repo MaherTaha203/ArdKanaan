@@ -1,5 +1,6 @@
 import { PrintPreview } from '@/components/print/print-preview'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
+import { formatVoucherNo } from '@/lib/voucher'
 import type { FinancialMovement } from '@/types/domain'
 
 type FinancialReportPrintProps = {
@@ -103,7 +104,7 @@ export function FinancialReportPrint({
                   </span>
                 </td>
                 <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>
-                  {formatNumber(movement.voucherNumber)}
+                  {formatVoucherNo(movement.voucherNumber)}
                 </td>
                 <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(movement.voucherDate)}</td>
                 <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>

@@ -68,17 +68,13 @@ export function ReceiptSheet() {
   }
 
   return (
-    <ActionSheet title="استلام مبلغ" eyebrow="سند قبض" onClose={closeOverlay}>
-      <p className="mb-5 text-[13px] leading-6 text-muted-foreground">
-        سند قبض جديد. يُنشأ الطالب إن لم يوجد، ثم يُحفظ السند ويظهر في بيانه وفي التقرير مباشرة.
-      </p>
-
+    <ActionSheet title="سند قبض" onClose={closeOverlay}>
       {error ? (
         <div
           role="alert"
           className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
-          {error}
+          تعذّر حفظ السند.
         </div>
       ) : null}
 

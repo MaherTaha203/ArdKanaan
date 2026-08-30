@@ -61,17 +61,13 @@ export function PaymentSheet() {
   }
 
   return (
-    <ActionSheet title="تسجيل مصروف" eyebrow="سند صرف" onClose={closeOverlay}>
-      <p className="mb-5 text-[13px] leading-6 text-muted-foreground">
-        حركة صادرة للمركز. لا ترتبط بطالب أو دورة، ولا تؤثر على بيان أي طالب — وتظهر في التقرير المالي.
-      </p>
-
+    <ActionSheet title="سند صرف" onClose={closeOverlay}>
       {error ? (
         <div
           role="alert"
           className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
-          {error}
+          تعذّر حفظ السند.
         </div>
       ) : null}
 

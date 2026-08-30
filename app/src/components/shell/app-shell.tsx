@@ -69,9 +69,6 @@ export function AppShell() {
           className="flex items-baseline gap-2 transition hover:opacity-80"
         >
           <span className="editorial text-[19px] text-foreground">أرض كنعان</span>
-          <span className="hidden text-[11px] font-medium tracking-wide text-faint sm:inline">
-            بيئة العمل المالية
-          </span>
         </button>
 
         {/* Primary navigation — plain text links (desktop). */}

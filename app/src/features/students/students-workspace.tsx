@@ -11,6 +11,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
+import { formatVoucherNo } from '@/lib/voucher'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -84,11 +85,7 @@ export function StudentsWorkspace() {
 
   return (
     <div>
-      <RouteHeader
-        eyebrow="الطلاب"
-        title="سجلّات الطلاب"
-        description="الطالب سجلٌّ كامل: هويّته، بيانه المالي المشتق، وحركته. اختر طالبًا من الفهرس."
-      />
+      <RouteHeader eyebrow="الطلاب" title="سجلّات الطلاب" />
 
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} />
@@ -199,7 +196,7 @@ export function StudentsWorkspace() {
                             {formatDate(line.voucherDate)}
                           </td>
                           <td className="border-b border-border px-2 py-3">
-                            سند قبض رقم {formatNumber(line.voucherNumber)}
+                            سند قبض — رقم {formatVoucherNo(line.voucherNumber)}
                           </td>
                           <td className="border-b border-border px-2 py-3 text-muted-foreground">
                             {line.courseName}
@@ -218,7 +215,7 @@ export function StudentsWorkspace() {
                     ) : (
                       <tr>
                         <td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">
-                          لا توجد حركة لعرضها لهذا الطالب.
+                          لا توجد حركة.
                         </td>
                       </tr>
                     )}
@@ -228,7 +225,7 @@ export function StudentsWorkspace() {
             </>
           ) : (
             <div className="py-16 text-center text-sm text-faint">
-              {loaded ? 'لا يوجد طلاب بعد — سجّل سند قبض لإنشاء أول طالب.' : 'جاري التحميل...'}
+              {loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}
             </div>
           )}
         </Card>
