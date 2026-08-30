@@ -106,37 +106,37 @@ export function ReceiptSheet() {
             )}
           </Field>
 
-          <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>
-            {(control) => (
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                className="figure"
-                {...control}
-                {...form.register('amountReceived', { valueAsNumber: true })}
-              />
-            )}
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>
             {(control) => (
               <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />
             )}
           </Field>
-
-          <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>
-            {(control) => (
-              <Input
-                placeholder="الاسم المدفوع باسمه"
-                {...control}
-                {...form.register('payerName')}
-              />
-            )}
-          </Field>
         </div>
+
+        {/* The amount received — the figure that moves money. Given visual weight. */}
+        <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>
+          {(control) => (
+            <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                inputMode="decimal"
+                className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint"
+                placeholder="0"
+                {...control}
+                {...form.register('amountReceived', { valueAsNumber: true })}
+              />
+              <span className="text-sm font-medium text-muted-foreground">₪</span>
+            </div>
+          )}
+        </Field>
+
+        <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>
+          {(control) => (
+            <Input placeholder="الاسم المدفوع باسمه" {...control} {...form.register('payerName')} />
+          )}
+        </Field>
 
         <Field label="الملاحظات (اختياري)" error={form.formState.errors.notes?.message}>
           {(control) => (
@@ -148,6 +148,9 @@ export function ReceiptSheet() {
           <ArrowDownLeft className="size-4" />
           {isSaving ? 'جاري الحفظ...' : 'حفظ سند القبض'}
         </Button>
+        <p className="text-center text-[11.5px] text-faint">
+          Enter للتالي · Ctrl+Enter للحفظ · Esc للإغلاق
+        </p>
       </form>
     </ActionSheet>
   )

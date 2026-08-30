@@ -12,11 +12,15 @@ type ActionSheetProps = {
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+// Fields that keyboard "advance" (Enter) steps through, in DOM order: the form
+// controls plus the submit button. Hidden inputs are excluded by the visibility filter.
+const FIELDS = 'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), button[type="submit"]:not([disabled])'
+
 /**
- * A focused action surface that slides in from the start edge over the workspace
- * canvas — deliberately not a centered modal dialog. Full-height, scrollable,
- * with a dimmed scrim behind it. Traps focus while open, restores it on close,
- * and locks background scroll (a11y).
+ * A centered modal dialog for a single focused action (a voucher). Dimmed scrim,
+ * rounded card, scrollable body. Traps focus while open, restores it on close, and
+ * locks background scroll (a11y). Keyboard-first: Enter advances to the next field,
+ * Ctrl/Cmd+Enter saves, Esc closes.
  */
 export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null)
@@ -35,21 +39,59 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
+    function visible(elements: HTMLElement[]): HTMLElement[] {
+      return elements.filter((el) => el.offsetParent !== null)
+    }
     function focusable(): HTMLElement[] {
       if (!panel) return []
-      return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null,
-      )
+      return visible(Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)))
+    }
+    function fields(): HTMLElement[] {
+      if (!panel) return []
+      return visible(Array.from(panel.querySelectorAll<HTMLElement>(FIELDS)))
     }
 
-    // Move focus into the sheet on open.
-    ;(focusable()[0] ?? panel)?.focus()
+    // Move focus into the sheet on open — the first form field for keyboard-first
+    // entry, falling back to any focusable element (or the panel) if none.
+    ;(fields()[0] ?? focusable()[0] ?? panel)?.focus()
+
+    function advance(from: EventTarget | null) {
+      const list = fields()
+      const index = list.indexOf(from as HTMLElement)
+      const next = index >= 0 ? list[index + 1] : list[0]
+      next?.focus()
+    }
 
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         onCloseRef.current()
         return
       }
+
+      if (event.key === 'Enter' && panel) {
+        const target = event.target as HTMLElement | null
+        const tag = target?.tagName
+        // Ctrl/Cmd+Enter saves from anywhere in the form.
+        if (event.ctrlKey || event.metaKey) {
+          const form = panel.querySelector('form')
+          if (form) {
+            event.preventDefault()
+            form.requestSubmit()
+          }
+          return
+        }
+        // Plain Enter in a multi-line field inserts a newline (default).
+        if (tag === 'TEXTAREA') return
+        // Plain Enter on the submit button saves (default click).
+        if (tag === 'BUTTON') return
+        // Plain Enter in a single-line field advances instead of submitting.
+        if (tag === 'INPUT' || tag === 'SELECT') {
+          event.preventDefault()
+          advance(target)
+        }
+        return
+      }
+
       if (event.key !== 'Tab' || !panel) return
 
       const items = focusable()
@@ -81,7 +123,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
 
   return (
     <div
-      className="fixed inset-0 z-40 flex"
+      className="fixed inset-0 z-40 flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -95,7 +137,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative flex h-full w-full max-w-[460px] flex-col overflow-y-auto border-e border-border bg-panel shadow-soft outline-none"
+        className="relative flex max-h-[92vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl border border-border bg-panel shadow-soft outline-none"
       >
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
@@ -115,7 +157,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
             <X className="size-5" />
           </button>
         </div>
-        <div className="px-6 py-6">{children}</div>
+        <div className="overflow-y-auto px-6 py-6">{children}</div>
       </div>
     </div>
   )

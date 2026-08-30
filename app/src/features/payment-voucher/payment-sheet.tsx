@@ -82,26 +82,30 @@ export function PaymentSheet() {
           )}
         </Field>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="المبلغ المصروف" error={form.formState.errors.amount?.message}>
-            {(control) => (
-              <Input
+        {/* The amount spent — the figure that moves money. Given visual weight. */}
+        <Field label="المبلغ المصروف" error={form.formState.errors.amount?.message}>
+          {(control) => (
+            <div className="flex items-center gap-2 rounded-xl border border-clay/30 bg-clay-weak/40 px-4 py-1 focus-within:border-clay focus-within:ring-2 focus-within:ring-clay/20">
+              <input
                 type="number"
                 min="0.01"
                 step="0.01"
-                className="figure"
+                inputMode="decimal"
+                className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint"
+                placeholder="0"
                 {...control}
                 {...form.register('amount', { valueAsNumber: true })}
               />
-            )}
-          </Field>
+              <span className="text-sm font-medium text-muted-foreground">₪</span>
+            </div>
+          )}
+        </Field>
 
-          <Field label="تاريخ الصرف" error={form.formState.errors.paymentDate?.message}>
-            {(control) => (
-              <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />
-            )}
-          </Field>
-        </div>
+        <Field label="تاريخ الصرف" error={form.formState.errors.paymentDate?.message}>
+          {(control) => (
+            <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />
+          )}
+        </Field>
 
         <Field label="الملاحظات" error={form.formState.errors.notes?.message}>
           {(control) => (
@@ -113,6 +117,9 @@ export function PaymentSheet() {
           <ArrowUpRight className="size-4" />
           {isSaving ? 'جاري الحفظ...' : 'حفظ سند الصرف'}
         </Button>
+        <p className="text-center text-[11.5px] text-faint">
+          Enter للتالي · Ctrl+Enter للحفظ · Esc للإغلاق
+        </p>
       </form>
     </ActionSheet>
   )
