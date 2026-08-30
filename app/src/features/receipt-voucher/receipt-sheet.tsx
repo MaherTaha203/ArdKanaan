@@ -130,7 +130,7 @@ export function ReceiptSheet() {
             )}
           </Field>
 
-          <Field label="اسم الدافع" error={form.formState.errors.payerName?.message}>
+          <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>
             {(control) => (
               <Input
                 placeholder="الاسم المدفوع باسمه"
@@ -141,9 +141,9 @@ export function ReceiptSheet() {
           </Field>
         </div>
 
-        <Field label="الملاحظات" error={form.formState.errors.notes?.message}>
+        <Field label="الملاحظات (اختياري)" error={form.formState.errors.notes?.message}>
           {(control) => (
-            <Textarea placeholder="أدخل الملاحظات" {...control} {...form.register('notes')} />
+            <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />
           )}
         </Field>
 

@@ -6,8 +6,10 @@ export const receiptVoucherFormSchema = z.object({
   courseName: z.string().trim().min(1, 'اسم الدورة مطلوب'),
   courseValue: z.coerce.number().min(0, 'قيمة الدورة يجب أن تكون صفرًا أو أكثر'),
   amountReceived: z.coerce.number().positive('المبلغ المقبوض يجب أن يكون أكبر من صفر'),
-  payerName: z.string().trim().min(1, 'اسم الدافع مطلوب'),
-  notes: z.string().trim().min(1, 'الملاحظات مطلوبة'),
+  // BUG-1 (approved): payer name and notes are truly optional. Empty is valid;
+  // only the financial fields above gate save. Sent to the DB as '' (NOT NULL-safe).
+  payerName: z.string().trim(),
+  notes: z.string().trim(),
 })
 
 export type ReceiptVoucherFormValues = z.infer<typeof receiptVoucherFormSchema>
