@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toast'
 import { StudentsWorkspace } from '@/features/students/students-workspace'
 import { FinancialReportWorkspace } from '@/features/financial-report/financial-report-workspace'
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
+import { useAuthStore } from '@/store/use-auth-store'
 import { useShellStore, type ShellRoute } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
@@ -49,7 +50,7 @@ export function AppShell() {
   const overlay = useShellStore((state) => state.overlay)
   const navigate = useShellStore((state) => state.navigate)
   const openOverlay = useShellStore((state) => state.openOverlay)
-  const leave = useShellStore((state) => state.leave)
+  const signOut = useAuthStore((state) => state.signOut)
 
   const load = useWorkspaceStore((state) => state.load)
   const loaded = useWorkspaceStore((state) => state.loaded)
@@ -116,7 +117,7 @@ export function AppShell() {
           </button>
           <button
             type="button"
-            onClick={leave}
+            onClick={() => void signOut()}
             aria-label="خروج"
             className="rounded-full p-2 text-muted-foreground transition hover:bg-highlight hover:text-foreground"
           >

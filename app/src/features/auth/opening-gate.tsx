@@ -1,37 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import { ArrowLeft } from 'lucide-react'
 
 import { FalconFrieze } from '@/components/brand/falcon-frieze'
-import { formatNumber } from '@/lib/format'
-import { financialTotals } from '@/lib/aggregate'
-import { useShellStore } from '@/store/use-shell-store'
-import { useWorkspaceStore } from '@/store/use-workspace-store'
+import { useAuthStore } from '@/store/use-auth-store'
 
 const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
 
-function FootStat({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <div className="text-[11px] font-medium tracking-wide text-muted-foreground">{label}</div>
-      <div className="figure mt-1 text-2xl font-semibold text-foreground">{formatNumber(value)}</div>
-    </div>
-  )
-}
-
 export function OpeningGate() {
-  const enter = useShellStore((state) => state.enter)
-  const load = useWorkspaceStore((state) => state.load)
-  const loaded = useWorkspaceStore((state) => state.loaded)
-  const movements = useWorkspaceStore((state) => state.movements)
+  const signIn = useAuthStore((state) => state.signIn)
+  const isSubmitting = useAuthStore((state) => state.isSubmitting)
+  const error = useAuthStore((state) => state.error)
+  const clearError = useAuthStore((state) => state.clearError)
 
-  const [password, setPassword] = useState('demo')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
-  useEffect(() => {
-    if (!loaded) void load()
-  }, [loaded, load])
-
-  const totals = useMemo(() => financialTotals(movements), [movements])
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    await signIn(email, password)
+    // On success the session arrives via onAuthStateChange and App swaps in the shell.
+  }
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[1.1fr_0.9fr]">
@@ -53,57 +42,76 @@ export function OpeningGate() {
           </p>
           <FalconFrieze color="#8a5a3c" height={20} className="mt-6 max-w-[300px] opacity-80" />
         </div>
-        <div className="relative mt-10 flex flex-wrap gap-x-10 gap-y-5 border-t border-border pt-7">
-          <FootStat label="الوارد" value={totals.totalIn} />
-          <FootStat label="الصادر" value={totals.totalOut} />
-          <FootStat label="الموقف" value={totals.net} />
+        <div className="relative mt-10 border-t border-border pt-7 text-[12.5px] leading-6 text-muted-foreground">
+          مركزٌ واحد · مشغّلٌ واحد · دخولٌ مؤمَّن عبر Supabase.
         </div>
       </section>
 
-      {/* Form side — white, clean. */}
+      {/* Form side — real sign-in. */}
       <section className="flex flex-col justify-center gap-5 bg-panel px-8 py-12 sm:px-12 lg:px-16">
         <div className="text-[12px] font-bold tracking-wide text-olive">الدخول إلى مساحة العمل</div>
         <h1 className="editorial text-3xl text-foreground">أهلًا بعودتك</h1>
         <p className="max-w-[38ch] text-[14px] leading-7 text-muted-foreground">
-          مركزٌ واحد، مشغّلٌ واحد. ادخل لتتابع دفتر المركز.
+          ادخل ببريد المشغّل وكلمة المرور لمتابعة دفتر المركز.
         </p>
 
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            enter()
-          }}
-        >
+        {error ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
+          >
+            {error}
+          </div>
+        ) : null}
+
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">المشغّل</span>
+            <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
+              بريد المشغّل
+            </span>
             <input
-              value="أمين المركز"
-              readOnly
-              className="h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value)
+                if (error) clearError()
+              }}
+              placeholder="name@example.com"
+              className="figure h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none transition placeholder:text-faint focus:border-olive focus:ring-2 focus:ring-olive/20"
+              dir="ltr"
             />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">كلمة المرور</span>
+            <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
+              كلمة المرور
+            </span>
             <input
               type="password"
+              autoComplete="current-password"
+              required
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value)
+                if (error) clearError()
+              }}
               className="h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none transition focus:border-olive focus:ring-2 focus:ring-olive/20"
             />
           </label>
 
           <button
             type="submit"
-            className="mt-2 inline-flex w-fit items-center gap-2 rounded-full bg-olive px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-olive-ink"
+            disabled={isSubmitting}
+            className="mt-2 inline-flex w-fit items-center gap-2 rounded-full bg-olive px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-olive-ink disabled:cursor-not-allowed disabled:opacity-60"
           >
-            ادخل إلى مساحة العمل
+            {isSubmitting ? 'جارٍ الدخول…' : 'ادخل إلى مساحة العمل'}
             <ArrowLeft className="size-4" />
           </button>
         </form>
 
         <p className="text-[11px] text-faint">
-          عرض بصري فقط — لم تُفعَّل مصادقة حقيقية في هذه المرحلة.
+          دخولٌ مؤمَّن بمصادقة حقيقيّة وسياسات وصولٍ على مستوى الصفوف (RLS).
         </p>
       </section>
     </div>
