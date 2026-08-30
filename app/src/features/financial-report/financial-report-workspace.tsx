@@ -25,6 +25,32 @@ function partyAndContext(movement: FinancialMovement) {
   return movement.context ? `${party} · ${movement.context}` : party
 }
 
+type Period = 'all' | 'month' | 'week'
+
+const PERIODS: { id: Period; label: string }[] = [
+  { id: 'all', label: 'الكل' },
+  { id: 'month', label: 'هذا الشهر' },
+  { id: 'week', label: 'هذا الأسبوع' },
+]
+
+// Presentation-only: the inclusive ISO (YYYY-MM-DD) start of the selected period,
+// or null for "all". Never a source of truth — it only narrows the derived
+// movements before they are summed for display.
+function periodStartIso(period: Period, today = new Date()): string | null {
+  if (period === 'all') return null
+  const year = today.getFullYear()
+  const month = today.getMonth()
+  if (period === 'month') {
+    return `${year}-${String(month + 1).padStart(2, '0')}-01`
+  }
+  // Current calendar week, starting Saturday (Arabic locale convention).
+  const daysSinceSaturday = (today.getDay() + 1) % 7 // Sat=0 … Fri=6
+  const start = new Date(year, month, today.getDate() - daysSinceSaturday)
+  return `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(
+    start.getDate(),
+  ).padStart(2, '0')}`
+}
+
 export function FinancialReportWorkspace() {
   const movements = useWorkspaceStore((state) => state.movements)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
@@ -33,10 +59,20 @@ export function FinancialReportWorkspace() {
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
 
-  const totals = useMemo(() => financialTotals(movements), [movements])
-  const ordered = useMemo(() => movementsNewestFirst(movements), [movements])
-
+  const [period, setPeriod] = useState<Period>('all')
   const [printing, setPrinting] = useState(false)
+
+  // The report is a period → totals → summary → traceable-transactions view.
+  // Everything below derives from this filtered slice of the read-only movements.
+  const scoped = useMemo(() => {
+    const start = periodStartIso(period)
+    if (!start) return movements
+    return movements.filter((movement) => movement.voucherDate >= start)
+  }, [movements, period])
+
+  const totals = useMemo(() => financialTotals(scoped), [scoped])
+  const ordered = useMemo(() => movementsNewestFirst(scoped), [scoped])
+  const periodLabel = PERIODS.find((item) => item.id === period)?.label ?? 'الكل'
 
   return (
     <div>
@@ -61,12 +97,35 @@ export function FinancialReportWorkspace() {
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} />
 
+      {/* PERIOD — narrows the derived view. */}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <span className="text-[13px] font-medium text-muted-foreground">الفترة</span>
+        <div className="flex items-center gap-1 rounded-full border border-border bg-panel p-1">
+          {PERIODS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setPeriod(item.id)}
+              aria-pressed={period === item.id}
+              className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition ${
+                period === item.id
+                  ? 'bg-olive text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* TOTALS + SUMMARY */}
       <div className="mb-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
         <PositionPanel
           net={totals.net}
           totalIn={totals.totalIn}
           totalOut={totals.totalOut}
-          label="صافي الموقف"
+          label={`صافي الموقف · ${periodLabel}`}
           context="وارد − صادر"
         />
 
@@ -75,9 +134,9 @@ export function FinancialReportWorkspace() {
             <h2 className="text-base font-bold text-foreground">ملخّص</h2>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-x-10 gap-y-4 px-6 py-6">
-            <SummaryFigure label="عدد الحركات" value={movements.length} />
-            <SummaryFigure label="سندات قبض" value={receiptCount(movements)} tone="in" />
-            <SummaryFigure label="سندات صرف" value={paymentCount(movements)} tone="out" />
+            <SummaryFigure label="عدد الحركات" value={ordered.length} />
+            <SummaryFigure label="سندات قبض" value={receiptCount(scoped)} tone="in" />
+            <SummaryFigure label="سندات صرف" value={paymentCount(scoped)} tone="out" />
           </CardContent>
         </Card>
       </div>
@@ -157,7 +216,9 @@ export function FinancialReportWorkspace() {
               ) : (
                 <tr>
                   <td colSpan={5} className="px-2 py-12 text-center text-sm text-faint">
-                    لا توجد حركات مالية لعرضها.
+                    {movements.length > 0
+                      ? 'لا توجد حركات في هذه الفترة.'
+                      : 'لا توجد حركات مالية لعرضها.'}
                   </td>
                 </tr>
               )}
@@ -171,9 +232,10 @@ export function FinancialReportWorkspace() {
           net={totals.net}
           totalIn={totals.totalIn}
           totalOut={totals.totalOut}
-          receiptCount={receiptCount(movements)}
-          paymentCount={paymentCount(movements)}
+          receiptCount={receiptCount(scoped)}
+          paymentCount={paymentCount(scoped)}
           movements={ordered}
+          periodLabel={periodLabel}
           onClose={() => setPrinting(false)}
         />
       ) : null}

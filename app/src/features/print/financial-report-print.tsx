@@ -9,6 +9,7 @@ type FinancialReportPrintProps = {
   receiptCount: number
   paymentCount: number
   movements: FinancialMovement[]
+  periodLabel?: string
   onClose: () => void
 }
 
@@ -34,6 +35,7 @@ export function FinancialReportPrint({
   receiptCount,
   paymentCount,
   movements,
+  periodLabel,
   onClose,
 }: FinancialReportPrintProps) {
   return (
@@ -44,6 +46,7 @@ export function FinancialReportPrint({
       meta={
         <>
           <div className="font-semibold text-[#0f172a]">الموقف والحركة</div>
+          {periodLabel ? <div>الفترة · {periodLabel}</div> : null}
           <div>
             التاريخ <span className="figure">{formatDate(todayIsoDate())}</span>
           </div>
