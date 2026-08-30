@@ -13,6 +13,7 @@ import {
   receiptVoucherFormSchema,
   type ReceiptVoucherFormValues,
 } from '@/features/receipt-voucher/schema'
+import { StudentPicker } from '@/features/receipt-voucher/student-picker'
 import { todayIsoDate } from '@/lib/format'
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useShellStore } from '@/store/use-shell-store'
@@ -23,6 +24,9 @@ function buildDefaults(studentName: string | null): ReceiptVoucherFormValues {
   return {
     paymentDate: todayIsoDate(),
     studentName: studentName ?? '',
+    studentId: '',
+    studentIdNumber: '',
+    studentPhone: '',
     courseName: '',
     courseValue: 0,
     amountReceived: 0,
@@ -42,6 +46,7 @@ export function ReceiptSheet() {
   const clearError = useMoneyInStore((state) => state.clearError)
 
   const reloadWorkspace = useWorkspaceStore((state) => state.load)
+  const students = useWorkspaceStore((state) => state.students)
 
   const form = useForm<ReceiptVoucherFormValues>({
     resolver: zodResolver(receiptVoucherFormSchema),
@@ -79,11 +84,7 @@ export function ReceiptSheet() {
       ) : null}
 
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-        <Field label="اسم الطالب" error={form.formState.errors.studentName?.message}>
-          {(control) => (
-            <Input placeholder="اكتب اسم الطالب" {...control} {...form.register('studentName')} />
-          )}
-        </Field>
+        <StudentPicker form={form} students={students} />
 
         <Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>
           {(control) => (

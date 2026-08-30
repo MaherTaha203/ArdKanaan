@@ -21,6 +21,7 @@ type WorkspaceStore = {
 type StudentRow = {
   id: string
   name: string
+  id_number: string | null
   phone: string | null
   notes: string | null
 }
@@ -48,7 +49,7 @@ type MovementRow = {
 }
 
 function normalizeStudent(row: StudentRow): Student {
-  return { id: row.id, name: row.name, phone: row.phone, notes: row.notes }
+  return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes }
 }
 
 function normalizeStatementLine(row: StatementRow): StudentStatementLine {
@@ -101,7 +102,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
 
     try {
       const [studentsResult, statementResult, movementsResult] = await Promise.all([
-        supabase.from('students').select('id, name, phone, notes').order('name', { ascending: true }),
+        supabase
+          .from('students')
+          .select('id, name, id_number, phone, notes')
+          .order('name', { ascending: true }),
         supabase
           .from('student_statement_lines')
           .select(

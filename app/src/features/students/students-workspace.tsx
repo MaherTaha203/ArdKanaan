@@ -68,9 +68,18 @@ export function StudentsWorkspace() {
   )
 
   const filtered = useMemo(() => {
-    const term = normalizeArabic(query)
-    if (!term) return sorted
-    return sorted.filter((item) => normalizeArabic(item.student.name).includes(term))
+    const trimmed = query.trim()
+    if (!trimmed) return sorted
+    const term = normalizeArabic(trimmed)
+    const digits = trimmed.replace(/\D/g, '')
+    return sorted.filter((item) => {
+      const { name, phone, idNumber } = item.student
+      if (normalizeArabic(name).includes(term)) return true
+      if (digits.length === 0) return false
+      const phoneHit = phone ? phone.replace(/\D/g, '').includes(digits) : false
+      const idHit = idNumber ? idNumber.replace(/\D/g, '').includes(digits) : false
+      return phoneHit || idHit
+    })
   }, [sorted, query])
 
   const activeId = selectedStudentId ?? sorted[0]?.student.id ?? null
@@ -102,7 +111,7 @@ export function StudentsWorkspace() {
                 if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id)
               }}
               aria-label="ابحث عن طالب"
-              placeholder="ابحث عن طالب… (Enter لفتح الأول)"
+              placeholder="بحث بالاسم أو الهاتف أو رقم الهوية"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
@@ -141,6 +150,26 @@ export function StudentsWorkspace() {
                     {formatNumber(active.courses)} دورة · آخر حركة{' '}
                     {active.lastActivity ? formatDate(active.lastActivity) : '—'}
                   </div>
+                  {active.student.idNumber || active.student.phone ? (
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12.5px] text-faint">
+                      {active.student.idNumber ? (
+                        <span>
+                          رقم الهوية{' '}
+                          <span className="figure text-muted-foreground" dir="ltr">
+                            {active.student.idNumber}
+                          </span>
+                        </span>
+                      ) : null}
+                      {active.student.phone ? (
+                        <span>
+                          الهاتف{' '}
+                          <span className="figure text-muted-foreground" dir="ltr">
+                            {active.student.phone}
+                          </span>
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="ms-auto flex gap-8">
                   <RecordFigure label="المدفوع" value={active.paid} tone="ink" />

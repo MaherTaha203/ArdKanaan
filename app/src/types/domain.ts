@@ -1,6 +1,9 @@
 export type Student = {
   id: string
   name: string
+  // National/identity number — text, so leading zeros are preserved and it is
+  // never treated as an amount. Part of the student's identity, not a financial field.
+  idNumber: string | null
   phone: string | null
   notes: string | null
 }

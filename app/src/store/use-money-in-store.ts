@@ -18,9 +18,12 @@ type MoneyInStore = {
 type StudentRow = {
   id: string
   name: string
+  id_number: string | null
   phone: string | null
   notes: string | null
 }
+
+const STUDENT_COLUMNS = 'id, name, id_number, phone, notes'
 
 type StudentStatementRow = {
   id: string
@@ -38,6 +41,7 @@ function normalizeStudent(row: StudentRow): Student {
   return {
     id: row.id,
     name: row.name,
+    idNumber: row.id_number,
     phone: row.phone,
     notes: row.notes,
   }
@@ -100,30 +104,53 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
 
     try {
       const normalizedStudentName = values.studentName.trim()
+      const pickedStudentId = values.studentId.trim()
 
-      const { data: existingStudentRows, error: studentLookupError } = await supabase
-        .from('students')
-        .select('id, name, phone, notes')
-        .eq('name', normalizedStudentName)
-        .limit(1)
+      let activeStudent: Student | null = null
 
-      if (studentLookupError) {
-        throw studentLookupError
+      if (pickedStudentId) {
+        // An existing student was picked from the search. Resolve by id and leave
+        // their identity fields (id_number, phone) untouched.
+        const { data: pickedRows, error: pickedError } = await supabase
+          .from('students')
+          .select(STUDENT_COLUMNS)
+          .eq('id', pickedStudentId)
+          .limit(1)
+
+        if (pickedError) throw pickedError
+        activeStudent = pickedRows?.[0] ? normalizeStudent(pickedRows[0] as StudentRow) : null
       }
 
-      let activeStudent: Student | null = existingStudentRows?.[0]
-        ? normalizeStudent(existingStudentRows[0] as StudentRow)
-        : null
+      if (!activeStudent) {
+        // No picked id (or it vanished): resolve by name, matching prior behavior.
+        const { data: existingStudentRows, error: studentLookupError } = await supabase
+          .from('students')
+          .select(STUDENT_COLUMNS)
+          .eq('name', normalizedStudentName)
+          .limit(1)
+
+        if (studentLookupError) throw studentLookupError
+
+        activeStudent = existingStudentRows?.[0]
+          ? normalizeStudent(existingStudentRows[0] as StudentRow)
+          : null
+      }
 
       if (!activeStudent) {
+        // A genuinely new student. Capture the optional identity fields entered on
+        // the form (id_number, phone) at creation time; blanks become null.
+        const idNumber = values.studentIdNumber.trim()
+        const phone = values.studentPhone.trim()
+
         const { data: studentRow, error: studentError } = await supabase
           .from('students')
           .insert({
             name: normalizedStudentName,
-            phone: null,
+            id_number: idNumber || null,
+            phone: phone || null,
             notes: null,
           })
-          .select('id, name, phone, notes')
+          .select(STUDENT_COLUMNS)
           .single()
 
         if (studentError) {
