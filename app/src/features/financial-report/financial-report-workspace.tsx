@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 
-import { Printer, RotateCw } from 'lucide-react'
+import { Pencil, Printer, RotateCw, Ban } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { PositionPanel } from '@/components/shell/position-panel'
 import { RouteHeader } from '@/components/shell/route-header'
 import { FinancialReportPrint } from '@/features/print/financial-report-print'
 import { VoucherPrint } from '@/features/print/voucher-print'
+import { CancelVoucherDialog } from '@/features/financial-report/cancel-voucher-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
@@ -18,9 +19,11 @@ import {
   receiptCount,
 } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
-import { formatVoucherNo } from '@/lib/voucher'
-import type { FinancialMovement } from '@/types/domain'
+import { formatVoucherNo, voucherTypeLabel } from '@/lib/voucher'
+import type { CancelledVoucher, FinancialMovement } from '@/types/domain'
 import { useShellStore, type ReportView } from '@/store/use-shell-store'
+import { useToastStore } from '@/components/ui/use-toast-store'
+import { useVoucherAdminStore } from '@/store/use-voucher-admin-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 function partyAndContext(movement: FinancialMovement) {
@@ -62,6 +65,7 @@ function periodStartIso(period: Period, today = new Date()): string | null {
 
 export function FinancialReportWorkspace() {
   const movements = useWorkspaceStore((state) => state.movements)
+  const cancelledVouchers = useWorkspaceStore((state) => state.cancelledVouchers)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -70,10 +74,18 @@ export function FinancialReportWorkspace() {
 
   const view = useShellStore((state) => state.reportView)
   const navigateReport = useShellStore((state) => state.navigateReport)
+  const openEditReceipt = useShellStore((state) => state.openEditReceipt)
+  const openEditPayment = useShellStore((state) => state.openEditPayment)
 
   const [period, setPeriod] = useState<Period>('all')
   const [printing, setPrinting] = useState(false)
   const [printingVoucher, setPrintingVoucher] = useState<FinancialMovement | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<FinancialMovement | null>(null)
+
+  function handleEdit(movement: FinancialMovement) {
+    if (movement.movementType === 'receipt') openEditReceipt(movement.id)
+    else openEditPayment(movement.id)
+  }
 
   const start = periodStartIso(period)
   const periodLabel = PERIODS.find((item) => item.id === period)?.label ?? 'الكل'
@@ -199,9 +211,15 @@ export function FinancialReportWorkspace() {
             movements={viewMovements}
             allEmpty={movements.length === 0}
             onPrintVoucher={setPrintingVoucher}
+            onEdit={handleEdit}
+            onCancel={setCancelTarget}
           />
         </CardContent>
       </Card>
+
+      {cancelledVouchers.length > 0 ? (
+        <CancelledSection vouchers={cancelledVouchers} onRestored={() => void reload()} />
+      ) : null}
 
       {printing ? (
         <FinancialReportPrint
@@ -222,6 +240,17 @@ export function FinancialReportWorkspace() {
 
       {printingVoucher ? (
         <VoucherPrint movement={printingVoucher} onClose={() => setPrintingVoucher(null)} />
+      ) : null}
+
+      {cancelTarget ? (
+        <CancelVoucherDialog
+          movement={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onCancelled={async () => {
+            setCancelTarget(null)
+            await reload()
+          }}
+        />
       ) : null}
     </div>
   )
@@ -325,21 +354,109 @@ function BalanceFigure({
   )
 }
 
+// Cancelled vouchers — kept out of every total, listed here for review. Each can be
+// restored (un-cancelled), so a mistaken cancel is never a dead end.
+function CancelledSection({
+  vouchers,
+  onRestored,
+}: {
+  vouchers: CancelledVoucher[]
+  onRestored: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const restoreVoucher = useVoucherAdminStore((state) => state.restoreVoucher)
+  const isBusy = useVoucherAdminStore((state) => state.isBusy)
+
+  async function handleRestore(voucher: CancelledVoucher) {
+    const ok = await restoreVoucher(voucher.movementType, voucher.id)
+    if (!ok) return
+    useToastStore.getState().show('تمت استعادة السند')
+    onRestored()
+  }
+
+  return (
+    <Card className="mt-6">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between px-6 py-4 text-start"
+        aria-expanded={open}
+      >
+        <h2 className="text-base font-bold text-foreground">
+          السندات الملغاة{' '}
+          <span className="figure text-muted-foreground">({formatNumber(vouchers.length)})</span>
+        </h2>
+        <span className="text-[13px] font-medium text-olive">{open ? 'إخفاء' : 'عرض'}</span>
+      </button>
+      {open ? (
+        <CardContent className="overflow-x-auto px-6 pb-4 pt-0">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="text-[11px] tracking-wide text-faint">
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">النوع</th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">رقم السند</th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">التاريخ</th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">البيان</th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">السبب</th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المبلغ</th>
+                <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
+                  <span className="sr-only">استعادة</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {vouchers.map((voucher) => (
+                <tr key={`${voucher.movementType}-${voucher.id}`} className="text-muted-foreground">
+                  <td className="border-b border-border px-2 py-3">
+                    {voucherTypeLabel(voucher.movementType)}
+                  </td>
+                  <td className="figure border-b border-border px-2 py-3 line-through">
+                    {formatVoucherNo(voucher.voucherNumber)}
+                  </td>
+                  <td className="border-b border-border px-2 py-3">{formatDate(voucher.voucherDate)}</td>
+                  <td className="border-b border-border px-2 py-3">
+                    {[voucher.movementType === 'receipt' ? voucher.partyName ?? '—' : 'المركز', voucher.context]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </td>
+                  <td className="border-b border-border px-2 py-3">{voucher.cancelReason ?? '—'}</td>
+                  <td className="figure border-b border-border px-2 py-3 text-end line-through">
+                    {formatNumber(voucher.amount)}
+                  </td>
+                  <td className="border-b border-border px-2 py-3 text-end">
+                    <Button variant="quiet" size="sm" onClick={() => handleRestore(voucher)} disabled={isBusy}>
+                      استعادة
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      ) : null}
+    </Card>
+  )
+}
+
 function MovementTable({
   view,
   loaded,
   movements,
   allEmpty,
   onPrintVoucher,
+  onEdit,
+  onCancel,
 }: {
   view: ReportView
   loaded: boolean
   movements: FinancialMovement[]
   allEmpty: boolean
   onPrintVoucher: (movement: FinancialMovement) => void
+  onEdit: (movement: FinancialMovement) => void
+  onCancel: (movement: FinancialMovement) => void
 }) {
   const showType = view === 'general'
-  // Columns: [النوع?] رقم · تاريخ · بيان · مبلغ · إجراء(طباعة)
+  // Columns: [النوع?] رقم · تاريخ · بيان · مبلغ · إجراءات
   const colCount = (showType ? 5 : 4) + 1
 
   return (
@@ -417,16 +534,36 @@ function MovementTable({
                   {isReceipt ? '+' : '−'}
                   {formatNumber(movement.amount)}
                 </td>
-                <td className="border-b border-border px-2 py-3.5 text-end">
-                  <button
-                    type="button"
-                    onClick={() => onPrintVoucher(movement)}
-                    aria-label={`طباعة ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`}
-                    title="طباعة السند"
-                    className="rounded-full p-1.5 text-faint transition hover:bg-highlight hover:text-olive"
-                  >
-                    <Printer className="size-4" />
-                  </button>
+                <td className="border-b border-border px-2 py-3.5">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => onPrintVoucher(movement)}
+                      aria-label={`طباعة ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`}
+                      title="طباعة السند"
+                      className="rounded-full p-1.5 text-faint transition hover:bg-highlight hover:text-olive"
+                    >
+                      <Printer className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onEdit(movement)}
+                      aria-label={`تعديل ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`}
+                      title="تعديل السند"
+                      className="rounded-full p-1.5 text-faint transition hover:bg-highlight hover:text-olive"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onCancel(movement)}
+                      aria-label={`إلغاء ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`}
+                      title="إلغاء السند"
+                      className="rounded-full p-1.5 text-faint transition hover:bg-clay-weak hover:text-clay"
+                    >
+                      <Ban className="size-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             )

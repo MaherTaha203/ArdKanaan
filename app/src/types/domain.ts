@@ -41,3 +41,17 @@ export type FinancialMovement = {
   partyName: string | null
   context: string | null
 }
+
+// A cancelled voucher — excluded from every active total, kept for review. Derived
+// from the cancelled_vouchers view; never counted anywhere.
+export type CancelledVoucher = {
+  id: string
+  movementType: 'receipt' | 'payment'
+  voucherNumber: number
+  voucherDate: string
+  amount: number
+  partyName: string | null
+  context: string | null
+  cancelledAt: string
+  cancelReason: string | null
+}

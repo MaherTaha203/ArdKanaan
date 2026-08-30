@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowUpRight } from 'lucide-react'
@@ -17,6 +17,7 @@ import { todayIsoDate } from '@/lib/format'
 import { useMoneyOutStore } from '@/store/use-money-out-store'
 import { useShellStore } from '@/store/use-shell-store'
 import { useToastStore } from '@/components/ui/use-toast-store'
+import { useVoucherAdminStore } from '@/store/use-voucher-admin-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 function buildDefaults(): PaymentVoucherFormValues {
@@ -33,13 +34,23 @@ function buildDefaults(): PaymentVoucherFormValues {
 export function PaymentSheet() {
   const closeOverlay = useShellStore((state) => state.closeOverlay)
   const navigate = useShellStore((state) => state.navigate)
+  const editVoucherId = useShellStore((state) => state.editVoucherId)
+  const isEdit = Boolean(editVoucherId)
 
   const savePaymentVoucher = useMoneyOutStore((state) => state.savePaymentVoucher)
   const isSaving = useMoneyOutStore((state) => state.isSaving)
   const error = useMoneyOutStore((state) => state.error)
   const clearError = useMoneyOutStore((state) => state.clearError)
 
+  const fetchPayment = useVoucherAdminStore((state) => state.fetchPayment)
+  const updatePayment = useVoucherAdminStore((state) => state.updatePayment)
+  const adminBusy = useVoucherAdminStore((state) => state.isBusy)
+  const adminError = useVoucherAdminStore((state) => state.error)
+  const clearAdminError = useVoucherAdminStore((state) => state.clearError)
+
   const reloadWorkspace = useWorkspaceStore((state) => state.load)
+
+  const [loadingEdit, setLoadingEdit] = useState(isEdit)
 
   const form = useForm<PaymentVoucherFormValues>({
     resolver: zodResolver(paymentVoucherFormSchema),
@@ -48,9 +59,40 @@ export function PaymentSheet() {
 
   useEffect(() => {
     clearError()
-  }, [clearError])
+    clearAdminError()
+  }, [clearError, clearAdminError])
+
+  useEffect(() => {
+    if (!editVoucherId) return
+    let active = true
+    void (async () => {
+      const data = await fetchPayment(editVoucherId)
+      if (!active) return
+      if (data) {
+        form.reset({
+          paymentDate: data.paymentDate,
+          expenseType: data.expenseType,
+          amount: data.amount,
+          notes: data.notes,
+        })
+      }
+      setLoadingEdit(false)
+    })()
+    return () => {
+      active = false
+    }
+  }, [editVoucherId, fetchPayment, form])
 
   async function onSubmit(values: PaymentVoucherFormValues) {
+    if (isEdit && editVoucherId) {
+      const ok = await updatePayment(editVoucherId, values)
+      if (!ok) return
+      await reloadWorkspace()
+      useToastStore.getState().show('تم حفظ التعديل')
+      closeOverlay()
+      return
+    }
+
     const saved = await savePaymentVoucher(values)
     if (!saved) return
 
@@ -60,14 +102,25 @@ export function PaymentSheet() {
     closeOverlay()
   }
 
+  const busy = isEdit ? adminBusy : isSaving
+  const showError = error || adminError
+
+  if (loadingEdit) {
+    return (
+      <ActionSheet title="تعديل سند صرف" onClose={closeOverlay}>
+        <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p>
+      </ActionSheet>
+    )
+  }
+
   return (
-    <ActionSheet title="سند صرف" onClose={closeOverlay}>
-      {error ? (
+    <ActionSheet title={isEdit ? 'تعديل سند صرف' : 'سند صرف'} onClose={closeOverlay}>
+      {showError ? (
         <div
           role="alert"
           className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
-          تعذّر حفظ السند.
+          {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : 'تعذّر حفظ السند.'}
         </div>
       ) : null}
 
@@ -113,9 +166,9 @@ export function PaymentSheet() {
           )}
         </Field>
 
-        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isSaving}>
+        <Button type="submit" size="lg" variant="default" className="w-full" disabled={busy}>
           <ArrowUpRight className="size-4" />
-          {isSaving ? 'جاري الحفظ...' : 'حفظ سند الصرف'}
+          {busy ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديل' : 'حفظ سند الصرف'}
         </Button>
         <p className="text-center text-[11.5px] text-faint">
           Enter للتالي · Ctrl+Enter للحفظ · Esc للإغلاق
