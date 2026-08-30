@@ -4,6 +4,7 @@ import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { BackupRestore } from '@/features/settings/backup-restore'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/use-auth-store'
 
@@ -79,6 +80,10 @@ export function SettingsWorkspace() {
           </Row>
           <Row label="ترقيم سندات القبض">تلقائيّ متسلسل</Row>
           <Row label="ترقيم سندات الصرف">تلقائيّ متسلسل</Row>
+        </Group>
+
+        <Group title="النسخ الاحتياطي والاستعادة">
+          <BackupRestore />
         </Group>
 
         <Group title="الحساب">
