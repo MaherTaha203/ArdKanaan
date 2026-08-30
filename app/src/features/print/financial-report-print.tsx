@@ -1,12 +1,17 @@
 import { PrintPreview } from '@/components/print/print-preview'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
 import { formatVoucherNo } from '@/lib/voucher'
+import type { ReportView } from '@/store/use-shell-store'
 import type { FinancialMovement } from '@/types/domain'
 
 type FinancialReportPrintProps = {
+  view: ReportView
+  title: string
   net: number
   totalIn: number
   totalOut: number
+  opening: number
+  closing: number
   receiptCount: number
   paymentCount: number
   movements: FinancialMovement[]
@@ -30,9 +35,13 @@ function partyAndContext(movement: FinancialMovement) {
  * no figure is recomputed here beyond formatting.
  */
 export function FinancialReportPrint({
+  view,
+  title,
   net,
   totalIn,
   totalOut,
+  opening,
+  closing,
   receiptCount,
   paymentCount,
   movements,
@@ -41,12 +50,12 @@ export function FinancialReportPrint({
 }: FinancialReportPrintProps) {
   return (
     <PrintPreview
-      docTitle="التقرير المالي"
-      documentTitle="التقرير المالي — أرض كنعان"
+      docTitle={title}
+      documentTitle={`${title} — أرض كنعان`}
       onClose={onClose}
       meta={
         <>
-          <div className="font-semibold text-[#0f172a]">الموقف والحركة</div>
+          <div className="font-semibold text-[#0f172a]">{title}</div>
           {periodLabel ? <div>الفترة · {periodLabel}</div> : null}
           <div>
             التاريخ <span className="figure">{formatDate(todayIsoDate())}</span>
@@ -57,29 +66,29 @@ export function FinancialReportPrint({
         </>
       }
     >
-      {/* Position summary */}
-      <div className={`grid grid-cols-3 gap-4 rounded-xl border ${HAIR} p-4`}>
-        <div>
-          <div className={`text-[11px] ${MUTED}`}>صافي الموقف</div>
-          <div className={`figure mt-1 text-2xl font-semibold ${INK}`}>{formatNumber(net)}</div>
+      {/* Summary — general shows the full position with opening/closing; a sided
+          report shows only its own total. */}
+      {view === 'general' ? (
+        <div className={`grid grid-cols-2 gap-4 rounded-xl border ${HAIR} p-4 sm:grid-cols-5`}>
+          <SummaryCell label="الرصيد الافتتاحي" value={opening} />
+          <SummaryCell label="إجمالي القبض" value={totalIn} color="text-[#059669]" />
+          <SummaryCell label="إجمالي الصرف" value={totalOut} color="text-[#dc2626]" />
+          <SummaryCell label="صافي الحركة" value={net} />
+          <SummaryCell label="الرصيد الختامي" value={closing} />
         </div>
-        <div>
-          <div className={`text-[11px] ${MUTED}`}>
-            الوارد · <span className="figure">{formatNumber(receiptCount)}</span> سند
-          </div>
-          <div className="figure mt-1 text-2xl font-semibold text-[#059669]">
-            {formatNumber(totalIn)}
-          </div>
+      ) : (
+        <div className={`grid grid-cols-2 gap-4 rounded-xl border ${HAIR} p-4`}>
+          <SummaryCell
+            label={view === 'receipts' ? 'إجمالي القبض' : 'إجمالي الصرف'}
+            value={view === 'receipts' ? totalIn : totalOut}
+            color={view === 'receipts' ? 'text-[#059669]' : 'text-[#dc2626]'}
+          />
+          <SummaryCell
+            label={view === 'receipts' ? 'عدد سندات القبض' : 'عدد سندات الصرف'}
+            value={view === 'receipts' ? receiptCount : paymentCount}
+          />
         </div>
-        <div>
-          <div className={`text-[11px] ${MUTED}`}>
-            الصادر · <span className="figure">{formatNumber(paymentCount)}</span> سند
-          </div>
-          <div className="figure mt-1 text-2xl font-semibold text-[#dc2626]">
-            {formatNumber(totalOut)}
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Movements */}
       <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>سجل الحركات — من الأحدث</h3>
@@ -124,5 +133,16 @@ export function FinancialReportPrint({
         </tbody>
       </table>
     </PrintPreview>
+  )
+}
+
+function SummaryCell({ label, value, color }: { label: string; value: number; color?: string }) {
+  return (
+    <div>
+      <div className={`text-[11px] ${MUTED}`}>{label}</div>
+      <div className={`figure mt-1 text-2xl font-semibold ${color ?? INK}`}>
+        {formatNumber(value)}
+      </div>
+    </div>
   )
 }
