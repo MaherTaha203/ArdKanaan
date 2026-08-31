@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 
+import { fetchAllRows } from '@/lib/fetch-all'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type {
   CancelledVoucher,
@@ -124,29 +125,43 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     set({ isLoading: true, error: null })
 
     try {
+      // Every read is fully paginated: a financial view must never operate on the
+      // first 1000 rows only (PostgREST's default cap), or totals silently under-count.
       const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
-        supabase
-          .from('students')
-          .select('id, name, id_number, phone, notes')
-          .order('name', { ascending: true }),
-        supabase
-          .from('student_statement_lines')
-          .select(
-            'id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance',
-          )
-          .order('voucher_date', { ascending: true })
-          .order('voucher_number', { ascending: true }),
-        supabase
-          .from('financial_movements')
-          .select('id, movement_type, voucher_number, voucher_date, amount, party_name, context')
-          .order('voucher_date', { ascending: true })
-          .order('created_at', { ascending: true }),
-        supabase
-          .from('cancelled_vouchers')
-          .select(
-            'id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason',
-          )
-          .order('cancelled_at', { ascending: false }),
+        fetchAllRows<StudentRow>((from, to) =>
+          supabase
+            .from('students')
+            .select('id, name, id_number, phone, notes')
+            .order('name', { ascending: true })
+            .range(from, to),
+        ),
+        fetchAllRows<StatementRow>((from, to) =>
+          supabase
+            .from('student_statement_lines')
+            .select(
+              'id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance',
+            )
+            .order('voucher_date', { ascending: true })
+            .order('voucher_number', { ascending: true })
+            .range(from, to),
+        ),
+        fetchAllRows<MovementRow>((from, to) =>
+          supabase
+            .from('financial_movements')
+            .select('id, movement_type, voucher_number, voucher_date, amount, party_name, context')
+            .order('voucher_date', { ascending: true })
+            .order('created_at', { ascending: true })
+            .range(from, to),
+        ),
+        fetchAllRows<CancelledRow>((from, to) =>
+          supabase
+            .from('cancelled_vouchers')
+            .select(
+              'id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason',
+            )
+            .order('cancelled_at', { ascending: false })
+            .range(from, to),
+        ),
       ])
 
       if (studentsResult.error) throw studentsResult.error
@@ -155,14 +170,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
       if (cancelledResult.error) throw cancelledResult.error
 
       set({
-        students: (studentsResult.data ?? []).map((row) => normalizeStudent(row as StudentRow)),
-        statementLines: (statementResult.data ?? []).map((row) =>
-          normalizeStatementLine(row as StatementRow),
-        ),
-        movements: (movementsResult.data ?? []).map((row) => normalizeMovement(row as MovementRow)),
-        cancelledVouchers: (cancelledResult.data ?? []).map((row) =>
-          normalizeCancelled(row as CancelledRow),
-        ),
+        students: studentsResult.data.map(normalizeStudent),
+        statementLines: statementResult.data.map(normalizeStatementLine),
+        movements: movementsResult.data.map(normalizeMovement),
+        cancelledVouchers: cancelledResult.data.map(normalizeCancelled),
         isLoading: false,
         loaded: true,
       })
