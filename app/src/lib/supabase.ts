@@ -15,7 +15,11 @@ export function getSupabaseBrowserClient() {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: false,
+        // Must be true so the password-recovery link is consumed from the URL and
+        // the PASSWORD_RECOVERY event fires (the recovery screen depends on it).
+        // Default (implicit) flow puts the recovery token in the URL hash, which
+        // matches urlHasRecovery()'s hash check in use-auth-store.
+        detectSessionInUrl: true,
       },
     })
   }

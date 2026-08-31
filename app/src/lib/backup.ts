@@ -10,13 +10,15 @@ export type BackupPayload = {
   version: number
   exported_at: string
   students: unknown[]
+  enrollments: unknown[]
   receipt_vouchers: unknown[]
   payment_vouchers: unknown[]
 }
 
-/** A validated backup, narrowed to the three arrays the restore RPC expects. */
+/** A validated backup, narrowed to the arrays the restore RPC expects. */
 export type RestorePayload = {
   students: unknown[]
+  enrollments: unknown[]
   receipt_vouchers: unknown[]
   payment_vouchers: unknown[]
 }
@@ -25,17 +27,39 @@ function isArray(value: unknown): value is unknown[] {
   return Array.isArray(value)
 }
 
-/** Validate a parsed object as a restorable backup; returns null if malformed. */
-export function validateBackup(value: unknown): RestorePayload | null {
-  if (!value || typeof value !== 'object') return null
+export type BackupValidation =
+  | { ok: true; payload: RestorePayload }
+  | { ok: false; reason: string }
+
+/**
+ * Validate a parsed object as a restorable backup: it must be this app's backup,
+ * a version this build understands, and carry the three expected arrays. Returns a
+ * tagged result so the caller can explain *why* a file was rejected.
+ */
+export function validateBackup(value: unknown): BackupValidation {
+  if (!value || typeof value !== 'object') {
+    return { ok: false, reason: 'الملف غير صالح كنسخة احتياطيّة.' }
+  }
   const record = value as Record<string, unknown>
+  if (record.app !== BACKUP_APP) {
+    return { ok: false, reason: 'هذا الملف ليس نسخة احتياطيّة لأرض كنعان.' }
+  }
+  if (typeof record.version !== 'number' || record.version > BACKUP_VERSION) {
+    return { ok: false, reason: 'إصدار النسخة غير مدعوم في هذا التطبيق.' }
+  }
   if (!isArray(record.students) || !isArray(record.receipt_vouchers) || !isArray(record.payment_vouchers)) {
-    return null
+    return { ok: false, reason: 'بنية النسخة الاحتياطيّة غير مكتملة.' }
   }
   return {
-    students: record.students,
-    receipt_vouchers: record.receipt_vouchers,
-    payment_vouchers: record.payment_vouchers,
+    ok: true,
+    payload: {
+      students: record.students,
+      // Enrollments are optional so older backups (before the enrollment model) still
+      // restore; the statement view then falls back to each voucher's course_value.
+      enrollments: isArray(record.enrollments) ? record.enrollments : [],
+      receipt_vouchers: record.receipt_vouchers,
+      payment_vouchers: record.payment_vouchers,
+    },
   }
 }
 
