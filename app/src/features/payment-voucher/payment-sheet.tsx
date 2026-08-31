@@ -120,7 +120,7 @@ export function PaymentSheet() {
           role="alert"
           className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
-          {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : 'تعذّر حفظ السند.'}
+          {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}
         </div>
       ) : null}
 

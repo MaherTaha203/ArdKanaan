@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { ArrowDownLeft, Printer, Search } from 'lucide-react'
+import { ArrowDownLeft, Pencil, Printer, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
@@ -46,6 +46,7 @@ export function StudentsWorkspace() {
   const selectedStudentId = useShellStore((state) => state.selectedStudentId)
   const selectStudent = useShellStore((state) => state.selectStudent)
   const openReceiveFor = useShellStore((state) => state.openReceiveFor)
+  const openEditStudent = useShellStore((state) => state.openEditStudent)
 
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
@@ -182,6 +183,10 @@ export function StudentsWorkspace() {
                   البيان المالي — مشتق من السندات
                 </h3>
                 <div className="flex items-center gap-2">
+                  <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}>
+                    <Pencil className="size-4" />
+                    تعديل الطالب
+                  </Button>
                   <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}>
                     <Printer className="size-4" />
                     طباعة البيان

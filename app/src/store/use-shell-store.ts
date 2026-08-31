@@ -5,7 +5,7 @@ import { create } from 'zustand'
 // RLS is the security boundary; this store no longer models a "session".
 
 export type ShellRoute = 'home' | 'students' | 'report' | 'settings'
-export type ShellOverlay = 'receive' | 'expense' | null
+export type ShellOverlay = 'receive' | 'expense' | 'student' | null
 // The financial report has three lenses over the SAME derived movements — no view
 // is a new source of truth. 'general' = full position, 'receipts'/'payments' = one side.
 export type ReportView = 'general' | 'receipts' | 'payments'
@@ -19,15 +19,22 @@ type ShellStore = {
   // When set, the open voucher overlay is editing this existing voucher (by id)
   // rather than creating a new one. Cleared whenever an overlay closes.
   editVoucherId: string | null
+  // When set, the student overlay is editing this student's identity record.
+  editStudentId: string | null
   navigate: (route: ShellRoute) => void
   navigateReport: (view: ReportView) => void
   selectStudent: (studentId: string) => void
-  openOverlay: (overlay: Exclude<ShellOverlay, null>) => void
+  openOverlay: (overlay: Exclude<ShellOverlay, null | 'student'>) => void
   openReceiveFor: (studentName: string) => void
   openEditReceipt: (id: string) => void
   openEditPayment: (id: string) => void
+  openEditStudent: (id: string) => void
   closeOverlay: () => void
 }
+
+// Every navigation/overlay transition clears BOTH edit targets so a stale id can
+// never leak into the next overlay.
+const CLEARED = { overlay: null, receivePrefillName: null, editVoucherId: null, editStudentId: null }
 
 export const useShellStore = create<ShellStore>((set) => ({
   route: 'home',
@@ -36,15 +43,14 @@ export const useShellStore = create<ShellStore>((set) => ({
   overlay: null,
   receivePrefillName: null,
   editVoucherId: null,
-  navigate: (route) => set({ route, overlay: null, editVoucherId: null }),
-  navigateReport: (view) =>
-    set({ route: 'report', reportView: view, overlay: null, editVoucherId: null }),
-  selectStudent: (studentId) =>
-    set({ selectedStudentId: studentId, route: 'students', overlay: null, editVoucherId: null }),
-  openOverlay: (overlay) => set({ overlay, receivePrefillName: null, editVoucherId: null }),
-  openReceiveFor: (studentName) =>
-    set({ overlay: 'receive', receivePrefillName: studentName, editVoucherId: null }),
-  openEditReceipt: (id) => set({ overlay: 'receive', receivePrefillName: null, editVoucherId: id }),
-  openEditPayment: (id) => set({ overlay: 'expense', receivePrefillName: null, editVoucherId: id }),
-  closeOverlay: () => set({ overlay: null, receivePrefillName: null, editVoucherId: null }),
+  editStudentId: null,
+  navigate: (route) => set({ route, ...CLEARED }),
+  navigateReport: (view) => set({ route: 'report', reportView: view, ...CLEARED }),
+  selectStudent: (studentId) => set({ selectedStudentId: studentId, route: 'students', ...CLEARED }),
+  openOverlay: (overlay) => set({ ...CLEARED, overlay }),
+  openReceiveFor: (studentName) => set({ ...CLEARED, overlay: 'receive', receivePrefillName: studentName }),
+  openEditReceipt: (id) => set({ ...CLEARED, overlay: 'receive', editVoucherId: id }),
+  openEditPayment: (id) => set({ ...CLEARED, overlay: 'expense', editVoucherId: id }),
+  openEditStudent: (id) => set({ ...CLEARED, overlay: 'student', editStudentId: id }),
+  closeOverlay: () => set({ ...CLEARED }),
 }))

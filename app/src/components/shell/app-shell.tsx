@@ -13,6 +13,7 @@ import {
 
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
+import { StudentEditSheet } from '@/features/students/student-edit-sheet'
 import { GlanceWorkspace } from '@/features/glance/glance-workspace'
 import { Toaster } from '@/components/ui/toast'
 import { StudentsWorkspace } from '@/features/students/students-workspace'
@@ -147,9 +148,10 @@ export function AppShell() {
         </div>
       </main>
 
-      {/* Action overlays (receipt / payment). */}
+      {/* Action overlays (receipt / payment / student edit). */}
       {overlay === 'receive' ? <ReceiptSheet /> : null}
       {overlay === 'expense' ? <PaymentSheet /> : null}
+      {overlay === 'student' ? <StudentEditSheet /> : null}
 
       {/* Transient confirmation toasts. */}
       <Toaster />

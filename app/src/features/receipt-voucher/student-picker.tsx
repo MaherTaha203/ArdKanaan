@@ -4,6 +4,7 @@ import type { UseFormReturn } from 'react-hook-form'
 
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { countNameMatches } from '@/lib/student-identity'
 import { normalizeArabic } from '@/lib/text'
 import type { Student } from '@/types/domain'
 
@@ -60,6 +61,10 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
   }, [students, name])
 
   const isNewStudent = !studentId && name.trim().length > 0 && !hasExactMatch
+
+  // Several existing students share this exact name and none is picked yet: binding
+  // now would be a guess. Warn so the operator resolves it from the list.
+  const isAmbiguous = !studentId && countNameMatches(students, name) > 1
 
   function pick(student: Student) {
     setValue('studentName', student.name, { shouldValidate: true })
@@ -130,6 +135,16 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
           </div>
         )}
       </Field>
+
+      {/* Ambiguous name: several students share it — force an explicit choice. */}
+      {isAmbiguous ? (
+        <div
+          role="alert"
+          className="mt-2 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-[12.5px] text-warn"
+        >
+          يوجد أكثر من طالب بهذا الاسم — اختر المقصود من القائمة لتفادي ربط السند بالطالب الخطأ.
+        </div>
+      ) : null}
 
       {/* Picked existing student: show their identity fields, read-only. */}
       {studentId ? (

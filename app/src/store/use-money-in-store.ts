@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
+import { classifyNameMatches } from '@/lib/student-identity'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type { Student, StudentStatementLine } from '@/types/domain'
 
@@ -122,18 +123,31 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
       }
 
       if (!activeStudent) {
-        // No picked id (or it vanished): resolve by name, matching prior behavior.
-        const { data: existingStudentRows, error: studentLookupError } = await supabase
+        // No explicit pick (or it vanished): resolve by exact name. Fetch EVERY match
+        // — never just the first — so an ambiguous name is refused rather than
+        // silently attached to whichever row happens to sort first.
+        const { data: nameRows, error: studentLookupError } = await supabase
           .from('students')
           .select(STUDENT_COLUMNS)
           .eq('name', normalizedStudentName)
-          .limit(1)
 
         if (studentLookupError) throw studentLookupError
 
-        activeStudent = existingStudentRows?.[0]
-          ? normalizeStudent(existingStudentRows[0] as StudentRow)
-          : null
+        const matches = (nameRows ?? []) as StudentRow[]
+        const resolution = classifyNameMatches(matches.map((row) => row.id))
+
+        if (resolution.kind === 'ambiguous') {
+          set({
+            isSaving: false,
+            error: 'يوجد أكثر من طالب بهذا الاسم. اختر الطالب المقصود من قائمة البحث قبل الحفظ.',
+          })
+          return false
+        }
+
+        if (resolution.kind === 'existing') {
+          const matched = matches.find((row) => row.id === resolution.id)
+          activeStudent = matched ? normalizeStudent(matched) : null
+        }
       }
 
       if (!activeStudent) {
@@ -219,10 +233,10 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
 
       return true
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'حدث خطأ غير متوقع أثناء حفظ السند.'
-
-      set({ isSaving: false, error: message })
+      // Never surface a raw/technical error to the operator (it can leak internals);
+      // log it for diagnosis and show a calm, safe message.
+      console.error('saveReceiptVoucher failed', error)
+      set({ isSaving: false, error: 'تعذّر حفظ السند. تحقّق من البيانات وحاول مرّة أخرى.' })
       return false
     }
   },
