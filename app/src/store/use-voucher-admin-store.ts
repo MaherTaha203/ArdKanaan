@@ -137,7 +137,9 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
   },
 
   // Edit keeps the voucher attached to its original student (student_id and the
-  // number are untouched); only the financial fields change.
+  // number are untouched); only the financial fields change. Editing the course
+  // value is a fee correction, so it updates the authoritative enrollment for that
+  // (student, course) — the balance derives from there.
   updateReceipt: async (id, values) => {
     const supabase = getSupabaseBrowserClient()
     if (!supabase) {
@@ -145,19 +147,46 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
       return false
     }
     set({ isBusy: true, error: null })
+
+    const courseName = values.courseName.trim()
+
+    // Resolve the voucher's student so the fee change lands on the right enrollment.
+    const { data: voucherRow, error: fetchError } = await supabase
+      .from('receipt_vouchers')
+      .select('student_id')
+      .eq('id', id)
+      .single()
+    if (fetchError || !voucherRow) {
+      set({ isBusy: false, error: 'تعذّر حفظ التعديل.' })
+      return false
+    }
+    const studentId = voucherRow.student_id as string
+
     const { error } = await supabase
       .from('receipt_vouchers')
       .update({
         voucher_date: values.paymentDate,
-        course_name: values.courseName.trim(),
+        course_name: courseName,
         course_value: values.courseValue,
         amount_received: values.amountReceived,
         payer_name: values.payerName.trim(),
         notes: values.notes.trim(),
       })
       .eq('id', id)
-    set({ isBusy: false })
     if (error) {
+      set({ isBusy: false, error: 'تعذّر حفظ التعديل.' })
+      return false
+    }
+
+    // Upsert the enrollment fee for this (student, course) to the edited value.
+    const { error: enrollmentError } = await supabase
+      .from('enrollments')
+      .upsert(
+        { student_id: studentId, course_name: courseName, course_value: values.courseValue },
+        { onConflict: 'student_id,course_name' },
+      )
+    set({ isBusy: false })
+    if (enrollmentError) {
       set({ error: 'تعذّر حفظ التعديل.' })
       return false
     }

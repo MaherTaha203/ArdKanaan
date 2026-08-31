@@ -10,13 +10,15 @@ export type BackupPayload = {
   version: number
   exported_at: string
   students: unknown[]
+  enrollments: unknown[]
   receipt_vouchers: unknown[]
   payment_vouchers: unknown[]
 }
 
-/** A validated backup, narrowed to the three arrays the restore RPC expects. */
+/** A validated backup, narrowed to the arrays the restore RPC expects. */
 export type RestorePayload = {
   students: unknown[]
+  enrollments: unknown[]
   receipt_vouchers: unknown[]
   payment_vouchers: unknown[]
 }
@@ -52,6 +54,9 @@ export function validateBackup(value: unknown): BackupValidation {
     ok: true,
     payload: {
       students: record.students,
+      // Enrollments are optional so older backups (before the enrollment model) still
+      // restore; the statement view then falls back to each voucher's course_value.
+      enrollments: isArray(record.enrollments) ? record.enrollments : [],
       receipt_vouchers: record.receipt_vouchers,
       payment_vouchers: record.payment_vouchers,
     },
