@@ -149,7 +149,9 @@ create trigger enrollments_activity
 
 -- 6) Student records become editable — correcting name / id_number / phone / notes.
 --    Still NO delete, ever. Every edit is audited by students_activity above.
-grant update on public.students to authenticated;
+--    Column-scoped grant (least privilege): the operator may change only the identity
+--    fields — never id or created_at; updated_at is set by the set_updated_at trigger.
+grant update (name, id_number, phone, notes) on public.students to authenticated;
 drop policy if exists students_auth_update on public.students;
 create policy students_auth_update on public.students
   for update to authenticated using (true) with check (true);

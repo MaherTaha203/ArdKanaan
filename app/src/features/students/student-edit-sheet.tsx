@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
@@ -40,7 +40,9 @@ export function StudentEditSheet() {
     },
   })
 
-  useEffect(() => {
+  // Clear any leftover store error before the first paint so a stale message never
+  // flashes when the sheet reopens (the store is a singleton across mounts).
+  useLayoutEffect(() => {
     clearError()
   }, [clearError])
 

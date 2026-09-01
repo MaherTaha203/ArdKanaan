@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { UseFormReturn } from 'react-hook-form'
 
@@ -39,6 +39,10 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
   const [open, setOpen] = useState(false)
   const blurTimer = useRef<number | undefined>(undefined)
 
+  // The blur-close timer must not fire after unmount (e.g. Ctrl+Enter submits and
+  // the sheet closes within the 120ms window).
+  useEffect(() => () => window.clearTimeout(blurTimer.current), [])
+
   const suggestions = useMemo(() => {
     const query = name.trim()
     if (!query) return []
@@ -64,7 +68,10 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
 
   // Several existing students share this exact name and none is picked yet: binding
   // now would be a guess. Warn so the operator resolves it from the list.
-  const isAmbiguous = !studentId && countNameMatches(students, name) > 1
+  const isAmbiguous = useMemo(
+    () => !studentId && countNameMatches(students, name) > 1,
+    [studentId, students, name],
+  )
 
   function pick(student: Student) {
     setValue('studentName', student.name, { shouldValidate: true })

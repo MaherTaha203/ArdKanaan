@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
-import { classifyNameMatches } from '@/lib/student-identity'
+import { classifyNameMatches, findNameMatchIds } from '@/lib/student-identity'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useWorkspaceStore } from '@/store/use-workspace-store'
 import type { Student, StudentStatementLine } from '@/types/domain'
 
 type MoneyInStore = {
@@ -104,7 +105,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
     set({ isSaving: true, error: null })
 
     try {
-      const normalizedStudentName = values.studentName.trim()
+      const typedStudentName = values.studentName.trim()
       const pickedStudentId = values.studentId.trim()
 
       let activeStudent: Student | null = null
@@ -123,18 +124,12 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
       }
 
       if (!activeStudent) {
-        // No explicit pick (or it vanished): resolve by exact name. Fetch EVERY match
-        // — never just the first — so an ambiguous name is refused rather than
-        // silently attached to whichever row happens to sort first.
-        const { data: nameRows, error: studentLookupError } = await supabase
-          .from('students')
-          .select(STUDENT_COLUMNS)
-          .eq('name', normalizedStudentName)
-
-        if (studentLookupError) throw studentLookupError
-
-        const matches = (nameRows ?? []) as StudentRow[]
-        const resolution = classifyNameMatches(matches.map((row) => row.id))
+        // No explicit pick (or it vanished): resolve by name against the SAME roster
+        // and Arabic normalization the picker shows the operator — so the on-screen
+        // warning and this guard always agree. Consider EVERY match, never just the
+        // first: an ambiguous name is refused, not silently attached to one of them.
+        const roster = useWorkspaceStore.getState().students
+        const resolution = classifyNameMatches(findNameMatchIds(roster, typedStudentName))
 
         if (resolution.kind === 'ambiguous') {
           set({
@@ -145,8 +140,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
         }
 
         if (resolution.kind === 'existing') {
-          const matched = matches.find((row) => row.id === resolution.id)
-          activeStudent = matched ? normalizeStudent(matched) : null
+          activeStudent = roster.find((student) => student.id === resolution.id) ?? null
         }
       }
 
@@ -159,7 +153,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
         const { data: studentRow, error: studentError } = await supabase
           .from('students')
           .insert({
-            name: normalizedStudentName,
+            name: typedStudentName,
             id_number: idNumber || null,
             phone: phone || null,
             notes: null,

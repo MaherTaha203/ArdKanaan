@@ -64,6 +64,9 @@ export function AppShell() {
   const route = useShellStore((state) => state.route)
   const reportView = useShellStore((state) => state.reportView)
   const overlay = useShellStore((state) => state.overlay)
+  const editVoucherId = useShellStore((state) => state.editVoucherId)
+  const editStudentId = useShellStore((state) => state.editStudentId)
+  const receivePrefillName = useShellStore((state) => state.receivePrefillName)
   const navigate = useShellStore((state) => state.navigate)
   const navigateReport = useShellStore((state) => state.navigateReport)
   const openOverlay = useShellStore((state) => state.openOverlay)
@@ -148,10 +151,12 @@ export function AppShell() {
         </div>
       </main>
 
-      {/* Action overlays (receipt / payment / student edit). */}
-      {overlay === 'receive' ? <ReceiptSheet /> : null}
-      {overlay === 'expense' ? <PaymentSheet /> : null}
-      {overlay === 'student' ? <StudentEditSheet /> : null}
+      {/* Action overlays (receipt / payment / student edit). Keyed on their edit
+          target so re-targeting a different id/name always forces a clean remount
+          (the sheets capture their form defaults once, at mount). */}
+      {overlay === 'receive' ? <ReceiptSheet key={editVoucherId ?? receivePrefillName ?? 'new'} /> : null}
+      {overlay === 'expense' ? <PaymentSheet key={editVoucherId ?? 'new'} /> : null}
+      {overlay === 'student' ? <StudentEditSheet key={editStudentId ?? 'new'} /> : null}
 
       {/* Transient confirmation toasts. */}
       <Toaster />

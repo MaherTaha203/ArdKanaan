@@ -34,20 +34,25 @@ export const useStudentAdminStore = create<StudentAdminStore>((set) => ({
     const phone = values.phone.trim()
     const notes = values.notes.trim()
 
-    const { error } = await supabase
-      .from('students')
-      .update({
-        name: values.name.trim(),
-        id_number: idNumber || null,
-        phone: phone || null,
-        notes: notes || null,
-      })
-      .eq('id', id)
-    set({ isBusy: false })
-    if (error) {
-      set({ error: 'تعذّر حفظ بيانات الطالب.' })
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({
+          name: values.name.trim(),
+          id_number: idNumber || null,
+          phone: phone || null,
+          notes: notes || null,
+        })
+        .eq('id', id)
+      if (error) throw error
+      set({ isBusy: false })
+      return true
+    } catch (error) {
+      // Log the technical detail; show the operator a calm, safe message. A rejected
+      // await (network/exception) must still reset isBusy and never leak internals.
+      console.error('updateStudent failed', error)
+      set({ isBusy: false, error: 'تعذّر حفظ بيانات الطالب.' })
       return false
     }
-    return true
   },
 }))

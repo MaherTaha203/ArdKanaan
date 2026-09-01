@@ -76,7 +76,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       json(route, body, status, { 'content-range': '0-0/*' })
 
     if (method === 'GET') {
-      if (table === 'students') return arr(students)
+      if (table === 'students') return arr(applyEqFilters(students, url.searchParams))
       if (table === 'student_statement_lines') return arr([])
       if (table === 'financial_movements') return arr([])
       if (table === 'cancelled_vouchers') return arr([])
@@ -126,6 +126,20 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
   })
 
   return handle
+}
+
+// Honor PostgREST `?field=eq.value` filters so a dropped/incorrect server-side
+// filter in the app is actually caught by the E2E, not masked by "return everything".
+function applyEqFilters(rows: MockStudent[], params: URLSearchParams): MockStudent[] {
+  let result = rows
+  for (const [key, raw] of params.entries()) {
+    if (!raw.startsWith('eq.')) continue
+    const value = raw.slice(3)
+    if (key === 'id' || key === 'name' || key === 'id_number' || key === 'phone') {
+      result = result.filter((row) => String(row[key] ?? '') === value)
+    }
+  }
+  return result
 }
 
 function safeJson(text: string | null): unknown {

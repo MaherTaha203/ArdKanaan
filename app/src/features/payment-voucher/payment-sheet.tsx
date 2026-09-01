@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowUpRight } from 'lucide-react'
@@ -57,7 +57,9 @@ export function PaymentSheet() {
     defaultValues: buildDefaults(),
   })
 
-  useEffect(() => {
+  // Clear any leftover store error before the first paint (the stores are singletons
+  // that persist across mounts) so a stale message never flashes on reopen.
+  useLayoutEffect(() => {
     clearError()
     clearAdminError()
   }, [clearError, clearAdminError])
