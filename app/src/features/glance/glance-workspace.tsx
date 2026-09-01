@@ -6,7 +6,7 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
-import { SkeletonRows } from '@/components/ui/skeleton'
+import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, attentionList, financialTotals } from '@/lib/aggregate'
 import { formatNumber } from '@/lib/format'
 import { useShellStore } from '@/store/use-shell-store'
@@ -52,21 +52,34 @@ export function GlanceWorkspace() {
       {/* The one figure. Cash on hand = derived net (receipts − payments). */}
       <section aria-label="الرصيد النقدي" className="rounded-2xl border border-border bg-panel px-6 py-7 shadow-card sm:px-8">
         <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ للمركز</div>
-        <Money
-          value={totals.net}
-          className="mt-2 block text-[44px] font-semibold leading-none text-foreground md:text-[56px]"
-          currencyClassName="text-[0.32em]"
-        />
-        <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-1 text-[13px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-gold" aria-hidden />
-            قبض <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" />
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-clay" aria-hidden />
-            صرف <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" />
-          </span>
-        </div>
+        {!loaded ? (
+          <div role="status" aria-label="جاري التحميل">
+            <Skeleton className="mt-3 h-12 w-56 md:h-14" />
+            <Skeleton className="mt-5 h-4 w-44" />
+          </div>
+        ) : (
+          <>
+            {/* A deficit (payments exceed receipts) is shown in the expense colour so
+                it reads as negative at a glance — the value itself is unchanged. */}
+            <Money
+              value={totals.net}
+              className={`mt-2 block text-[44px] font-semibold leading-none md:text-[56px] ${
+                totals.net < 0 ? 'text-clay' : 'text-foreground'
+              }`}
+              currencyClassName="text-[0.32em]"
+            />
+            <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-1 text-[13px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-gold" aria-hidden />
+                قبض <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" />
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-clay" aria-hidden />
+                صرف <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" />
+              </span>
+            </div>
+          </>
+        )}
       </section>
 
       {/* The day's actions. */}
