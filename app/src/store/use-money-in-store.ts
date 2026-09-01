@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
+import { classifyNameMatches, findNameMatchIds } from '@/lib/student-identity'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useWorkspaceStore } from '@/store/use-workspace-store'
 import type { Student, StudentStatementLine } from '@/types/domain'
 
 type MoneyInStore = {
@@ -103,7 +105,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
     set({ isSaving: true, error: null })
 
     try {
-      const normalizedStudentName = values.studentName.trim()
+      const typedStudentName = values.studentName.trim()
       const pickedStudentId = values.studentId.trim()
 
       let activeStudent: Student | null = null
@@ -122,18 +124,24 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
       }
 
       if (!activeStudent) {
-        // No picked id (or it vanished): resolve by name, matching prior behavior.
-        const { data: existingStudentRows, error: studentLookupError } = await supabase
-          .from('students')
-          .select(STUDENT_COLUMNS)
-          .eq('name', normalizedStudentName)
-          .limit(1)
+        // No explicit pick (or it vanished): resolve by name against the SAME roster
+        // and Arabic normalization the picker shows the operator — so the on-screen
+        // warning and this guard always agree. Consider EVERY match, never just the
+        // first: an ambiguous name is refused, not silently attached to one of them.
+        const roster = useWorkspaceStore.getState().students
+        const resolution = classifyNameMatches(findNameMatchIds(roster, typedStudentName))
 
-        if (studentLookupError) throw studentLookupError
+        if (resolution.kind === 'ambiguous') {
+          set({
+            isSaving: false,
+            error: 'يوجد أكثر من طالب بهذا الاسم. اختر الطالب المقصود من قائمة البحث قبل الحفظ.',
+          })
+          return false
+        }
 
-        activeStudent = existingStudentRows?.[0]
-          ? normalizeStudent(existingStudentRows[0] as StudentRow)
-          : null
+        if (resolution.kind === 'existing') {
+          activeStudent = roster.find((student) => student.id === resolution.id) ?? null
+        }
       }
 
       if (!activeStudent) {
@@ -145,7 +153,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
         const { data: studentRow, error: studentError } = await supabase
           .from('students')
           .insert({
-            name: normalizedStudentName,
+            name: typedStudentName,
             id_number: idNumber || null,
             phone: phone || null,
             notes: null,
@@ -219,10 +227,10 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
 
       return true
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'حدث خطأ غير متوقع أثناء حفظ السند.'
-
-      set({ isSaving: false, error: message })
+      // Never surface a raw/technical error to the operator (it can leak internals);
+      // log it for diagnosis and show a calm, safe message.
+      console.error('saveReceiptVoucher failed', error)
+      set({ isSaving: false, error: 'تعذّر حفظ السند. تحقّق من البيانات وحاول مرّة أخرى.' })
       return false
     }
   },

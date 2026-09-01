@@ -27,6 +27,7 @@ export function GlanceWorkspace() {
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
+  const reload = useWorkspaceStore((state) => state.load)
 
   const navigate = useShellStore((state) => state.navigate)
   const selectStudent = useShellStore((state) => state.selectStudent)
@@ -41,7 +42,7 @@ export function GlanceWorkspace() {
   return (
     <div className="mx-auto max-w-3xl space-y-9">
       <ConfigNotice />
-      <ErrorNotice message={error} onDismiss={clearError} />
+      <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       <header className="space-y-1.5">
         <div className="text-[12px] font-bold tracking-wide text-olive">أرض كنعان</div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowDownLeft } from 'lucide-react'
@@ -65,7 +65,9 @@ export function ReceiptSheet() {
     defaultValues: buildDefaults(prefillName),
   })
 
-  useEffect(() => {
+  // Clear any leftover store error before the first paint (the stores are singletons
+  // that persist across mounts) so a stale message never flashes on reopen.
+  useLayoutEffect(() => {
     clearError()
     clearAdminError()
   }, [clearError, clearAdminError])
@@ -132,7 +134,10 @@ export function ReceiptSheet() {
           role="alert"
           className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
-          {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : 'تعذّر حفظ السند.'}
+          {/* Store messages are all safe, user-facing Arabic (technical errors are
+              logged, not shown) — so the specific one, e.g. an ambiguous name, reaches
+              the operator instead of a generic fallback. */}
+          {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}
         </div>
       ) : null}
 

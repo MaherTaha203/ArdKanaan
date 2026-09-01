@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { ArrowDownLeft, Printer, Search } from 'lucide-react'
+import { ArrowDownLeft, Pencil, Printer, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
@@ -42,10 +42,12 @@ export function StudentsWorkspace() {
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
+  const reload = useWorkspaceStore((state) => state.load)
 
   const selectedStudentId = useShellStore((state) => state.selectedStudentId)
   const selectStudent = useShellStore((state) => state.selectStudent)
   const openReceiveFor = useShellStore((state) => state.openReceiveFor)
+  const openEditStudent = useShellStore((state) => state.openEditStudent)
 
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
@@ -97,7 +99,7 @@ export function StudentsWorkspace() {
       <RouteHeader eyebrow="الطلاب" title="سجلّات الطلاب" />
 
       <ConfigNotice />
-      <ErrorNotice message={error} onDismiss={clearError} />
+      <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       <div className="grid gap-6 md:grid-cols-[300px_minmax(0,1fr)]">
         <div>
@@ -182,6 +184,10 @@ export function StudentsWorkspace() {
                   البيان المالي — مشتق من السندات
                 </h3>
                 <div className="flex items-center gap-2">
+                  <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}>
+                    <Pencil className="size-4" />
+                    تعديل الطالب
+                  </Button>
                   <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}>
                     <Printer className="size-4" />
                     طباعة البيان

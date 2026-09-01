@@ -12,19 +12,39 @@ export function ConfigNotice() {
   )
 }
 
-export function ErrorNotice({ message, onDismiss }: { message: string | null; onDismiss: () => void }) {
+export function ErrorNotice({
+  message,
+  onDismiss,
+  onRetry,
+}: {
+  message: string | null
+  onDismiss: () => void
+  // When provided (e.g. a failed data load), offer an explicit retry alongside dismiss.
+  onRetry?: () => void
+}) {
   if (!message) return null
 
   return (
     <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-clay/25 bg-clay-weak px-5 py-4 text-sm text-clay sm:flex-row sm:items-center sm:justify-between">
       <span>{message}</span>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="self-start text-clay/80 underline-offset-2 hover:underline sm:self-auto"
-      >
-        إخفاء
-      </button>
+      <div className="flex items-center gap-4 self-start sm:self-auto">
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="font-medium text-clay underline-offset-2 hover:underline"
+          >
+            أعد المحاولة
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="text-clay/80 underline-offset-2 hover:underline"
+        >
+          إخفاء
+        </button>
+      </div>
     </div>
   )
 }

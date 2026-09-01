@@ -178,9 +178,14 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         loaded: true,
       })
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'حدث خطأ غير متوقع أثناء تحميل بيانات المركز.'
-      set({ isLoading: false, loaded: true, error: message })
+      // A raw Postgres/PostgREST message can carry RLS/permission/schema detail —
+      // never show it. Log it for diagnosis and surface a calm, safe message.
+      console.error('workspace load failed', error)
+      set({
+        isLoading: false,
+        loaded: true,
+        error: 'تعذّر تحميل بيانات المركز. تحقّق من الاتصال وحاول تحديث الصفحة.',
+      })
     }
   },
 }))

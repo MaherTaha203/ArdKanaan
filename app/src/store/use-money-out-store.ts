@@ -97,10 +97,9 @@ export const useMoneyOutStore = create<MoneyOutStore>((set) => ({
 
       return true
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'حدث خطأ غير متوقع أثناء حفظ سند الصرف.'
-
-      set({ isSaving: false, error: message })
+      // Never surface a raw/technical error to the operator; log it and show a safe message.
+      console.error('savePaymentVoucher failed', error)
+      set({ isSaving: false, error: 'تعذّر حفظ سند الصرف. تحقّق من البيانات وحاول مرّة أخرى.' })
       return false
     }
   },
