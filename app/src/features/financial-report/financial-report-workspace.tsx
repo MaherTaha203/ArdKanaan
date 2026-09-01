@@ -141,7 +141,7 @@ export function FinancialReportWorkspace() {
       />
 
       <ConfigNotice />
-      <ErrorNotice message={error} onDismiss={clearError} />
+      <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       {/* VIEW SWITCHER — mobile; desktop switches from the top-bar dropdown. */}
       <div className="mb-4 flex items-center gap-1 rounded-full border border-border bg-panel p-1 md:hidden">

@@ -52,3 +52,44 @@ describe('StudentPicker ambiguity warning', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 })
+
+describe('StudentPicker keyboard operation', () => {
+  it('exposes a combobox with a listbox of options', async () => {
+    render(<Harness students={[student('s-1', 'محمد علي')]} />)
+
+    const input = screen.getByRole('combobox')
+    await userEvent.type(input, 'محمد')
+
+    expect(input).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    expect(screen.getAllByRole('option').length).toBeGreaterThan(0)
+  })
+
+  it('opens with ArrowDown, highlights, and selects with Enter', async () => {
+    render(
+      <Harness
+        students={[{ id: 's-1', name: 'محمد علي', idNumber: '900111', phone: null, notes: null }]}
+      />,
+    )
+    const input = screen.getByRole('combobox')
+    await userEvent.type(input, 'محمد')
+    await userEvent.keyboard('{ArrowDown}{Enter}')
+
+    expect(input).toHaveValue('محمد علي')
+    expect(screen.queryByRole('listbox')).toBeNull()
+    // The identity chip only renders once a student is actually selected.
+    expect(screen.getByText('900111')).toBeInTheDocument()
+  })
+
+  it('closes the list with Escape without selecting', async () => {
+    render(<Harness students={[student('s-1', 'محمد علي')]} />)
+    const input = screen.getByRole('combobox')
+    await userEvent.type(input, 'محمد')
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(input).toHaveValue('محمد')
+  })
+})

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 
+import type { KeyboardEvent } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import { Field } from '@/components/ui/field'
@@ -37,11 +38,10 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
   const error = form.formState.errors.studentName?.message
 
   const [open, setOpen] = useState(false)
-  const blurTimer = useRef<number | undefined>(undefined)
-
-  // The blur-close timer must not fire after unmount (e.g. Ctrl+Enter submits and
-  // the sheet closes within the 120ms window).
-  useEffect(() => () => window.clearTimeout(blurTimer.current), [])
+  // Index of the keyboard-highlighted option in `suggestions`, or -1 for none.
+  const [highlighted, setHighlighted] = useState(-1)
+  const listId = useId()
+  const optionId = (index: number) => `${listId}-opt-${index}`
 
   const suggestions = useMemo(() => {
     const query = name.trim()
@@ -73,12 +73,26 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
     [studentId, students, name],
   )
 
+  const showDropdown = open && suggestions.length > 0
+
+  // Keep the keyboard-highlighted option within the list bounds as it changes, and
+  // scroll it into view. Runs whenever the highlight or the visible options change.
+  useEffect(() => {
+    if (showDropdown && highlighted >= 0) {
+      // Optional call: not every environment implements scrollIntoView (e.g. jsdom).
+      document.getElementById(optionId(highlighted))?.scrollIntoView?.({ block: 'nearest' })
+    }
+    // optionId is derived from a stable useId; not a reactive dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlighted, showDropdown])
+
   function pick(student: Student) {
     setValue('studentName', student.name, { shouldValidate: true })
     setValue('studentId', student.id)
     setValue('studentIdNumber', student.idNumber ?? '')
     setValue('studentPhone', student.phone ?? '')
     setOpen(false)
+    setHighlighted(-1)
   }
 
   function onType(value: string) {
@@ -90,9 +104,40 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
       setValue('studentPhone', '')
     }
     setOpen(true)
+    setHighlighted(-1)
   }
 
-  const showDropdown = open && suggestions.length > 0
+  // Full keyboard operation of the combobox. Arrow keys move the highlight, Enter
+  // picks the highlighted option, Escape closes the list. When nothing is
+  // highlighted, Enter/Escape are left to bubble to the sheet (advance / close).
+  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      if (!open) setOpen(true)
+      setHighlighted((index) => Math.min(index + 1, suggestions.length - 1))
+      return
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setHighlighted((index) => Math.max(index - 1, 0))
+      return
+    }
+    if (event.key === 'Enter' && showDropdown && highlighted >= 0 && suggestions[highlighted]) {
+      // Select the highlighted student; stop the sheet from advancing/submitting.
+      event.preventDefault()
+      event.stopPropagation()
+      pick(suggestions[highlighted])
+      return
+    }
+    if (event.key === 'Escape' && showDropdown) {
+      // Close only the list, not the whole sheet.
+      event.stopPropagation()
+      setOpen(false)
+      setHighlighted(-1)
+    }
+  }
+
+  const activeOptionId = showDropdown && highlighted >= 0 ? optionId(highlighted) : undefined
 
   return (
     <div>
@@ -105,36 +150,47 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
               autoComplete="off"
               placeholder="ابحث بالاسم أو الهاتف أو رقم الهوية"
               value={name}
+              role="combobox"
+              aria-expanded={showDropdown}
+              aria-controls={listId}
+              aria-autocomplete="list"
+              aria-activedescendant={activeOptionId}
               onChange={(event) => onType(event.target.value)}
               onFocus={() => setOpen(true)}
               onBlur={() => {
-                blurTimer.current = window.setTimeout(() => setOpen(false), 120)
+                setOpen(false)
+                setHighlighted(-1)
               }}
+              onKeyDown={onKeyDown}
             />
             {showDropdown ? (
               <ul
+                id={listId}
+                role="listbox"
                 className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-border-strong bg-panel py-1 shadow-lg"
                 onMouseDown={(event) => {
-                  // Keep focus on the input so the blur-close timer does not fire
-                  // before the click selects an option.
+                  // Keep focus on the input so a mouse pick does not blur-close first.
                   event.preventDefault()
-                  window.clearTimeout(blurTimer.current)
                 }}
               >
-                {suggestions.map((student) => (
-                  <li key={student.id}>
-                    <button
-                      type="button"
-                      onClick={() => pick(student)}
-                      className="flex w-full flex-col items-start gap-0.5 px-3.5 py-2 text-start transition hover:bg-highlight"
-                    >
-                      <span className="text-sm font-medium text-foreground">{student.name}</span>
-                      {student.idNumber || student.phone ? (
-                        <span className="figure text-[11.5px] text-faint" dir="ltr">
-                          {[student.idNumber, student.phone].filter(Boolean).join(' · ')}
-                        </span>
-                      ) : null}
-                    </button>
+                {suggestions.map((student, index) => (
+                  <li
+                    key={student.id}
+                    id={optionId(index)}
+                    role="option"
+                    aria-selected={highlighted === index}
+                    onMouseMove={() => setHighlighted(index)}
+                    onClick={() => pick(student)}
+                    className={`flex w-full cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start transition ${
+                      highlighted === index ? 'bg-highlight' : 'hover:bg-highlight'
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-foreground">{student.name}</span>
+                    {student.idNumber || student.phone ? (
+                      <span className="figure text-[11.5px] text-faint" dir="ltr">
+                        {[student.idNumber, student.phone].filter(Boolean).join(' · ')}
+                      </span>
+                    ) : null}
                   </li>
                 ))}
               </ul>

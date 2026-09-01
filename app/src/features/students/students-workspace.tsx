@@ -42,6 +42,7 @@ export function StudentsWorkspace() {
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
+  const reload = useWorkspaceStore((state) => state.load)
 
   const selectedStudentId = useShellStore((state) => state.selectedStudentId)
   const selectStudent = useShellStore((state) => state.selectStudent)
@@ -98,7 +99,7 @@ export function StudentsWorkspace() {
       <RouteHeader eyebrow="الطلاب" title="سجلّات الطلاب" />
 
       <ConfigNotice />
-      <ErrorNotice message={error} onDismiss={clearError} />
+      <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       <div className="grid gap-6 md:grid-cols-[300px_minmax(0,1fr)]">
         <div>
