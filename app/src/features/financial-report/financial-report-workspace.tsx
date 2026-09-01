@@ -341,7 +341,16 @@ function BalanceFigure({
   tone?: 'ink' | 'in' | 'out'
   strong?: boolean
 }) {
-  const color = tone === 'in' ? 'text-gold' : tone === 'out' ? 'text-clay' : 'text-foreground'
+  // A deficit (negative balance) on a neutral figure reads in the expense colour so
+  // it is never mistaken for a positive balance; the value itself is unchanged.
+  const color =
+    tone === 'in'
+      ? 'text-gold'
+      : tone === 'out'
+        ? 'text-clay'
+        : value < 0
+          ? 'text-clay'
+          : 'text-foreground'
   return (
     <div>
       <div className="text-[11px] font-medium text-faint">{label}</div>
