@@ -26,13 +26,17 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
 
   // The save is refused with the specific, actionable message — and no receipt was written.
-  await expect(page.getByRole('alert')).toContainText('اختر الطالب المقصود من قائمة البحث')
+  await expect(page.getByRole('alert')).toContainText('اختر المقصود من القائمة لتفادي ربط السند بالطالب الخطأ')
   expect(handle.receiptInserts).toHaveLength(0)
 })
 
-// A unique name saves normally (the guard does not get in the way).
-test('saves a receipt for a new, unique student', async ({ page }) => {
-  const handle = await installSupabaseMocks(page, { students: [] })
+// A unique existing name resolves deterministically and saves normally.
+test('saves a receipt for a unique student name', async ({ page }) => {
+  const handle = await installSupabaseMocks(page, {
+    students: [
+      { id: 's-unique', name: 'خالد سمير', id_number: null, phone: null, notes: null },
+    ],
+  })
 
   await login(page)
   await openReceiptSheet(page)
