@@ -15,6 +15,7 @@ import { formatVoucherNo } from '@/lib/voucher'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
+import '../detail/ux01f.css'
 
 const REMAINING_EPSILON = 0.0001
 
@@ -86,7 +87,7 @@ export function StudentsWorkspace() {
   )
 
   return (
-    <div>
+    <div className="detail-workspace">
       <RouteHeader eyebrow="الطلاب" title="سجلّات الطلاب" />
 
       <ConfigNotice />
@@ -130,7 +131,7 @@ export function StudentsWorkspace() {
           </Card>
         </div>
 
-        <Card className="min-w-0 p-6">
+        <section className="min-w-0 border-y border-border py-6" aria-label={`تفاصيل الطالب ${active?.student.name ?? ''}`}>
           {active ? (
             <>
               <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
@@ -188,8 +189,8 @@ export function StudentsWorkspace() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse text-sm">
+              <div className="detail-table-wrap">
+                <table className="border-collapse text-sm">
                   <thead>
                     <tr className="text-[11px] tracking-wide text-faint">
                       <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">التاريخ</th>
@@ -226,7 +227,7 @@ export function StudentsWorkspace() {
               {loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}
             </div>
           )}
-        </Card>
+        </section>
       </div>
 
       {printing && active ? (
