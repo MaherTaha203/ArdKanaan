@@ -190,7 +190,7 @@ export function ReceiptSheet() {
               <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
                 <input
                   type="number"
-                  min="0.01"
+                  min="1"
                   step="1"
                   inputMode="numeric"
                   readOnly={isEdit}
@@ -211,9 +211,7 @@ export function ReceiptSheet() {
           </Field>
 
           <Field label="الملاحظات (اختياري)" error={form.formState.errors.notes?.message}>
-            {(control) => (
-              <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />
-            )}
+            {(control) => <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />}
           </Field>
 
           <Button type="submit" size="lg" className="w-full" disabled={busy}>
