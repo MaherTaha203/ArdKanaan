@@ -1,6 +1,6 @@
 import { PrintPreview } from '@/components/print/print-preview'
-import { formatDate, formatNumber } from '@/lib/format'
 import { amountInWords } from '@/lib/amount-in-words'
+import { formatDate, formatNumber } from '@/lib/format'
 import { formatVoucherNo, voucherTypeLabel } from '@/lib/voucher'
 import { getCenterSettings } from '@/lib/center-settings'
 import type { FinancialMovement } from '@/types/domain'
@@ -41,20 +41,22 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
         {isReceipt ? <Row label="استلمنا من" value={movement.partyName ?? '—'} /> : <Row label="صُرف لـ" value="المركز" />}
         {movement.context ? <Row label={isReceipt ? 'عن دورة' : 'نوع المصروف'} value={movement.context} /> : null}
         <div className={`mt-4 border-t ${HAIR} pt-4`}>
-          <div className="flex items-end justify-between gap-5">
-            <span className={`text-[13px] font-medium ${MUTED}`}>
-              {isReceipt ? 'المبلغ المقبوض' : 'المبلغ المصروف'}
-            </span>
-            <span className={`figure text-3xl font-bold ${INK}`}>
-              {formatNumber(movement.amount)} <span className="text-lg font-medium text-[#64748b]">₪</span>
-            </span>
-          </div>
-          <div className="mt-4 border-t border-dashed border-[#e2e8f0] pt-3">
-            <div dir="rtl" className="text-[13px] font-medium leading-6 text-[#334155]">
-              {words.ar}
+          <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <div className="min-w-0">
+              <div dir="rtl" className="text-[13px] font-medium leading-6 text-[#334155]">
+                {words.ar}
+              </div>
+              <div dir="ltr" className="mt-0.5 text-[11.5px] leading-5 text-[#64748b]">
+                {words.en}
+              </div>
             </div>
-            <div dir="ltr" className="mt-0.5 text-[11.5px] leading-5 text-[#64748b]">
-              {words.en}
+            <div className="text-end sm:min-w-[150px]">
+              <div className={`text-[12px] font-medium ${MUTED}`}>
+                {isReceipt ? 'المبلغ المقبوض' : 'المبلغ المصروف'}
+              </div>
+              <div className={`figure mt-1 text-3xl font-bold ${INK}`}>
+                {formatNumber(movement.amount)} <span className="text-lg font-medium text-[#64748b]">₪</span>
+              </div>
             </div>
           </div>
         </div>
