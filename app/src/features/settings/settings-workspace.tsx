@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { BackupRestore } from '@/features/settings/backup-restore'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { DEFAULT_CENTER_SETTINGS, getCenterSettings, saveCenterSettings, type CenterSettings } from '@/lib/center-settings'
 import { useAuthStore } from '@/store/use-auth-store'
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -28,44 +28,31 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-const MIN_PASSWORD = 8
-
 export function SettingsWorkspace() {
   const session = useAuthStore((state) => state.session)
   const signOut = useAuthStore((state) => state.signOut)
   const email = session?.user?.email ?? '—'
-
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
+  const [center, setCenter] = useState<CenterSettings>(() => getCenterSettings())
   const [isSaving, setIsSaving] = useState(false)
-  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
-  async function handleChangePassword(event: React.FormEvent) {
-    event.preventDefault()
-    if (password.length < MIN_PASSWORD) {
-      setMessage({ tone: 'error', text: 'كلمة المرور يجب أن تتكون من 8 أحرف على الأقل' })
-      return
-    }
-    if (password !== confirm) {
-      setMessage({ tone: 'error', text: 'كلمتا المرور غير متطابقتين' })
-      return
-    }
-    const supabase = getSupabaseBrowserClient()
-    if (!supabase) {
-      setMessage({ tone: 'error', text: 'تعذّر تغيير كلمة المرور' })
-      return
-    }
-    setIsSaving(true)
+  function updateField(field: keyof CenterSettings, value: string) {
+    setCenter((current) => ({ ...current, [field]: value }))
     setMessage(null)
-    const { error } = await supabase.auth.updateUser({ password })
+  }
+
+  function handleSave() {
+    setIsSaving(true)
+    saveCenterSettings(center)
+    setCenter(getCenterSettings())
+    setMessage('تم حفظ بيانات المركز')
     setIsSaving(false)
-    if (error) {
-      setMessage({ tone: 'error', text: 'تعذّر تغيير كلمة المرور' })
-      return
-    }
-    setPassword('')
-    setConfirm('')
-    setMessage({ tone: 'ok', text: 'تم تغيير كلمة المرور' })
+  }
+
+  function handleReset() {
+    setCenter(DEFAULT_CENTER_SETTINGS)
+    saveCenterSettings(DEFAULT_CENTER_SETTINGS)
+    setMessage('تمت إعادة اسم المركز الافتراضي')
   }
 
   return (
@@ -73,6 +60,39 @@ export function SettingsWorkspace() {
       <RouteHeader eyebrow="الإعدادات" title="الإعدادات" />
 
       <div className="grid w-full max-w-[1080px] gap-6">
+        <Group title="بيانات المركز">
+          <div className="grid gap-4 py-4 sm:grid-cols-2">
+            <label className="grid gap-1.5">
+              <span className="text-[13px] text-muted-foreground">اسم المركز</span>
+              <Input value={center.name} onChange={(event) => updateField('name', event.target.value)} />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-[13px] text-muted-foreground">اسم المسؤول</span>
+              <Input value={center.responsibleName} onChange={(event) => updateField('responsibleName', event.target.value)} />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-[13px] text-muted-foreground">الهاتف</span>
+              <Input dir="ltr" inputMode="tel" value={center.phone} onChange={(event) => updateField('phone', event.target.value)} />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-[13px] text-muted-foreground">العنوان</span>
+              <Input value={center.address} onChange={(event) => updateField('address', event.target.value)} />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 border-t border-border py-4">
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'جارٍ الحفظ…' : 'حفظ بيانات المركز'}
+            </Button>
+            <Button variant="quiet" size="sm" onClick={handleReset}>
+              إعادة الاسم الافتراضي
+            </Button>
+            {message ? <span className="text-sm font-medium text-gold">{message}</span> : null}
+          </div>
+          <p className="pb-4 text-xs leading-6 text-muted-foreground">
+            تستخدم هذه البيانات في ترويسة المستندات المطبوعة والتقارير.
+          </p>
+        </Group>
+
         <Group title="المالية">
           <Row label="العملة">شيكل (₪)</Row>
           <Row label="تنسيق التاريخ">
@@ -92,49 +112,6 @@ export function SettingsWorkspace() {
               {email}
             </span>
           </Row>
-
-          <div className="border-b border-border py-4 last:border-b-0">
-            <div className="mb-2 text-[13px] text-muted-foreground">تغيير كلمة المرور</div>
-            <form onSubmit={handleChangePassword} className="flex flex-wrap items-center gap-2">
-              <Input
-                type="password"
-                autoComplete="new-password"
-                placeholder="كلمة مرور جديدة"
-                minLength={MIN_PASSWORD}
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value)
-                  if (message) setMessage(null)
-                }}
-                className="max-w-[200px]"
-              />
-              <Input
-                type="password"
-                autoComplete="new-password"
-                placeholder="تأكيد كلمة المرور"
-                minLength={MIN_PASSWORD}
-                value={confirm}
-                onChange={(event) => {
-                  setConfirm(event.target.value)
-                  if (message) setMessage(null)
-                }}
-                className="max-w-[200px]"
-              />
-              <Button type="submit" size="sm" disabled={isSaving}>
-                {isSaving ? 'جارٍ الحفظ…' : 'تحديث'}
-              </Button>
-              {message ? (
-                <span
-                  className={`text-sm font-medium ${
-                    message.tone === 'ok' ? 'text-gold' : 'text-clay'
-                  }`}
-                >
-                  {message.text}
-                </span>
-              ) : null}
-            </form>
-          </div>
-
           <div className="py-4">
             <Button variant="quiet" size="sm" onClick={() => void signOut()}>
               تسجيل الخروج
