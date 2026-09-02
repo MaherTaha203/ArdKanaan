@@ -19,8 +19,8 @@ type CancelVoucherDialogProps = {
 
 /**
  * Confirms cancelling a voucher. Cancelling never deletes: the voucher keeps its
- * number, drops out of active totals, and stays reviewable. An optional reason is
- * recorded. The audit log captures who/when server-side.
+ * number, drops out of active totals, and stays reviewable. A reason is mandatory
+ * and the audit log captures who/when server-side.
  */
 export function CancelVoucherDialog({ movement, onClose, onCancelled }: CancelVoucherDialogProps) {
   const cancelVoucher = useVoucherAdminStore((state) => state.cancelVoucher)
@@ -70,13 +70,13 @@ export function CancelVoucherDialog({ movement, onClose, onCancelled }: CancelVo
       </div>
 
       <p className="mb-4 text-[13px] leading-6 text-muted-foreground">
-        لا يُحذف السند؛ يبقى برقمه ويخرج من الإجماليات، ويمكن مراجعته لاحقًا.
+        لا يُحذف السند؛ يبقى برقمه ويخرج من الإجماليات، ويظل متاحًا للمراجعة.
       </p>
 
-      <Field label="سبب الإلغاء (اختياري)">
+      <Field label="سبب الإلغاء" error={!reason.trim() ? 'سبب الإلغاء مطلوب' : undefined}>
         {(control) => (
           <Textarea
-            placeholder="سبب اختياري"
+            placeholder="اكتب سبب الإلغاء"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             {...control}
@@ -85,7 +85,12 @@ export function CancelVoucherDialog({ movement, onClose, onCancelled }: CancelVo
       </Field>
 
       <div className="mt-6 flex gap-3">
-        <Button variant="destructive" className="flex-1" onClick={handleConfirm} disabled={isBusy}>
+        <Button
+          variant="destructive"
+          className="flex-1"
+          onClick={handleConfirm}
+          disabled={isBusy || !reason.trim()}
+        >
           {isBusy ? 'جارٍ الإلغاء…' : 'تأكيد الإلغاء'}
         </Button>
         <Button variant="quiet" onClick={onClose} disabled={isBusy}>
