@@ -9,7 +9,7 @@ const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
 type Mode = 'signin' | 'forgot'
 
 const inputClass =
-  'h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none transition placeholder:text-faint focus:border-olive focus:ring-2 focus:ring-olive/20'
+  'h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none placeholder:text-faint focus:border-olive focus:ring-2 focus:ring-olive/20'
 
 export function OpeningGate() {
   const signIn = useAuthStore((state) => state.signIn)
@@ -32,7 +32,6 @@ export function OpeningGate() {
   async function handleSignIn(event: React.FormEvent) {
     event.preventDefault()
     await signIn(email, password)
-    // On success the session arrives via onAuthStateChange and App swaps in the shell.
   }
 
   async function handleForgot(event: React.FormEvent) {
@@ -43,7 +42,6 @@ export function OpeningGate() {
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[1.1fr_0.9fr]">
-      {/* Brand side — airy, light, blue-tinted, led by the emblem. */}
       <section className="relative flex flex-col justify-between overflow-hidden bg-olive-weak px-8 py-12 sm:px-12 lg:px-16 lg:py-16">
         <div className="relative">
           <img
@@ -60,7 +58,6 @@ export function OpeningGate() {
         </div>
       </section>
 
-      {/* Form side. */}
       <section className="flex flex-col justify-center gap-5 bg-panel px-8 py-12 sm:px-12 lg:px-16">
         {mode === 'signin' ? (
           <>
@@ -68,19 +65,14 @@ export function OpeningGate() {
             <h1 className="editorial text-3xl text-foreground">أهلًا بعودتك</h1>
 
             {error ? (
-              <div
-                role="alert"
-                className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
-              >
+              <div role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">
                 {error}
               </div>
             ) : null}
 
             <form className="flex flex-col gap-4" onSubmit={handleSignIn}>
               <label className="block">
-                <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
-                  بريد المشغّل
-                </span>
+                <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">بريد المشغّل</span>
                 <input
                   type="email"
                   autoComplete="email"
@@ -96,9 +88,7 @@ export function OpeningGate() {
                 />
               </label>
               <label className="block">
-                <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
-                  كلمة المرور
-                </span>
+                <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">كلمة المرور</span>
                 <input
                   type="password"
                   autoComplete="current-password"
@@ -115,18 +105,14 @@ export function OpeningGate() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-2 inline-flex w-fit items-center gap-2 rounded-full bg-olive px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-olive-ink disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 inline-flex w-fit items-center gap-2 rounded-full bg-olive px-7 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? 'جارٍ الدخول…' : 'دخول'}
                 <ArrowLeft className="size-4" />
               </button>
             </form>
 
-            <button
-              type="button"
-              onClick={() => switchMode('forgot')}
-              className="w-fit text-[13px] font-medium text-olive transition hover:underline"
-            >
+            <button type="button" onClick={() => switchMode('forgot')} className="w-fit text-[13px] font-medium text-olive">
               نسيت كلمة المرور؟
             </button>
           </>
@@ -138,14 +124,9 @@ export function OpeningGate() {
             {resetSent ? (
               <>
                 <div className="rounded-xl border border-gold/25 bg-gold-weak px-4 py-3 text-sm text-gold">
-                  إن كان البريد مسجّلًا فستصلك رسالة تحوي رابطًا لإعادة تعيين كلمة المرور. افتح الرابط
-                  من هذا الجهاز.
+                  إن كان البريد مسجّلًا فستصلك رسالة تحوي رابطًا لإعادة تعيين كلمة المرور. افتح الرابط من هذا الجهاز.
                 </div>
-                <button
-                  type="button"
-                  onClick={() => switchMode('signin')}
-                  className="w-fit text-[13px] font-medium text-olive transition hover:underline"
-                >
+                <button type="button" onClick={() => switchMode('signin')} className="w-fit text-[13px] font-medium text-olive">
                   العودة إلى الدخول
                 </button>
               </>
@@ -156,19 +137,14 @@ export function OpeningGate() {
                 </p>
 
                 {error ? (
-                  <div
-                    role="alert"
-                    className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
-                  >
+                  <div role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">
                     {error}
                   </div>
                 ) : null}
 
                 <form className="flex flex-col gap-4" onSubmit={handleForgot}>
                   <label className="block">
-                    <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
-                      بريد المشغّل
-                    </span>
+                    <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">بريد المشغّل</span>
                     <input
                       type="email"
                       autoComplete="email"
@@ -187,18 +163,14 @@ export function OpeningGate() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="mt-2 inline-flex w-fit items-center gap-2 rounded-full bg-olive px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-olive-ink disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-2 inline-flex w-fit items-center gap-2 rounded-full bg-olive px-7 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSubmitting ? 'جارٍ الإرسال…' : 'إرسال رابط الاستعادة'}
                     <ArrowLeft className="size-4" />
                   </button>
                 </form>
 
-                <button
-                  type="button"
-                  onClick={() => switchMode('signin')}
-                  className="w-fit text-[13px] font-medium text-olive transition hover:underline"
-                >
+                <button type="button" onClick={() => switchMode('signin')} className="w-fit text-[13px] font-medium text-olive">
                   العودة إلى الدخول
                 </button>
               </>
