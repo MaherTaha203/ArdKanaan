@@ -27,12 +27,6 @@ function statusOf(item: StudentAggregate): StudentStatus {
   return 'due'
 }
 
-const STATUS_BAR: Record<StudentStatus, string> = {
-  ok: 'bg-gold',
-  due: 'bg-warn',
-  none: 'bg-border-strong',
-}
-
 export function StudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
@@ -147,20 +141,10 @@ export function StudentsWorkspace() {
                   {active.student.idNumber || active.student.phone ? (
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12.5px] text-faint">
                       {active.student.idNumber ? (
-                        <span>
-                          رقم الهوية{' '}
-                          <span className="figure text-muted-foreground" dir="ltr">
-                            {active.student.idNumber}
-                          </span>
-                        </span>
+                        <span>رقم الهوية <span className="figure text-muted-foreground" dir="ltr">{active.student.idNumber}</span></span>
                       ) : null}
                       {active.student.phone ? (
-                        <span>
-                          الهاتف{' '}
-                          <span className="figure text-muted-foreground" dir="ltr">
-                            {active.student.phone}
-                          </span>
-                        </span>
+                        <span>الهاتف <span className="figure text-muted-foreground" dir="ltr">{active.student.phone}</span></span>
                       ) : null}
                     </div>
                   ) : null}
@@ -174,144 +158,66 @@ export function StudentsWorkspace() {
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-base font-bold text-foreground">البيان المالي — مشتق من السندات</h3>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}>
-                    <Pencil className="size-4" />
-                    تعديل الطالب
-                  </Button>
-                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}>
-                    <Printer className="size-4" />
-                    طباعة البيان
-                  </Button>
-                  <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}>
-                    <ArrowDownLeft className="size-4" />
-                    استلام مبلغ
-                  </Button>
+                  <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل الطالب</Button>
+                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة البيان</Button>
+                  <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}><ArrowDownLeft className="size-4" />استلام مبلغ</Button>
                 </div>
               </div>
 
               <div className="detail-table-wrap">
                 <table className="border-collapse text-sm">
-                  <thead>
-                    <tr className="text-[11px] tracking-wide text-faint">
-                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">التاريخ</th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">الوصف</th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">الدورة</th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">قيمة الدورة</th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المدفوع</th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المتبقّي</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="text-[11px] tracking-wide text-faint">
+                    <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">التاريخ</th>
+                    <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">الوصف</th>
+                    <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">الدورة</th>
+                    <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">قيمة الدورة</th>
+                    <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المدفوع</th>
+                    <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المتبقّي</th>
+                  </tr></thead>
                   <tbody>
-                    {activeLines.length > 0 ? (
-                      activeLines.map((line) => (
-                        <tr key={line.id}>
-                          <td className="border-b border-border px-2 py-3">{formatDate(line.voucherDate)}</td>
-                          <td className="border-b border-border px-2 py-3">سند قبض — رقم {formatVoucherNo(line.voucherNumber)}</td>
-                          <td className="border-b border-border px-2 py-3 text-muted-foreground">{line.courseName}</td>
-                          <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.courseValue)}</td>
-                          <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.amountReceived)}</td>
-                          <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.remainingBalance)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">لا توجد حركة.</td>
+                    {activeLines.length > 0 ? activeLines.map((line) => (
+                      <tr key={line.id}>
+                        <td className="border-b border-border px-2 py-3">{formatDate(line.voucherDate)}</td>
+                        <td className="border-b border-border px-2 py-3">سند قبض — رقم {formatVoucherNo(line.voucherNumber)}</td>
+                        <td className="border-b border-border px-2 py-3 text-muted-foreground">{line.courseName}</td>
+                        <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.courseValue)}</td>
+                        <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.amountReceived)}</td>
+                        <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.remainingBalance)}</td>
                       </tr>
+                    )) : (
+                      <tr><td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">لا توجد حركة.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
             </>
-          ) : (
-            <div className="py-16 text-center text-sm text-faint">
-              {loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}
-            </div>
-          )}
+          ) : <div className="py-16 text-center text-sm text-faint">{loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}</div>}
         </section>
       </div>
 
-      {printing && active ? (
-        <StudentStatementPrint
-          studentName={active.student.name}
-          paid={active.paid}
-          remaining={active.remaining}
-          courses={active.courses}
-          lines={activeLines}
-          onClose={() => setPrinting(false)}
-        />
-      ) : null}
+      {printing && active ? <StudentStatementPrint studentName={active.student.name} paid={active.paid} remaining={active.remaining} courses={active.courses} lines={activeLines} onClose={() => setPrinting(false)} /> : null}
     </div>
   )
 }
 
-function StudentRow({
-  item,
-  active,
-  onSelect,
-  onQuickReceive,
-}: {
-  item: StudentAggregate
-  active: boolean
-  onSelect: () => void
-  onQuickReceive: () => void
-}) {
+function StudentRow({ item, active, onSelect, onQuickReceive }: { item: StudentAggregate; active: boolean; onSelect: () => void; onQuickReceive: () => void }) {
   const status = statusOf(item)
+  const statusLabel = status === 'ok' ? 'مكتمل' : status === 'due' ? 'عليه متبقٍّ' : 'غير مدفوع'
   return (
-    <div className={`relative flex items-center gap-2 border-b border-border last:border-b-0 ${active ? 'bg-highlight' : ''}`}>
-      <span
-        aria-hidden
-        className={`absolute inset-y-2 start-0 w-[3px] rounded-e ${active ? 'bg-olive' : STATUS_BAR[status]}`}
-      />
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-current={active ? 'true' : undefined}
-        className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-1 ps-4 text-start"
-      >
-        <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">
-          {item.student.name.charAt(0)}
-        </span>
+    <div className={`flex items-center gap-2 border-b border-border last:border-b-0 ${active ? 'bg-highlight' : ''}`}>
+      <button type="button" onClick={onSelect} aria-current={active ? 'true' : undefined} className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-1 ps-4 text-start">
+        <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">{item.student.name.charAt(0)}</span>
         <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
-        {item.remaining > REMAINING_EPSILON ? (
-          <Money value={item.remaining} currency={false} className="text-xs font-semibold text-warn" />
-        ) : (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gold">
-            <span className="size-1.5 rounded-full bg-gold" aria-hidden />
-            مكتمل
-          </span>
-        )}
+        <span className="text-[11px] font-medium text-muted-foreground">{statusLabel}</span>
+        {item.remaining > REMAINING_EPSILON ? <Money value={item.remaining} currency={false} className="text-xs font-semibold text-warn" /> : null}
       </button>
-      <button
-        type="button"
-        onClick={onQuickReceive}
-        aria-label={`سند قبض لـ ${item.student.name}`}
-        title="سند قبض"
-        className="me-2 flex flex-none items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium text-gold"
-      >
-        <ArrowDownLeft className="size-3.5" />
-        قبض
+      <button type="button" onClick={onQuickReceive} aria-label={`سند قبض لـ ${item.student.name}`} title="سند قبض" className="me-2 flex flex-none items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium text-gold">
+        <ArrowDownLeft className="size-3.5" />قبض
       </button>
     </div>
   )
 }
 
-function RecordFigure({
-  label,
-  value,
-  tone,
-}: {
-  label: string
-  value: number
-  tone: 'ink' | 'warn'
-}) {
-  return (
-    <div>
-      <div className="text-[11px] font-medium text-faint">{label}</div>
-      <Money
-        value={value}
-        currency={false}
-        className={`text-xl font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`}
-      />
-    </div>
-  )
+function RecordFigure({ label, value, tone }: { label: string; value: number; tone: 'ink' | 'warn' }) {
+  return <div><div className="text-[11px] font-medium text-faint">{label}</div><Money value={value} currency={false} className={`text-xl font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} /></div>
 }
