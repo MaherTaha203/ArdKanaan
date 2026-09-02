@@ -72,7 +72,7 @@ export function SettingsWorkspace() {
     <div>
       <RouteHeader eyebrow="الإعدادات" title="الإعدادات" />
 
-      <div className="grid max-w-[760px] gap-6">
+      <div className="grid w-full max-w-[1080px] gap-6">
         <Group title="المالية">
           <Row label="العملة">شيكل (₪)</Row>
           <Row label="تنسيق التاريخ">
