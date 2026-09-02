@@ -5,16 +5,11 @@ import { ArrowLeft } from 'lucide-react'
 import { useAuthStore } from '@/store/use-auth-store'
 
 const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
-const MIN_PASSWORD = 6
+const MIN_PASSWORD = 8
 
 const inputClass =
   'h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none transition placeholder:text-faint focus:border-olive focus:ring-2 focus:ring-olive/20'
 
-/**
- * Set-new-password screen, shown when the operator arrives via a password-recovery
- * link. A recovery session already exists; setting the password clears recovery
- * mode and drops them straight into the app.
- */
 export function RecoveryGate() {
   const updatePassword = useAuthStore((state) => state.updatePassword)
   const signOut = useAuthStore((state) => state.signOut)
@@ -30,7 +25,7 @@ export function RecoveryGate() {
     event.preventDefault()
     setLocalError(null)
     if (password.length < MIN_PASSWORD) {
-      setLocalError('كلمة المرور قصيرة')
+      setLocalError('كلمة المرور يجب أن تتكون من 8 أحرف على الأقل')
       return
     }
     if (password !== confirm) {
@@ -38,7 +33,6 @@ export function RecoveryGate() {
       return
     }
     await updatePassword(password)
-    // On success isRecovering flips to false and App swaps in the shell.
   }
 
   const shownError = localError ?? error
@@ -82,6 +76,7 @@ export function RecoveryGate() {
             <input
               type="password"
               autoComplete="new-password"
+              minLength={MIN_PASSWORD}
               required
               value={password}
               onChange={(event) => {
@@ -101,6 +96,7 @@ export function RecoveryGate() {
             <input
               type="password"
               autoComplete="new-password"
+              minLength={MIN_PASSWORD}
               required
               value={confirm}
               onChange={(event) => {
