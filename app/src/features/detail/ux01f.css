@@ -1,0 +1,32 @@
+/* UX-01F: shared detail/table presentation primitives. */
+.detail-workspace {
+  width: min(100%, 1440px);
+  margin-inline: auto;
+}
+
+.detail-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-table-wrap > table {
+  width: 100%;
+  min-width: 760px;
+}
+
+.detail-table-wrap th,
+.detail-table-wrap td {
+  white-space: nowrap;
+  text-align: start;
+}
+
+@media (max-width: 900px) {
+  .detail-workspace {
+    width: 100%;
+  }
+
+  .detail-table-wrap > table {
+    min-width: 680px;
+  }
+}
