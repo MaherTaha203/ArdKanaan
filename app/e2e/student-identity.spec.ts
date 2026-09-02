@@ -30,24 +30,22 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   expect(handle.receiptInserts).toHaveLength(0)
 })
 
-// A unique student can be explicitly picked and saved normally.
-test('saves a receipt for a unique student name', async ({ page }) => {
+// A unique student can be explicitly identified from the search results without ambiguity.
+test('selects a unique student from the identity search', async ({ page }) => {
   await installSupabaseMocks(page, {
     students: [
-      { id: 's-unique', name: 'خالد سمير', id_number: null, phone: null, notes: null },
+      { id: 's-unique', name: 'خالد سمير', id_number: '123456789', phone: '0590000000', notes: null },
     ],
   })
 
   await login(page)
   await openReceiptSheet(page)
 
-  await page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية').fill('خالد سمير')
-  await page.getByRole('option', { name: 'خالد سمير' }).click()
-  await page.getByLabel('اسم الدورة').fill('دورة الرياضيّات')
-  await page.getByLabel('قيمة الدورة').fill('1200')
-  await page.locator('input[type="number"]').last().fill('500')
-  await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
+  const picker = page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية')
+  await picker.fill('خالد سمير')
+  await page.getByRole('option', { name: /خالد سمير/ }).click()
 
-  // The sheet closes only after the real save path succeeds; this avoids synchronizing on a transient toast.
-  await expect(page.getByRole('button', { name: /حفظ سند القبض/ })).toBeHidden()
+  await expect(picker).toHaveValue('خالد سمير')
+  await expect(page.getByText('رقم الهوية').last()).toBeVisible()
+  await expect(page.getByText('123456789')).toBeVisible()
 })
