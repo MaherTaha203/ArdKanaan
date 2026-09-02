@@ -12,22 +12,11 @@ type ActionSheetProps = {
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-// Fields that keyboard "advance" (Enter) steps through, in DOM order: the form
-// controls plus the submit button. Hidden inputs are excluded by the visibility filter.
 const FIELDS = 'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), button[type="submit"]:not([disabled])'
 
-/**
- * A centered modal dialog for a single focused action (a voucher). Dimmed scrim,
- * rounded card, scrollable body. Traps focus while open, restores it on close, and
- * locks background scroll (a11y). Keyboard-first: Enter advances to the next field,
- * Ctrl/Cmd+Enter saves, Esc closes.
- */
 export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
-  // Read onClose through a ref so the setup/teardown effect can run once (mount/
-  // unmount) without re-arming — and losing the real pre-open focus target — if
-  // the onClose identity ever changes while the sheet is open.
   const onCloseRef = useRef(onClose)
   useEffect(() => {
     onCloseRef.current = onClose
@@ -51,8 +40,6 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
       return visible(Array.from(panel.querySelectorAll<HTMLElement>(FIELDS)))
     }
 
-    // Move focus into the sheet on open — the first form field for keyboard-first
-    // entry, falling back to any focusable element (or the panel) if none.
     ;(fields()[0] ?? focusable()[0] ?? panel)?.focus()
 
     function advance(from: EventTarget | null) {
@@ -71,7 +58,6 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
       if (event.key === 'Enter' && panel) {
         const target = event.target as HTMLElement | null
         const tag = target?.tagName
-        // Ctrl/Cmd+Enter saves from anywhere in the form.
         if (event.ctrlKey || event.metaKey) {
           const form = panel.querySelector('form')
           if (form) {
@@ -80,11 +66,8 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
           }
           return
         }
-        // Plain Enter in a multi-line field inserts a newline (default).
         if (tag === 'TEXTAREA') return
-        // Plain Enter on the submit button saves (default click).
         if (tag === 'BUTTON') return
-        // Plain Enter in a single-line field advances instead of submitting.
         if (tag === 'INPUT' || tag === 'SELECT') {
           event.preventDefault()
           advance(target)
@@ -151,7 +134,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-muted-foreground transition hover:bg-highlight hover:text-foreground"
+            className="rounded-full p-1.5 text-muted-foreground"
             aria-label="إغلاق"
           >
             <X className="size-5" />
