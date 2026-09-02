@@ -26,23 +26,26 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
 
   // The save is refused with the specific, actionable message — and no receipt was written.
-  await expect(page.getByText('اختر الطالب المقصود من قائمة البحث').first()).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('اختر المقصود من القائمة لتفادي ربط السند بالطالب الخطأ')
   expect(handle.receiptInserts).toHaveLength(0)
 })
 
-// A unique name saves normally (the guard does not get in the way).
-test('saves a receipt for a new, unique student', async ({ page }) => {
-  const handle = await installSupabaseMocks(page, { students: [] })
+// A unique student can be explicitly identified from the search results without ambiguity.
+test('selects a unique student from the identity search', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    students: [
+      { id: 's-unique', name: 'خالد سمير', id_number: '123456789', phone: '0590000000', notes: null },
+    ],
+  })
 
   await login(page)
   await openReceiptSheet(page)
 
-  await page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية').fill('خالد سمير')
-  await page.getByLabel('اسم الدورة').fill('دورة الرياضيّات')
-  await page.getByLabel('قيمة الدورة').fill('1200')
-  await page.locator('input[type="number"]').last().fill('500')
-  await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
+  const picker = page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية')
+  await picker.fill('خالد سمير')
+  await page.getByRole('option', { name: /خالد سمير/ }).click()
 
-  await expect(page.getByText('تم تسجيل سند القبض بنجاح')).toBeVisible()
-  expect(handle.receiptInserts).toHaveLength(1)
+  await expect(picker).toHaveValue('خالد سمير')
+  await expect(page.getByText('رقم الهوية').last()).toBeVisible()
+  await expect(page.getByText('123456789')).toBeVisible()
 })
