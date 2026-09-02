@@ -120,7 +120,7 @@ export function ActionSheet({ title, eyebrow, onClose, children }: ActionSheetPr
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative flex max-h-[92vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl border border-border bg-panel shadow-soft outline-none"
+        className="relative flex max-h-[92vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-border bg-panel shadow-soft outline-none"
       >
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
