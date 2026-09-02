@@ -132,7 +132,7 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-clip">
         <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-8 md:px-8 md:pb-14 md:pt-10">
           <CurrentView route={route} />
         </div>
