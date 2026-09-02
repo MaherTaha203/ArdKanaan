@@ -65,14 +65,11 @@ export function ReceiptSheet() {
     defaultValues: buildDefaults(prefillName),
   })
 
-  // Clear any leftover store error before the first paint (the stores are singletons
-  // that persist across mounts) so a stale message never flashes on reopen.
   useLayoutEffect(() => {
     clearError()
     clearAdminError()
   }, [clearError, clearAdminError])
 
-  // Edit mode: load the voucher once and prefill the form.
   useEffect(() => {
     if (!editVoucherId) return
     let active = true
@@ -114,7 +111,6 @@ export function ReceiptSheet() {
     const saved = await saveReceiptVoucher(values)
     if (!saved) return
 
-    // Refresh the derived read model, then jump to the student's record.
     await reloadWorkspace()
     const activeStudent = useMoneyInStore.getState().activeStudent
     if (activeStudent) {
@@ -134,9 +130,6 @@ export function ReceiptSheet() {
           role="alert"
           className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
         >
-          {/* Store messages are all safe, user-facing Arabic (technical errors are
-              logged, not shown) — so the specific one, e.g. an ambiguous name, reaches
-              the operator instead of a generic fallback. */}
           {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}
         </div>
       ) : null}
@@ -147,14 +140,21 @@ export function ReceiptSheet() {
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
           {isEdit ? (
             <Field label="اسم الطالب">
-              {(control) => <Input {...control} value={editStudentName} readOnly disabled />}
+              {(control) => <Input {...control} value={editStudentName} readOnly />}
             </Field>
           ) : (
             <StudentPicker form={form} students={students} />
           )}
 
           <Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>
-            {(control) => <Input placeholder="نص حر" {...control} {...form.register('courseName')} />}
+            {(control) => (
+              <Input
+                placeholder="نص حر"
+                readOnly={isEdit}
+                {...control}
+                {...form.register('courseName')}
+              />
+            )}
           </Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -163,7 +163,8 @@ export function ReceiptSheet() {
                 <Input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
+                  readOnly={isEdit}
                   className="figure"
                   {...control}
                   {...form.register('courseValue', { valueAsNumber: true })}
@@ -173,20 +174,26 @@ export function ReceiptSheet() {
 
             <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>
               {(control) => (
-                <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />
+                <Input
+                  type="date"
+                  readOnly={isEdit}
+                  className="figure"
+                  {...control}
+                  {...form.register('paymentDate')}
+                />
               )}
             </Field>
           </div>
 
-          {/* The amount received — the figure that moves money. Given visual weight. */}
           <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>
             {(control) => (
               <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
                 <input
                   type="number"
                   min="0.01"
-                  step="0.01"
-                  inputMode="decimal"
+                  step="1"
+                  inputMode="numeric"
+                  readOnly={isEdit}
                   className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint"
                   placeholder="0"
                   {...control}
