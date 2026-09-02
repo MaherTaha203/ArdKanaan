@@ -30,7 +30,7 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   expect(handle.receiptInserts).toHaveLength(0)
 })
 
-// A unique name must not be blocked by the identity guard; a successful save closes the sheet.
+// A unique student can be explicitly picked and saved normally.
 test('saves a receipt for a unique student name', async ({ page }) => {
   await installSupabaseMocks(page, {
     students: [
@@ -42,6 +42,7 @@ test('saves a receipt for a unique student name', async ({ page }) => {
   await openReceiptSheet(page)
 
   await page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية').fill('خالد سمير')
+  await page.getByRole('option', { name: 'خالد سمير' }).click()
   await page.getByLabel('اسم الدورة').fill('دورة الرياضيّات')
   await page.getByLabel('قيمة الدورة').fill('1200')
   await page.locator('input[type="number"]').last().fill('500')
