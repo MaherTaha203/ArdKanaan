@@ -16,14 +16,10 @@ import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-// Below this residual, a course row is treated as fully paid (guards float noise).
 const REMAINING_EPSILON = 0.0001
 
 type StudentStatus = 'ok' | 'due' | 'none'
 
-// Derived, from voucher-sourced figures only. "Due" = still owes; "none" = nothing
-// paid yet; "ok" = settled. There is no due-date in the data model, so no "late"
-// state is invented here.
 function statusOf(item: StudentAggregate): StudentStatus {
   if (item.remaining <= REMAINING_EPSILON) return 'ok'
   if (item.paid <= REMAINING_EPSILON) return 'none'
@@ -31,9 +27,9 @@ function statusOf(item: StudentAggregate): StudentStatus {
 }
 
 const STATUS_BAR: Record<StudentStatus, string> = {
-  ok: 'bg-gold', // settled — emerald
-  due: 'bg-warn', // still owes — amber
-  none: 'bg-border-strong', // nothing paid yet — neutral
+  ok: 'bg-gold',
+  due: 'bg-warn',
+  none: 'bg-border-strong',
 }
 
 export function StudentsWorkspace() {
@@ -52,13 +48,8 @@ export function StudentsWorkspace() {
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
 
-  const aggregates = useMemo(
-    () => aggregateStudents(students, statementLines),
-    [students, statementLines],
-  )
+  const aggregates = useMemo(() => aggregateStudents(students, statementLines), [students, statementLines])
 
-  // Smart order: the most urgent (largest remaining) first, then by name. This is a
-  // presentation ordering only — it never changes any figure.
   const sorted = useMemo(
     () =>
       aggregates
@@ -101,9 +92,9 @@ export function StudentsWorkspace() {
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
-      <div className="grid gap-6 md:grid-cols-[300px_minmax(0,1fr)]">
+      <div className="grid gap-6 md:grid-cols-[380px_minmax(0,1fr)]">
         <div>
-          <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm transition focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
             <Search aria-hidden className="size-4 flex-none text-faint" />
             <input
               type="search"
@@ -139,7 +130,7 @@ export function StudentsWorkspace() {
           </Card>
         </div>
 
-        <Card className="p-6">
+        <Card className="min-w-0 p-6">
           {active ? (
             <>
               <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
@@ -179,11 +170,9 @@ export function StudentsWorkspace() {
                 </div>
               </div>
 
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-base font-bold text-foreground">
-                  البيان المالي — مشتق من السندات
-                </h3>
-                <div className="flex items-center gap-2">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-base font-bold text-foreground">البيان المالي — مشتق من السندات</h3>
+                <div className="flex flex-wrap items-center gap-2">
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}>
                     <Pencil className="size-4" />
                     تعديل الطالب
@@ -200,58 +189,32 @@ export function StudentsWorkspace() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full min-w-[760px] border-collapse text-sm">
                   <thead>
                     <tr className="text-[11px] tracking-wide text-faint">
-                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
-                        التاريخ
-                      </th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
-                        الوصف
-                      </th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">
-                        الدورة
-                      </th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
-                        قيمة الدورة
-                      </th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
-                        المدفوع
-                      </th>
-                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">
-                        المتبقّي
-                      </th>
+                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">التاريخ</th>
+                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">الوصف</th>
+                      <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">الدورة</th>
+                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">قيمة الدورة</th>
+                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المدفوع</th>
+                      <th className="border-b border-border-strong px-2 py-2.5 text-end font-semibold">المتبقّي</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeLines.length > 0 ? (
                       activeLines.map((line) => (
                         <tr key={line.id}>
-                          <td className="border-b border-border px-2 py-3">
-                            {formatDate(line.voucherDate)}
-                          </td>
-                          <td className="border-b border-border px-2 py-3">
-                            سند قبض — رقم {formatVoucherNo(line.voucherNumber)}
-                          </td>
-                          <td className="border-b border-border px-2 py-3 text-muted-foreground">
-                            {line.courseName}
-                          </td>
-                          <td className="figure border-b border-border px-2 py-3 text-end">
-                            {formatNumber(line.courseValue)}
-                          </td>
-                          <td className="figure border-b border-border px-2 py-3 text-end">
-                            {formatNumber(line.amountReceived)}
-                          </td>
-                          <td className="figure border-b border-border px-2 py-3 text-end">
-                            {formatNumber(line.remainingBalance)}
-                          </td>
+                          <td className="border-b border-border px-2 py-3">{formatDate(line.voucherDate)}</td>
+                          <td className="border-b border-border px-2 py-3">سند قبض — رقم {formatVoucherNo(line.voucherNumber)}</td>
+                          <td className="border-b border-border px-2 py-3 text-muted-foreground">{line.courseName}</td>
+                          <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.courseValue)}</td>
+                          <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.amountReceived)}</td>
+                          <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.remainingBalance)}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">
-                          لا توجد حركة.
-                        </td>
+                        <td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">لا توجد حركة.</td>
                       </tr>
                     )}
                   </tbody>
@@ -293,11 +256,7 @@ function StudentRow({
 }) {
   const status = statusOf(item)
   return (
-    <div
-      className={`relative flex items-center gap-2 border-b border-border last:border-b-0 transition ${
-        active ? 'bg-highlight' : 'hover:bg-highlight'
-      }`}
-    >
+    <div className={`relative flex items-center gap-2 border-b border-border last:border-b-0 ${active ? 'bg-highlight' : ''}`}>
       <span
         aria-hidden
         className={`absolute inset-y-2 start-0 w-[3px] rounded-e ${active ? 'bg-olive' : STATUS_BAR[status]}`}
@@ -326,7 +285,7 @@ function StudentRow({
         onClick={onQuickReceive}
         aria-label={`سند قبض لـ ${item.student.name}`}
         title="سند قبض"
-        className="me-2 flex flex-none items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium text-gold transition hover:bg-gold-weak"
+        className="me-2 flex flex-none items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium text-gold"
       >
         <ArrowDownLeft className="size-3.5" />
         قبض
