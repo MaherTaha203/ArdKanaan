@@ -4,10 +4,9 @@ import type { PaymentVoucherFormValues } from '@/features/payment-voucher/schema
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
-// Administrative voucher actions: cancel (never delete) and edit. Every UPDATE is
-// recorded server-side in voucher_audit_log by a trigger; the voucher_number is
-// GENERATED ALWAYS and never changes. These operate on the source-of-truth tables;
-// balances re-derive automatically from the views afterwards.
+// Administrative voucher actions: cancel (never delete) and descriptive-only edit.
+// Financial fields are immutable after posting; every UPDATE is recorded server-side
+// in voucher_audit_log by a trigger. The voucher number never changes.
 
 export type ReceiptEditData = {
   paymentDate: string
@@ -51,14 +50,18 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
       set({ error: NOT_CONFIGURED })
       return false
     }
+    const trimmed = reason.trim()
+    if (!trimmed) {
+      set({ error: 'سبب الإلغاء مطلوب.' })
+      return false
+    }
     const table = type === 'receipt' ? 'receipt_vouchers' : 'payment_vouchers'
     set({ isBusy: true, error: null })
-    const trimmed = reason.trim()
     const { error } = await supabase
       .from(table)
-      .update({ cancelled_at: new Date().toISOString(), cancel_reason: trimmed || null })
+      .update({ cancelled_at: new Date().toISOString(), cancel_reason: trimmed })
       .eq('id', id)
-      .is('cancelled_at', null) // never re-cancel an already-cancelled voucher
+      .is('cancelled_at', null)
     set({ isBusy: false })
     if (error) {
       set({ error: 'تعذّر إلغاء السند.' })
@@ -67,24 +70,11 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
     return true
   },
 
-  restoreVoucher: async (type, id) => {
-    const supabase = getSupabaseBrowserClient()
-    if (!supabase) {
-      set({ error: NOT_CONFIGURED })
-      return false
-    }
-    const table = type === 'receipt' ? 'receipt_vouchers' : 'payment_vouchers'
-    set({ isBusy: true, error: null })
-    const { error } = await supabase
-      .from(table)
-      .update({ cancelled_at: null, cancel_reason: null })
-      .eq('id', id)
-    set({ isBusy: false })
-    if (error) {
-      set({ error: 'تعذّر استعادة السند.' })
-      return false
-    }
-    return true
+  // Cancellation is final by product rule. Keep this compatibility surface so old
+  // callers fail safely rather than ever reopening a financial document.
+  restoreVoucher: async () => {
+    set({ error: 'السند الملغى لا يمكن استعادته.' })
+    return false
   },
 
   fetchReceipt: async (id) => {
@@ -136,10 +126,8 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
     }
   },
 
-  // Edit keeps the voucher attached to its original student (student_id and the
-  // number are untouched); only the financial fields change. Editing the course
-  // value is a fee correction, so it updates the authoritative enrollment for that
-  // (student, course) — the balance derives from there.
+  // Only descriptive fields may change after posting. Financial fields remain the
+  // original source-of-truth facts and are protected again by the database trigger.
   updateReceipt: async (id, values) => {
     const supabase = getSupabaseBrowserClient()
     if (!supabase) {
@@ -147,46 +135,15 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
       return false
     }
     set({ isBusy: true, error: null })
-
-    const courseName = values.courseName.trim()
-
-    // Resolve the voucher's student so the fee change lands on the right enrollment.
-    const { data: voucherRow, error: fetchError } = await supabase
-      .from('receipt_vouchers')
-      .select('student_id')
-      .eq('id', id)
-      .single()
-    if (fetchError || !voucherRow) {
-      set({ isBusy: false, error: 'تعذّر حفظ التعديل.' })
-      return false
-    }
-    const studentId = voucherRow.student_id as string
-
     const { error } = await supabase
       .from('receipt_vouchers')
       .update({
-        voucher_date: values.paymentDate,
-        course_name: courseName,
-        course_value: values.courseValue,
-        amount_received: values.amountReceived,
         payer_name: values.payerName.trim(),
         notes: values.notes.trim(),
       })
       .eq('id', id)
-    if (error) {
-      set({ isBusy: false, error: 'تعذّر حفظ التعديل.' })
-      return false
-    }
-
-    // Upsert the enrollment fee for this (student, course) to the edited value.
-    const { error: enrollmentError } = await supabase
-      .from('enrollments')
-      .upsert(
-        { student_id: studentId, course_name: courseName, course_value: values.courseValue },
-        { onConflict: 'student_id,course_name' },
-      )
     set({ isBusy: false })
-    if (enrollmentError) {
+    if (error) {
       set({ error: 'تعذّر حفظ التعديل.' })
       return false
     }
@@ -202,12 +159,7 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
     set({ isBusy: true, error: null })
     const { error } = await supabase
       .from('payment_vouchers')
-      .update({
-        voucher_date: values.paymentDate,
-        expense_type: values.expenseType.trim(),
-        amount: values.amount,
-        notes: values.notes.trim(),
-      })
+      .update({ notes: values.notes.trim() })
       .eq('id', id)
     set({ isBusy: false })
     if (error) {
