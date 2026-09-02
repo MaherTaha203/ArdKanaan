@@ -2,6 +2,7 @@ import { PrintPreview } from '@/components/print/print-preview'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
 import { getCenterSettings } from '@/lib/center-settings'
 import { formatVoucherNo } from '@/lib/voucher'
+import { chronological, withRunningBalance, type RunningMovement } from '@/features/print/financial-report-rows'
 import type { ReportView } from '@/store/use-shell-store'
 import type { FinancialMovement } from '@/types/domain'
 
@@ -30,13 +31,6 @@ function partyAndContext(movement: FinancialMovement) {
   return movement.context ? `${party} · ${movement.context}` : party
 }
 
-function chronological(movements: FinancialMovement[]) {
-  return [...movements].sort((a, b) => {
-    const dateCompare = a.voucherDate.localeCompare(b.voucherDate)
-    return dateCompare || a.voucherNumber - b.voucherNumber
-  })
-}
-
 export function FinancialReportPrint({
   view,
   title,
@@ -52,7 +46,8 @@ export function FinancialReportPrint({
   onClose,
 }: FinancialReportPrintProps) {
   const centerName = getCenterSettings().name
-  const runningRows = chronological(movements)
+  const orderedRows = chronological(movements)
+  const runningRows = withRunningBalance(movements, opening)
 
   return (
     <PrintPreview
@@ -109,7 +104,7 @@ export function FinancialReportPrint({
             </tr>
           </thead>
           <tbody>
-            {runningRows.map((movement) => {
+            {orderedRows.map((movement) => {
               const isReceipt = movement.movementType === 'receipt'
               return (
                 <tr key={`${movement.movementType}-${movement.id}`} className={INK}>
@@ -134,9 +129,7 @@ export function FinancialReportPrint({
   )
 }
 
-function GeneralMovementTable({ movements, opening }: { movements: FinancialMovement[]; opening: number }) {
-  let runningBalance = opening
-
+function GeneralMovementTable({ movements, opening }: { movements: RunningMovement[]; opening: number }) {
   return (
     <table className="w-full border-collapse text-[12.5px]">
       <thead>
@@ -162,7 +155,6 @@ function GeneralMovementTable({ movements, opening }: { movements: FinancialMove
         </tr>
         {movements.map((movement) => {
           const isReceipt = movement.movementType === 'receipt'
-          runningBalance += isReceipt ? movement.amount : -movement.amount
           return (
             <tr key={`${movement.movementType}-${movement.id}`} className={INK}>
               <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(movement.voucherDate)}</td>
@@ -174,8 +166,8 @@ function GeneralMovementTable({ movements, opening }: { movements: FinancialMove
               <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${isReceipt ? 'text-[#059669]' : MUTED}`}>
                 {isReceipt ? formatNumber(movement.amount) : '—'}
               </td>
-              <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${balanceClass(runningBalance)}`}>
-                {formatNumber(runningBalance)}
+              <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${balanceClass(movement.runningBalance)}`}>
+                {formatNumber(movement.runningBalance)}
               </td>
             </tr>
           )
