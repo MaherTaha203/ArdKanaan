@@ -32,7 +32,7 @@ export function ErrorNotice({
           <button
             type="button"
             onClick={onRetry}
-            className="font-medium text-clay underline-offset-2 hover:underline"
+            className="font-medium text-clay underline-offset-2"
           >
             أعد المحاولة
           </button>
@@ -40,7 +40,7 @@ export function ErrorNotice({
         <button
           type="button"
           onClick={onDismiss}
-          className="text-clay/80 underline-offset-2 hover:underline"
+          className="text-clay/80 underline-offset-2"
         >
           إخفاء
         </button>
