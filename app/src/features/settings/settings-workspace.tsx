@@ -28,7 +28,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-const MIN_PASSWORD = 6
+const MIN_PASSWORD = 8
 
 export function SettingsWorkspace() {
   const session = useAuthStore((state) => state.session)
@@ -43,7 +43,7 @@ export function SettingsWorkspace() {
   async function handleChangePassword(event: React.FormEvent) {
     event.preventDefault()
     if (password.length < MIN_PASSWORD) {
-      setMessage({ tone: 'error', text: 'كلمة المرور قصيرة' })
+      setMessage({ tone: 'error', text: 'كلمة المرور يجب أن تتكون من 8 أحرف على الأقل' })
       return
     }
     if (password !== confirm) {
@@ -100,6 +100,7 @@ export function SettingsWorkspace() {
                 type="password"
                 autoComplete="new-password"
                 placeholder="كلمة مرور جديدة"
+                minLength={MIN_PASSWORD}
                 value={password}
                 onChange={(event) => {
                   setPassword(event.target.value)
@@ -111,6 +112,7 @@ export function SettingsWorkspace() {
                 type="password"
                 autoComplete="new-password"
                 placeholder="تأكيد كلمة المرور"
+                minLength={MIN_PASSWORD}
                 value={confirm}
                 onChange={(event) => {
                   setConfirm(event.target.value)
