@@ -1,5 +1,6 @@
 import { PrintPreview } from '@/components/print/print-preview'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
+import { getCenterSettings } from '@/lib/center-settings'
 import { formatVoucherNo } from '@/lib/voucher'
 import type { ReportView } from '@/store/use-shell-store'
 import type { FinancialMovement } from '@/types/domain'
@@ -29,11 +30,6 @@ function partyAndContext(movement: FinancialMovement) {
   return movement.context ? `${party} · ${movement.context}` : party
 }
 
-/**
- * The printable financial report — a branded A4 rendering of the derived
- * position and the full movement log. Presentation only; nothing is stored and
- * no figure is recomputed here beyond formatting.
- */
 export function FinancialReportPrint({
   view,
   title,
@@ -48,10 +44,12 @@ export function FinancialReportPrint({
   periodLabel,
   onClose,
 }: FinancialReportPrintProps) {
+  const centerName = getCenterSettings().name
+
   return (
     <PrintPreview
       docTitle={title}
-      documentTitle={`${title} — أرض كنعان`}
+      documentTitle={`${title} — ${centerName}`}
       onClose={onClose}
       meta={
         <>
@@ -66,8 +64,6 @@ export function FinancialReportPrint({
         </>
       }
     >
-      {/* Summary — general shows the full position with opening/closing; a sided
-          report shows only its own total. */}
       {view === 'general' ? (
         <div className={`grid grid-cols-2 gap-4 rounded-xl border ${HAIR} p-4 sm:grid-cols-5`}>
           <SummaryCell label="الرصيد الافتتاحي" value={opening} />
@@ -90,7 +86,6 @@ export function FinancialReportPrint({
         </div>
       )}
 
-      {/* Movements */}
       <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>سجل الحركات — من الأحدث</h3>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
@@ -108,24 +103,15 @@ export function FinancialReportPrint({
             return (
               <tr key={`${movement.movementType}-${movement.id}`} className={INK}>
                 <td className={`border-b ${HAIR} px-2 py-2.5`}>
-                  <span className={isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}>
-                    {isReceipt ? 'قبض' : 'صرف'}
-                  </span>
+                  <span className={isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}>{isReceipt ? 'قبض' : 'صرف'}</span>
                 </td>
                 <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>
                   {formatVoucherNo(movement.voucherNumber)}
                 </td>
                 <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(movement.voucherDate)}</td>
-                <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>
-                  {partyAndContext(movement)}
-                </td>
-                <td
-                  className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${
-                    isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'
-                  }`}
-                >
-                  {isReceipt ? '+' : '−'}
-                  {formatNumber(movement.amount)}
+                <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>{partyAndContext(movement)}</td>
+                <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
+                  {isReceipt ? '+' : '−'}{formatNumber(movement.amount)}
                 </td>
               </tr>
             )
@@ -140,9 +126,7 @@ function SummaryCell({ label, value, color }: { label: string; value: number; co
   return (
     <div>
       <div className={`text-[11px] ${MUTED}`}>{label}</div>
-      <div className={`figure mt-1 text-2xl font-semibold ${color ?? INK}`}>
-        {formatNumber(value)}
-      </div>
+      <div className={`figure mt-1 text-2xl font-semibold ${color ?? INK}`}>{formatNumber(value)}</div>
     </div>
   )
 }
