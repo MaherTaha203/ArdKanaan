@@ -181,8 +181,8 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
                     aria-selected={highlighted === index}
                     onMouseMove={() => setHighlighted(index)}
                     onClick={() => pick(student)}
-                    className={`flex w-full cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start transition ${
-                      highlighted === index ? 'bg-highlight' : 'hover:bg-highlight'
+                    className={`flex w-full cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start ${
+                      highlighted === index ? 'bg-highlight' : ''
                     }`}
                   >
                     <span className="text-sm font-medium text-foreground">{student.name}</span>
