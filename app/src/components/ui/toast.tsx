@@ -4,11 +4,8 @@ import { CheckCircle2, Info, X } from 'lucide-react'
 
 import { useToastStore } from '@/components/ui/use-toast-store'
 
-// How long a toast stays before it auto-dismisses.
 const TOAST_DURATION_MS = 4000
 
-// A single, centered, self-dismissing confirmation toast. Rendered once at the shell
-// level; it reads the toast store and shows the latest message.
 export function Toaster() {
   const id = useToastStore((state) => state.id)
   const message = useToastStore((state) => state.message)
@@ -41,7 +38,7 @@ export function Toaster() {
           type="button"
           onClick={dismiss}
           aria-label="إغلاق الإشعار"
-          className="-me-1 rounded-full p-1 text-white/60 transition hover:bg-white/15 hover:text-white"
+          className="-me-1 rounded-full p-1 text-white/60"
         >
           <X className="size-3.5" />
         </button>
