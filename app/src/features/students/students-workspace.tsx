@@ -5,6 +5,7 @@ import { ArrowDownLeft, Pencil, Printer, Search } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
+import '@/features/detail/ux01f.css'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
@@ -86,7 +87,7 @@ export function StudentsWorkspace() {
   )
 
   return (
-    <div>
+    <div className="detail-workspace">
       <RouteHeader eyebrow="الطلاب" title="سجلّات الطلاب" />
 
       <ConfigNotice />
@@ -130,7 +131,7 @@ export function StudentsWorkspace() {
           </Card>
         </div>
 
-        <Card className="min-w-0 p-6">
+        <section className="detail-table-section min-w-0 border-y border-border bg-panel px-6 py-6">
           {active ? (
             <>
               <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
@@ -188,8 +189,8 @@ export function StudentsWorkspace() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse text-sm">
+              <div className="detail-table-wrap">
+                <table className="border-collapse text-sm">
                   <thead>
                     <tr className="text-[11px] tracking-wide text-faint">
                       <th className="border-b border-border-strong px-2 py-2.5 text-start font-semibold">التاريخ</th>
@@ -226,7 +227,7 @@ export function StudentsWorkspace() {
               {loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}
             </div>
           )}
-        </Card>
+        </section>
       </div>
 
       {printing && active ? (
