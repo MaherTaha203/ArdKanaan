@@ -2,8 +2,11 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches:
+      - claude/ard-kanaan-phase-0-6rymjv
   pull_request:
+    branches:
+      - claude/ard-kanaan-phase-0-6rymjv
 
 concurrency:
   group: ci-${{ github.ref }}
