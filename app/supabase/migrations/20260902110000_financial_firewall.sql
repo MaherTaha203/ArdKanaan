@@ -1,7 +1,6 @@
 -- Financial firewall: enforce whole-shekel money, preserve enrollment as the
 -- authoritative course fee, block receipt overpayment, and keep posted financial
--- fields immutable. Descriptive fields may still be edited; cancellation remains
--- an explicit status transition and cannot be reversed.
+-- fields immutable. Descriptive fields may still be edited; cancellation is final.
 
 alter table public.enrollments
   add constraint enrollments_course_value_whole_shekel
@@ -42,6 +41,11 @@ begin
 
     if old.cancelled_at is not null and new.cancelled_at is null then
       raise exception 'CANCELLED_VOUCHER_CANNOT_BE_REOPENED';
+    end if;
+
+    if old.cancelled_at is null and new.cancelled_at is not null
+       and nullif(btrim(new.cancel_reason), '') is null then
+      raise exception 'CANCELLATION_REASON_REQUIRED';
     end if;
 
     return new;
