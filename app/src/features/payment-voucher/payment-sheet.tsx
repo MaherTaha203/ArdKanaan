@@ -21,8 +21,6 @@ import { useVoucherAdminStore } from '@/store/use-voucher-admin-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 function buildDefaults(): PaymentVoucherFormValues {
-  // Built per-mount (not a module-level constant) so the date is today's whenever
-  // the sheet opens — not frozen at bundle-load time for a long-lived tab.
   return {
     paymentDate: todayIsoDate(),
     expenseType: '',
@@ -57,8 +55,6 @@ export function PaymentSheet() {
     defaultValues: buildDefaults(),
   })
 
-  // Clear any leftover store error before the first paint (the stores are singletons
-  // that persist across mounts) so a stale message never flashes on reopen.
   useLayoutEffect(() => {
     clearError()
     clearAdminError()
@@ -118,10 +114,7 @@ export function PaymentSheet() {
   return (
     <ActionSheet title={isEdit ? 'تعديل سند صرف' : 'سند صرف'} onClose={closeOverlay}>
       {showError ? (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay"
-        >
+        <div role="alert" className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">
           {isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}
         </div>
       ) : null}
@@ -129,23 +122,18 @@ export function PaymentSheet() {
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
         <Field label="نوع المصروف" error={form.formState.errors.expenseType?.message}>
           {(control) => (
-            <Input
-              placeholder="مثال: إيجار، كهرباء، رواتب"
-              {...control}
-              {...form.register('expenseType')}
-            />
+            <Input placeholder="مثال: إيجار، كهرباء، رواتب" {...control} {...form.register('expenseType')} />
           )}
         </Field>
 
-        {/* The amount spent — the figure that moves money. Given visual weight. */}
         <Field label="المبلغ المصروف" error={form.formState.errors.amount?.message}>
           {(control) => (
             <div className="flex items-center gap-2 rounded-xl border border-clay/30 bg-clay-weak/40 px-4 py-1 focus-within:border-clay focus-within:ring-2 focus-within:ring-clay/20">
               <input
                 type="number"
-                min="0.01"
-                step="0.01"
-                inputMode="decimal"
+                min="1"
+                step="1"
+                inputMode="numeric"
                 className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint"
                 placeholder="0"
                 {...control}
@@ -157,24 +145,18 @@ export function PaymentSheet() {
         </Field>
 
         <Field label="تاريخ الصرف" error={form.formState.errors.paymentDate?.message}>
-          {(control) => (
-            <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />
-          )}
+          {(control) => <Input type="date" className="figure" {...control} {...form.register('paymentDate')} />}
         </Field>
 
         <Field label="الملاحظات" error={form.formState.errors.notes?.message}>
-          {(control) => (
-            <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />
-          )}
+          {(control) => <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />}
         </Field>
 
         <Button type="submit" size="lg" variant="default" className="w-full" disabled={busy}>
           <ArrowUpRight className="size-4" />
           {busy ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديل' : 'حفظ سند الصرف'}
         </Button>
-        <p className="text-center text-[11.5px] text-faint">
-          Enter للتالي · Ctrl+Enter للحفظ · Esc للإغلاق
-        </p>
+        <p className="text-center text-[11.5px] text-faint">Enter للتالي · Ctrl+Enter للحفظ · Esc للإغلاق</p>
       </form>
     </ActionSheet>
   )
