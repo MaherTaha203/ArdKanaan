@@ -30,6 +30,13 @@ function partyAndContext(movement: FinancialMovement) {
   return movement.context ? `${party} · ${movement.context}` : party
 }
 
+function chronological(movements: FinancialMovement[]) {
+  return [...movements].sort((a, b) => {
+    const dateCompare = a.voucherDate.localeCompare(b.voucherDate)
+    return dateCompare || a.voucherNumber - b.voucherNumber
+  })
+}
+
 export function FinancialReportPrint({
   view,
   title,
@@ -45,6 +52,7 @@ export function FinancialReportPrint({
   onClose,
 }: FinancialReportPrintProps) {
   const centerName = getCenterSettings().name
+  const runningRows = chronological(movements)
 
   return (
     <PrintPreview
@@ -65,7 +73,7 @@ export function FinancialReportPrint({
       }
     >
       {view === 'general' ? (
-        <div className={`grid grid-cols-2 gap-4 rounded-xl border ${HAIR} p-4 sm:grid-cols-5`}>
+        <div className="grid grid-cols-2 gap-4 border-y border-[#e2e8f0] py-5 sm:grid-cols-5">
           <SummaryCell label="الرصيد الافتتاحي" value={opening} />
           <SummaryCell label="إجمالي القبض" value={totalIn} color="text-[#059669]" />
           <SummaryCell label="إجمالي الصرف" value={totalOut} color="text-[#dc2626]" />
@@ -73,7 +81,7 @@ export function FinancialReportPrint({
           <SummaryCell label="الرصيد الختامي" value={closing} />
         </div>
       ) : (
-        <div className={`grid grid-cols-2 gap-4 rounded-xl border ${HAIR} p-4`}>
+        <div className="grid grid-cols-2 gap-4 border-y border-[#e2e8f0] py-5">
           <SummaryCell
             label={view === 'receipts' ? 'إجمالي القبض' : 'إجمالي الصرف'}
             value={view === 'receipts' ? totalIn : totalOut}
@@ -86,40 +94,99 @@ export function FinancialReportPrint({
         </div>
       )}
 
-      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>سجل الحركات — من الأحدث</h3>
-      <table className="w-full border-collapse text-[12.5px]">
-        <thead>
-          <tr className={`text-[10.5px] ${MUTED}`}>
-            <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>النوع</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>رقم السند</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>التاريخ</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>البيان</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>المبلغ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {movements.map((movement) => {
-            const isReceipt = movement.movementType === 'receipt'
-            return (
-              <tr key={`${movement.movementType}-${movement.id}`} className={INK}>
-                <td className={`border-b ${HAIR} px-2 py-2.5`}>
-                  <span className={isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}>{isReceipt ? 'قبض' : 'صرف'}</span>
-                </td>
-                <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>
-                  {formatVoucherNo(movement.voucherNumber)}
-                </td>
-                <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(movement.voucherDate)}</td>
-                <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>{partyAndContext(movement)}</td>
-                <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
-                  {isReceipt ? '+' : '−'}{formatNumber(movement.amount)}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>سجل الحركات — من الأقدم</h3>
+      {view === 'general' ? (
+        <GeneralMovementTable movements={runningRows} opening={opening} />
+      ) : (
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr className={`text-[10.5px] ${MUTED}`}>
+              <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>النوع</th>
+              <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>رقم السند</th>
+              <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>التاريخ</th>
+              <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>البيان</th>
+              <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>المبلغ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {runningRows.map((movement) => {
+              const isReceipt = movement.movementType === 'receipt'
+              return (
+                <tr key={`${movement.movementType}-${movement.id}`} className={INK}>
+                  <td className={`border-b ${HAIR} px-2 py-2.5`}>
+                    <span className={isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}>{isReceipt ? 'قبض' : 'صرف'}</span>
+                  </td>
+                  <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>
+                    {formatVoucherNo(movement.voucherNumber)}
+                  </td>
+                  <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(movement.voucherDate)}</td>
+                  <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>{partyAndContext(movement)}</td>
+                  <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${isReceipt ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
+                    {formatNumber(movement.amount)}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      )}
     </PrintPreview>
   )
+}
+
+function GeneralMovementTable({ movements, opening }: { movements: FinancialMovement[]; opening: number }) {
+  let runningBalance = opening
+
+  return (
+    <table className="w-full border-collapse text-[12.5px]">
+      <thead>
+        <tr className={`text-[10.5px] ${MUTED}`}>
+          <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>التاريخ</th>
+          <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>رقم السند</th>
+          <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>البيان</th>
+          <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>صرف</th>
+          <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>قبض</th>
+          <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>الرصيد الجاري</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr className={INK}>
+          <td className={`border-b ${HAIR} px-2 py-2.5`}>—</td>
+          <td className={`border-b ${HAIR} px-2 py-2.5`}>—</td>
+          <td className={`border-b ${HAIR} px-2 py-2.5 font-medium ${MUTED}`}>الرصيد الافتتاحي</td>
+          <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end ${MUTED}`}>—</td>
+          <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end ${MUTED}`}>—</td>
+          <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${balanceClass(opening)}`}>
+            {formatNumber(opening)}
+          </td>
+        </tr>
+        {movements.map((movement) => {
+          const isReceipt = movement.movementType === 'receipt'
+          runningBalance += isReceipt ? movement.amount : -movement.amount
+          return (
+            <tr key={`${movement.movementType}-${movement.id}`} className={INK}>
+              <td className={`border-b ${HAIR} px-2 py-2.5`}>{formatDate(movement.voucherDate)}</td>
+              <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>{formatVoucherNo(movement.voucherNumber)}</td>
+              <td className={`border-b ${HAIR} px-2 py-2.5 ${MUTED}`}>{partyAndContext(movement)}</td>
+              <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${isReceipt ? MUTED : 'text-[#dc2626]'}`}>
+                {isReceipt ? '—' : formatNumber(movement.amount)}
+              </td>
+              <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${isReceipt ? 'text-[#059669]' : MUTED}`}>
+                {isReceipt ? formatNumber(movement.amount) : '—'}
+              </td>
+              <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end font-semibold ${balanceClass(runningBalance)}`}>
+                {formatNumber(runningBalance)}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
+function balanceClass(value: number) {
+  return value < 0 ? 'text-[#dc2626]' : INK
 }
 
 function SummaryCell({ label, value, color }: { label: string; value: number; color?: string }) {
