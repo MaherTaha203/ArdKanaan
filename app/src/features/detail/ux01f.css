@@ -21,6 +21,12 @@
   text-align: start;
 }
 
+/* Preserve explicit financial end-alignment inside the shared wrapper. */
+.detail-table-wrap th.text-end,
+.detail-table-wrap td.text-end {
+  text-align: end;
+}
+
 @media (max-width: 900px) {
   .detail-workspace {
     width: 100%;
