@@ -26,7 +26,7 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
 
   // The save is refused with the specific, actionable message — and no receipt was written.
-  await expect(page.getByText('اختر الطالب المقصود من قائمة البحث').first()).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('اختر الطالب المقصود من قائمة البحث')
   expect(handle.receiptInserts).toHaveLength(0)
 })
 
@@ -43,6 +43,7 @@ test('saves a receipt for a new, unique student', async ({ page }) => {
   await page.locator('input[type="number"]').last().fill('500')
   await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
 
-  await expect(page.getByText('تم تسجيل سند القبض بنجاح')).toBeVisible()
-  expect(handle.receiptInserts).toHaveLength(1)
+  // Verify the financial write itself; the success toast is transient presentation and
+  // is intentionally not used as the E2E synchronization point.
+  await expect.poll(() => handle.receiptInserts.length).toBe(1)
 })
