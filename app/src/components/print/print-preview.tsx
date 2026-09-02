@@ -47,7 +47,7 @@ export function PrintPreview({ docTitle, documentTitle, meta, onClose, children 
           <button
             type="button"
             onClick={() => handlePrint()}
-            className="inline-flex items-center gap-2 rounded-full bg-olive px-5 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-olive-ink"
+            className="inline-flex items-center gap-2 rounded-full bg-olive px-5 py-2 text-[13px] font-semibold text-white shadow-sm"
           >
             <Printer className="size-4" />
             طباعة
@@ -56,7 +56,7 @@ export function PrintPreview({ docTitle, documentTitle, meta, onClose, children 
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-white/20"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[13px] font-medium text-white"
           >
             <X className="size-4" />
             إغلاق
