@@ -4,7 +4,6 @@ import { ArrowDownLeft, ArrowUpRight, PanelsTopLeft } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, attentionList, financialTotals } from '@/lib/aggregate'
@@ -45,72 +44,71 @@ export function GlanceWorkspace() {
         <h1 className="editorial text-[clamp(1.8rem,3vw,2.5rem)] text-foreground">الإطلالة</h1>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-        <section aria-label="الرصيد النقدي" className="rounded-2xl border border-border bg-panel px-6 py-7 shadow-card sm:px-8">
-          <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ للمركز</div>
-          {!loaded ? (
-            <div role="status" aria-label="جاري التحميل">
-              <Skeleton className="mt-3 h-12 w-56 md:h-14" />
-              <Skeleton className="mt-5 h-4 w-44" />
+      <section aria-label="الرصيد النقدي" className="border-y border-border py-7 sm:py-8">
+        <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ للمركز</div>
+        {!loaded ? (
+          <div role="status" aria-label="جاري التحميل">
+            <Skeleton className="mt-3 h-12 w-56 md:h-14" />
+            <Skeleton className="mt-5 h-4 w-44" />
+          </div>
+        ) : (
+          <>
+            <Money
+              value={totals.net}
+              className={`mt-2 block text-[44px] font-semibold leading-none md:text-[56px] ${
+                totals.net < 0 ? 'text-clay' : 'text-foreground'
+              }`}
+              currencyClassName="text-[0.32em]"
+            />
+            <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-1 text-[13px] text-muted-foreground">
+              <span>
+                قبض <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" />
+              </span>
+              <span>
+                صرف <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" />
+              </span>
             </div>
-          ) : (
-            <>
-              <Money
-                value={totals.net}
-                className={`mt-2 block text-[44px] font-semibold leading-none md:text-[56px] ${
-                  totals.net < 0 ? 'text-clay' : 'text-foreground'
-                }`}
-                currencyClassName="text-[0.32em]"
-              />
-              <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-1 text-[13px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-gold" aria-hidden />
-                  قبض <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" />
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-clay" aria-hidden />
-                  صرف <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" />
-                </span>
-              </div>
-            </>
-          )}
-        </section>
+          </>
+        )}
+      </section>
 
-        <Card>
-          <CardHeader>
-            <h2 className="text-base font-semibold text-foreground">طلاب عليهم متبقٍّ</h2>
-            <button type="button" onClick={() => navigate('students')} className="text-xs font-semibold text-olive">
-              كل الطلاب
-            </button>
-          </CardHeader>
-          <CardContent className="px-6 py-2">
-            {!loaded ? (
-              <SkeletonRows rows={3} />
-            ) : attention.length > 0 ? (
-              attention.map((item) => (
-                <div
-                  key={item.student.id}
-                  className="flex items-center gap-3 border-b border-border py-3.5 last:border-b-0"
-                >
-                  <span className="grid size-9 flex-none place-items-center rounded-full bg-olive-weak text-sm font-bold text-olive">
-                    {item.student.name.charAt(0)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-foreground">{item.student.name}</div>
-                    <div className="text-xs text-faint">متبقٍّ على {formatNumber(item.courses)} دورة</div>
-                  </div>
-                  <Money value={item.remaining} currency={false} className="text-sm font-semibold text-warn" />
-                  <Button variant="quiet" size="sm" onClick={() => selectStudent(item.student.id)}>
-                    فتح
-                  </Button>
+      <section aria-labelledby="attention-heading" className="border-b border-border pb-7 sm:pb-8">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 id="attention-heading" className="text-base font-semibold text-foreground">
+            طلاب عليهم متبقٍّ
+          </h2>
+          <button type="button" onClick={() => navigate('students')} className="text-xs font-semibold text-olive">
+            كل الطلاب
+          </button>
+        </div>
+
+        <div className="mt-2">
+          {!loaded ? (
+            <SkeletonRows rows={3} />
+          ) : attention.length > 0 ? (
+            attention.map((item) => (
+              <div
+                key={item.student.id}
+                className="flex items-center gap-3 border-b border-border py-3.5 last:border-b-0"
+              >
+                <span className="grid size-9 flex-none place-items-center rounded-full bg-olive-weak text-sm font-bold text-olive">
+                  {item.student.name.charAt(0)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-foreground">{item.student.name}</div>
+                  <div className="text-xs text-faint">متبقٍّ على {formatNumber(item.courses)} دورة</div>
                 </div>
-              ))
-            ) : (
-              <p className="py-8 text-center text-sm text-faint">لا مبالغ متبقية.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                <Money value={item.remaining} currency={false} className="text-sm font-semibold text-warn" />
+                <Button variant="quiet" size="sm" onClick={() => selectStudent(item.student.id)}>
+                  فتح
+                </Button>
+              </div>
+            ))
+          ) : (
+            <p className="py-8 text-center text-sm text-faint">لا مبالغ متبقية.</p>
+          )}
+        </div>
+      </section>
 
       <section aria-label="إجراءات اليوم" className="flex flex-wrap gap-3">
         <Button variant="gold" onClick={() => openOverlay('receive')}>
