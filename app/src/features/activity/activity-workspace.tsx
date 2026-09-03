@@ -29,8 +29,9 @@ const ACTION_LABELS: Record<string, string> = {
   create: 'إنشاء',
   edit: 'تعديل',
   cancel: 'إلغاء',
-  uncancel: 'إعادة تفعيل',
-  restore: 'استعادة',
+  // Legacy audit values are historical records only; cancellation is final.
+  uncancel: 'تغيير حالة الإلغاء (سجل تاريخي)',
+  restore: 'استعادة نسخة احتياطية',
   export: 'تصدير',
   login: 'تسجيل الدخول',
   logout: 'تسجيل الخروج',
@@ -222,7 +223,7 @@ export function ActivityWorkspace() {
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          السجل للقراءة والمراجعة فقط، وترتيبه زمني تنازليًا. لا توجد فيه إجراءات لتعديل أو حذف الأحداث.
+          السجل للقراءة والمراجعة فقط، وترتيبه زمنيًا تنازليًا. لا توجد فيه إجراءات لتعديل أو حذف الأحداث.
         </p>
       </section>
     </div>
