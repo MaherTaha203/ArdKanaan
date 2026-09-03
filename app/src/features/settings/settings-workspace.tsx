@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { BackupRestore } from '@/features/settings/backup-restore'
+import { recordActivityEvent } from '@/lib/activity-log'
 import { DEFAULT_CENTER_SETTINGS, getCenterSettings, saveCenterSettings, type CenterSettings } from '@/lib/center-settings'
 import { useAuthStore } from '@/store/use-auth-store'
 
@@ -46,12 +47,24 @@ export function SettingsWorkspace() {
     saveCenterSettings(center)
     setCenter(getCenterSettings())
     setMessage('تم حفظ بيانات المركز')
+    void recordActivityEvent({
+      entity: 'settings',
+      action: 'edit',
+      label: 'بيانات المركز',
+      description: 'تعديل بيانات المركز المحلية',
+    })
     setIsSaving(false)
   }
 
   function handleReset() {
     setCenter((current) => ({ ...current, name: DEFAULT_CENTER_SETTINGS.name }))
     setMessage('تمت إعادة اسم المركز الافتراضي')
+    void recordActivityEvent({
+      entity: 'settings',
+      action: 'edit',
+      label: 'اسم المركز',
+      description: 'إعادة اسم المركز إلى القيمة الافتراضية',
+    })
   }
 
   return (

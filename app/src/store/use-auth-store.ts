@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 
+import { recordActivityEvent } from '@/lib/activity-log'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 // Real authentication state, backed by Supabase Auth. The app gates on a live
@@ -84,9 +85,22 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
     // The session arrives via onAuthStateChange; nothing else to set here.
     set({ isSubmitting: false })
+    void recordActivityEvent({
+      entity: 'authentication',
+      action: 'login',
+      label: 'تسجيل الدخول',
+      description: 'تسجيل دخول ناجح إلى النظام',
+    })
     return true
   },
   signOut: async () => {
+    // Record the event while the authenticated session is still available.
+    void recordActivityEvent({
+      entity: 'authentication',
+      action: 'logout',
+      label: 'تسجيل الخروج',
+      description: 'تسجيل الخروج من النظام',
+    })
     const supabase = getSupabaseBrowserClient()
     await supabase?.auth.signOut()
     set({ session: null, isRecovering: false })
@@ -121,6 +135,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({ error: 'تعذّر تعيين كلمة المرور.' })
       return false
     }
+    void recordActivityEvent({
+      entity: 'authentication',
+      action: 'password_change',
+      label: 'تغيير كلمة المرور',
+      description: 'تغيير كلمة مرور الحساب',
+    })
     // New password set; leave recovery mode and clear the recovery token from the URL.
     if (typeof window !== 'undefined' && window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
