@@ -14,10 +14,8 @@ import { SkeletonRows } from '@/components/ui/skeleton'
 import { financialTotals, movementsNewestFirst, paymentCount, receiptCount } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { formatVoucherNo, voucherTypeLabel } from '@/lib/voucher'
-import type { CancelledVoucher, FinancialMovement } from '@/types/domain'
+import type { FinancialMovement } from '@/types/domain'
 import { useShellStore, type ReportView } from '@/store/use-shell-store'
-import { useToastStore } from '@/components/ui/use-toast-store'
-import { useVoucherAdminStore } from '@/store/use-voucher-admin-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 type Period = 'all' | 'month' | 'week'
@@ -51,7 +49,6 @@ function periodStartIso(period: Period, today = new Date()): string | null {
 
 export function FinancialReportWorkspace() {
   const movements = useWorkspaceStore((state) => state.movements)
-  const cancelledVouchers = useWorkspaceStore((state) => state.cancelledVouchers)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -150,7 +147,6 @@ export function FinancialReportWorkspace() {
         </div>
       </section>
 
-      {cancelledVouchers.length > 0 ? <CancelledSection vouchers={cancelledVouchers} onRestored={() => void reload()} /> : null}
       {printing ? <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} closing={closing} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={viewMovements} periodLabel={periodLabel} onClose={() => setPrinting(false)} /> : null}
       {printingVoucher ? <VoucherPrint movement={printingVoucher} onClose={() => setPrintingVoucher(null)} /> : null}
       {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); await reload() }} /> : null}
@@ -201,52 +197,6 @@ function BalanceFigure({ label, value, tone = 'ink', strong = false }: { label: 
       <div className="text-[11px] font-medium text-faint">{label}</div>
       <Money value={value} currency={false} className={`${strong ? 'text-2xl' : 'text-xl'} font-semibold ${color}`} />
     </div>
-  )
-}
-
-function CancelledSection({ vouchers, onRestored }: { vouchers: CancelledVoucher[]; onRestored: () => void }) {
-  const [open, setOpen] = useState(false)
-  const restoreVoucher = useVoucherAdminStore((state) => state.restoreVoucher)
-  const isBusy = useVoucherAdminStore((state) => state.isBusy)
-  async function handleRestore(voucher: CancelledVoucher) {
-    const ok = await restoreVoucher(voucher.movementType, voucher.id)
-    if (!ok) return
-    useToastStore.getState().show('تمت استعادة السند')
-    onRestored()
-  }
-  return (
-    <section className="border-y border-border">
-      <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full items-center justify-between gap-4 py-4 text-start" aria-expanded={open}>
-        <h2 className="text-base font-bold text-foreground">السندات الملغاة <span className="figure text-muted-foreground">({formatNumber(vouchers.length)})</span></h2>
-        <span className="text-[13px] font-medium text-olive">{open ? 'إخفاء' : 'عرض'}</span>
-      </button>
-      {open ? (
-        <div className="overflow-x-auto border-t border-border">
-          <table className="min-w-[980px] w-full border-collapse text-sm">
-            <thead><tr className="text-[11px] tracking-wide text-faint">
-              <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">النوع</th>
-              <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">رقم السند</th>
-              <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">التاريخ</th>
-              <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">البيان</th>
-              <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">السبب</th>
-              <th className="border-b border-border-strong px-3 py-2.5 text-end font-semibold">المبلغ</th>
-              <th className="border-b border-border-strong px-3 py-2.5 text-end font-semibold"><span className="sr-only">استعادة</span></th>
-            </tr></thead>
-            <tbody>{vouchers.map((voucher) => (
-              <tr key={`${voucher.movementType}-${voucher.id}`} className="text-muted-foreground">
-                <td className="border-b border-border px-3 py-3">{voucherTypeLabel(voucher.movementType)}</td>
-                <td className="figure border-b border-border px-3 py-3 line-through">{formatVoucherNo(voucher.voucherNumber)}</td>
-                <td className="border-b border-border px-3 py-3">{formatDate(voucher.voucherDate)}</td>
-                <td className="border-b border-border px-3 py-3">{[voucher.movementType === 'receipt' ? voucher.partyName ?? '—' : 'المركز', voucher.context].filter(Boolean).join(' · ')}</td>
-                <td className="border-b border-border px-3 py-3">{voucher.cancelReason ?? '—'}</td>
-                <td className="figure border-b border-border px-3 py-3 text-end line-through">{formatNumber(voucher.amount)}</td>
-                <td className="border-b border-border px-3 py-3 text-end"><Button variant="quiet" size="sm" onClick={() => handleRestore(voucher)} disabled={isBusy}>استعادة</Button></td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
-      ) : null}
-    </section>
   )
 }
 
