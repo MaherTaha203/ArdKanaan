@@ -50,8 +50,7 @@ export function SettingsWorkspace() {
   }
 
   function handleReset() {
-    setCenter(DEFAULT_CENTER_SETTINGS)
-    saveCenterSettings(DEFAULT_CENTER_SETTINGS)
+    setCenter((current) => ({ ...current, name: DEFAULT_CENTER_SETTINGS.name }))
     setMessage('تمت إعادة اسم المركز الافتراضي')
   }
 
