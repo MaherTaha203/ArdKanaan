@@ -5,23 +5,24 @@ import { create } from 'zustand'
 // RLS is the security boundary; this store no longer models a "session".
 
 export type ShellRoute = 'home' | 'students' | 'report' | 'activity' | 'settings'
+export type StudentView = 'directory' | 'statement'
+export type SettingsView = 'system' | 'activity'
 export type ShellOverlay = 'receive' | 'expense' | 'student' | null
-// The financial report has three lenses over the SAME derived movements — no view
-// is a new source of truth. 'general' = full position, 'receipts'/'payments' = one side.
 export type ReportView = 'general' | 'receipts' | 'payments'
 
 type ShellStore = {
   route: ShellRoute
+  studentView: StudentView
+  settingsView: SettingsView
   reportView: ReportView
   selectedStudentId: string | null
   overlay: ShellOverlay
   receivePrefillName: string | null
-  // When set, the open voucher overlay is editing this existing voucher (by id)
-  // rather than creating a new one. Cleared whenever an overlay closes.
   editVoucherId: string | null
-  // When set, the student overlay is editing this student's identity record.
   editStudentId: string | null
   navigate: (route: ShellRoute) => void
+  navigateStudents: (view: StudentView) => void
+  navigateSettings: (view: SettingsView) => void
   navigateReport: (view: ReportView) => void
   selectStudent: (studentId: string) => void
   openOverlay: (overlay: Exclude<ShellOverlay, null | 'student'>) => void
@@ -32,12 +33,12 @@ type ShellStore = {
   closeOverlay: () => void
 }
 
-// Every navigation/overlay transition clears BOTH edit targets so a stale id can
-// never leak into the next overlay.
 const CLEARED = { overlay: null, receivePrefillName: null, editVoucherId: null, editStudentId: null }
 
 export const useShellStore = create<ShellStore>((set) => ({
   route: 'home',
+  studentView: 'directory',
+  settingsView: 'system',
   reportView: 'general',
   selectedStudentId: null,
   overlay: null,
@@ -45,8 +46,10 @@ export const useShellStore = create<ShellStore>((set) => ({
   editVoucherId: null,
   editStudentId: null,
   navigate: (route) => set({ route, ...CLEARED }),
+  navigateStudents: (view) => set({ route: 'students', studentView: view, ...CLEARED }),
+  navigateSettings: (view) => set({ route: 'settings', settingsView: view, ...CLEARED }),
   navigateReport: (view) => set({ route: 'report', reportView: view, ...CLEARED }),
-  selectStudent: (studentId) => set({ selectedStudentId: studentId, route: 'students', ...CLEARED }),
+  selectStudent: (studentId) => set({ selectedStudentId: studentId, route: 'students', studentView: 'statement', ...CLEARED }),
   openOverlay: (overlay) => set({ ...CLEARED, overlay }),
   openReceiveFor: (studentName) => set({ ...CLEARED, overlay: 'receive', receivePrefillName: studentName }),
   openEditReceipt: (id) => set({ ...CLEARED, overlay: 'receive', editVoucherId: id }),
