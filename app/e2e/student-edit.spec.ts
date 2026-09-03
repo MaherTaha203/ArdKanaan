@@ -10,7 +10,9 @@ test('edits a student and persists the change through an UPDATE', async ({ page 
   })
 
   await login(page)
-  await page.getByRole('button', { name: 'الطلاب' }).first().click()
+  await page.getByRole('button', { name: 'معلومات الطلاب' }).click()
+  await page.getByRole('menuitemradio', { name: 'أسماء الطلاب' }).click()
+  await page.getByRole('button', { name: /سارة أحمد/ }).click()
 
   // Open the edit sheet for the active student and correct the name.
   await page.getByRole('button', { name: 'تعديل الطالب' }).click()
