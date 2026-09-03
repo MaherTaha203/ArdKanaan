@@ -32,7 +32,7 @@ test('opens the activity log as a read-only workspace', async ({ page }) => {
   await installSupabaseMocks(page)
 
   await login(page)
-  await page.getByRole('button', { name: 'إعدادات' }).click()
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'سجل العمل' }).click()
 
   await expect(page.getByRole('heading', { name: 'سجل العمل' })).toBeVisible()
