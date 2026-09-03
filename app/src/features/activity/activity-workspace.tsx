@@ -31,6 +31,7 @@ const ACTION_LABELS: Record<string, string> = {
   cancel: 'إلغاء',
   uncancel: 'إعادة تفعيل',
   restore: 'استعادة',
+  export: 'تصدير',
   login: 'تسجيل الدخول',
   logout: 'تسجيل الخروج',
   password_change: 'تغيير كلمة المرور',
