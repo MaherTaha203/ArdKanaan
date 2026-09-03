@@ -4,7 +4,7 @@ import { create } from 'zustand'
 // Authentication now lives in use-auth-store (real Supabase Auth), and Postgres
 // RLS is the security boundary; this store no longer models a "session".
 
-export type ShellRoute = 'home' | 'students' | 'report' | 'settings'
+export type ShellRoute = 'home' | 'students' | 'report' | 'activity' | 'settings'
 export type ShellOverlay = 'receive' | 'expense' | 'student' | null
 // The financial report has three lenses over the SAME derived movements — no view
 // is a new source of truth. 'general' = full position, 'receipts'/'payments' = one side.
