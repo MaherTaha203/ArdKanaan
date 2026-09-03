@@ -12,6 +12,7 @@ import {
   validateBackup,
   type RestorePayload,
 } from '@/lib/backup'
+import { recordActivityEvent } from '@/lib/activity-log'
 import { useBackupStore } from '@/store/use-backup-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
@@ -48,6 +49,12 @@ export function BackupRestore() {
       return
     }
     downloadBackup(payload)
+    void recordActivityEvent({
+      entity: 'backup',
+      action: 'export',
+      label: 'نسخة احتياطيّة',
+      description: 'تصدير نسخة احتياطيّة من بيانات المركز',
+    })
     useToastStore.getState().show('تم تنزيل النسخة الاحتياطيّة')
   }
 
