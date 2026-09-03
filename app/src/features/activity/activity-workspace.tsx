@@ -100,7 +100,8 @@ export function ActivityWorkspace() {
   }, [])
 
   useEffect(() => {
-    void load()
+    const task = window.setTimeout(() => void load(), 0)
+    return () => window.clearTimeout(task)
   }, [load])
 
   const sources = useMemo(
