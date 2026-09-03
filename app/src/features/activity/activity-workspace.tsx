@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { RefreshCw } from 'lucide-react'
 
@@ -57,11 +57,6 @@ function formatTime(value: string) {
   }).format(new Date(value))
 }
 
-function deviceLabel(row: ActivityRow) {
-  if (!row.device_id) return '—'
-  return row.device_id
-}
-
 function locationLabel(row: ActivityRow) {
   return [row.timezone, row.ip_address].filter(Boolean).join(' · ') || '—'
 }
@@ -73,7 +68,7 @@ export function ActivityWorkspace() {
   const [query, setQuery] = useState('')
   const [source, setSource] = useState('all')
 
-  async function load() {
+  const load = useCallback(async () => {
     const supabase = getSupabaseBrowserClient()
     if (!supabase) {
       setError('الاتصال بقاعدة البيانات غير مهيأ بعد.')
@@ -101,11 +96,11 @@ export function ActivityWorkspace() {
       setRows(result.data)
     }
     setIsLoading(false)
-  }
+  }, [])
 
   useEffect(() => {
     void load()
-  }, [])
+  }, [load])
 
   const sources = useMemo(
     () => Array.from(new Set(rows.map((row) => row.source).filter((value): value is string => Boolean(value)))),
@@ -210,9 +205,9 @@ export function ActivityWorkspace() {
                       <div className="font-medium text-foreground">{row.actor_email ?? 'المالك'}</div>
                       {row.changed_by ? <div className="figure mt-1 text-[11px] text-muted-foreground" dir="ltr">{row.changed_by}</div> : null}
                     </td>
-                    <td className="figure px-3 py-3 whitespace-nowrap" dir="ltr">{formatDate(row.changed_at)}</td>
-                    <td className="figure px-3 py-3 whitespace-nowrap" dir="ltr">{formatTime(row.changed_at)}</td>
-                    <td className="figure max-w-[190px] break-all px-3 py-3 text-xs text-muted-foreground" dir="ltr">{deviceLabel(row)}</td>
+                    <td className="figure whitespace-nowrap px-3 py-3" dir="ltr">{formatDate(row.changed_at)}</td>
+                    <td className="figure whitespace-nowrap px-3 py-3" dir="ltr">{formatTime(row.changed_at)}</td>
+                    <td className="figure max-w-[190px] break-all px-3 py-3 text-xs text-muted-foreground" dir="ltr">{row.device_id ?? '—'}</td>
                     <td className="figure max-w-[220px] px-3 py-3 text-xs text-muted-foreground" dir="ltr">{locationLabel(row)}</td>
                     <td className="px-3 py-3 text-muted-foreground">{row.source ?? 'النظام'}</td>
                     <td className="px-3 py-3 font-semibold text-foreground">{actionLabel(row.action)}</td>
