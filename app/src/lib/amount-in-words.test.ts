@@ -9,17 +9,17 @@ describe('amountInWords', () => {
   })
 
   it('handles whole-shekel values across hundreds and thousands', () => {
-    expect(amountInWordsArabic(125)).toBe('مئة و خمسة و عشرون شيكل فقط')
+    expect(amountInWordsArabic(125)).toBe('مئة وخمسة وعشرون شيكل فقط')
     expect(amountInWordsEnglish(125)).toBe('one hundred twenty-five shekels only')
     expect(amountInWordsArabic(1000)).toBe('ألف شيكل فقط')
     expect(amountInWordsEnglish(1000)).toBe('one thousand shekels only')
-    expect(amountInWordsArabic(2500)).toBe('ألفان و خمسمئة شيكل فقط')
+    expect(amountInWordsArabic(2500)).toBe('ألفان وخمسمئة شيكل فقط')
     expect(amountInWordsEnglish(2500)).toBe('two thousand five hundred shekels only')
   })
 
   it('truncates decimal input rather than introducing fractional currency', () => {
     expect(amountInWords(125.99)).toEqual({
-      ar: 'مئة و خمسة و عشرون شيكل فقط',
+      ar: 'مئة وخمسة وعشرون شيكل فقط',
       en: 'one hundred twenty-five shekels only',
     })
   })
