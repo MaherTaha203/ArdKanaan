@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 
 import {
+  Activity,
   ArrowDownLeft,
   ArrowUpRight,
   ChevronDown,
@@ -14,6 +15,7 @@ import {
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
 import { StudentEditSheet } from '@/features/students/student-edit-sheet'
+import { ActivityWorkspace } from '@/features/activity/activity-workspace'
 import { GlanceWorkspace } from '@/features/glance/glance-workspace'
 import { Toaster } from '@/components/ui/toast'
 import { StudentsWorkspace } from '@/features/students/students-workspace'
@@ -32,6 +34,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { route: 'home', label: 'الإطلالة', icon: Home },
   { route: 'students', label: 'الطلاب', icon: Users },
+  { route: 'activity', label: 'سجل العمل', icon: Activity },
 ]
 
 const REPORT_MENU: { view: ReportView; label: string }[] = [
@@ -48,6 +51,8 @@ function CurrentView({ route }: { route: ShellRoute }) {
       return <StudentsWorkspace />
     case 'report':
       return <FinancialReportWorkspace />
+    case 'activity':
+      return <ActivityWorkspace />
     case 'settings':
       return <SettingsWorkspace />
   }
@@ -154,6 +159,12 @@ export function AppShell() {
           icon={Users}
           label="الطلاب"
           onClick={() => navigate('students')}
+        />
+        <MobileNavButton
+          active={route === 'activity'}
+          icon={Activity}
+          label="سجل العمل"
+          onClick={() => navigate('activity')}
         />
         <MobileNavButton icon={ArrowDownLeft} label="قبض" accent onClick={() => openOverlay('receive')} />
         <MobileNavButton icon={ArrowUpRight} label="صرف" onClick={() => openOverlay('expense')} />
