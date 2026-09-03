@@ -185,7 +185,7 @@ export function ActivityWorkspace() {
                 <th scope="col" className="px-3 py-3 text-start">المستخدم</th>
                 <th scope="col" className="px-3 py-3 text-start">التاريخ</th>
                 <th scope="col" className="px-3 py-3 text-start">الوقت</th>
-                <th scope="col" className="px-3 py-3 text-start">رقم الجهاز</th>
+                <th scope="col" className="px-3 py-3 text-start">معرّف الجهاز</th>
                 <th scope="col" className="px-3 py-3 text-start">المكان / الشبكة</th>
                 <th scope="col" className="px-3 py-3 text-start">المصدر</th>
                 <th scope="col" className="px-3 py-3 text-start">العملية</th>
