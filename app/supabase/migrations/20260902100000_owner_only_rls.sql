@@ -85,9 +85,10 @@ drop policy if exists restore_log_select on public.restore_log;
 create policy restore_log_owner_select on public.restore_log
   for select to authenticated using (public.is_owner());
 
-drop policy if exists audit_auth_select on public.voucher_audit_log;
-create policy audit_owner_select on public.voucher_audit_log
-  for select to authenticated using (public.is_owner());
+-- NOTE: the legacy voucher_audit_log table was superseded and dropped by the P1
+-- audit migration (20260831140000_audit_and_student_edit); its history now lives in
+-- audit_log, so this migration defines no policy for it — referencing the dropped
+-- table would make the migration set fail to replay on a fresh database.
 
 -- Destructive restore must enforce the same boundary inside the SECURITY DEFINER
 -- function; RLS alone does not protect statements executed by its definer.
