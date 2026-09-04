@@ -44,10 +44,10 @@ export function GlanceWorkspace() {
         <h1 className="editorial text-[clamp(1.8rem,3vw,2.5rem)] text-foreground">الإطلالة</h1>
       </header>
 
-      <section aria-label="الرصيد النقدي" className="border-y border-border py-7 sm:py-8">
+      <section aria-label="الرصيد النقديّ للمركز" className="border-y border-border py-7 sm:py-8">
         <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ للمركز</div>
         {!loaded ? (
-          <div role="status" aria-label="جاري التحميل">
+          <div role="status" aria-label="جارٍ التحميل">
             <Skeleton className="mt-3 h-12 w-56 md:h-14" />
             <Skeleton className="mt-5 h-4 w-44" />
           </div>
@@ -75,7 +75,7 @@ export function GlanceWorkspace() {
       <section aria-labelledby="attention-heading" className="border-b border-border pb-7 sm:pb-8">
         <div className="flex items-baseline justify-between gap-4">
           <h2 id="attention-heading" className="text-base font-semibold text-foreground">
-            طلاب عليهم متبقٍّ
+            طلاب عليهم مبالغ متبقّية
           </h2>
           <button type="button" onClick={() => navigate('students')} className="text-xs font-semibold text-olive">
             كل الطلاب
@@ -105,7 +105,7 @@ export function GlanceWorkspace() {
               </div>
             ))
           ) : (
-            <p className="py-8 text-center text-sm text-faint">لا مبالغ متبقية.</p>
+            <p className="py-8 text-center text-sm text-faint">لا مبالغ متبقّية.</p>
           )}
         </div>
       </section>
@@ -121,7 +121,7 @@ export function GlanceWorkspace() {
         </Button>
         <Button variant="quiet" onClick={() => navigate('students')}>
           <PanelsTopLeft className="size-4" />
-          سجلّات الطلاب
+          أسماء الطلاب
         </Button>
       </section>
     </div>

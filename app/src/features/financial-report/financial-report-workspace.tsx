@@ -101,7 +101,7 @@ export function FinancialReportWorkspace() {
             </Button>
             <Button variant="outline" onClick={() => void reload()} disabled={isLoading}>
               <RotateCw className="size-4" />
-              {isLoading ? 'جاري التحديث...' : 'تحديث'}
+              {isLoading ? 'جارٍ التحديث…' : 'تحديث'}
             </Button>
           </>
         }

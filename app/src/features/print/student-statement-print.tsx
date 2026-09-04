@@ -62,7 +62,7 @@ export function StudentStatementPrint({
       </div>
 
       {/* Statement table */}
-      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>البيان المالي — مشتق من السندات</h3>
+      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>البيان المالي — مشتقّ من السندات</h3>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
           <tr className={`text-[10.5px] ${MUTED}`}>

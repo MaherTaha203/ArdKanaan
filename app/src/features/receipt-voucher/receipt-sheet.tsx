@@ -99,7 +99,7 @@ export function ReceiptSheet() {
         ) : (
           <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
-            <Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>{(control) => <Input placeholder="نص حر" readOnly={isEdit} {...control} {...form.register('courseName')} />}</Field>
+            <Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>{(control) => <Input placeholder="اكتب اسم الدورة" readOnly={isEdit} {...control} {...form.register('courseName')} />}</Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="قيمة الدورة" error={form.formState.errors.courseValue?.message}>{(control) => <Input type="number" min="0" step="1" readOnly={isEdit} className="figure" {...control} {...form.register('courseValue', { valueAsNumber: true })} />}</Field>
               <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>{(control) => <Input type="date" readOnly={isEdit} className="figure" {...control} {...form.register('paymentDate')} />}</Field>
@@ -112,9 +112,9 @@ export function ReceiptSheet() {
                 </div>
               )}
             </Field>
-            <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>{(control) => <Input placeholder="الاسم المدفوع باسمه" {...control} {...form.register('payerName')} />}</Field>
+            <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>{(control) => <Input placeholder="اسم من يدفع نيابةً عن الطالب" {...control} {...form.register('payerName')} />}</Field>
             <Field label="الملاحظات (اختياري)" error={form.formState.errors.notes?.message}>{(control) => <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />}</Field>
-            <Button type="submit" size="lg" className="w-full" disabled={busy}><ArrowDownLeft className="size-4" />{busy ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
+            <Button type="submit" size="lg" className="w-full" disabled={busy}><ArrowDownLeft className="size-4" />{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
             <p className="text-center text-[11.5px] text-faint">Enter للتالي · Ctrl+Enter للحفظ · Esc للإغلاق</p>
           </form>
         )}
