@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Pencil, Printer, RotateCw, Ban } from 'lucide-react'
+import { Ban, Eye, Pencil, Printer, RotateCw } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { PositionPanel } from '@/components/shell/position-panel'
@@ -62,6 +62,7 @@ export function FinancialReportWorkspace() {
   const [printing, setPrinting] = useState(false)
   const [printingVoucher, setPrintingVoucher] = useState<FinancialMovement | null>(null)
   const [cancelTarget, setCancelTarget] = useState<FinancialMovement | null>(null)
+  const [previewMovement, setPreviewMovement] = useState<FinancialMovement | null>(null)
 
   function handleEdit(movement: FinancialMovement) {
     if (movement.movementType === 'receipt') openEditReceipt(movement.id)
@@ -142,14 +143,32 @@ export function FinancialReportWorkspace() {
           <h2 className="text-base font-bold text-foreground">سجل الحركات المالية</h2>
           <span className="text-[12px] text-faint">من الأحدث</span>
         </div>
-        <div className="overflow-x-auto">
-          <MovementTable view={view} loaded={loaded} movements={viewMovements} allEmpty={movements.length === 0} onPrintVoucher={setPrintingVoucher} onEdit={handleEdit} onCancel={setCancelTarget} />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="overflow-x-auto">
+            <MovementTable
+              view={view}
+              loaded={loaded}
+              movements={viewMovements}
+              allEmpty={movements.length === 0}
+              previewId={previewMovement?.id ?? null}
+              onPreview={setPreviewMovement}
+              onPrintVoucher={setPrintingVoucher}
+              onEdit={handleEdit}
+              onCancel={setCancelTarget}
+            />
+          </div>
+          <VoucherPreviewPanel
+            movement={previewMovement}
+            onPrint={() => previewMovement && setPrintingVoucher(previewMovement)}
+            onEdit={() => previewMovement && handleEdit(previewMovement)}
+            onCancel={() => previewMovement && setCancelTarget(previewMovement)}
+          />
         </div>
       </section>
 
       {printing ? <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} closing={closing} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={viewMovements} periodLabel={periodLabel} onClose={() => setPrinting(false)} /> : null}
       {printingVoucher ? <VoucherPrint movement={printingVoucher} onClose={() => setPrintingVoucher(null)} /> : null}
-      {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); await reload() }} /> : null}
+      {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); setPreviewMovement(null); await reload() }} /> : null}
     </div>
   )
 }
@@ -200,32 +219,54 @@ function BalanceFigure({ label, value, tone = 'ink', strong = false }: { label: 
   )
 }
 
-function MovementTable({ view, loaded, movements, allEmpty, onPrintVoucher, onEdit, onCancel }: { view: ReportView; loaded: boolean; movements: FinancialMovement[]; allEmpty: boolean; onPrintVoucher: (movement: FinancialMovement) => void; onEdit: (movement: FinancialMovement) => void; onCancel: (movement: FinancialMovement) => void }) {
+function MovementTable({
+  view,
+  loaded,
+  movements,
+  allEmpty,
+  previewId,
+  onPreview,
+  onPrintVoucher,
+  onEdit,
+  onCancel,
+}: {
+  view: ReportView
+  loaded: boolean
+  movements: FinancialMovement[]
+  allEmpty: boolean
+  previewId: string | null
+  onPreview: (movement: FinancialMovement) => void
+  onPrintVoucher: (movement: FinancialMovement) => void
+  onEdit: (movement: FinancialMovement) => void
+  onCancel: (movement: FinancialMovement) => void
+}) {
   const showType = view === 'general'
   const colCount = (showType ? 5 : 4) + 1
   return (
     <table className="min-w-[980px] w-full border-collapse text-sm">
       <thead><tr className="text-[11px] tracking-wide text-faint">
-        {showType ? <th className="border-b border-border-strong px-3 py-3 text-start font-semibold">النوع</th> : null}
-        <th className="border-b border-border-strong px-3 py-3 text-start font-semibold">رقم السند</th>
-        <th className="border-b border-border-strong px-3 py-3 text-start font-semibold">التاريخ</th>
-        <th className="border-b border-border-strong px-3 py-3 text-start font-semibold">البيان</th>
-        <th className="border-b border-border-strong px-3 py-3 text-end font-semibold">المبلغ</th>
-        <th className="border-b border-border-strong px-3 py-3 text-end font-semibold"><span className="sr-only">طباعة</span></th>
+        {showType ? <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">النوع</th> : null}
+        <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">رقم السند</th>
+        <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">التاريخ</th>
+        <th className="border-b border-border-strong px-3 py-2.5 text-start font-semibold">البيان</th>
+        <th className="border-b border-border-strong px-3 py-2.5 text-end font-semibold">المبلغ</th>
+        <th className="border-b border-border-strong px-3 py-2.5 text-end font-semibold"><span className="sr-only">إجراءات</span></th>
       </tr></thead>
       <tbody>
         {!loaded ? (
           <tr><td colSpan={colCount} className="px-3 py-3"><SkeletonRows rows={5} /></td></tr>
         ) : movements.length > 0 ? movements.map((movement) => {
           const isReceipt = movement.movementType === 'receipt'
+          const selected = movement.id === previewId
           return (
-            <tr key={`${movement.movementType}-${movement.id}`}>
-              {showType ? <td className="border-b border-border px-3 py-3.5"><span className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-[11.5px] font-medium ${isReceipt ? 'border-gold/30 bg-gold-weak text-gold' : 'border-clay/30 bg-clay-weak text-clay'}`}><span className={`size-1.5 ${isReceipt ? 'bg-gold' : 'bg-clay'}`} aria-hidden />{isReceipt ? 'قبض' : 'صرف'}</span></td> : null}
-              <td className="figure border-b border-border px-3 py-3.5 text-muted-foreground">{formatVoucherNo(movement.voucherNumber)}</td>
-              <td className="border-b border-border px-3 py-3.5">{formatDate(movement.voucherDate)}</td>
-              <td className="border-b border-border px-3 py-3.5 text-muted-foreground">{partyAndContext(movement)}</td>
-              <td className={`figure border-b border-border px-3 py-3.5 text-end font-semibold ${isReceipt ? 'text-gold' : 'text-clay'}`}>{isReceipt ? '+' : '−'}{formatNumber(movement.amount)}</td>
-              <td className="border-b border-border px-3 py-3.5"><div className="flex items-center justify-end gap-0.5">
+            <tr key={`${movement.movementType}-${movement.id}`} className={selected ? 'bg-highlight' : ''}>
+              {showType ? <td className="border-b border-border px-3 py-2.5"><span className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-[11.5px] font-medium ${isReceipt ? 'border-gold/30 bg-gold-weak text-gold' : 'border-clay/30 bg-clay-weak text-clay'}`}><span className={`size-1.5 ${isReceipt ? 'bg-gold' : 'bg-clay'}`} aria-hidden />{isReceipt ? 'قبض' : 'صرف'}</span></td> : null}
+              <td className="figure border-b border-border px-3 py-2.5 text-muted-foreground">{formatVoucherNo(movement.voucherNumber)}</td>
+              <td className="border-b border-border px-3 py-2.5">{formatDate(movement.voucherDate)}</td>
+              <td className="border-b border-border px-3 py-2.5 text-muted-foreground">{partyAndContext(movement)}</td>
+              <td className={`figure border-b border-border px-3 py-2.5 text-end font-bold ${isReceipt ? 'text-gold' : 'text-clay'}`}>{isReceipt ? '+' : '−'}{formatNumber(movement.amount)}</td>
+              <td className="border-b border-border px-3 py-2.5"><div className="flex items-center justify-end gap-0.5">
+                <button type="button" onClick={() => onPreview(movement)} aria-pressed={selected} aria-label={`معاينة ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="معاينة" className={`p-1.5 ${selected ? 'text-olive' : 'text-faint'}`}><Eye className="size-4" /></button>
                 <button type="button" onClick={() => onPrintVoucher(movement)} aria-label={`طباعة ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="طباعة السند" className="p-1.5 text-faint"><Printer className="size-4" /></button>
                 <button type="button" onClick={() => onEdit(movement)} aria-label={`تعديل ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="تعديل السند" className="p-1.5 text-faint"><Pencil className="size-4" /></button>
                 <button type="button" onClick={() => onCancel(movement)} aria-label={`إبطال ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="إبطال السند" className="p-1.5 text-faint"><Ban className="size-4" /></button>
@@ -237,5 +278,52 @@ function MovementTable({ view, loaded, movements, allEmpty, onPrintVoucher, onEd
         )}
       </tbody>
     </table>
+  )
+}
+
+function VoucherPreviewPanel({
+  movement,
+  onPrint,
+  onEdit,
+  onCancel,
+}: {
+  movement: FinancialMovement | null
+  onPrint: () => void
+  onEdit: () => void
+  onCancel: () => void
+}) {
+  if (!movement) {
+    return (
+      <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint xl:block">
+        اختر قيدًا من السجلّ لعرض تفاصيله هنا.
+      </div>
+    )
+  }
+
+  const isReceipt = movement.movementType === 'receipt'
+  return (
+    <div className="rounded-xl border border-border-strong bg-panel p-4">
+      <span className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-[11.5px] font-medium ${isReceipt ? 'border-gold/30 bg-gold-weak text-gold' : 'border-clay/30 bg-clay-weak text-clay'}`}>
+        <span className={`size-1.5 ${isReceipt ? 'bg-gold' : 'bg-clay'}`} aria-hidden />
+        {isReceipt ? 'سند قبض' : 'سند صرف'}
+      </span>
+
+      <div className="mt-3 grid gap-2 text-sm">
+        <div className="flex items-center justify-between"><span className="text-muted-foreground">رقم السند</span><span className="figure font-semibold text-foreground">{formatVoucherNo(movement.voucherNumber)}</span></div>
+        <div className="flex items-center justify-between"><span className="text-muted-foreground">التاريخ</span><span className="figure text-foreground">{formatDate(movement.voucherDate)}</span></div>
+        <div className="flex items-center justify-between"><span className="text-muted-foreground">البيان</span><span className="max-w-[60%] truncate text-end text-foreground">{partyAndContext(movement)}</span></div>
+      </div>
+
+      <div className="mt-3 border-t border-border pt-3">
+        <div className="text-[11px] font-medium text-faint">المبلغ</div>
+        <Money value={movement.amount} currency={false} className={`text-xl font-bold ${isReceipt ? 'text-gold' : 'text-clay'}`} />
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <Button variant="quiet" size="sm" onClick={onPrint}><Printer className="size-4" />طباعة السند</Button>
+        <Button variant="quiet" size="sm" onClick={onEdit}><Pencil className="size-4" />تعديل السند</Button>
+        <Button variant="destructive" size="sm" onClick={onCancel}><Ban className="size-4" />إبطال السند</Button>
+      </div>
+    </div>
   )
 }

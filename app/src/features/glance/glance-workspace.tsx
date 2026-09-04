@@ -1,17 +1,18 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
-import { ArrowDownLeft, ArrowUpRight, PanelsTopLeft } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, PanelsTopLeft } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, attentionList, financialTotals } from '@/lib/aggregate'
+import { aggregateStudents, attentionList, financialTotals, type StudentAggregate } from '@/lib/aggregate'
 import { formatNumber } from '@/lib/format'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const ATTENTION_LIMIT = 5
+const ATTENTION_COLLAPSED = 3
 
 // The Glance is a work entry point, not a dashboard: one cash position, a short
 // attention list, and the day's actions. Figures remain derived from vouchers.
@@ -27,11 +28,21 @@ export function GlanceWorkspace() {
   const navigate = useShellStore((state) => state.navigate)
   const selectStudent = useShellStore((state) => state.selectStudent)
   const openOverlay = useShellStore((state) => state.openOverlay)
+  const openReceiveFor = useShellStore((state) => state.openReceiveFor)
+  const navigateStudents = useShellStore((state) => state.navigateStudents)
+
+  const [previewId, setPreviewId] = useState<string | null>(null)
+  const [showAllAttention, setShowAllAttention] = useState(false)
 
   const totals = useMemo(() => financialTotals(movements), [movements])
   const attention = useMemo(
     () => attentionList(aggregateStudents(students, statementLines)).slice(0, ATTENTION_LIMIT),
     [students, statementLines],
+  )
+  const visibleAttention = showAllAttention ? attention : attention.slice(0, ATTENTION_COLLAPSED)
+  const preview = useMemo(
+    () => (previewId ? attention.find((item) => item.student.id === previewId) ?? null : null),
+    [attention, previewId],
   )
 
   return (
@@ -86,24 +97,44 @@ export function GlanceWorkspace() {
           {!loaded ? (
             <SkeletonRows rows={3} />
           ) : attention.length > 0 ? (
-            attention.map((item) => (
-              <div
-                key={item.student.id}
-                className="flex items-center gap-3 border-b border-border py-3.5 last:border-b-0"
-              >
-                <span className="grid size-9 flex-none place-items-center rounded-full bg-olive-weak text-sm font-bold text-olive">
-                  {item.student.name.charAt(0)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-foreground">{item.student.name}</div>
-                  <div className="text-xs text-faint">رصيد مستحق على {formatNumber(item.courses)} دورة</div>
-                </div>
-                <Money value={item.remaining} currency={false} className="text-sm font-semibold text-warn" />
-                <Button variant="quiet" size="sm" onClick={() => selectStudent(item.student.id)}>
-                  عرض
-                </Button>
+            <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_300px]">
+              <div>
+                {visibleAttention.map((item) => (
+                  <div
+                    key={item.student.id}
+                    className={`flex items-center gap-3 border-b border-border py-2.5 last:border-b-0 ${item.student.id === previewId ? 'bg-highlight' : ''}`}
+                  >
+                    <span className="grid size-9 flex-none place-items-center rounded-full bg-olive-weak text-sm font-bold text-olive">
+                      {item.student.name.charAt(0)}
+                    </span>
+                    <div className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{item.student.name}</div>
+                    <Money value={item.remaining} currency={false} className="text-sm font-bold text-warn" />
+                    <Button variant="quiet" size="sm" onClick={() => setPreviewId(item.student.id)}>
+                      عرض
+                    </Button>
+                  </div>
+                ))}
+                {!showAllAttention && attention.length > ATTENTION_COLLAPSED ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllAttention(true)}
+                    className="w-full py-2.5 text-center text-xs font-semibold text-olive"
+                  >
+                    عرض المزيد ({attention.length - ATTENTION_COLLAPSED})
+                  </button>
+                ) : null}
               </div>
-            ))
+
+              <AttentionPreviewPanel
+                item={preview}
+                onQuickReceive={() => preview && openReceiveFor(preview.student.name)}
+                onOpenStatement={() => {
+                  if (!preview) return
+                  selectStudent(preview.student.id)
+                  navigateStudents('statement')
+                }}
+              />
+            </div>
           ) : (
             <p className="py-8 text-center text-sm text-faint">لا توجد أرصدة مستحقة.</p>
           )}
@@ -124,6 +155,52 @@ export function GlanceWorkspace() {
           دليل الطلاب
         </Button>
       </section>
+    </div>
+  )
+}
+
+function AttentionPreviewPanel({
+  item,
+  onQuickReceive,
+  onOpenStatement,
+}: {
+  item: StudentAggregate | null
+  onQuickReceive: () => void
+  onOpenStatement: () => void
+}) {
+  if (!item) {
+    return (
+      <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint md:block">
+        اختر طالبًا من القائمة لعرض ملخّص حسابه هنا.
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-border-strong bg-panel p-4">
+      <div className="flex items-center gap-3">
+        <span className="editorial grid size-11 flex-none place-items-center rounded-full bg-olive text-lg text-white">{item.student.name.charAt(0)}</span>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-bold text-foreground">{item.student.name}</div>
+          <div className="text-[12px] text-muted-foreground">رصيد مستحق على {formatNumber(item.courses)} دورة</div>
+        </div>
+      </div>
+
+      <div className="mt-4 border-t border-border pt-4">
+        <div className="text-[11px] font-medium text-faint">الرصيد المستحق</div>
+        <Money value={item.remaining} currency={false} className="text-xl font-bold text-warn" />
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <Button variant="gold" size="sm" onClick={onQuickReceive}>
+          <ArrowDownLeft className="size-4" />
+          تسجيل دفعة
+        </Button>
+        <Button variant="quiet" size="sm" onClick={onOpenStatement}>
+          <ChevronLeft className="size-4" />
+          فتح الكشف الكامل
+        </Button>
+      </div>
     </div>
   )
 }

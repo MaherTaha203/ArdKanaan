@@ -6,7 +6,6 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
@@ -90,9 +89,9 @@ export function StudentsWorkspace() {
             <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id) }} aria-label="البحث عن طالب" placeholder="الاسم أو الهاتف أو الرقم التعريفي أو الدورة" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
           </div>
 
-          <Card className="overflow-hidden">
+          <div className="border-t border-border-strong">
             {!loaded ? <div className="p-3"><SkeletonRows rows={6} /></div> : filtered.length > 0 ? filtered.map((item) => <StudentRow key={item.student.id} item={item} active={item.student.id === activeId} onSelect={() => selectStudent(item.student.id)} onQuickReceive={() => openReceiveFor(item.student.name)} />) : <p className="px-4 py-8 text-center text-sm text-faint">لا نتائج مطابقة.</p>}
-          </Card>
+          </div>
         </div>
 
         <section className="min-w-0 border-y border-border py-6" aria-label={`كشف حساب ${active?.student.name ?? ''}`}>
@@ -135,8 +134,8 @@ export function StudentsWorkspace() {
                     <td className="border-b border-border px-2 py-3">سند قبض — رقم {formatVoucherNo(line.voucherNumber)}</td>
                     <td className="border-b border-border px-2 py-3 text-muted-foreground">{line.courseName}</td>
                     <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.courseValue)}</td>
-                    <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.amountReceived)}</td>
-                    <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.remainingBalance)}</td>
+                    <td className="figure border-b border-border px-2 py-3 text-end font-medium">{formatNumber(line.amountReceived)}</td>
+                    <td className="figure border-b border-border px-2 py-3 text-end font-semibold">{formatNumber(line.remainingBalance)}</td>
                   </tr>) : <tr><td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">لا توجد حركات.</td></tr>}</tbody>
                 </table>
               </div>
@@ -154,7 +153,7 @@ function StudentRow({ item, active, onSelect, onQuickReceive }: { item: StudentA
   const status = statusOf(item)
   const statusLabel = status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
   return <div className={`flex items-center gap-2 border-b border-border last:border-b-0 ${active ? 'bg-highlight' : ''}`}>
-    <button type="button" onClick={onSelect} aria-current={active ? 'true' : undefined} className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-1 ps-4 text-start">
+    <button type="button" onClick={onSelect} aria-current={active ? 'true' : undefined} className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pe-1 ps-4 text-start">
       <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">{item.student.name.charAt(0)}</span>
       <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
       <span className="text-[11px] font-medium text-muted-foreground">{statusLabel}</span>

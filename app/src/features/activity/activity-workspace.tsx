@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { RefreshCw } from 'lucide-react'
+import { ChevronDown, RefreshCw } from 'lucide-react'
 
 import { RouteHeader } from '@/components/shell/route-header'
 import { Input } from '@/components/ui/input'
@@ -69,6 +69,16 @@ export function ActivityWorkspace() {
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [source, setSource] = useState('all')
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+
+  const toggleRow = useCallback((id: string) => {
+    setExpandedRows((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   const load = useCallback(async () => {
     const supabase = getSupabaseBrowserClient()
@@ -179,44 +189,69 @@ export function ActivityWorkspace() {
         ) : null}
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px] border-collapse text-sm">
+          <table className="w-full min-w-[880px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border text-start text-xs font-semibold text-muted-foreground">
-                <th scope="col" className="px-3 py-3 text-start">المستخدم</th>
-                <th scope="col" className="px-3 py-3 text-start">التاريخ</th>
-                <th scope="col" className="px-3 py-3 text-start">الوقت</th>
-                <th scope="col" className="px-3 py-3 text-start">معرّف الجهاز</th>
-                <th scope="col" className="px-3 py-3 text-start">المكان / الشبكة</th>
-                <th scope="col" className="px-3 py-3 text-start">المصدر</th>
-                <th scope="col" className="px-3 py-3 text-start">الإجراء</th>
-                <th scope="col" className="px-3 py-3 text-start">البيان</th>
+                <th scope="col" className="px-3 py-2.5 text-start">المستخدم</th>
+                <th scope="col" className="px-3 py-2.5 text-start">التاريخ</th>
+                <th scope="col" className="px-3 py-2.5 text-start">الوقت</th>
+                <th scope="col" className="px-3 py-2.5 text-start">المصدر</th>
+                <th scope="col" className="px-3 py-2.5 text-start">الإجراء</th>
+                <th scope="col" className="px-3 py-2.5 text-start">البيان</th>
+                <th scope="col" className="px-3 py-2.5 text-start"><span className="sr-only">تفاصيل تقنيّة</span></th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">جارٍ تحميل السجل…</td>
+                  <td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">جارٍ تحميل السجل…</td>
                 </tr>
               ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">لا توجد سجلات مطابقة.</td>
+                  <td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">لا توجد سجلات مطابقة.</td>
                 </tr>
               ) : (
-                filteredRows.map((row) => (
-                  <tr key={row.id} className="border-b border-border align-top last:border-b-0">
-                    <td className="px-3 py-3">
-                      <div className="font-medium text-foreground">{row.actor_email ?? 'المستخدم'}</div>
-                      {row.changed_by ? <div className="figure mt-1 text-[11px] text-muted-foreground" dir="ltr">{row.changed_by}</div> : null}
-                    </td>
-                    <td className="figure whitespace-nowrap px-3 py-3" dir="ltr">{formatDate(row.changed_at)}</td>
-                    <td className="figure whitespace-nowrap px-3 py-3" dir="ltr">{formatTime(row.changed_at)}</td>
-                    <td className="figure max-w-[190px] break-all px-3 py-3 text-xs text-muted-foreground" dir="ltr">{row.device_id ?? '—'}</td>
-                    <td className="figure max-w-[220px] px-3 py-3 text-xs text-muted-foreground" dir="ltr">{locationLabel(row)}</td>
-                    <td className="px-3 py-3 text-muted-foreground">{row.source ?? 'النظام'}</td>
-                    <td className="px-3 py-3 font-semibold text-foreground">{actionLabel(row.action)}</td>
-                    <td className="max-w-[360px] px-3 py-3 text-foreground">{row.description ?? row.label ?? '—'}</td>
-                  </tr>
-                ))
+                filteredRows.map((row) => {
+                  const expanded = expandedRows.has(row.id)
+                  return (
+                    <Fragment key={row.id}>
+                      <tr className="border-b border-border align-top last:border-b-0">
+                        <td className="px-3 py-2.5">
+                          <div className="font-medium text-foreground">{row.actor_email ?? 'المستخدم'}</div>
+                          {row.changed_by ? <div className="figure mt-1 text-[11px] text-muted-foreground" dir="ltr">{row.changed_by}</div> : null}
+                        </td>
+                        <td className="figure whitespace-nowrap px-3 py-2.5">{formatDate(row.changed_at)}</td>
+                        <td className="figure whitespace-nowrap px-3 py-2.5">{formatTime(row.changed_at)}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground">{row.source ?? 'النظام'}</td>
+                        <td className="px-3 py-2.5 font-semibold text-foreground">{actionLabel(row.action)}</td>
+                        <td className="max-w-[300px] px-3 py-2.5 text-foreground">{row.description ?? row.label ?? '—'}</td>
+                        <td className="px-3 py-2.5">
+                          <button
+                            type="button"
+                            onClick={() => toggleRow(row.id)}
+                            aria-expanded={expanded}
+                            aria-controls={`activity-details-${row.id}`}
+                            aria-label="تفاصيل تقنيّة"
+                            title="تفاصيل تقنيّة"
+                            className="rounded-full p-1.5 text-faint"
+                          >
+                            <ChevronDown className={`size-4 transition-transform ${expanded ? '-rotate-180' : ''}`} />
+                          </button>
+                        </td>
+                      </tr>
+                      {expanded ? (
+                        <tr id={`activity-details-${row.id}`} className="border-b border-border bg-highlight/40 last:border-b-0">
+                          <td colSpan={7} className="px-3 py-2.5">
+                            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                              <span>معرّف الجهاز <span className="figure break-all text-foreground" dir="ltr">{row.device_id ?? '—'}</span></span>
+                              <span>المكان / الشبكة <span className="figure text-foreground" dir="ltr">{locationLabel(row)}</span></span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </Fragment>
+                  )
+                })
               )}
             </tbody>
           </table>
