@@ -115,7 +115,7 @@ export function StudentEditSheet() {
 
         <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy}>
           <Check className="size-4" />
-          {isBusy ? 'جاري الحفظ...' : 'حفظ بيانات الطالب'}
+          {isBusy ? 'جارٍ الحفظ…' : 'حفظ بيانات الطالب'}
         </Button>
         <p className="text-center text-[11.5px] text-faint">
           يُصحّح هذا البيانات التعريفيّة فقط — لا يغيّر أي سند أو مبلغ.

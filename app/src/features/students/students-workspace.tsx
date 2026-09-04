@@ -112,7 +112,7 @@ export function StudentsWorkspace() {
               </div>
 
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-base font-bold text-foreground">البيان المالي — مشتق من السندات</h3>
+                <h3 className="text-base font-bold text-foreground">البيان المالي — مشتقّ من السندات</h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل الطالب</Button>
                   <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة البيان</Button>
@@ -137,11 +137,11 @@ export function StudentsWorkspace() {
                     <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.courseValue)}</td>
                     <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.amountReceived)}</td>
                     <td className="figure border-b border-border px-2 py-3 text-end">{formatNumber(line.remainingBalance)}</td>
-                  </tr>) : <tr><td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">لا توجد حركة.</td></tr>}</tbody>
+                  </tr>) : <tr><td colSpan={6} className="px-2 py-10 text-center text-sm text-faint">لا توجد حركات.</td></tr>}</tbody>
                 </table>
               </div>
             </>
-          ) : <div className="py-16 text-center text-sm text-faint">{loaded ? 'لا يوجد طلاب.' : 'جاري التحميل…'}</div>}
+          ) : <div className="py-16 text-center text-sm text-faint">{loaded ? 'لا يوجد طلاب.' : 'جارٍ التحميل…'}</div>}
         </section>
       </div>
 

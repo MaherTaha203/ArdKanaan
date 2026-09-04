@@ -169,7 +169,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
       }
 
       if (!activeStudent) {
-        throw new Error('تعذر تحديد الطالب المطلوب للسند.')
+        throw new Error('تعذّر تحديد الطالب المطلوب للسند.')
       }
 
       // The course fee is authoritative per (student, course) via the enrollment.

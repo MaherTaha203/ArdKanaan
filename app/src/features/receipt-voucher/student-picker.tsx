@@ -205,7 +205,7 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
           role="alert"
           className="mt-2 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-[12.5px] text-warn"
         >
-          يوجد أكثر من طالب بهذا الاسم — اختر المقصود من القائمة لتفادي ربط السند بالطالب الخطأ.
+          يوجد أكثر من طالب بهذا الاسم — اختر المقصود من القائمة لتفادي ربط السند بالطالب غير المقصود.
         </div>
       ) : null}
 

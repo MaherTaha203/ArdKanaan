@@ -90,9 +90,28 @@ function underThousandEn(value: number): string {
   return parts.join(' ')
 }
 
+// A voucher's amount is sealed with this idiom ("only, no more") so nothing can be
+// appended after the figure in words.
+const AR_CLOSING = 'فقط لا غير'
+
+// The currency noun after a number follows Arabic tamyiz (specifier) rules, driven
+// by the last two digits of the amount:
+//   • 3–10  → plural           ("خمسة شيكلات")
+//   • 11–99 → accusative singular ("خمسة وعشرون شيكلًا")
+//   • a hundred/thousand tail (…00) → genitive singular ("مئة شيكل")
+// The pure values 1 and 2 read the noun before the number and are handled by the caller.
+function shekelNoun(value: number): string {
+  const lastTwo = value % 100
+  if (lastTwo >= 3 && lastTwo <= 10) return 'شيكلات'
+  if (lastTwo >= 11 && lastTwo <= 99) return 'شيكلًا'
+  return 'شيكل'
+}
+
 export function amountInWordsArabic(amount: number): string {
   const value = Math.max(0, Math.trunc(amount))
-  if (value === 0) return 'صفر شيكل فقط'
+  if (value === 0) return `صفر شيكل ${AR_CLOSING}`
+  if (value === 1) return `شيكل واحد ${AR_CLOSING}`
+  if (value === 2) return `شيكلان ${AR_CLOSING}`
 
   const groups: string[] = []
   let remaining = value
@@ -112,12 +131,13 @@ export function amountInWordsArabic(amount: number): string {
     scale += 1
   }
 
-  return `${groups.join(' و')} شيكل فقط`
+  return `${groups.join(' و')} ${shekelNoun(value)} ${AR_CLOSING}`
 }
 
 export function amountInWordsEnglish(amount: number): string {
   const value = Math.max(0, Math.trunc(amount))
   if (value === 0) return 'Zero shekels only'
+  if (value === 1) return 'one shekel only'
 
   const groups: string[] = []
   let remaining = value

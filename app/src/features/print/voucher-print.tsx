@@ -38,7 +38,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       }
     >
       <div className={`rounded-xl border ${HAIR} p-5`}>
-        {isReceipt ? <Row label="استلمنا من" value={movement.partyName ?? '—'} /> : <Row label="صُرف لـ" value="المركز" />}
+        {isReceipt ? <Row label="استلمنا من" value={movement.partyName ?? '—'} /> : null}
         {movement.context ? <Row label={isReceipt ? 'عن دورة' : 'نوع المصروف'} value={movement.context} /> : null}
         <div className={`mt-4 border-t ${HAIR} pt-4`}>
           <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
@@ -63,7 +63,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       </div>
 
       <div className="mt-16 grid grid-cols-2 gap-10">
-        <Signature label={isReceipt ? 'توقيع المستلِم' : 'توقيع الصارف'} />
+        <Signature label={isReceipt ? 'توقيع المستلِم' : 'توقيع المسؤول'} />
         <Signature label={isReceipt ? 'توقيع الدافع' : 'توقيع المستلِم'} />
       </div>
     </PrintPreview>
