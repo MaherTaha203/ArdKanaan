@@ -10,12 +10,12 @@ test('edits a student and persists the change through an UPDATE', async ({ page 
   })
 
   await login(page)
-  await page.getByRole('button', { name: 'معلومات الطلاب' }).click()
-  await page.getByRole('menuitemradio', { name: 'أسماء الطلاب' }).click()
+  await page.getByRole('button', { name: 'الطلاب', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'دليل الطلاب' }).click()
   await page.getByRole('button', { name: /سارة أحمد/ }).click()
 
   // Open the edit sheet for the active student and correct the name.
-  await page.getByRole('button', { name: 'تعديل الطالب' }).click()
+  await page.getByRole('button', { name: 'تعديل بيانات الطالب' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
 

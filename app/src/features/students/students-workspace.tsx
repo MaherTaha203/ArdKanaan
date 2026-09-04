@@ -74,20 +74,20 @@ export function StudentsWorkspace() {
 
   return (
     <div className="detail-workspace">
-      <RouteHeader eyebrow="معلومات الطلاب" title="كشف حساب" />
+      <RouteHeader eyebrow="الطلاب" title="كشف الحساب" />
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => navigateStudents('directory')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">أسماء الطلاب</button>
-        <button type="button" onClick={() => navigateStudents('statement')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">كشف حساب</button>
+        <button type="button" onClick={() => navigateStudents('directory')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">دليل الطلاب</button>
+        <button type="button" onClick={() => navigateStudents('statement')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">كشف الحساب</button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[380px_minmax(0,1fr)]">
         <div>
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
             <Search aria-hidden className="size-4 flex-none text-faint" />
-            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id) }} aria-label="ابحث عن طالب" placeholder="الاسم أو الهاتف أو الهوية أو الدورة" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id) }} aria-label="البحث عن طالب" placeholder="الاسم أو الهاتف أو الرقم التعريفي أو الدورة" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
           </div>
 
           <Card className="overflow-hidden">
@@ -104,19 +104,19 @@ export function StudentsWorkspace() {
                   <h2 className="editorial text-2xl text-foreground">{active.student.name}</h2>
                   <div className="text-[13px] text-muted-foreground">{formatNumber(active.courses)} دورة · آخر حركة {active.lastActivity ? formatDate(active.lastActivity) : '—'}</div>
                   {active.student.idNumber || active.student.phone ? <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12.5px] text-faint">
-                    {active.student.idNumber ? <span>رقم الهوية <span className="figure text-muted-foreground" dir="ltr">{active.student.idNumber}</span></span> : null}
+                    {active.student.idNumber ? <span>الرقم التعريفي <span className="figure text-muted-foreground" dir="ltr">{active.student.idNumber}</span></span> : null}
                     {active.student.phone ? <span>الهاتف <span className="figure text-muted-foreground" dir="ltr">{active.student.phone}</span></span> : null}
                   </div> : null}
                 </div>
-                <div className="ms-auto flex gap-8"><RecordFigure label="المدفوع" value={active.paid} tone="ink" /><RecordFigure label="المتبقّي" value={active.remaining} tone="warn" /></div>
+                <div className="ms-auto flex gap-8"><RecordFigure label="المسدَّد" value={active.paid} tone="ink" /><RecordFigure label="الرصيد المستحق" value={active.remaining} tone="warn" /></div>
               </div>
 
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-base font-bold text-foreground">البيان المالي — مشتقّ من السندات</h3>
+                <h3 className="text-base font-bold text-foreground">كشف الحساب — مُستخرج من السندات</h3>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل الطالب</Button>
-                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة البيان</Button>
-                  <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}><ArrowDownLeft className="size-4" />استلام مبلغ</Button>
+                  <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
+                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة الكشف</Button>
+                  <Button variant="quiet" size="sm" onClick={() => openReceiveFor(active.student.name)}><ArrowDownLeft className="size-4" />تسجيل دفعة</Button>
                 </div>
               </div>
 
@@ -124,11 +124,11 @@ export function StudentsWorkspace() {
                 <table className="border-collapse text-sm">
                   <thead><tr className="text-[11px] tracking-wide text-faint">
                     <th className="border-b border-border px-2 py-2.5 text-start font-semibold">التاريخ</th>
-                    <th className="border-b border-border px-2 py-2.5 text-start font-semibold">الوصف</th>
+                    <th className="border-b border-border px-2 py-2.5 text-start font-semibold">البيان</th>
                     <th className="border-b border-border px-2 py-2.5 text-start font-semibold">الدورة</th>
                     <th className="border-b border-border px-2 py-2.5 text-end font-semibold">قيمة الدورة</th>
-                    <th className="border-b border-border px-2 py-2.5 text-end font-semibold">المدفوع</th>
-                    <th className="border-b border-border px-2 py-2.5 text-end font-semibold">المتبقّي</th>
+                    <th className="border-b border-border px-2 py-2.5 text-end font-semibold">المسدَّد</th>
+                    <th className="border-b border-border px-2 py-2.5 text-end font-semibold">الرصيد المستحق</th>
                   </tr></thead>
                   <tbody>{activeLines.length > 0 ? activeLines.map((line) => <tr key={line.id}>
                     <td className="border-b border-border px-2 py-3">{formatDate(line.voucherDate)}</td>
@@ -152,7 +152,7 @@ export function StudentsWorkspace() {
 
 function StudentRow({ item, active, onSelect, onQuickReceive }: { item: StudentAggregate; active: boolean; onSelect: () => void; onQuickReceive: () => void }) {
   const status = statusOf(item)
-  const statusLabel = status === 'ok' ? 'مكتمل' : status === 'due' ? 'عليه متبقٍّ' : 'غير مدفوع'
+  const statusLabel = status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
   return <div className={`flex items-center gap-2 border-b border-border last:border-b-0 ${active ? 'bg-highlight' : ''}`}>
     <button type="button" onClick={onSelect} aria-current={active ? 'true' : undefined} className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-1 ps-4 text-start">
       <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">{item.student.name.charAt(0)}</span>

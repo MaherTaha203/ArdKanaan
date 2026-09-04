@@ -62,7 +62,7 @@ export function FinancialReportPrint({
             التاريخ <span className="figure">{formatDate(todayIsoDate())}</span>
           </div>
           <div>
-            عدد الحركات <span className="figure">{formatNumber(movements.length)}</span>
+            عدد الحركات المالية <span className="figure">{formatNumber(movements.length)}</span>
           </div>
         </>
       }
@@ -70,15 +70,15 @@ export function FinancialReportPrint({
       {view === 'general' ? (
         <div className="grid grid-cols-2 gap-4 border-y border-[#e2e8f0] py-5 sm:grid-cols-5">
           <SummaryCell label="الرصيد الافتتاحي" value={opening} />
-          <SummaryCell label="إجمالي القبض" value={totalIn} color="text-[#059669]" />
-          <SummaryCell label="إجمالي الصرف" value={totalOut} color="text-[#dc2626]" />
-          <SummaryCell label="صافي الحركة" value={net} />
+          <SummaryCell label="إجمالي المقبوضات" value={totalIn} color="text-[#059669]" />
+          <SummaryCell label="إجمالي المدفوعات" value={totalOut} color="text-[#dc2626]" />
+          <SummaryCell label="صافي التدفق النقدي" value={net} />
           <SummaryCell label="الرصيد الختامي" value={closing} />
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 border-y border-[#e2e8f0] py-5">
           <SummaryCell
-            label={view === 'receipts' ? 'إجمالي القبض' : 'إجمالي الصرف'}
+            label={view === 'receipts' ? 'إجمالي المقبوضات' : 'إجمالي المدفوعات'}
             value={view === 'receipts' ? totalIn : totalOut}
             color={view === 'receipts' ? 'text-[#059669]' : 'text-[#dc2626]'}
           />
@@ -89,7 +89,7 @@ export function FinancialReportPrint({
         </div>
       )}
 
-      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>سجل الحركات — من الأقدم</h3>
+      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>سجل الحركات المالية — من الأقدم</h3>
       {view === 'general' ? (
         <GeneralMovementTable movements={runningRows} opening={opening} />
       ) : (

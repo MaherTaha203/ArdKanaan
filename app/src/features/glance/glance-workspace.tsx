@@ -41,7 +41,7 @@ export function GlanceWorkspace() {
 
       <header className="space-y-1.5">
         <div className="text-[12px] font-bold tracking-wide text-olive">أرض كنعان</div>
-        <h1 className="editorial text-[clamp(1.8rem,3vw,2.5rem)] text-foreground">الإطلالة</h1>
+        <h1 className="editorial text-[clamp(1.8rem,3vw,2.5rem)] text-foreground">الرئيسية</h1>
       </header>
 
       <section aria-label="الرصيد النقديّ للمركز" className="border-y border-border py-7 sm:py-8">
@@ -62,10 +62,10 @@ export function GlanceWorkspace() {
             />
             <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-1 text-[13px] text-muted-foreground">
               <span>
-                قبض <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" />
+                المقبوضات <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" />
               </span>
               <span>
-                صرف <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" />
+                المدفوعات <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" />
               </span>
             </div>
           </>
@@ -75,10 +75,10 @@ export function GlanceWorkspace() {
       <section aria-labelledby="attention-heading" className="border-b border-border pb-7 sm:pb-8">
         <div className="flex items-baseline justify-between gap-4">
           <h2 id="attention-heading" className="text-base font-semibold text-foreground">
-            طلاب عليهم مبالغ متبقّية
+            طلاب لديهم أرصدة مستحقة
           </h2>
           <button type="button" onClick={() => navigate('students')} className="text-xs font-semibold text-olive">
-            كل الطلاب
+            دليل الطلاب
           </button>
         </div>
 
@@ -96,16 +96,16 @@ export function GlanceWorkspace() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-foreground">{item.student.name}</div>
-                  <div className="text-xs text-faint">متبقٍّ على {formatNumber(item.courses)} دورة</div>
+                  <div className="text-xs text-faint">رصيد مستحق على {formatNumber(item.courses)} دورة</div>
                 </div>
                 <Money value={item.remaining} currency={false} className="text-sm font-semibold text-warn" />
                 <Button variant="quiet" size="sm" onClick={() => selectStudent(item.student.id)}>
-                  فتح
+                  عرض
                 </Button>
               </div>
             ))
           ) : (
-            <p className="py-8 text-center text-sm text-faint">لا مبالغ متبقّية.</p>
+            <p className="py-8 text-center text-sm text-faint">لا توجد أرصدة مستحقة.</p>
           )}
         </div>
       </section>
@@ -121,7 +121,7 @@ export function GlanceWorkspace() {
         </Button>
         <Button variant="quiet" onClick={() => navigate('students')}>
           <PanelsTopLeft className="size-4" />
-          أسماء الطلاب
+          دليل الطلاب
         </Button>
       </section>
     </div>

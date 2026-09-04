@@ -16,7 +16,7 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   await openReceiptSheet(page)
 
   // Typing the shared name (without picking from the list) raises an inline warning.
-  await page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية').fill('محمد علي')
+  await page.getByPlaceholder('ابحث عن طالب بالاسم أو الهاتف أو الرقم التعريفي').fill('محمد علي')
   await expect(page.getByText('يوجد أكثر من طالب بهذا الاسم').first()).toBeVisible()
 
   // Fill the rest and try to save anyway.
@@ -28,7 +28,7 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   // The save is refused with the specific, actionable message — and no receipt was written.
   await expect(
     page.getByRole('alert').filter({
-      hasText: 'اختر المقصود من القائمة لتفادي ربط السند بالطالب الخطأ',
+      hasText: 'اختر المقصود من القائمة لتفادي ربط السند بالطالب غير المقصود',
     }),
   ).toBeVisible()
   expect(handle.receiptInserts).toHaveLength(0)
@@ -45,11 +45,11 @@ test('selects a unique student from the identity search', async ({ page }) => {
   await login(page)
   await openReceiptSheet(page)
 
-  const picker = page.getByPlaceholder('ابحث بالاسم أو الهاتف أو رقم الهوية')
+  const picker = page.getByPlaceholder('ابحث عن طالب بالاسم أو الهاتف أو الرقم التعريفي')
   await picker.fill('خالد سمير')
   await page.getByRole('option', { name: /خالد سمير/ }).click()
 
   await expect(picker).toHaveValue('خالد سمير')
-  await expect(page.getByText('رقم الهوية').last()).toBeVisible()
+  await expect(page.getByText('الرقم التعريفي').last()).toBeVisible()
   await expect(page.getByText('123456789')).toBeVisible()
 })

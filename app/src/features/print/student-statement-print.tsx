@@ -32,8 +32,8 @@ export function StudentStatementPrint({
 }: StudentStatementPrintProps) {
   return (
     <PrintPreview
-      docTitle="بيان الطالب"
-      documentTitle={`بيان الطالب — ${studentName}`}
+      docTitle="كشف حساب الطالب"
+      documentTitle={`كشف حساب الطالب — ${studentName}`}
       onClose={onClose}
       meta={
         <>
@@ -50,11 +50,11 @@ export function StudentStatementPrint({
       {/* Summary strip */}
       <div className={`grid grid-cols-2 gap-4 rounded-xl border ${HAIR} p-4 sm:grid-cols-2`}>
         <div>
-          <div className={`text-[11px] ${MUTED}`}>إجمالي المدفوع</div>
+          <div className={`text-[11px] ${MUTED}`}>إجمالي المسدَّد</div>
           <div className={`figure mt-1 text-2xl font-semibold ${INK}`}>{formatNumber(paid)}</div>
         </div>
         <div>
-          <div className={`text-[11px] ${MUTED}`}>إجمالي المتبقّي</div>
+          <div className={`text-[11px] ${MUTED}`}>إجمالي الرصيد المستحق</div>
           <div className="figure mt-1 text-2xl font-semibold text-[#b45309]">
             {formatNumber(remaining)}
           </div>
@@ -62,16 +62,16 @@ export function StudentStatementPrint({
       </div>
 
       {/* Statement table */}
-      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>البيان المالي — مشتقّ من السندات</h3>
+      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>كشف الحساب — مُستخرج من السندات</h3>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
           <tr className={`text-[10.5px] ${MUTED}`}>
             <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>التاريخ</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>الوصف</th>
+            <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>البيان</th>
             <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>الدورة</th>
             <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>قيمة الدورة</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>المدفوع</th>
-            <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>المتبقّي</th>
+            <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>المسدَّد</th>
+            <th className={`border-b ${HEAD} px-2 py-2 text-end font-semibold`}>الرصيد المستحق</th>
           </tr>
         </thead>
         <tbody>

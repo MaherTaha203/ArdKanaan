@@ -27,9 +27,9 @@ const PERIODS: { id: Period; label: string }[] = [
 ]
 
 const REPORT_VIEWS: { id: ReportView; label: string }[] = [
-  { id: 'general', label: 'التقرير العام' },
-  { id: 'receipts', label: 'تقرير القبض' },
-  { id: 'payments', label: 'تقرير الصرف' },
+  { id: 'general', label: 'كشف الحساب العام' },
+  { id: 'receipts', label: 'تقرير المقبوضات' },
+  { id: 'payments', label: 'تقرير المدفوعات' },
 ]
 
 function partyAndContext(movement: FinancialMovement) {
@@ -86,12 +86,12 @@ export function FinancialReportWorkspace() {
     if (view === 'payments') return ordered.filter((m) => m.movementType === 'payment')
     return ordered
   }, [scoped, view])
-  const title = view === 'receipts' ? 'تقرير القبض' : view === 'payments' ? 'تقرير الصرف' : 'التقرير العام'
+  const title = view === 'receipts' ? 'تقرير المقبوضات' : view === 'payments' ? 'تقرير المدفوعات' : 'كشف الحساب العام'
 
   return (
     <div className="space-y-8">
       <RouteHeader
-        eyebrow="التقرير المالي"
+        eyebrow="التقارير المالية"
         title={title}
         actions={
           <>
@@ -139,7 +139,7 @@ export function FinancialReportWorkspace() {
 
       <section className="border-y border-border">
         <div className="flex items-baseline justify-between gap-4 border-b border-border px-1 py-4">
-          <h2 className="text-base font-bold text-foreground">سجل الحركات</h2>
+          <h2 className="text-base font-bold text-foreground">سجل الحركات المالية</h2>
           <span className="text-[12px] text-faint">من الأحدث</span>
         </div>
         <div className="overflow-x-auto">
@@ -163,13 +163,13 @@ function GeneralSummary({ net, totalIn, totalOut, opening, closing, periodLabel 
       </div>
       <div className="grid gap-y-5 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-8">
         <BalanceFigure label="الرصيد الافتتاحي" value={opening} />
-        <BalanceFigure label="إجمالي القبض" value={totalIn} tone="in" />
-        <BalanceFigure label="إجمالي الصرف" value={totalOut} tone="out" />
-        <BalanceFigure label="صافي الحركة" value={net} />
+        <BalanceFigure label="إجمالي المقبوضات" value={totalIn} tone="in" />
+        <BalanceFigure label="إجمالي المدفوعات" value={totalOut} tone="out" />
+        <BalanceFigure label="صافي التدفق النقدي" value={net} />
         <BalanceFigure label="الرصيد الختامي" value={closing} strong />
       </div>
       <div className="mt-6 border-t border-border pt-5">
-        <PositionPanel net={net} totalIn={totalIn} totalOut={totalOut} label={`صافي الحركة · ${periodLabel}`} context="وارد − صادر" />
+        <PositionPanel net={net} totalIn={totalIn} totalOut={totalOut} label={`صافي التدفق النقدي · ${periodLabel}`} context="مقبوضات − مدفوعات" />
       </div>
     </section>
   )
@@ -181,7 +181,7 @@ function SidedSummary({ view, amount, count, periodLabel }: { view: Exclude<Repo
     <section className="border-y border-border py-5">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <div className="text-[12px] font-bold tracking-wide text-olive">{isReceipts ? 'إجمالي القبض' : 'إجمالي الصرف'} · {periodLabel}</div>
+          <div className="text-[12px] font-bold tracking-wide text-olive">{isReceipts ? 'إجمالي المقبوضات' : 'إجمالي المدفوعات'} · {periodLabel}</div>
           <Money value={amount} currencyClassName="text-faint" className={`mt-2 block text-[clamp(2.2rem,5vw,3.2rem)] font-semibold leading-none ${isReceipts ? 'text-gold' : 'text-clay'}`} />
         </div>
         <BalanceFigure label={isReceipts ? 'عدد سندات القبض' : 'عدد سندات الصرف'} value={count} />
@@ -228,7 +228,7 @@ function MovementTable({ view, loaded, movements, allEmpty, onPrintVoucher, onEd
               <td className="border-b border-border px-3 py-3.5"><div className="flex items-center justify-end gap-0.5">
                 <button type="button" onClick={() => onPrintVoucher(movement)} aria-label={`طباعة ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="طباعة السند" className="p-1.5 text-faint"><Printer className="size-4" /></button>
                 <button type="button" onClick={() => onEdit(movement)} aria-label={`تعديل ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="تعديل السند" className="p-1.5 text-faint"><Pencil className="size-4" /></button>
-                <button type="button" onClick={() => onCancel(movement)} aria-label={`إلغاء ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="إلغاء السند" className="p-1.5 text-faint"><Ban className="size-4" /></button>
+                <button type="button" onClick={() => onCancel(movement)} aria-label={`إبطال ${isReceipt ? 'سند القبض' : 'سند الصرف'} رقم ${formatVoucherNo(movement.voucherNumber)}`} title="إبطال السند" className="p-1.5 text-faint"><Ban className="size-4" /></button>
               </div></td>
             </tr>
           )

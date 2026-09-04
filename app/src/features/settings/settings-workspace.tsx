@@ -105,7 +105,7 @@ export function SettingsWorkspace() {
           </p>
         </Group>
 
-        <Group title="المالية">
+        <Group title="الإعدادات المالية">
           <Row label="العملة">شيكل (₪)</Row>
           <Row label="تنسيق التاريخ">
             <span className="figure">DD/MM/YYYY</span>
@@ -119,7 +119,7 @@ export function SettingsWorkspace() {
         </Group>
 
         <Group title="الحساب">
-          <Row label="البريد">
+          <Row label="البريد الإلكتروني">
             <span className="figure" dir="ltr">
               {email}
             </span>

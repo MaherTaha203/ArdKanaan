@@ -81,7 +81,7 @@ export function StudentEditSheet() {
         </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="رقم الهوية">
+          <Field label="الرقم التعريفي">
             {(control) => (
               <Input
                 className="figure"

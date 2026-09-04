@@ -7,7 +7,7 @@ const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
 type PrintDocumentProps = {
   /** Ref to the printable root — react-to-print prints this node. */
   ref?: Ref<HTMLDivElement>
-  /** The document's own title, e.g. "بيان الطالب" or "سند قبض". */
+  /** The document's own title, e.g. "كشف حساب الطالب" or "سند قبض". */
   docTitle: string
   /** Right-side meta lines (date, number, name…). */
   meta?: ReactNode

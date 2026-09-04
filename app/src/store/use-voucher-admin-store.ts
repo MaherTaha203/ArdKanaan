@@ -52,7 +52,7 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
     }
     const trimmed = reason.trim()
     if (!trimmed) {
-      set({ error: 'سبب الإلغاء مطلوب.' })
+      set({ error: 'سبب الإبطال مطلوب.' })
       return false
     }
     const table = type === 'receipt' ? 'receipt_vouchers' : 'payment_vouchers'
@@ -64,7 +64,7 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
       .is('cancelled_at', null)
     set({ isBusy: false })
     if (error) {
-      set({ error: 'تعذّر إلغاء السند.' })
+      set({ error: 'تعذّر إبطال السند.' })
       return false
     }
     return true
