@@ -39,7 +39,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
     >
       <div className={`rounded-xl border ${HAIR} p-5`}>
         {isReceipt ? <Row label="استلمنا من" value={movement.partyName ?? '—'} /> : null}
-        {movement.context ? <Row label={isReceipt ? 'عن دورة' : 'نوع المصروف'} value={movement.context} /> : null}
+        {movement.context ? <Row label={isReceipt ? 'عن الدورة' : 'بند المصروف'} value={movement.context} /> : null}
         <div className={`mt-4 border-t ${HAIR} pt-4`}>
           <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0">
@@ -52,7 +52,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
             </div>
             <div className="text-end sm:min-w-[150px]">
               <div className={`text-[12px] font-medium ${MUTED}`}>
-                {isReceipt ? 'المبلغ المقبوض' : 'المبلغ المصروف'}
+                {isReceipt ? 'المبلغ المقبوض' : 'المبلغ المدفوع'}
               </div>
               <div className={`figure mt-1 text-3xl font-bold ${INK}`}>
                 {formatNumber(movement.amount)} <span className="text-lg font-medium text-[#64748b]">₪</span>

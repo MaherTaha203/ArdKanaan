@@ -56,14 +56,14 @@ export function StudentDirectoryWorkspace() {
 
   return (
     <div>
-      <RouteHeader eyebrow="معلومات الطلاب" title="أسماء الطلاب" />
+      <RouteHeader eyebrow="الطلاب" title="دليل الطلاب" />
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       <div className="max-w-[1080px]">
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => navigateStudents('directory')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">أسماء الطلاب</button>
-          <button type="button" onClick={() => navigateStudents('statement')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">كشف حساب</button>
+          <button type="button" onClick={() => navigateStudents('directory')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">دليل الطلاب</button>
+          <button type="button" onClick={() => navigateStudents('statement')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">كشف الحساب</button>
         </div>
 
         <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/20">
@@ -72,8 +72,8 @@ export function StudentDirectoryWorkspace() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            aria-label="ابحث عن طالب"
-            placeholder="بحث بالاسم أو الهاتف أو رقم الهوية"
+            aria-label="البحث عن طالب"
+            placeholder="بالاسم أو الهاتف أو الرقم التعريفي"
             className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
           />
         </div>
@@ -94,14 +94,14 @@ export function StudentDirectoryWorkspace() {
 
 function DirectoryRow({ item, onSelect }: { item: StudentAggregate; onSelect: () => void }) {
   const status = statusOf(item)
-  const statusLabel = status === 'ok' ? 'مكتمل' : status === 'due' ? 'عليه متبقٍّ' : 'غير مدفوع'
+  const statusLabel = status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
   return (
     <button type="button" onClick={onSelect} className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-start last:border-b-0">
       <span className="grid size-9 flex-none place-items-center rounded-full bg-olive-weak text-sm font-bold text-olive">{item.student.name.charAt(0)}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm text-foreground">{item.student.name}</span>
         <span className="block text-xs text-faint">
-          {item.student.phone ? item.student.phone : 'لا يوجد هاتف'}
+          {item.student.phone ? item.student.phone : 'لا يوجد رقم هاتف'}
           {item.student.idNumber ? ` · ${item.student.idNumber}` : ''}
           {` · ${formatNumber(item.courses)} دورة`}
         </span>

@@ -33,7 +33,7 @@ function Harness({ students }: { students: Student[] }) {
   return <StudentPicker form={form} students={students} />
 }
 
-const PLACEHOLDER = 'ابحث بالاسم أو الهاتف أو رقم الهوية'
+const PLACEHOLDER = 'ابحث عن طالب بالاسم أو الهاتف أو الرقم التعريفي'
 
 describe('StudentPicker ambiguity warning', () => {
   it('warns when the typed name matches several students', async () => {

@@ -19,19 +19,19 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 type MenuItem<T> = { value: T; label: string }
 
 const REPORT_MENU: MenuItem<ReportView>[] = [
-  { value: 'general', label: 'التقرير العام' },
-  { value: 'receipts', label: 'تقرير القبض' },
-  { value: 'payments', label: 'تقرير الصرف' },
+  { value: 'general', label: 'كشف الحساب العام' },
+  { value: 'receipts', label: 'تقرير المقبوضات' },
+  { value: 'payments', label: 'تقرير المدفوعات' },
 ]
 
 const STUDENT_MENU: MenuItem<StudentView>[] = [
-  { value: 'directory', label: 'أسماء الطلاب' },
-  { value: 'statement', label: 'كشف حساب' },
+  { value: 'directory', label: 'دليل الطلاب' },
+  { value: 'statement', label: 'كشف الحساب' },
 ]
 
 const SETTINGS_MENU: MenuItem<SettingsView>[] = [
-  { value: 'system', label: 'إعدادات النظام' },
-  { value: 'activity', label: 'سجل العمل' },
+  { value: 'system', label: 'الإعدادات' },
+  { value: 'activity', label: 'سجل التدقيق' },
 ]
 
 function CurrentView({ route, studentView, settingsView }: { route: ShellRoute; studentView: StudentView; settingsView: SettingsView }) {
@@ -79,9 +79,9 @@ export function AppShell() {
         </button>
 
         <nav aria-label="التنقل" className="ms-6 hidden items-center gap-1 md:flex">
-          <NavLink label="الإطلالة" icon={Home} active={route === 'home'} onClick={() => navigate('home')} />
+          <NavLink label="الرئيسية" icon={Home} active={route === 'home'} onClick={() => navigate('home')} />
           <GroupNav
-            label="معلومات الطلاب"
+            label="الطلاب"
             icon={Users}
             active={route === 'students'}
             value={studentView}
@@ -130,7 +130,7 @@ export function AppShell() {
       <Toaster />
 
       <nav aria-label="التنقل" className="fixed inset-x-0 bottom-0 z-20 flex flex-none items-stretch justify-around border-t border-border bg-panel/95 px-1 py-1.5 md:hidden">
-        <MobileNavButton active={route === 'home'} icon={Home} label="الإطلالة" onClick={() => navigate('home')} />
+        <MobileNavButton active={route === 'home'} icon={Home} label="الرئيسية" onClick={() => navigate('home')} />
         <MobileGroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
         <MobileGroupNav label="التقرير" icon={FileText} active={route === 'report'} value={reportView} items={REPORT_MENU} onPick={navigateReport} />
         <MobileGroupNav label="إعدادات" icon={Settings} active={route === 'settings' || route === 'activity'} value={settingsView} items={SETTINGS_MENU} onPick={navigateSettings} />
@@ -176,7 +176,7 @@ function GroupNav<T extends string>({ label, icon: Icon, active, value, items, o
 }
 
 function ReportNav({ active, reportView, onPick }: { active: boolean; reportView: ReportView; onPick: (view: ReportView) => void }) {
-  return <GroupNav label="التقرير المالي" icon={FileText} active={active} value={reportView} items={REPORT_MENU} onPick={onPick} />
+  return <GroupNav label="التقارير المالية" icon={FileText} active={active} value={reportView} items={REPORT_MENU} onPick={onPick} />
 }
 
 function MobileGroupNav<T extends string>({ label, icon: Icon, active, value, items, onPick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; value: T; items: MenuItem<T>[]; onPick: (value: T) => void }) {

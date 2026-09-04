@@ -28,9 +28,9 @@ type ActivityRow = {
 const ACTION_LABELS: Record<string, string> = {
   create: 'إنشاء',
   edit: 'تعديل',
-  cancel: 'إلغاء',
+  cancel: 'إبطال',
   // Legacy audit values are historical records only; cancellation is final.
-  uncancel: 'تغيير حالة الإلغاء (سجل تاريخي)',
+  uncancel: 'تغيير حالة الإبطال (سجل تاريخي)',
   restore: 'استعادة نسخة احتياطيّة',
   export: 'تصدير',
   login: 'تسجيل الدخول',
@@ -134,7 +134,7 @@ export function ActivityWorkspace() {
 
   return (
     <div>
-      <RouteHeader eyebrow="المراجعة" title="سجل النشاط" />
+      <RouteHeader eyebrow="التدقيق" title="سجل التدقيق" />
 
       <section className="w-full">
         <div className="mb-5 flex flex-col gap-3 border-y border-border py-4 lg:flex-row lg:items-center">
@@ -188,7 +188,7 @@ export function ActivityWorkspace() {
                 <th scope="col" className="px-3 py-3 text-start">معرّف الجهاز</th>
                 <th scope="col" className="px-3 py-3 text-start">المكان / الشبكة</th>
                 <th scope="col" className="px-3 py-3 text-start">المصدر</th>
-                <th scope="col" className="px-3 py-3 text-start">العملية</th>
+                <th scope="col" className="px-3 py-3 text-start">الإجراء</th>
                 <th scope="col" className="px-3 py-3 text-start">البيان</th>
               </tr>
             </thead>
@@ -205,7 +205,7 @@ export function ActivityWorkspace() {
                 filteredRows.map((row) => (
                   <tr key={row.id} className="border-b border-border align-top last:border-b-0">
                     <td className="px-3 py-3">
-                      <div className="font-medium text-foreground">{row.actor_email ?? 'المشغّل'}</div>
+                      <div className="font-medium text-foreground">{row.actor_email ?? 'المستخدم'}</div>
                       {row.changed_by ? <div className="figure mt-1 text-[11px] text-muted-foreground" dir="ltr">{row.changed_by}</div> : null}
                     </td>
                     <td className="figure whitespace-nowrap px-3 py-3" dir="ltr">{formatDate(row.changed_at)}</td>

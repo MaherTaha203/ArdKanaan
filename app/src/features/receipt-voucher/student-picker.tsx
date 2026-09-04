@@ -148,7 +148,7 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
             <Input
               {...control}
               autoComplete="off"
-              placeholder="ابحث بالاسم أو الهاتف أو رقم الهوية"
+              placeholder="ابحث عن طالب بالاسم أو الهاتف أو الرقم التعريفي"
               value={name}
               role="combobox"
               aria-expanded={showDropdown}
@@ -212,7 +212,7 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
       {/* Picked existing student: show their identity fields, read-only. */}
       {studentId ? (
         <div className="mt-2 flex flex-wrap gap-2">
-          <IdentityChip label="رقم الهوية" value={idNumber} />
+          <IdentityChip label="الرقم التعريفي" value={idNumber} />
           <IdentityChip label="الهاتف" value={phone} />
         </div>
       ) : null}
@@ -224,7 +224,7 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
             طالب جديد — بيانات اختيارية
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="رقم الهوية">
+            <Field label="الرقم التعريفي">
               {(control) => (
                 <Input
                   {...control}

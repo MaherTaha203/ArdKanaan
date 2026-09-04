@@ -84,7 +84,7 @@ export function ReceiptSheet() {
     if (latestLine) {
       setSavedVoucher({ id: latestLine.id, movementType: 'receipt', voucherNumber: latestLine.voucherNumber, voucherDate: latestLine.voucherDate, amount: latestLine.amountReceived, partyName: latestLine.studentName, context: latestLine.courseName })
     }
-    useToastStore.getState().show('تم تسجيل سند القبض بنجاح')
+    useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
   const busy = isEdit ? adminBusy : isSaving

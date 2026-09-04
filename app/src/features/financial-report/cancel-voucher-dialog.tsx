@@ -33,12 +33,12 @@ export function CancelVoucherDialog({ movement, onClose, onCancelled }: CancelVo
   async function handleConfirm() {
     const ok = await cancelVoucher(movement.movementType, movement.id, reason)
     if (!ok) return
-    useToastStore.getState().show('تم إلغاء السند')
+    useToastStore.getState().show('تم إبطال السند')
     await onCancelled()
   }
 
   return (
-    <ActionSheet title={`إلغاء ${typeLabel}`} onClose={onClose}>
+    <ActionSheet title={`إبطال ${typeLabel}`} onClose={onClose}>
       {error ? (
         <div
           role="alert"
@@ -73,10 +73,10 @@ export function CancelVoucherDialog({ movement, onClose, onCancelled }: CancelVo
         لا يُحذف السند؛ يبقى برقمه ويخرج من الإجماليات، ويظل متاحًا للمراجعة.
       </p>
 
-      <Field label="سبب الإلغاء" error={!reason.trim() ? 'سبب الإلغاء مطلوب' : undefined}>
+      <Field label="سبب الإبطال" error={!reason.trim() ? 'سبب الإبطال مطلوب' : undefined}>
         {(control) => (
           <Textarea
-            placeholder="اكتب سبب الإلغاء"
+            placeholder="اكتب سبب الإبطال"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             {...control}
@@ -91,7 +91,7 @@ export function CancelVoucherDialog({ movement, onClose, onCancelled }: CancelVo
           onClick={handleConfirm}
           disabled={isBusy || !reason.trim()}
         >
-          {isBusy ? 'جارٍ الإلغاء…' : 'تأكيد الإلغاء'}
+          {isBusy ? 'جارٍ الإبطال…' : 'تأكيد الإبطال'}
         </Button>
         <Button variant="quiet" onClick={onClose} disabled={isBusy}>
           تراجع
