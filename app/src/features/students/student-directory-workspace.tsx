@@ -57,8 +57,8 @@ export function StudentDirectoryWorkspace() {
   }, [sorted, query])
 
   const preview = useMemo(
-    () => (previewId ? aggregates.find((item) => item.student.id === previewId) ?? null : null),
-    [aggregates, previewId],
+    () => (previewId ? filtered.find((item) => item.student.id === previewId) ?? null : null),
+    [filtered, previewId],
   )
 
   return (

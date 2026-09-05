@@ -62,7 +62,7 @@ export function FinancialReportWorkspace() {
   const [printing, setPrinting] = useState(false)
   const [printingVoucher, setPrintingVoucher] = useState<FinancialMovement | null>(null)
   const [cancelTarget, setCancelTarget] = useState<FinancialMovement | null>(null)
-  const [previewMovement, setPreviewMovement] = useState<FinancialMovement | null>(null)
+  const [previewId, setPreviewId] = useState<string | null>(null)
 
   function handleEdit(movement: FinancialMovement) {
     if (movement.movementType === 'receipt') openEditReceipt(movement.id)
@@ -87,6 +87,10 @@ export function FinancialReportWorkspace() {
     if (view === 'payments') return ordered.filter((m) => m.movementType === 'payment')
     return ordered
   }, [scoped, view])
+  const previewMovement = useMemo(
+    () => (previewId ? viewMovements.find((m) => m.id === previewId) ?? null : null),
+    [viewMovements, previewId],
+  )
   const title = view === 'receipts' ? 'تقرير المقبوضات' : view === 'payments' ? 'تقرير المدفوعات' : 'كشف الحساب العام'
 
   return (
@@ -150,8 +154,8 @@ export function FinancialReportWorkspace() {
               loaded={loaded}
               movements={viewMovements}
               allEmpty={movements.length === 0}
-              previewId={previewMovement?.id ?? null}
-              onPreview={setPreviewMovement}
+              previewId={previewId}
+              onPreview={(movement) => setPreviewId(movement.id)}
               onPrintVoucher={setPrintingVoucher}
               onEdit={handleEdit}
               onCancel={setCancelTarget}
@@ -168,7 +172,7 @@ export function FinancialReportWorkspace() {
 
       {printing ? <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} closing={closing} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={viewMovements} periodLabel={periodLabel} onClose={() => setPrinting(false)} /> : null}
       {printingVoucher ? <VoucherPrint movement={printingVoucher} onClose={() => setPrintingVoucher(null)} /> : null}
-      {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); setPreviewMovement(null); await reload() }} /> : null}
+      {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); setPreviewId(null); await reload() }} /> : null}
     </div>
   )
 }
