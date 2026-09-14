@@ -189,3 +189,54 @@ test('adds a student through the real student form path', async ({ page }) => {
   })
   await expect(page.getByText('تمت إضافة الطالب بنجاح')).toBeVisible()
 });
+
+test('restores a validated backup through the real settings path', async ({ page }) => {
+  const handle = await installSupabaseMocks(page)
+
+  await login(page)
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
+  await page.getByRole('button', { name: 'فتح صفحة النسخ الاحتياطي' }).click()
+
+  await expect(page.getByRole('heading', { name: 'النسخ الاحتياطي والاستعادة' })).toBeVisible()
+  const backup = JSON.stringify({
+    app: 'ard-kanaan',
+    version: 1,
+    exported_at: '2026-08-31T00:00:00.000Z',
+    students: [{ id: 'restored-1', name: 'طالب مستعاد', id_number: null, phone: null, notes: 'من النسخة' }],
+    courses: [],
+    enrollments: [],
+    receipt_vouchers: [],
+    payment_vouchers: [],
+  })
+
+  const fileInput = page.locator('input[type="file"]')
+  await fileInput.setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(backup) })
+  const dialog = page.getByRole('dialog', { name: 'تأكيد الاستعادة' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('textbox').fill('استعادة')
+  await dialog.getByRole('button', { name: 'تأكيد الاستعادة' }).click()
+
+  await expect.poll(() => handle.restoreCalls.length).toBe(1)
+  expect(handle.restoreCalls[0]).toMatchObject({ force: false })
+  await expect(page.getByText('تمت الاستعادة بنجاح')).toBeVisible()
+
+  await page.getByRole('button', { name: 'الطلاب', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'دليل الطلاب' }).click()
+  await expect(page.getByText('طالب مستعاد')).toBeVisible()
+});
+
+test('handles password recovery and returns to the authenticated shell after password update', async ({ page }) => {
+  const handle = await installSupabaseMocks(page)
+
+  await page.goto('/#type=recovery&access_token=stub-access&refresh_token=stub-refresh')
+  await expect(page.getByRole('heading', { name: 'تعيين كلمة مرور جديدة' })).toBeVisible()
+  const inputs = page.locator('input[type="password"]')
+  await inputs.nth(0).fill('StrongPass1!')
+  await inputs.nth(1).fill('StrongPass1!')
+  await page.getByRole('button', { name: 'تعيين كلمة المرور' }).click()
+
+  await expect.poll(() => handle.passwordUpdates.length).toBe(1)
+  expect(handle.passwordUpdates[0]).toBe('StrongPass1!')
+  await expect(page.getByRole('button', { name: 'الرئيسية' })).toBeVisible()
+});
