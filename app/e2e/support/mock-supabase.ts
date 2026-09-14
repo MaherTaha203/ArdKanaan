@@ -95,7 +95,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       handle.passwordResets.push(String(payload.email ?? ''))
       return json(route, {})
     }
-    if (url.includes('/user') && method === 'PUT') {
+    if (url.includes('/user') && (method === 'PUT' || method === 'PATCH')) {
       const payload = safeJson(route.request().postData()) as { password?: string }
       handle.passwordUpdates.push(String(payload.password ?? ''))
       return json(route, { user: { id: 'u-1' } })
