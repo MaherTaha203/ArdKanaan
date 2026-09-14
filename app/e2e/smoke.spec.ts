@@ -61,7 +61,8 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
 
   await expect.poll(() => handle.receiptInserts.length).toBe(1)
-  await expect(page.getByRole('heading', { name: 'كشف الحساب' })).toBeVisible()
+  const statement = page.getByLabel('كشف حساب سارة أحمد')
+  await expect(statement.getByRole('heading', { name: 'كشف الحساب' })).toBeVisible()
   await expect(page.getByText('دورة الرياضيات').first()).toBeVisible()
   await expect(page.getByText('R-900').first()).toBeVisible()
 
