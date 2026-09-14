@@ -1,0 +1,5 @@
+-- Compatibility marker for the production migration history.
+-- The restore-courses fidelity implementation is already present in
+-- 20260914100000_restore_courses_fidelity.sql in this repository. This file keeps
+-- the repository migration history aligned with the production version that was
+-- applied before the migration was normalized in source control.
