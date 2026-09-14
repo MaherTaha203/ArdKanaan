@@ -77,7 +77,29 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
 
     if (method === 'GET') {
       if (table === 'students') return arr(applyEqFilters(students, url.searchParams))
-      if (table === 'student_statement_lines') return arr([])
+      if (table === 'student_statement_lines') {
+        const receipt = handle.receiptInserts.at(-1)
+        if (!receipt) return arr([])
+
+        const courseValue = Number(receipt.course_value ?? 0)
+        const amountReceived = Number(receipt.amount_received ?? 0)
+        const studentId = String(receipt.student_id ?? 'new-student')
+        const student = students.find((row) => row.id === studentId)
+
+        return arr([
+          {
+            id: 'new-receipt',
+            voucher_number: 900,
+            voucher_date: '2026-08-31',
+            student_id: studentId,
+            student_name: student?.name ?? 'سارة أحمد',
+            course_name: String(receipt.course_name ?? 'دورة'),
+            course_value: courseValue,
+            amount_received: amountReceived,
+            remaining_balance: courseValue - amountReceived,
+          },
+        ])
+      }
       if (table === 'financial_movements') return arr([])
       if (table === 'cancelled_vouchers') return arr([])
       if (table === 'enrollments') return arr([])
