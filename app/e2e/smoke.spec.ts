@@ -89,6 +89,41 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   await expect(page.getByText('كهرباء')).toBeVisible()
 });
 
+test('cancels a voucher without deleting it and moves it to cancelled history', async ({ page }) => {
+  const handle = await installSupabaseMocks(page, {
+    financialMovements: [{
+      id: 'r-1', movement_type: 'receipt', voucher_number: 912, voucher_date: '2026-08-31', amount: 400,
+      party_name: 'سارة أحمد', context: 'دورة الرياضيات',
+    }],
+  })
+
+  await login(page)
+  await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'تقرير المقبوضات' }).click()
+
+  const cancelButton = page.getByRole('button', { name: /إبطال سند القبض رقم R-912/ })
+  await expect(cancelButton).toBeVisible()
+  await cancelButton.click()
+
+  const dialog = page.getByRole('dialog', { name: 'إبطال سند قبض' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('textbox', { name: 'سبب الإبطال' }).fill('إدخال تجريبي خاطئ')
+  await dialog.getByRole('button', { name: 'تأكيد الإبطال' }).click()
+
+  await expect.poll(() => handle.cancellations.length).toBe(1)
+  expect(handle.cancellations[0]).toMatchObject({ table: 'receipt_vouchers', id: 'r-1', reason: 'إدخال تجريبي خاطئ' })
+  expect(handle.activeMovements.some((movement) => movement.id === 'r-1')).toBe(false)
+  expect(handle.cancelledVouchers).toEqual(expect.arrayContaining([
+    expect.objectContaining({ id: 'r-1', voucher_number: 912, cancel_reason: 'إدخال تجريبي خاطئ' }),
+  ]))
+
+  await expect(page.getByRole('button', { name: /إبطال سند القبض رقم R-912/ })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'سجل التدقيق' }).click()
+  await expect(page.getByText('لا توجد سجلات مطابقة.')).not.toBeVisible()
+});
+
 test('keeps financial reports separated by report type and period', async ({ page }) => {
   await installSupabaseMocks(page)
 

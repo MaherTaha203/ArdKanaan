@@ -1,0 +1,3 @@
+-- Compatibility marker for the production migration history.
+-- The hardened enrollment financial firewall is implemented by the later
+-- 20260914210000_enrollment_financial_firewall.sql migration in source control.
