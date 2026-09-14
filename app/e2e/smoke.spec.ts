@@ -99,7 +99,7 @@ test('cancels a voucher without deleting it and moves it to cancelled history', 
 
   await login(page)
   await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
-  await page.getByRole('menuitemradio', { name: 'كشف الحساب العام' }).click()
+  await page.getByRole('menuitemradio', { name: 'تقرير المقبوضات' }).click()
 
   const cancelButton = page.getByRole('button', { name: /إبطال سند القبض رقم R-912/ })
   await expect(cancelButton).toBeVisible()
