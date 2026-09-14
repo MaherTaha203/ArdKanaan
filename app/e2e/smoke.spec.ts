@@ -120,6 +120,9 @@ test('persists center settings and reflects reset to defaults', async ({ page })
   await centerName.blur()
 
   await page.reload()
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
   await expect(page.locator('input').first()).toHaveValue('مركز أرض كنعان التجريبي')
 
   await page.getByRole('button', { name: 'إعادة كل الإعدادات إلى الافتراضي' }).click()
