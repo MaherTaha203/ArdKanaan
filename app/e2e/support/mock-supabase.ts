@@ -47,6 +47,9 @@ export type MockHandle = {
   cancellations: Array<{ table: 'receipt_vouchers' | 'payment_vouchers'; id: string | null; reason: string }>
   activeMovements: MockMovement[]
   cancelledVouchers: MockCancelledVoucher[]
+  restoreCalls: Array<{ force: boolean; payload: Record<string, unknown> }>
+  passwordResets: string[]
+  passwordUpdates: string[]
 }
 
 function json(route: Route, body: unknown, status = 200, headers: Record<string, string> = {}) {
@@ -70,6 +73,9 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
     cancellations: [],
     activeMovements,
     cancelledVouchers,
+    restoreCalls: [],
+    passwordResets: [],
+    passwordUpdates: [],
   }
 
   await page.route('**/auth/v1/**', (route) => {
@@ -84,6 +90,16 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         user: { id: 'u-1', aud: 'authenticated', role: 'authenticated', email: 'owner@example.com', app_metadata: {}, user_metadata: {} },
       })
     }
+    if (url.includes('/recover') && method === 'POST') {
+      const payload = safeJson(route.request().postData()) as { email?: string }
+      handle.passwordResets.push(String(payload.email ?? ''))
+      return json(route, {})
+    }
+    if (url.includes('/user') && method === 'PUT') {
+      const payload = safeJson(route.request().postData()) as { password?: string }
+      handle.passwordUpdates.push(String(payload.password ?? ''))
+      return json(route, { user: { id: 'u-1' } })
+    }
     return json(route, {})
   })
 
@@ -96,8 +112,36 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
     const table = url.pathname.split('/rest/v1/')[1]?.split('?')[0]
     const arr = (body: unknown, status = 200) => json(route, body, status, { 'content-range': '0-0/*' })
 
+    if (table?.startsWith('rpc/restore_center_data') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { payload?: Record<string, unknown>; force?: boolean }
+      const backup = payload.payload ?? {}
+      const restoredStudents = Array.isArray(backup.students) ? backup.students : []
+      students.splice(0, students.length, ...restoredStudents.map((row) => ({
+        id: String((row as Record<string, unknown>).id ?? 'restored-student'),
+        name: String((row as Record<string, unknown>).name ?? ''),
+        id_number: ((row as Record<string, unknown>).id_number as string | null) ?? null,
+        phone: ((row as Record<string, unknown>).phone as string | null) ?? null,
+        notes: ((row as Record<string, unknown>).notes as string | null) ?? null,
+      })))
+      handle.restoreCalls.push({ force: Boolean(payload.force), payload: backup })
+      return json(route, {
+        students: restoredStudents.length,
+        receipt_vouchers: Array.isArray(backup.receipt_vouchers) ? backup.receipt_vouchers.length : 0,
+        payment_vouchers: Array.isArray(backup.payment_vouchers) ? backup.payment_vouchers.length : 0,
+      })
+    }
+
+    if (method === 'HEAD') {
+      if (['students', 'courses', 'enrollments', 'receipt_vouchers', 'payment_vouchers'].includes(table ?? '')) {
+        const counts: Record<string, number> = { students: students.length, courses: 0, enrollments: 0, receipt_vouchers: handle.receiptInserts.length, payment_vouchers: handle.paymentInserts.length }
+        return route.fulfill({ status: 200, headers: { ...CORS, 'content-range': `0-${Math.max(counts[table ?? ''] - 1, 0)}/${counts[table ?? '']}` } })
+      }
+      return route.fulfill({ status: 200, headers: CORS })
+    }
+
     if (method === 'GET') {
       if (table === 'students') return arr(applyEqFilters(students, url.searchParams))
+      if (table === 'courses' || table === 'enrollments') return arr([])
       if (table === 'student_statement_lines') {
         const receipt = handle.receiptInserts.at(-1)
         if (!receipt) return arr([])
@@ -110,7 +154,6 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       if (table === 'payment_vouchers') return arr(handle.paymentInserts.map((payment) => ({ id: 'new-payment', voucher_number: 901, voucher_date: '2026-08-31', expense_type: String(payment.expense_type ?? 'مصروف'), amount: Number(payment.amount ?? 0), notes: String(payment.notes ?? '') })))
       if (table === 'financial_movements') return arr(handle.activeMovements)
       if (table === 'cancelled_vouchers') return arr(handle.cancelledVouchers)
-      if (table === 'enrollments') return arr([])
       return arr([])
     }
 
@@ -118,6 +161,8 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       const payload = safeJson(request.postData())
       if (table === 'students') {
         handle.studentInserts.push(payload as Record<string, unknown>)
+        const student = payload as Record<string, unknown>
+        students.push({ id: 'new-student', name: String(student.name ?? ''), id_number: (student.id_number as string | null) ?? null, phone: (student.phone as string | null) ?? null, notes: (student.notes as string | null) ?? null })
         return json(route, { id: 'new-student', name: '', id_number: null, phone: null, notes: null, ...(payload as object) }, 201)
       }
       if (table === 'enrollments') return json(route, [{}], 201)
