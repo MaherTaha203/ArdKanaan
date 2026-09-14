@@ -1,4 +1,4 @@
-import type { FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type { Enrollment, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
 
 // Pure derivations over voucher-sourced data. Nothing here is a stored balance;
 // every returned figure is computed on demand from the derived views
@@ -43,47 +43,112 @@ function chronological(lines: StudentStatementLine[]) {
   })
 }
 
-export function aggregateStudents(
-  students: Student[],
-  lines: StudentStatementLine[],
-): StudentAggregate[] {
-  const linesByStudent = new Map<string, StudentStatementLine[]>()
+export type StudentCourseBreakdown = {
+  courseName: string
+  fee: number
+  paid: number
+  remaining: number
+}
 
-  for (const line of lines) {
-    const bucket = linesByStudent.get(line.studentId)
-    if (bucket) {
-      bucket.push(line)
+function groupByStudent<T extends { studentId: string }>(rows: T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>()
+  for (const row of rows) {
+    const bucket = map.get(row.studentId)
+    if (bucket) bucket.push(row)
+    else map.set(row.studentId, [row])
+  }
+  return map
+}
+
+// Per-course fee / paid / remaining for one student. The fee is the authoritative
+// enrollment snapshot; a course that only has receipts but no enrollment (legacy)
+// falls back to the receipt's own course_value. This is what makes a
+// registered-but-unpaid course show its full fee as due.
+export function studentCourseBreakdown(
+  studentId: string,
+  lines: StudentStatementLine[],
+  enrollments: Enrollment[],
+): StudentCourseBreakdown[] {
+  const studentLines = lines.filter((line) => line.studentId === studentId)
+  const studentEnrollments = enrollments.filter((enrollment) => enrollment.studentId === studentId)
+
+  // For a course with receipts: paid = sum of receipts, and fee + remaining come from
+  // that course's LATEST line — the view's already-computed running balance is the
+  // authority (it coalesces the enrollment fee), so we never re-derive it here.
+  type Bucket = { paid: number; fee: number; remaining: number; latestKey: string }
+  const byCourse = new Map<string, Bucket>()
+  for (const line of studentLines) {
+    const key = `${line.voucherDate}#${String(line.voucherNumber).padStart(12, '0')}`
+    const bucket = byCourse.get(line.courseName)
+    if (!bucket) {
+      byCourse.set(line.courseName, {
+        paid: line.amountReceived,
+        fee: line.courseValue,
+        remaining: line.remainingBalance,
+        latestKey: key,
+      })
     } else {
-      linesByStudent.set(line.studentId, [line])
+      bucket.paid += line.amountReceived
+      if (key >= bucket.latestKey) {
+        bucket.fee = line.courseValue
+        bucket.remaining = line.remainingBalance
+        bucket.latestKey = key
+      }
     }
   }
 
+  const result: StudentCourseBreakdown[] = []
+  const seen = new Set<string>()
+  for (const [courseName, bucket] of byCourse) {
+    seen.add(courseName)
+    result.push({ courseName, fee: bucket.fee, paid: bucket.paid, remaining: bucket.remaining })
+  }
+  // A course the student is registered in but has NOT paid toward yet: the full
+  // enrollment fee is due (no line exists for it).
+  for (const enrollment of studentEnrollments) {
+    if (seen.has(enrollment.courseName)) continue
+    seen.add(enrollment.courseName)
+    result.push({ courseName: enrollment.courseName, fee: enrollment.courseValue, paid: 0, remaining: enrollment.courseValue })
+  }
+  return result.sort((a, b) => a.courseName.localeCompare(b.courseName, 'ar'))
+}
+
+// Per-student rollup. Remaining is enrollment-aware: it sums (fee − paid) across
+// every course the student is enrolled in OR has paid toward — so a student who is
+// registered in a course but has not paid yet correctly shows the full fee as due.
+export function aggregateStudents(
+  students: Student[],
+  lines: StudentStatementLine[],
+  enrollments: Enrollment[] = [],
+): StudentAggregate[] {
+  const linesByStudent = groupByStudent(lines)
+  const enrollmentsByStudent = groupByStudent(enrollments)
+
   return students.map((student) => {
     const studentLines = chronological(linesByStudent.get(student.id) ?? [])
+    const breakdown = studentCourseBreakdown(
+      student.id,
+      studentLines,
+      enrollmentsByStudent.get(student.id) ?? [],
+    )
 
     let paid = 0
     let lastActivity: string | null = null
-    // Current remaining per course = the remaining_balance on that course's latest line.
-    const remainingByCourse = new Map<string, number>()
-
     for (const line of studentLines) {
       paid += line.amountReceived
-      remainingByCourse.set(line.courseName, line.remainingBalance)
       if (!lastActivity || line.voucherDate > lastActivity) {
         lastActivity = line.voucherDate
       }
     }
 
     let remaining = 0
-    for (const courseRemaining of remainingByCourse.values()) {
-      remaining += courseRemaining
-    }
+    for (const course of breakdown) remaining += course.remaining
 
     return {
       student,
       paid,
       remaining,
-      courses: remainingByCourse.size,
+      courses: breakdown.length,
       lastActivity,
       lineCount: studentLines.length,
     }

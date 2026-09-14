@@ -34,6 +34,7 @@ function statement(movement: FinancialMovement): string {
 export function GlanceWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const enrollments = useWorkspaceStore((state) => state.enrollments)
   const movements = useWorkspaceStore((state) => state.movements)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -47,8 +48,8 @@ export function GlanceWorkspace() {
   const totals = useMemo(() => financialTotals(movements), [movements])
   const recent = useMemo(() => movementsNewestFirst(movements).slice(0, RECENT_LIMIT), [movements])
   const attention = useMemo(
-    () => attentionList(aggregateStudents(students, statementLines)).slice(0, attentionCount),
-    [students, statementLines, attentionCount],
+    () => attentionList(aggregateStudents(students, statementLines, enrollments)).slice(0, attentionCount),
+    [students, statementLines, enrollments, attentionCount],
   )
 
   return (

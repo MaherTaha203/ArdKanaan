@@ -8,7 +8,7 @@ import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, statementFor, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudents, statementFor, studentCourseBreakdown, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
 import { normalizeArabic } from '@/lib/text'
@@ -29,6 +29,7 @@ function statusOf(item: StudentAggregate): StudentStatus {
 export function StudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const enrollments = useWorkspaceStore((state) => state.enrollments)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
@@ -42,7 +43,7 @@ export function StudentsWorkspace() {
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines), [students, statementLines])
+  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments), [students, statementLines, enrollments])
 
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
@@ -69,6 +70,10 @@ export function StudentsWorkspace() {
   const activeId = selectedStudentId ?? filtered[0]?.student.id ?? sorted[0]?.student.id ?? null
   const active = useMemo(() => aggregates.find((item) => item.student.id === activeId) ?? null, [aggregates, activeId])
   const activeLines = useMemo(() => (activeId ? statementFor(statementLines, activeId) : []), [statementLines, activeId])
+  const activeBreakdown = useMemo(
+    () => (activeId ? studentCourseBreakdown(activeId, statementLines, enrollments) : []),
+    [activeId, statementLines, enrollments],
+  )
 
   return (
     <div className="detail-workspace">
@@ -108,6 +113,24 @@ export function StudentsWorkspace() {
                 </div>
                 <div className="flex gap-8"><RecordFigure label="المسدَّد" value={active.paid} tone="ink" /><RecordFigure label="الرصيد المستحق" value={active.remaining} tone="warn" /></div>
               </div>
+
+              {activeBreakdown.length > 0 ? (
+                <div className="mb-6">
+                  <h3 className="mb-3 text-base font-bold text-foreground">الدورات المسجّل بها</h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {activeBreakdown.map((course) => (
+                      <div key={course.courseName} className="rounded-xl border border-border bg-panel px-4 py-3">
+                        <div className="text-sm font-semibold text-foreground">{course.courseName}</div>
+                        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px]">
+                          <span><span className="text-faint">الرسوم</span> <span className="figure font-semibold text-foreground">{formatNumber(course.fee)}</span></span>
+                          <span><span className="text-faint">المدفوع</span> <span className="figure font-semibold text-gold">{formatNumber(course.paid)}</span></span>
+                          <span><span className="text-faint">المتبقّي</span> <span className={`figure font-semibold ${course.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(course.remaining)}</span></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-base font-bold text-foreground">كشف الحساب</h3>
