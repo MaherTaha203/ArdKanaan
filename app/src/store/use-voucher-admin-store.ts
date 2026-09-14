@@ -30,7 +30,6 @@ type VoucherAdminStore = {
   error: string | null
   clearError: () => void
   cancelVoucher: (type: 'receipt' | 'payment', id: string, reason: string) => Promise<boolean>
-  restoreVoucher: (type: 'receipt' | 'payment', id: string) => Promise<boolean>
   fetchReceipt: (id: string) => Promise<ReceiptEditData | null>
   fetchPayment: (id: string) => Promise<PaymentEditData | null>
   updateReceipt: (id: string, values: ReceiptVoucherFormValues) => Promise<boolean>
@@ -68,13 +67,6 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
       return false
     }
     return true
-  },
-
-  // Cancellation is final by product rule. Keep this compatibility surface so old
-  // callers fail safely rather than ever reopening a financial document.
-  restoreVoucher: async () => {
-    set({ error: 'السند الملغى لا يمكن استعادته.' })
-    return false
   },
 
   fetchReceipt: async (id) => {
