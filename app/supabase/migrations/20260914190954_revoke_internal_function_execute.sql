@@ -1,0 +1,16 @@
+-- Trigger helpers and privileged RPCs must not be callable by anon.
+-- Trigger functions are intentionally not executable by the client at all.
+revoke all on function public.set_updated_at() from public, anon, authenticated;
+revoke all on function public.log_activity() from public, anon, authenticated;
+revoke all on function public.enforce_financial_firewall() from public, anon, authenticated;
+revoke all on function public.enforce_payment_financial_firewall() from public, anon, authenticated;
+revoke all on function public.enforce_enrollment_financial_firewall() from public, anon, authenticated;
+revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+
+revoke all on function public.is_owner() from public, anon;
+revoke all on function public.record_activity_event(text, text, text, text, jsonb) from public, anon;
+revoke all on function public.restore_center_data(jsonb, boolean) from public, anon;
+
+grant execute on function public.is_owner() to authenticated;
+grant execute on function public.record_activity_event(text, text, text, text, jsonb) to authenticated;
+grant execute on function public.restore_center_data(jsonb, boolean) to authenticated;
