@@ -24,6 +24,7 @@ const CORS = {
 
 export type MockHandle = {
   receiptInserts: Array<Record<string, unknown>>
+  paymentInserts: Array<Record<string, unknown>>
   studentUpdates: Array<{ id: string | null; body: Record<string, unknown> }>
 }
 
@@ -38,7 +39,7 @@ function json(route: Route, body: unknown, status = 200, headers: Record<string,
 
 export async function installSupabaseMocks(page: Page, options: MockOptions = {}): Promise<MockHandle> {
   const students = options.students ?? []
-  const handle: MockHandle = { receiptInserts: [], studentUpdates: [] }
+  const handle: MockHandle = { receiptInserts: [], paymentInserts: [], studentUpdates: [] }
 
   await page.route('**/auth/v1/**', (route) => {
     const method = route.request().method()
@@ -100,6 +101,18 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
           },
         ])
       }
+      if (table === 'payment_vouchers') {
+        return arr(
+          handle.paymentInserts.map((payment) => ({
+            id: 'new-payment',
+            voucher_number: 901,
+            voucher_date: '2026-08-31',
+            expense_type: String(payment.expense_type ?? 'مصروف'),
+            amount: Number(payment.amount ?? 0),
+            notes: String(payment.notes ?? ''),
+          })),
+        )
+      }
       if (table === 'financial_movements') return arr([])
       if (table === 'cancelled_vouchers') return arr([])
       if (table === 'enrollments') return arr([])
@@ -126,6 +139,22 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
             course_value: 1000,
             amount_received: 400,
             payer_name: '',
+            notes: '',
+            ...(payload as object),
+          },
+          201,
+        )
+      }
+      if (table === 'payment_vouchers') {
+        handle.paymentInserts.push(payload as Record<string, unknown>)
+        return json(
+          route,
+          {
+            id: 'new-payment',
+            voucher_number: 901,
+            voucher_date: '2026-08-31',
+            expense_type: 'مصروف',
+            amount: 0,
             notes: '',
             ...(payload as object),
           },
