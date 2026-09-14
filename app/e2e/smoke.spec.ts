@@ -10,10 +10,9 @@ test('signs in and lands on the workspace shell', async ({ page }) => {
 
   await login(page)
 
-  // The primary navigation and money actions are present.
   await expect(page.getByRole('button', { name: 'الرئيسية' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'سند قبض', exact: true }).first()).toBeVisible()
-})
+});
 
 test('shows the seeded student on the student directory', async ({ page }) => {
   await installSupabaseMocks(page, {
@@ -26,7 +25,7 @@ test('shows the seeded student on the student directory', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'دليل الطلاب' })).toBeVisible()
   await expect(page.getByText('سارة أحمد').first()).toBeVisible()
-})
+});
 
 test('opens the activity log as a read-only workspace', async ({ page }) => {
   await installSupabaseMocks(page)
@@ -41,7 +40,7 @@ test('opens the activity log as a read-only workspace', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'تحديث السجل' })).toBeVisible()
   await expect(page.getByText('لا توجد سجلات مطابقة.')).toBeVisible()
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
-})
+});
 
 test('creates a receipt, reaches the student statement, then opens its print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page, {
@@ -69,7 +68,7 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await page.getByRole('button', { name: 'طباعة الكشف' }).click()
   await expect(page.getByText('معاينة الطباعة — كشف حساب الطالب')).toBeVisible()
   await expect(page.getByText('R-900').last()).toBeVisible()
-})
+});
 
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
@@ -88,7 +87,7 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   await expect(page.getByText('معاينة الطباعة — سند صرف')).toBeVisible()
   await expect(page.getByText('P-901').first()).toBeVisible()
   await expect(page.getByText('كهرباء')).toBeVisible()
-})
+});
 
 test('keeps financial reports separated by report type and period', async ({ page }) => {
   await installSupabaseMocks(page)
@@ -105,4 +104,53 @@ test('keeps financial reports separated by report type and period', async ({ pag
   await page.getByRole('menuitemradio', { name: 'تقرير المدفوعات' }).click()
   await expect(page.getByRole('heading', { name: 'تقرير المدفوعات' })).toBeVisible()
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
-})
+});
+
+test('persists center settings and reflects reset to defaults', async ({ page }) => {
+  await installSupabaseMocks(page)
+
+  await login(page)
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
+
+  await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
+  const centerName = page.locator('input').first()
+  await expect(centerName).toHaveValue('أرض كنعان')
+  await centerName.fill('مركز أرض كنعان التجريبي')
+  await centerName.blur()
+
+  await page.reload()
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
+  await expect(page.locator('input').first()).toHaveValue('مركز أرض كنعان التجريبي')
+
+  await page.getByRole('button', { name: 'إعادة كل الإعدادات إلى الافتراضي' }).click()
+  await expect(page.locator('input').first()).toHaveValue('أرض كنعان')
+});
+
+test('adds a student through the real student form path', async ({ page }) => {
+  const handle = await installSupabaseMocks(page)
+
+  await login(page)
+  await page.getByRole('button', { name: 'الطلاب', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'دليل الطلاب' }).click()
+  await page.getByRole('button', { name: 'إضافة طالب', exact: true }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'إضافة طالب' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('textbox', { name: 'اسم الطالب' }).fill('محمد علي')
+  await dialog.getByRole('textbox', { name: 'الرقم التعريفي' }).fill('123456789')
+  await dialog.getByRole('textbox', { name: 'الهاتف' }).fill('0591234567')
+  await dialog.getByRole('textbox', { name: 'الملاحظات' }).fill('طالب جديد')
+  await dialog.getByRole('button', { name: 'إضافة الطالب' }).click()
+
+  await expect.poll(() => handle.studentInserts.length).toBe(1)
+  expect(handle.studentInserts[0]).toMatchObject({
+    name: 'محمد علي',
+    id_number: '123456789',
+    phone: '0591234567',
+    notes: 'طالب جديد',
+  })
+  await expect(page.getByText('تمت إضافة الطالب بنجاح')).toBeVisible()
+});

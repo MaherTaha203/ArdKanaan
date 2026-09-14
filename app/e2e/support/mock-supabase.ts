@@ -25,6 +25,7 @@ const CORS = {
 export type MockHandle = {
   receiptInserts: Array<Record<string, unknown>>
   paymentInserts: Array<Record<string, unknown>>
+  studentInserts: Array<Record<string, unknown>>
   studentUpdates: Array<{ id: string | null; body: Record<string, unknown> }>
 }
 
@@ -39,7 +40,7 @@ function json(route: Route, body: unknown, status = 200, headers: Record<string,
 
 export async function installSupabaseMocks(page: Page, options: MockOptions = {}): Promise<MockHandle> {
   const students = options.students ?? []
-  const handle: MockHandle = { receiptInserts: [], paymentInserts: [], studentUpdates: [] }
+  const handle: MockHandle = { receiptInserts: [], paymentInserts: [], studentInserts: [], studentUpdates: [] }
 
   await page.route('**/auth/v1/**', (route) => {
     const method = route.request().method()
@@ -122,6 +123,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
     if (method === 'POST') {
       const payload = safeJson(request.postData())
       if (table === 'students') {
+        handle.studentInserts.push(payload as Record<string, unknown>)
         return json(route, { id: 'new-student', name: '', id_number: null, phone: null, notes: null, ...(payload as object) }, 201)
       }
       if (table === 'enrollments') return json(route, [{}], 201)
