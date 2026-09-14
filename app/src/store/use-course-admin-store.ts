@@ -86,16 +86,21 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
       const course = useWorkspaceStore.getState().courses.find((item) => item.id === courseId)
       if (!course) throw new Error('COURSE_NOT_FOUND')
 
-      // The enrollment is keyed UNIQUE(student_id, course_name). If the student is
-      // already enrolled, do not silently change their (authoritative) fee — report it.
+      // "Already enrolled" is checked canonically on course_id — the catalog identity
+      // that survives a course rename — OR on the snapshot course_name, which catches a
+      // legacy enrollment (course_id null) for the same course. Keying on the (possibly
+      // renamed) name alone would let a rename spawn a second enrollment for one course,
+      // giving the student two independent firewall ceilings; keying on the id prevents
+      // that. We never silently change an existing enrollment's (authoritative) fee.
       const { data: existing, error: lookupError } = await supabase
         .from('enrollments')
-        .select('id')
+        .select('id, course_id, course_name')
         .eq('student_id', values.studentId)
-        .eq('course_name', course.name)
-        .limit(1)
       if (lookupError) throw lookupError
-      if (existing?.[0]) {
+      const alreadyEnrolled = (existing ?? []).some(
+        (row) => row.course_id === courseId || row.course_name === course.name,
+      )
+      if (alreadyEnrolled) {
         set({ isBusy: false, error: 'هذا الطالب مسجّل في هذه الدورة بالفعل.' })
         return false
       }
@@ -104,14 +109,20 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
         student_id: values.studentId,
         course_id: courseId,
         course_name: course.name,
-        course_value: values.fee,
+        course_value: Number(values.fee),
       })
       if (insertError) throw insertError
       set({ isBusy: false })
       return true
     } catch (error) {
       console.error('registerStudent failed', error)
-      set({ isBusy: false, error: 'تعذّر تسجيل الطالب في الدورة.' })
+      // A unique-violation here means a concurrent submission won the race and the DB
+      // constraint (student+course) blocked the duplicate — report it accurately.
+      const isDuplicate = (error as { code?: string }).code === '23505'
+      set({
+        isBusy: false,
+        error: isDuplicate ? 'هذا الطالب مسجّل في هذه الدورة بالفعل.' : 'تعذّر تسجيل الطالب في الدورة.',
+      })
       return false
     }
   },

@@ -94,7 +94,7 @@ export function StudentsWorkspace() {
           </div>
 
           <div className="border-t border-border-strong">
-            {!loaded ? <div className="p-3"><SkeletonRows rows={6} /></div> : filtered.length > 0 ? filtered.map((item) => <StudentRow key={item.student.id} item={item} active={item.student.id === activeId} onSelect={() => selectStudent(item.student.id)} />) : <p className="px-4 py-8 text-center text-sm text-faint">لا نتائج مطابقة.</p>}
+            {!loaded ? <div className="p-3"><SkeletonRows rows={6} /></div> : filtered.length > 0 ? filtered.map((item) => <StudentRow key={item.student.id} item={item} active={item.student.id === activeId} onSelect={() => selectStudent(item.student.id)} />) : <p className="px-4 py-8 text-center text-sm text-faint">{students.length === 0 ? 'لا يوجد طلاب بعد.' : 'لا نتائج مطابقة.'}</p>}
           </div>
         </div>
 

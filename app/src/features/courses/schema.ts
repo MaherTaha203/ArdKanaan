@@ -27,14 +27,19 @@ export type CourseFormValues = z.infer<typeof courseFormSchema>
 
 // Registering a student in a course establishes the enrollment fee (the snapshot the
 // financial firewall enforces for receipts). An existing student must be chosen.
+// The fee is a REQUIRED whole-shekel string: a blank field is rejected (not silently
+// coerced to 0), so a course with no default fee forces a conscious amount — while an
+// explicit 0 (a genuinely free course) is still accepted. Parsed to a number on save.
 export const enrollFormSchema = z.object({
   studentId: z.string().trim().min(1, 'اختر الطالب من القائمة'),
   studentName: z.string().trim(),
-  fee: z.coerce
-    .number()
-    .int('الرسوم يجب أن تكون عددًا صحيحًا من الشواكل')
-    .min(0, 'الرسوم يجب أن تكون صفرًا أو أكثر')
-    .max(MAX_SHEKEL_AMOUNT, 'الرسوم أكبر من الحدّ المسموح'),
+  fee: z
+    .string()
+    .trim()
+    .refine(
+      (value) => /^\d+$/.test(value) && Number(value) <= MAX_SHEKEL_AMOUNT,
+      'رسوم التسجيل مطلوبة (عدد صحيح من الشواكل ضمن الحدّ المسموح)',
+    ),
 })
 
 export type EnrollFormValues = z.infer<typeof enrollFormSchema>

@@ -80,9 +80,7 @@ export function CourseFormSheet() {
         <Field label="الرسوم الأساسية" error={form.formState.errors.baseFee?.message}>
           {(control) => (
             <Input
-              type="number"
-              min="0"
-              step="1"
+              type="text"
               inputMode="numeric"
               className="figure"
               placeholder="اختياري"
@@ -116,12 +114,14 @@ export function CourseFormSheet() {
         </div>
 
         <div>
-          <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">الحالة</span>
-          <div className="inline-flex overflow-hidden rounded-xl border border-border-strong">
+          <span id="course-status-label" className="mb-1.5 block text-[13px] font-medium text-muted-foreground">الحالة</span>
+          <div role="radiogroup" aria-labelledby="course-status-label" className="inline-flex overflow-hidden rounded-xl border border-border-strong">
             {(['active', 'ended'] as const).map((value) => (
               <button
                 key={value}
                 type="button"
+                role="radio"
+                aria-checked={status === value}
                 onClick={() => form.setValue('status', value)}
                 className={`px-5 py-2 text-sm font-medium ${
                   status === value ? 'bg-olive text-white' : 'bg-panel text-muted-foreground'
