@@ -10,10 +10,9 @@ test('signs in and lands on the workspace shell', async ({ page }) => {
 
   await login(page)
 
-  // The primary navigation and money actions are present.
   await expect(page.getByRole('button', { name: 'الرئيسية' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'سند قبض', exact: true }).first()).toBeVisible()
-})
+});
 
 test('shows the seeded student on the student directory', async ({ page }) => {
   await installSupabaseMocks(page, {
@@ -26,7 +25,7 @@ test('shows the seeded student on the student directory', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'دليل الطلاب' })).toBeVisible()
   await expect(page.getByText('سارة أحمد').first()).toBeVisible()
-})
+});
 
 test('opens the activity log as a read-only workspace', async ({ page }) => {
   await installSupabaseMocks(page)
@@ -41,7 +40,7 @@ test('opens the activity log as a read-only workspace', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'تحديث السجل' })).toBeVisible()
   await expect(page.getByText('لا توجد سجلات مطابقة.')).toBeVisible()
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
-})
+});
 
 test('creates a receipt, reaches the student statement, then opens its print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page, {
@@ -69,7 +68,7 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await page.getByRole('button', { name: 'طباعة الكشف' }).click()
   await expect(page.getByText('معاينة الطباعة — كشف حساب الطالب')).toBeVisible()
   await expect(page.getByText('R-900').last()).toBeVisible()
-})
+});
 
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
@@ -88,9 +87,9 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   await expect(page.getByText('معاينة الطباعة — سند صرف')).toBeVisible()
   await expect(page.getByText('P-901').first()).toBeVisible()
   await expect(page.getByText('كهرباء')).toBeVisible()
-})
+});
 
-test('keeps financial reports separated by report type and period', async ({ page }) =>
+test('keeps financial reports separated by report type and period', async ({ page }) => {
   await installSupabaseMocks(page)
 
   await login(page)
@@ -105,7 +104,7 @@ test('keeps financial reports separated by report type and period', async ({ pag
   await page.getByRole('menuitemradio', { name: 'تقرير المدفوعات' }).click()
   await expect(page.getByRole('heading', { name: 'تقرير المدفوعات' })).toBeVisible()
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
-})
+});
 
 test('persists center settings and reflects reset to defaults', async ({ page }) => {
   await installSupabaseMocks(page)
@@ -125,4 +124,4 @@ test('persists center settings and reflects reset to defaults', async ({ page })
 
   await page.getByRole('button', { name: 'إعادة كل الإعدادات إلى الافتراضي' }).click()
   await expect(page.locator('input').first()).toHaveValue('أرض كنعان')
-})
+});
