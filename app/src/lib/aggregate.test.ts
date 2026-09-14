@@ -8,8 +8,13 @@ import {
   paymentCount,
   receiptCount,
   statementFor,
+  studentCourseBreakdown,
 } from '@/lib/aggregate'
-import type { FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type { Enrollment, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+
+function enrollment(partial: Partial<Enrollment> & Pick<Enrollment, 'id' | 'studentId'>): Enrollment {
+  return { courseId: null, courseName: 'دورة', courseValue: 1000, ...partial }
+}
 
 function student(id: string, name: string): Student {
   return { id, name, idNumber: null, phone: null, notes: null }
@@ -110,6 +115,37 @@ describe('aggregateStudents', () => {
     expect(aggregate.remaining).toBe(0)
     expect(aggregate.courses).toBe(0)
     expect(aggregate.lastActivity).toBeNull()
+  })
+
+  it('counts a registered-but-unpaid course: full enrolment fee is due', () => {
+    // Student enrolled in a 300-fee course with no receipts yet → owes 300.
+    const [aggregate] = aggregateStudents(
+      [student('s-1', 'سارة')],
+      [],
+      [enrollment({ id: 'en1', studentId: 's-1', courseName: 'رسم', courseValue: 300 })],
+    )
+
+    expect(aggregate.paid).toBe(0)
+    expect(aggregate.remaining).toBe(300)
+    expect(aggregate.courses).toBe(1)
+  })
+})
+
+describe('studentCourseBreakdown', () => {
+  it('gives fee/paid/remaining per course, incl. a registered-but-unpaid one', () => {
+    const lines = [
+      line({ id: 'l1', studentId: 's-1', courseName: 'رياضيات', courseValue: 200, amountReceived: 150, remainingBalance: 50 }),
+    ]
+    const enrollments = [
+      enrollment({ id: 'en1', studentId: 's-1', courseName: 'رياضيات', courseValue: 200 }),
+      enrollment({ id: 'en2', studentId: 's-1', courseName: 'إنجليزي', courseValue: 100 }),
+    ]
+
+    const breakdown = studentCourseBreakdown('s-1', lines, enrollments)
+    const byCourse = Object.fromEntries(breakdown.map((entry) => [entry.courseName, entry]))
+
+    expect(byCourse['رياضيات']).toEqual({ courseName: 'رياضيات', fee: 200, paid: 150, remaining: 50 })
+    expect(byCourse['إنجليزي']).toEqual({ courseName: 'إنجليزي', fee: 100, paid: 0, remaining: 100 })
   })
 })
 

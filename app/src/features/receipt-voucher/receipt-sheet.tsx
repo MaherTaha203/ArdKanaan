@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowDownLeft } from 'lucide-react'
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { VoucherPrint } from '@/features/print/voucher-print'
 import { receiptVoucherFormSchema, type ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { StudentPicker } from '@/features/receipt-voucher/student-picker'
+import { studentCourseBreakdown } from '@/lib/aggregate'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useSettingsStore } from '@/store/use-settings-store'
@@ -45,6 +46,8 @@ export function ReceiptSheet() {
   const clearAdminError = useVoucherAdminStore((state) => state.clearError)
   const reloadWorkspace = useWorkspaceStore((state) => state.load)
   const students = useWorkspaceStore((state) => state.students)
+  const enrollments = useWorkspaceStore((state) => state.enrollments)
+  const statementLines = useWorkspaceStore((state) => state.statementLines)
   const currencySymbol = useSettingsStore((state) => state.settings.currencySymbol)
   const maxAmount = useSettingsStore((state) => state.settings.maxVoucherAmount)
   const blockFutureDate = useSettingsStore((state) => state.settings.blockFutureDate)
@@ -55,6 +58,17 @@ export function ReceiptSheet() {
 
   const form = useForm<ReceiptVoucherFormValues>({ resolver: zodResolver(receiptVoucherFormSchema), defaultValues: buildDefaults(prefillName) })
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
+  const pickedStudentId = useWatch({ control: form.control, name: 'studentId' }) ?? ''
+  const courseName = useWatch({ control: form.control, name: 'courseName' }) ?? ''
+
+  // Courses the picked student is enrolled in, each with its remaining balance —
+  // offered as quick-pick so the operator chooses the right course (and its
+  // authoritative fee) instead of re-typing it. Only in create mode.
+  const studentCourses = useMemo(
+    () => (!isEdit && pickedStudentId ? studentCourseBreakdown(pickedStudentId, statementLines, enrollments) : []),
+    [isEdit, pickedStudentId, statementLines, enrollments],
+  )
+  const selectedCourse = studentCourses.find((course) => course.courseName === courseName) ?? null
 
   useLayoutEffect(() => { clearError(); clearAdminError() }, [clearError, clearAdminError])
 
@@ -120,11 +134,40 @@ export function ReceiptSheet() {
         ) : (
           <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
-            <Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>{(control) => <Input placeholder="اكتب اسم الدورة" readOnly={isEdit} {...control} {...form.register('courseName')} />}</Field>
+            {studentCourses.length > 0 ? (
+              <div>
+                <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">دورات الطالب</span>
+                <div className="flex flex-wrap gap-2">
+                  {studentCourses.map((course) => {
+                    const active = course.courseName === courseName
+                    return (
+                      <button
+                        key={course.courseName}
+                        type="button"
+                        onClick={() => {
+                          form.setValue('courseName', course.courseName, { shouldValidate: true })
+                          form.setValue('courseValue', course.fee, { shouldValidate: true })
+                        }}
+                        className={`rounded-xl border px-3 py-2 text-start text-[13px] ${active ? 'border-olive bg-olive-weak text-olive' : 'border-border-strong bg-panel text-muted-foreground'}`}
+                      >
+                        <span className="font-semibold">{course.courseName}</span>
+                        <span className="figure ms-2 text-[12px]">المتبقّي {formatNumber(course.remaining)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+            <Field label={studentCourses.length > 0 ? 'الدورة (أو اكتب دورة جديدة)' : 'اسم الدورة'} error={form.formState.errors.courseName?.message}>{(control) => <Input placeholder="اكتب اسم الدورة" readOnly={isEdit} {...control} {...form.register('courseName')} />}</Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="قيمة الدورة" error={form.formState.errors.courseValue?.message}>{(control) => <Input type="number" min="0" step="1" placeholder="0" readOnly={isEdit} className="figure" {...control} {...form.register('courseValue', { valueAsNumber: true })} />}</Field>
               <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>{(control) => isEdit ? <Input readOnly dir="ltr" className="figure" value={formatDate(paymentDate)} {...control} /> : <SmartDateInput max={maxDate} value={paymentDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} {...control} />}</Field>
             </div>
+            {selectedCourse ? (
+              <p className="text-[12.5px] text-muted-foreground">
+                الرصيد المستحقّ لهذه الدورة: <span className="figure font-semibold text-warn">{formatNumber(selectedCourse.remaining)}</span>
+              </p>
+            ) : null}
             <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>
               {(control) => (
                 <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive">

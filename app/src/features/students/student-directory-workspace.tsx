@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { ChevronDown, ChevronLeft, Search, User } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Plus, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
@@ -26,17 +26,19 @@ function statusOf(item: StudentAggregate): StudentStatus {
 export function StudentDirectoryWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const enrollments = useWorkspaceStore((state) => state.enrollments)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
   const selectStudent = useShellStore((state) => state.selectStudent)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
+  const openAddStudent = useShellStore((state) => state.openAddStudent)
 
   const [query, setQuery] = useState('')
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines), [students, statementLines])
+  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments), [students, statementLines, enrollments])
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
     [aggregates],
@@ -62,7 +64,13 @@ export function StudentDirectoryWorkspace() {
 
   return (
     <div>
-      <RouteHeader eyebrow="الطلاب" title="دليل الطلاب" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <RouteHeader eyebrow="الطلاب" title="دليل الطلاب" />
+        <Button variant="default" onClick={openAddStudent}>
+          <Plus className="size-4" />
+          إضافة طالب
+        </Button>
+      </div>
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 

@@ -23,11 +23,13 @@ export function StudentEditSheet() {
   const students = useWorkspaceStore((state) => state.students)
   const reloadWorkspace = useWorkspaceStore((state) => state.load)
 
+  const createStudent = useStudentAdminStore((state) => state.createStudent)
   const updateStudent = useStudentAdminStore((state) => state.updateStudent)
   const isBusy = useStudentAdminStore((state) => state.isBusy)
   const error = useStudentAdminStore((state) => state.error)
   const clearError = useStudentAdminStore((state) => state.clearError)
 
+  const isEdit = Boolean(editStudentId)
   const student = students.find((item) => item.id === editStudentId) ?? null
 
   const form = useForm<StudentEditFormValues>({
@@ -46,8 +48,8 @@ export function StudentEditSheet() {
     clearError()
   }, [clearError])
 
-  // The student record can only ever be missing if it was cancelled mid-edit; guard.
-  if (!student) {
+  // In edit mode the record can only be missing if it was cancelled mid-edit; guard.
+  if (isEdit && !student) {
     return (
       <ActionSheet title="تعديل بيانات الطالب" onClose={closeOverlay}>
         <p className="py-10 text-center text-sm text-faint">تعذّر العثور على الطالب.</p>
@@ -56,16 +58,17 @@ export function StudentEditSheet() {
   }
 
   async function onSubmit(values: StudentEditFormValues) {
-    if (!editStudentId) return
-    const ok = await updateStudent(editStudentId, values)
+    const ok = editStudentId ? await updateStudent(editStudentId, values) : await createStudent(values)
     if (!ok) return
     await reloadWorkspace()
-    useToastStore.getState().show('تم حفظ بيانات الطالب')
+    useToastStore.getState().show(editStudentId ? 'تم حفظ بيانات الطالب' : 'تمت إضافة الطالب بنجاح')
     closeOverlay()
   }
 
+  const title = isEdit ? 'تعديل بيانات الطالب' : 'إضافة طالب'
+
   return (
-    <ActionSheet title="تعديل بيانات الطالب" eyebrow="الطلاب" onClose={closeOverlay}>
+    <ActionSheet title={title} eyebrow="الطلاب" onClose={closeOverlay}>
       {error ? (
         <div
           role="alert"
@@ -115,7 +118,7 @@ export function StudentEditSheet() {
 
         <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy}>
           <Check className="size-4" />
-          {isBusy ? 'جارٍ الحفظ…' : 'حفظ بيانات الطالب'}
+          {isBusy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ بيانات الطالب' : 'إضافة الطالب'}
         </Button>
       </form>
     </ActionSheet>

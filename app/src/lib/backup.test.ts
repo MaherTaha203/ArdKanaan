@@ -8,6 +8,7 @@ function validRecord(overrides: Record<string, unknown> = {}) {
     version: BACKUP_VERSION,
     exported_at: '2026-08-31T00:00:00.000Z',
     students: [{ id: 's-1' }],
+    courses: [{ id: 'c-1' }],
     enrollments: [{ id: 'e-1' }],
     receipt_vouchers: [{ id: 'r-1' }],
     payment_vouchers: [],
@@ -22,6 +23,7 @@ describe('validateBackup', () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.payload.students).toHaveLength(1)
+      expect(result.payload.courses).toHaveLength(1)
       expect(result.payload.enrollments).toHaveLength(1)
       expect(result.payload.receipt_vouchers).toHaveLength(1)
       expect(result.payload.payment_vouchers).toHaveLength(0)
@@ -35,6 +37,15 @@ describe('validateBackup', () => {
 
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.payload.enrollments).toEqual([])
+  })
+
+  it('defaults courses to [] for backups taken before the catalog existed', () => {
+    const record = validRecord()
+    delete (record as Record<string, unknown>).courses
+    const result = validateBackup(record)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.payload.courses).toEqual([])
   })
 
   it('rejects a non-object', () => {

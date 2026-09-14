@@ -12,6 +12,7 @@ type StudentAdminStore = {
   isBusy: boolean
   error: string | null
   clearError: () => void
+  createStudent: (values: StudentEditFormValues) => Promise<boolean>
   updateStudent: (id: string, values: StudentEditFormValues) => Promise<boolean>
 }
 
@@ -21,6 +22,35 @@ export const useStudentAdminStore = create<StudentAdminStore>((set) => ({
   isBusy: false,
   error: null,
   clearError: () => set({ error: null }),
+
+  createStudent: async (values) => {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) {
+      set({ error: NOT_CONFIGURED })
+      return false
+    }
+    set({ isBusy: true, error: null })
+
+    const idNumber = values.idNumber.trim()
+    const phone = values.phone.trim()
+    const notes = values.notes.trim()
+
+    try {
+      const { error } = await supabase.from('students').insert({
+        name: values.name.trim(),
+        id_number: idNumber || null,
+        phone: phone || null,
+        notes: notes || null,
+      })
+      if (error) throw error
+      set({ isBusy: false })
+      return true
+    } catch (error) {
+      console.error('createStudent failed', error)
+      set({ isBusy: false, error: 'تعذّر إضافة الطالب.' })
+      return false
+    }
+  },
 
   updateStudent: async (id, values) => {
     const supabase = getSupabaseBrowserClient()
