@@ -1,21 +1,25 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, BookOpen, ChevronDown, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
 
 import { useApplyRootSettings, useIdleLogout } from '@/hooks/use-app-preferences'
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
 import { StudentEditSheet } from '@/features/students/student-edit-sheet'
+import { CourseFormSheet } from '@/features/courses/course-form-sheet'
+import { EnrollStudentSheet } from '@/features/courses/enroll-student-sheet'
 import { ActivityWorkspace } from '@/features/activity/activity-workspace'
 import { GlanceWorkspace } from '@/features/glance/glance-workspace'
 import { StudentDirectoryWorkspace } from '@/features/students/student-directory-workspace'
+import { CoursesWorkspace } from '@/features/courses/courses-workspace'
+import { CourseDetailWorkspace } from '@/features/courses/course-detail-workspace'
 import { Toaster } from '@/components/ui/toast'
 import { StudentsWorkspace } from '@/features/students/students-workspace'
 import { FinancialReportWorkspace } from '@/features/financial-report/financial-report-workspace'
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { BackupWorkspace } from '@/features/settings/backup-workspace'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useShellStore, type ReportView, type SettingsView, type ShellRoute, type StudentView } from '@/store/use-shell-store'
+import { useShellStore, type CourseView, type ReportView, type SettingsView, type ShellRoute, type StudentView } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 type MenuItem<T> = { value: T; label: string }
@@ -37,12 +41,14 @@ const SETTINGS_MENU: MenuItem<SettingsView>[] = [
   { value: 'activity', label: 'سجل التدقيق' },
 ]
 
-function CurrentView({ route, studentView, settingsView }: { route: ShellRoute; studentView: StudentView; settingsView: SettingsView }) {
+function CurrentView({ route, studentView, courseView, settingsView }: { route: ShellRoute; studentView: StudentView; courseView: CourseView; settingsView: SettingsView }) {
   switch (route) {
     case 'home':
       return <GlanceWorkspace />
     case 'students':
       return studentView === 'directory' ? <StudentDirectoryWorkspace /> : <StudentsWorkspace />
+    case 'courses':
+      return courseView === 'detail' ? <CourseDetailWorkspace /> : <CoursesWorkspace />
     case 'report':
       return <FinancialReportWorkspace />
     case 'activity':
@@ -57,14 +63,18 @@ function CurrentView({ route, studentView, settingsView }: { route: ShellRoute; 
 export function AppShell() {
   const route = useShellStore((state) => state.route)
   const studentView = useShellStore((state) => state.studentView)
+  const courseView = useShellStore((state) => state.courseView)
   const settingsView = useShellStore((state) => state.settingsView)
   const reportView = useShellStore((state) => state.reportView)
   const overlay = useShellStore((state) => state.overlay)
   const editVoucherId = useShellStore((state) => state.editVoucherId)
   const editStudentId = useShellStore((state) => state.editStudentId)
+  const editCourseId = useShellStore((state) => state.editCourseId)
+  const enrollCourseId = useShellStore((state) => state.enrollCourseId)
   const receivePrefillName = useShellStore((state) => state.receivePrefillName)
   const navigate = useShellStore((state) => state.navigate)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
+  const navigateCourses = useShellStore((state) => state.navigateCourses)
   const navigateSettings = useShellStore((state) => state.navigateSettings)
   const navigateReport = useShellStore((state) => state.navigateReport)
   const openOverlay = useShellStore((state) => state.openOverlay)
@@ -96,6 +106,7 @@ export function AppShell() {
             items={STUDENT_MENU}
             onPick={navigateStudents}
           />
+          <NavLink label="الدورات" icon={BookOpen} active={route === 'courses'} onClick={() => navigateCourses('directory')} />
           <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} />
           <GroupNav
             label="إعدادات"
@@ -124,8 +135,8 @@ export function AppShell() {
 
       <main className="flex-1 overflow-x-clip">
         <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-8 md:px-8 md:pb-14 md:pt-10">
-          <div key={`${route}:${studentView}:${settingsView}:${reportView}`} className="route-fade">
-            <CurrentView route={route} studentView={studentView} settingsView={settingsView} />
+          <div key={`${route}:${studentView}:${courseView}:${settingsView}:${reportView}`} className="route-fade">
+            <CurrentView route={route} studentView={studentView} courseView={courseView} settingsView={settingsView} />
           </div>
         </div>
       </main>
@@ -133,12 +144,15 @@ export function AppShell() {
       {overlay === 'receive' ? <ReceiptSheet key={editVoucherId ?? receivePrefillName ?? 'new'} /> : null}
       {overlay === 'expense' ? <PaymentSheet key={editVoucherId ?? 'new'} /> : null}
       {overlay === 'student' ? <StudentEditSheet key={editStudentId ?? 'new'} /> : null}
+      {overlay === 'course' ? <CourseFormSheet key={editCourseId ?? 'new'} /> : null}
+      {overlay === 'enroll' ? <EnrollStudentSheet key={enrollCourseId ?? 'new'} /> : null}
 
       <Toaster />
 
       <nav aria-label="التنقل" className="fixed inset-x-0 bottom-0 z-20 flex flex-none items-stretch justify-around border-t border-border bg-panel/95 px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] md:hidden">
         <MobileNavButton active={route === 'home'} icon={Home} label="الرئيسية" onClick={() => navigate('home')} />
         <MobileGroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
+        <MobileNavButton active={route === 'courses'} icon={BookOpen} label="الدورات" onClick={() => navigateCourses('directory')} />
         <MobileGroupNav label="التقرير" icon={FileText} active={route === 'report'} value={reportView} items={REPORT_MENU} onPick={navigateReport} />
         <MobileGroupNav label="إعدادات" icon={Settings} active={route === 'settings' || route === 'activity'} value={settingsView} items={SETTINGS_MENU} onPick={navigateSettings} />
         <MobileNavButton icon={ArrowDownLeft} label="قبض" accent onClick={() => openOverlay('receive')} />
