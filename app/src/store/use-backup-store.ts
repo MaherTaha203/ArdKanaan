@@ -68,8 +68,9 @@ export const useBackupStore = create<BackupState>((set) => ({
       return { rows: rows.data, error: null }
     }
 
-    const [students, enrollments, receipts, payments] = await Promise.all([
+    const [students, courses, enrollments, receipts, payments] = await Promise.all([
       dumpTable('students'),
+      dumpTable('courses'),
       dumpTable('enrollments'),
       dumpTable('receipt_vouchers'),
       dumpTable('payment_vouchers'),
@@ -77,8 +78,8 @@ export const useBackupStore = create<BackupState>((set) => ({
     set({ isBusy: false })
 
     if (
-      students.error || enrollments.error || receipts.error || payments.error ||
-      !students.rows || !enrollments.rows || !receipts.rows || !payments.rows
+      students.error || courses.error || enrollments.error || receipts.error || payments.error ||
+      !students.rows || !courses.rows || !enrollments.rows || !receipts.rows || !payments.rows
     ) {
       set({ error: 'تعذّر إنشاء نسخة احتياطيّة كاملة؛ لم يُنشأ الملف.' })
       return null
@@ -89,6 +90,7 @@ export const useBackupStore = create<BackupState>((set) => ({
       version: BACKUP_VERSION,
       exported_at: new Date().toISOString(),
       students: students.rows,
+      courses: courses.rows,
       enrollments: enrollments.rows,
       receipt_vouchers: receipts.rows,
       payment_vouchers: payments.rows,

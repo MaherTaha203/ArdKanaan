@@ -3,6 +3,11 @@
 // snapshot of the three source-of-truth tables; restore is atomic server-side.
 
 export const BACKUP_APP = 'ard-kanaan'
+// Stays 1 on purpose: `courses` is an additive, optional array. A build that
+// predates it harmlessly ignores the extra field and still restores all financial
+// data, and this build treats a backup without `courses` (an older file) as an
+// empty catalog. Bumping the version would make older builds reject new backups
+// wholesale, which is worse than gracefully degrading the catalog.
 export const BACKUP_VERSION = 1
 
 export type BackupPayload = {
@@ -10,6 +15,7 @@ export type BackupPayload = {
   version: number
   exported_at: string
   students: unknown[]
+  courses: unknown[]
   enrollments: unknown[]
   receipt_vouchers: unknown[]
   payment_vouchers: unknown[]
@@ -18,6 +24,7 @@ export type BackupPayload = {
 /** A validated backup, narrowed to the arrays the restore RPC expects. */
 export type RestorePayload = {
   students: unknown[]
+  courses: unknown[]
   enrollments: unknown[]
   receipt_vouchers: unknown[]
   payment_vouchers: unknown[]
@@ -54,6 +61,10 @@ export function validateBackup(value: unknown): BackupValidation {
     ok: true,
     payload: {
       students: record.students,
+      // Courses are optional so backups taken before the catalog existed still
+      // restore (as an empty catalog); the enrollment snapshot remains the source
+      // of financial truth regardless.
+      courses: isArray(record.courses) ? record.courses : [],
       // Enrollments are optional so older backups (before the enrollment model) still
       // restore; the statement view then falls back to each voucher's course_value.
       enrollments: isArray(record.enrollments) ? record.enrollments : [],
