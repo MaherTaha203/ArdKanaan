@@ -229,7 +229,9 @@ test('restores a validated backup through the real settings path', async ({ page
 test('handles password recovery and returns to the authenticated shell after password update', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
 
+  await login(page)
   await page.goto('/#type=recovery&access_token=stub-access&refresh_token=stub-refresh')
+  await page.reload()
   await expect(page.getByRole('heading', { name: 'تعيين كلمة مرور جديدة' })).toBeVisible()
   const inputs = page.locator('input[type="password"]')
   await inputs.nth(0).fill('StrongPass1!')
