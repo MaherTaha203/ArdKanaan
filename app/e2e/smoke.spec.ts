@@ -128,3 +128,29 @@ test('persists center settings and reflects reset to defaults', async ({ page })
   await page.getByRole('button', { name: 'إعادة كل الإعدادات إلى الافتراضي' }).click()
   await expect(page.locator('input').first()).toHaveValue('أرض كنعان')
 });
+
+test('adds a student through the real student form path', async ({ page }) => {
+  const handle = await installSupabaseMocks(page)
+
+  await login(page)
+  await page.getByRole('button', { name: 'الطلاب', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'دليل الطلاب' }).click()
+  await page.getByRole('button', { name: 'إضافة طالب', exact: true }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'إضافة طالب' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('textbox', { name: 'اسم الطالب' }).fill('محمد علي')
+  await dialog.getByRole('textbox', { name: 'الرقم التعريفي' }).fill('123456789')
+  await dialog.getByRole('textbox', { name: 'الهاتف' }).fill('0591234567')
+  await dialog.getByRole('textbox', { name: 'الملاحظات' }).fill('طالب جديد')
+  await dialog.getByRole('button', { name: 'إضافة الطالب' }).click()
+
+  await expect.poll(() => handle.studentInserts.length).toBe(1)
+  expect(handle.studentInserts[0]).toMatchObject({
+    name: 'محمد علي',
+    id_number: '123456789',
+    phone: '0591234567',
+    notes: 'طالب جديد',
+  })
+  await expect(page.getByText('تمت إضافة الطالب بنجاح')).toBeVisible()
+});
