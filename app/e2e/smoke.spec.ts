@@ -90,7 +90,7 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   await expect(page.getByText('كهرباء')).toBeVisible()
 })
 
-test('keeps financial reports separated by report type and period', async ({ page }) => {
+test('keeps financial reports separated by report type and period', async ({ page }) =>
   await installSupabaseMocks(page)
 
   await login(page)
@@ -105,4 +105,24 @@ test('keeps financial reports separated by report type and period', async ({ pag
   await page.getByRole('menuitemradio', { name: 'تقرير المدفوعات' }).click()
   await expect(page.getByRole('heading', { name: 'تقرير المدفوعات' })).toBeVisible()
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
+})
+
+test('persists center settings and reflects reset to defaults', async ({ page }) => {
+  await installSupabaseMocks(page)
+
+  await login(page)
+  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
+
+  await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
+  const centerName = page.getByRole('textbox').filter({ has: undefined }).first()
+  await expect(centerName).toHaveValue('أرض كنعان')
+  await centerName.fill('مركز أرض كنعان التجريبي')
+  await centerName.blur()
+
+  await page.reload()
+  await expect(page.getByRole('textbox').first()).toHaveValue('مركز أرض كنعان التجريبي')
+
+  await page.getByRole('button', { name: 'إعادة كل الإعدادات إلى الافتراضي' }).click()
+  await expect(page.getByRole('textbox').first()).toHaveValue('أرض كنعان')
 })
