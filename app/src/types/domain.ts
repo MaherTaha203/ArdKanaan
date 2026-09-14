@@ -20,6 +20,31 @@ export type StudentStatementLine = {
   remainingBalance: number
 }
 
+// A course in the catalog. base_fee is only the DEFAULT fee proposed at
+// registration; the authoritative fee per student lives on the Enrollment.
+export type CourseStatus = 'active' | 'ended'
+
+export type Course = {
+  id: string
+  name: string
+  baseFee: number | null
+  startDate: string | null
+  endDate: string | null
+  status: CourseStatus
+  notes: string
+}
+
+// A student's enrolment in a course. This is the authoritative financial link:
+// (studentId + courseName) carries the snapshot fee (courseValue) the firewall
+// enforces. courseId links to the catalog Course when one exists (null for legacy).
+export type Enrollment = {
+  id: string
+  studentId: string
+  courseId: string | null
+  courseName: string
+  courseValue: number
+}
+
 // Money Out — an outgoing center expense. Never linked to a student or course.
 export type PaymentVoucherLine = {
   id: string
