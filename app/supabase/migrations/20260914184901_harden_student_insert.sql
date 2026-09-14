@@ -1,0 +1,3 @@
+-- Compatibility marker for the production migration history.
+-- The owner-only student INSERT hardening is implemented by the later
+-- 20260914230000_harden_student_insert.sql migration in source control.
