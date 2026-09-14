@@ -4,6 +4,9 @@ import { fetchAllRows } from '@/lib/fetch-all'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type {
   CancelledVoucher,
+  Course,
+  CourseStatus,
+  Enrollment,
   FinancialMovement,
   Student,
   StudentStatementLine,
@@ -18,6 +21,8 @@ type WorkspaceStore = {
   statementLines: StudentStatementLine[]
   movements: FinancialMovement[]
   cancelledVouchers: CancelledVoucher[]
+  courses: Course[]
+  enrollments: Enrollment[]
   isLoading: boolean
   loaded: boolean
   error: string | null
@@ -85,6 +90,46 @@ function normalizeMovement(row: MovementRow): FinancialMovement {
   }
 }
 
+type CourseRow = {
+  id: string
+  name: string
+  base_fee: number | string | null
+  start_date: string | null
+  end_date: string | null
+  status: string
+  notes: string | null
+}
+
+function normalizeCourse(row: CourseRow): Course {
+  return {
+    id: row.id,
+    name: row.name,
+    baseFee: row.base_fee === null ? null : Number(row.base_fee),
+    startDate: row.start_date,
+    endDate: row.end_date,
+    status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus,
+    notes: row.notes ?? '',
+  }
+}
+
+type EnrollmentRow = {
+  id: string
+  student_id: string
+  course_id: string | null
+  course_name: string
+  course_value: number | string
+}
+
+function normalizeEnrollment(row: EnrollmentRow): Enrollment {
+  return {
+    id: row.id,
+    studentId: row.student_id,
+    courseId: row.course_id,
+    courseName: row.course_name,
+    courseValue: Number(row.course_value),
+  }
+}
+
 type CancelledRow = MovementRow & { cancelled_at: string; cancel_reason: string | null }
 
 function normalizeCancelled(row: CancelledRow): CancelledVoucher {
@@ -106,6 +151,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   statementLines: [],
   movements: [],
   cancelledVouchers: [],
+  courses: [],
+  enrollments: [],
   isLoading: false,
   loaded: false,
   error: null,
@@ -127,7 +174,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     try {
       // Every read is fully paginated: a financial view must never operate on the
       // first 1000 rows only (PostgREST's default cap), or totals silently under-count.
-      const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
+      const [studentsResult, statementResult, movementsResult, cancelledResult, coursesResult, enrollmentsResult] = await Promise.all([
         fetchAllRows<StudentRow>((from, to) =>
           supabase
             .from('students')
@@ -162,18 +209,35 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
             .order('cancelled_at', { ascending: false })
             .range(from, to),
         ),
+        fetchAllRows<CourseRow>((from, to) =>
+          supabase
+            .from('courses')
+            .select('id, name, base_fee, start_date, end_date, status, notes')
+            .order('name', { ascending: true })
+            .range(from, to),
+        ),
+        fetchAllRows<EnrollmentRow>((from, to) =>
+          supabase
+            .from('enrollments')
+            .select('id, student_id, course_id, course_name, course_value')
+            .range(from, to),
+        ),
       ])
 
       if (studentsResult.error) throw studentsResult.error
       if (statementResult.error) throw statementResult.error
       if (movementsResult.error) throw movementsResult.error
       if (cancelledResult.error) throw cancelledResult.error
+      if (coursesResult.error) throw coursesResult.error
+      if (enrollmentsResult.error) throw enrollmentsResult.error
 
       set({
         students: studentsResult.data.map(normalizeStudent),
         statementLines: statementResult.data.map(normalizeStatementLine),
         movements: movementsResult.data.map(normalizeMovement),
         cancelledVouchers: cancelledResult.data.map(normalizeCancelled),
+        courses: coursesResult.data.map(normalizeCourse),
+        enrollments: enrollmentsResult.data.map(normalizeEnrollment),
         isLoading: false,
         loaded: true,
       })

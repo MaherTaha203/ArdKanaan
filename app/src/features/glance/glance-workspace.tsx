@@ -161,6 +161,6 @@ export function GlanceWorkspace() {
           </div>
         </section>
       </div>
-
+    </div>
   )
 }
