@@ -57,6 +57,7 @@ export function FinancialReportWorkspace() {
   const movements = useWorkspaceStore((state) => state.movements)
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const courses = useWorkspaceStore((state) => state.courses)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -78,6 +79,8 @@ export function FinancialReportWorkspace() {
   const [accountName, setAccountName] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
+  // Receipts report: optional filter by course (§ receipts-by-course).
+  const [courseFilter, setCourseFilter] = useState('')
 
   // Per-student statements are the real, course-aware document derived from
   // statement lines — reused here so the report's single print control can scope
@@ -95,6 +98,9 @@ export function FinancialReportWorkspace() {
 
   const start = periodStartIso(period)
   const periodLabel = PERIODS.find((item) => item.id === period)?.label ?? 'الكل'
+  // The receipts report can be scoped to one course; the scope label carries it
+  // through to the on-screen summary and the printed report.
+  const receiptsScopeLabel = view === 'receipts' && courseFilter ? `${periodLabel} · ${courseFilter}` : periodLabel
   const scoped = useMemo(() => {
     if (!start) return movements
     return movements.filter((movement) => movement.voucherDate >= start)
@@ -106,10 +112,21 @@ export function FinancialReportWorkspace() {
   const totals = useMemo(() => financialTotals(scoped), [scoped])
   const viewMovements = useMemo(() => {
     const ordered = movementsNewestFirst(scoped)
-    if (view === 'receipts') return ordered.filter((m) => m.movementType === 'receipt')
+    if (view === 'receipts') return ordered.filter((m) => m.movementType === 'receipt' && (!courseFilter || m.context === courseFilter))
     if (view === 'payments') return ordered.filter((m) => m.movementType === 'payment')
     return ordered
-  }, [scoped, view])
+  }, [scoped, view, courseFilter])
+  const viewTotal = useMemo(() => viewMovements.reduce((sum, m) => sum + m.amount, 0), [viewMovements])
+  // Course names available to filter receipts by — the catalog plus any course
+  // that appears on a receipt (covers legacy receipts with no catalog row).
+  const courseOptions = useMemo(() => {
+    const names = new Set<string>()
+    for (const course of courses) names.add(course.name)
+    for (const movement of movements) {
+      if (movement.movementType === 'receipt' && movement.context) names.add(movement.context)
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'ar'))
+  }, [courses, movements])
   const previewMovement = useMemo(
     () => (previewId ? viewMovements.find((m) => m.id === previewId) ?? null : null),
     [viewMovements, previewId],
@@ -243,10 +260,33 @@ export function FinancialReportWorkspace() {
         </div>
       ) : null}
 
+      {view === 'receipts' && courseOptions.length > 0 ? (
+        <div className="flex flex-wrap items-end gap-4 border-b border-border pb-4">
+          <label className="flex flex-col gap-1 text-[12px] font-medium text-muted-foreground">
+            الدورة
+            <select
+              value={courseFilter}
+              onChange={(event) => setCourseFilter(event.target.value)}
+              className="figure h-9 w-64 rounded-md border border-border-strong bg-panel px-3 text-[13px] text-foreground"
+            >
+              <option value="">كل الدورات</option>
+              {courseOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </label>
+          {courseFilter ? (
+            <button type="button" onClick={() => setCourseFilter('')} className="h-9 text-[12px] font-semibold text-olive">
+              مسح الفلتر
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {view === 'general' ? (
         <GeneralSummary net={genTotals.net} totalIn={genTotals.totalIn} totalOut={genTotals.totalOut} periodLabel={generalScopeLabel} />
       ) : (
-        <SidedSummary view={view} amount={view === 'receipts' ? totals.totalIn : totals.totalOut} count={viewMovements.length} periodLabel={periodLabel} />
+        <SidedSummary view={view} amount={viewTotal} count={viewMovements.length} periodLabel={receiptsScopeLabel} />
       )}
 
       <section className="border-y border-border">
@@ -291,7 +331,7 @@ export function FinancialReportWorkspace() {
         view === 'general' ? (
           <FinancialReportPrint view={view} title={title} net={genTotals.net} totalIn={genTotals.totalIn} totalOut={genTotals.totalOut} opening={genOpening} receiptCount={receiptCount(genScoped)} paymentCount={paymentCount(genScoped)} movements={genScoped} periodLabel={generalScopeLabel} onClose={() => setPrinting(false)} />
         ) : (
-          <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={viewMovements} periodLabel={periodLabel} onClose={() => setPrinting(false)} />
+          <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={view === 'receipts' ? viewTotal : totals.totalIn} totalOut={view === 'payments' ? viewTotal : totals.totalOut} opening={opening} receiptCount={view === 'receipts' ? viewMovements.length : receiptCount(scoped)} paymentCount={view === 'payments' ? viewMovements.length : paymentCount(scoped)} movements={viewMovements} periodLabel={receiptsScopeLabel} onClose={() => setPrinting(false)} />
         )
       ) : null}
       {printStudent ? <StudentStatementPrint studentName={printStudent.student.name} paid={printStudent.paid} remaining={printStudent.remaining} courses={printStudent.courses} lines={statementFor(statementLines, printStudent.student.id)} onClose={() => setPrintStudentId(null)} /> : null}

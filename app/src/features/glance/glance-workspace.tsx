@@ -5,7 +5,7 @@ import { User } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Money } from '@/components/ui/money'
 import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, attentionList, financialTotals, movementsNewestFirst } from '@/lib/aggregate'
+import { aggregateStudents, attentionList, financialTotals, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import type { FinancialMovement } from '@/types/domain'
 import { useSettingsStore } from '@/store/use-settings-store'
@@ -51,6 +51,17 @@ export function GlanceWorkspace() {
     () => attentionList(aggregateStudents(students, statementLines, enrollments)).slice(0, attentionCount),
     [students, statementLines, enrollments, attentionCount],
   )
+  // The course(s) each attention student still owes on — shown beside the name.
+  const owedCourses = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const item of attention) {
+      const courses = studentCourseBreakdown(item.student.id, statementLines, enrollments)
+        .filter((course) => course.remaining > 0)
+        .map((course) => course.courseName)
+      map.set(item.student.id, courses.join('، '))
+    }
+    return map
+  }, [attention, statementLines, enrollments])
 
   return (
     <div className="space-y-6">
@@ -59,6 +70,7 @@ export function GlanceWorkspace() {
 
       <header>
         <h1 className="editorial text-[clamp(1.6rem,3vw,2.1rem)] text-foreground">مرحبًا بك في أرض كنعان</h1>
+        <p className="mt-1 text-sm text-muted-foreground">متابعة سريعة لحركة المركز الماليّ</p>
       </header>
 
       <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]">
@@ -151,7 +163,9 @@ export function GlanceWorkspace() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-foreground">{item.student.name}</span>
-                    <span className="text-[11px] font-medium text-warn">مستحق</span>
+                    <span className="block truncate text-[11px] font-medium text-warn">
+                      {owedCourses.get(item.student.id) || 'مستحق'}
+                    </span>
                   </span>
                   <Money value={item.remaining} currency={false} className="text-sm font-bold text-warn" />
                 </button>
