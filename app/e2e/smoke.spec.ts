@@ -115,14 +115,14 @@ test('persists center settings and reflects reset to defaults', async ({ page })
   await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
 
   await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
-  const centerName = page.getByRole('textbox').filter({ has: undefined }).first()
+  const centerName = page.locator('input').first()
   await expect(centerName).toHaveValue('أرض كنعان')
   await centerName.fill('مركز أرض كنعان التجريبي')
   await centerName.blur()
 
   await page.reload()
-  await expect(page.getByRole('textbox').first()).toHaveValue('مركز أرض كنعان التجريبي')
+  await expect(page.locator('input').first()).toHaveValue('مركز أرض كنعان التجريبي')
 
   await page.getByRole('button', { name: 'إعادة كل الإعدادات إلى الافتراضي' }).click()
-  await expect(page.getByRole('textbox').first()).toHaveValue('أرض كنعان')
+  await expect(page.locator('input').first()).toHaveValue('أرض كنعان')
 })
