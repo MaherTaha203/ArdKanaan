@@ -30,6 +30,7 @@ export function StudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
+  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
@@ -43,7 +44,7 @@ export function StudentsWorkspace() {
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments), [students, statementLines, enrollments])
+  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
 
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
@@ -70,10 +71,17 @@ export function StudentsWorkspace() {
   const activeId = selectedStudentId ?? filtered[0]?.student.id ?? sorted[0]?.student.id ?? null
   const active = useMemo(() => aggregates.find((item) => item.student.id === activeId) ?? null, [aggregates, activeId])
   const activeLines = useMemo(() => (activeId ? statementFor(statementLines, activeId) : []), [statementLines, activeId])
-  const activeBreakdown = useMemo(
-    () => (activeId ? studentCourseBreakdown(activeId, statementLines, enrollments) : []),
-    [activeId, statementLines, enrollments],
-  )
+  const activeBreakdown = useMemo(() => (activeId ? studentCourseBreakdown(activeId, statementLines, enrollments) : []), [activeId, statementLines, enrollments])
+  const activeFees = useMemo(() => {
+    if (!activeId) return []
+    return feeObligations
+      .filter((fee) => fee.studentId === activeId && !fee.cancelledAt)
+      .map((fee) => {
+        const paid = activeLines.filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id).reduce((sum, line) => sum + line.amountReceived, 0)
+        return { fee, paid, remaining: Math.max(0, fee.amount - paid) }
+      })
+      .sort((a, b) => b.remaining - a.remaining)
+  }, [activeId, feeObligations, activeLines])
 
   return (
     <div className="detail-workspace">
@@ -132,6 +140,22 @@ export function StudentsWorkspace() {
                 </div>
               ) : null}
 
+              {activeFees.length > 0 ? (
+                <div className="mb-6">
+                  <h3 className="mb-3 text-base font-bold text-foreground">الرسوم</h3>
+                  <div className="border-y border-border">
+                    {activeFees.map(({ fee, paid, remaining }) => (
+                      <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-border px-2.5 py-3.5 last:border-b-0">
+                        <div className="min-w-0 flex-1"><div className="text-sm font-medium text-foreground">{fee.description}</div><div className="mt-1 text-[11.5px] text-muted-foreground">{fee.courseName} · {fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</div></div>
+                        <span className="figure text-sm">{formatNumber(fee.amount)}</span>
+                        <span className="figure text-sm text-gold">{formatNumber(paid)}</span>
+                        <span className={`figure text-sm font-semibold ${remaining > REMAINING_EPSILON ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(remaining)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-base font-bold text-foreground">كشف الحساب</h3>
                 <div className="flex flex-wrap items-center gap-2">
@@ -145,15 +169,15 @@ export function StudentsWorkspace() {
                   <thead><tr className="text-[11.5px] tracking-wide text-faint">
                     <th className="border-b border-border px-2.5 py-3 text-start font-semibold">التاريخ</th>
                     <th className="border-b border-border px-2.5 py-3 text-start font-semibold">رقم السند</th>
-                    <th className="border-b border-border px-2.5 py-3 text-start font-semibold">الدورة</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">قيمة الدورة</th>
+                    <th className="border-b border-border px-2.5 py-3 text-start font-semibold">البيان</th>
+                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">القيمة</th>
                     <th className="border-b border-border px-2.5 py-3 text-end font-semibold">المسدَّد</th>
                     <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد المستحق</th>
                   </tr></thead>
                   <tbody>{activeLines.length > 0 ? activeLines.map((line) => <tr key={line.id}>
                     <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5">{formatDate(line.voucherDate)}</td>
                     <td className="figure border-b border-border px-2.5 py-3.5 text-muted-foreground">{voucherRef('receipt', line.voucherNumber)}</td>
-                    <td className="border-b border-border px-2.5 py-3.5 text-muted-foreground">{line.courseName}</td>
+                    <td className="border-b border-border px-2.5 py-3.5 text-muted-foreground">{line.entryType === 'fee' ? `رسم · ${line.courseName}` : line.courseName}</td>
                     <td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(line.courseValue)}</td>
                     <td className="figure border-b border-border px-2.5 py-3.5 text-end font-medium">{formatNumber(line.amountReceived)}</td>
                     <td className={`figure border-b border-border px-2.5 py-3.5 text-end font-bold ${line.remainingBalance > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`}>{formatNumber(line.remainingBalance)}</td>
