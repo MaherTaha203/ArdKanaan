@@ -206,7 +206,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const [studentsResult, statementResult, movementsResult, cancelledResult, coursesResult, enrollmentsResult, feesResult] = await Promise.all([
+      const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
         fetchAllRows<StudentRow>((from, to) =>
           supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to),
         ),
@@ -224,6 +224,21 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         fetchAllRows<CancelledRow>((from, to) =>
           supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to),
         ),
+      ])
+
+      if (studentsResult.error) throw studentsResult.error
+      if (statementResult.error) throw statementResult.error
+      if (movementsResult.error) throw movementsResult.error
+      if (cancelledResult.error) throw cancelledResult.error
+
+      set({
+        students: studentsResult.data.map(normalizeStudent),
+        statementLines: statementResult.data.map(normalizeStatementLine),
+        movements: movementsResult.data.map(normalizeMovement),
+        cancelledVouchers: cancelledResult.data.map(normalizeCancelled),
+      })
+
+      const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
         fetchAllRows<CourseRow>((from, to) =>
           supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to),
         ),
@@ -235,22 +250,18 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         ),
       ])
 
-      if (studentsResult.error) throw studentsResult.error
-      if (statementResult.error) throw statementResult.error
-      if (movementsResult.error) throw movementsResult.error
-      if (cancelledResult.error) throw cancelledResult.error
-      if (coursesResult.error) throw coursesResult.error
-      if (enrollmentsResult.error) throw enrollmentsResult.error
-      if (feesResult.error) throw feesResult.error
+      if (coursesResult.error || enrollmentsResult.error || feesResult.error) {
+        console.error('optional workspace load failed', {
+          courses: coursesResult.error,
+          enrollments: enrollmentsResult.error,
+          feeObligations: feesResult.error,
+        })
+      }
 
       set({
-        students: studentsResult.data.map(normalizeStudent),
-        statementLines: statementResult.data.map(normalizeStatementLine),
-        movements: movementsResult.data.map(normalizeMovement),
-        cancelledVouchers: cancelledResult.data.map(normalizeCancelled),
-        courses: coursesResult.data.map(normalizeCourse),
-        enrollments: enrollmentsResult.data.map(normalizeEnrollment),
-        feeObligations: feesResult.data.map(normalizeFeeObligation),
+        courses: coursesResult.error ? [] : coursesResult.data.map(normalizeCourse),
+        enrollments: enrollmentsResult.error ? [] : enrollmentsResult.data.map(normalizeEnrollment),
+        feeObligations: feesResult.error ? [] : feesResult.data.map(normalizeFeeObligation),
         isLoading: false,
         loaded: true,
       })
