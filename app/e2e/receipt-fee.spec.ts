@@ -11,13 +11,14 @@ test('course page can assign a fee obligation to selected students', async ({ pa
     ],
     courses: [{ id: 'c-1', name: 'دورة الإدارة', base_fee: 300, start_date: '2026-09-01', end_date: '2026-10-01', status: 'active', notes: null }],
     enrollments: [
-      { id: 'e-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 },
-      { id: 'e-2', student_id: 's-2', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 },
+      { id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 },
+      { id: '33333333-3333-4333-8333-333333333333', student_id: 's-2', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 },
     ],
   })
 
   await login(page)
-  await page.getByText('دورة الإدارة').first().click()
+  await page.getByRole('button', { name: 'الدورات', exact: true }).first().click()
+  await page.getByRole('button', { name: /دورة الإدارة/ }).click()
   await page.getByRole('button', { name: 'إضافة رسوم' }).click()
   const sheet = page.getByRole('dialog', { name: /إضافة رسوم/ })
   await expect(sheet).toBeVisible()
@@ -36,10 +37,10 @@ test('course page can assign a fee obligation to selected students', async ({ pa
 test('one receipt can cover course dues and multiple fee obligations', async ({ page }) => {
   const handle = await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
-    enrollments: [{ id: 'e-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 }],
+    enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 }],
     feeObligations: [
-      { id: 'f-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', description: 'رسوم تخريج', amount: 50, fee_category: 'external', external_share: 50, cancelled_at: null, cancel_reason: null, created_at: '2026-09-15T08:00:00Z' },
-      { id: 'f-2', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', description: 'رسوم شهادة', amount: 20, fee_category: 'institute', external_share: 0, cancelled_at: null, cancel_reason: null, created_at: '2026-09-15T08:05:00Z' },
+      { id: '22222222-2222-4222-8222-222222222222', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', description: 'رسوم تخريج', amount: 50, fee_category: 'external', external_share: 50, cancelled_at: null, cancel_reason: null, created_at: '2026-09-15T08:00:00Z' },
+      { id: '44444444-4444-4444-8444-444444444444', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', description: 'رسوم شهادة', amount: 20, fee_category: 'institute', external_share: 0, cancelled_at: null, cancel_reason: null, created_at: '2026-09-15T08:05:00Z' },
     ],
   })
 
