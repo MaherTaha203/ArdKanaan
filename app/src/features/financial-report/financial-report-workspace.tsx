@@ -117,6 +117,12 @@ export function FinancialReportWorkspace() {
     return ordered
   }, [scoped, view, courseFilter])
   const viewTotal = useMemo(() => viewMovements.reduce((sum, m) => sum + m.amount, 0), [viewMovements])
+  // Portion of the receipts in scope that is held on behalf of a third party
+  // (لصالح الغير). Institute revenue = viewTotal − this. Zero unless a fee split exists.
+  const viewExternalHeld = useMemo(
+    () => (view === 'receipts' ? viewMovements.reduce((sum, m) => sum + (m.externalShare ?? 0), 0) : 0),
+    [viewMovements, view],
+  )
   // Course names available to filter receipts by — the catalog plus any course
   // that appears on a receipt (covers legacy receipts with no catalog row).
   const courseOptions = useMemo(() => {
@@ -286,7 +292,7 @@ export function FinancialReportWorkspace() {
       {view === 'general' ? (
         <GeneralSummary net={genTotals.net} totalIn={genTotals.totalIn} totalOut={genTotals.totalOut} periodLabel={generalScopeLabel} />
       ) : (
-        <SidedSummary view={view} amount={viewTotal} count={viewMovements.length} periodLabel={receiptsScopeLabel} />
+        <SidedSummary view={view} amount={viewTotal} count={viewMovements.length} periodLabel={receiptsScopeLabel} externalHeld={viewExternalHeld} instituteRevenue={viewTotal - viewExternalHeld} />
       )}
 
       <section className="border-y border-border">
@@ -331,7 +337,7 @@ export function FinancialReportWorkspace() {
         view === 'general' ? (
           <FinancialReportPrint view={view} title={title} net={genTotals.net} totalIn={genTotals.totalIn} totalOut={genTotals.totalOut} opening={genOpening} receiptCount={receiptCount(genScoped)} paymentCount={paymentCount(genScoped)} movements={genScoped} periodLabel={generalScopeLabel} onClose={() => setPrinting(false)} />
         ) : (
-          <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={view === 'receipts' ? viewTotal : totals.totalIn} totalOut={view === 'payments' ? viewTotal : totals.totalOut} opening={opening} receiptCount={view === 'receipts' ? viewMovements.length : receiptCount(scoped)} paymentCount={view === 'payments' ? viewMovements.length : paymentCount(scoped)} movements={viewMovements} periodLabel={receiptsScopeLabel} onClose={() => setPrinting(false)} />
+          <FinancialReportPrint view={view} title={title} net={totals.net} totalIn={view === 'receipts' ? viewTotal : totals.totalIn} totalOut={view === 'payments' ? viewTotal : totals.totalOut} opening={opening} receiptCount={view === 'receipts' ? viewMovements.length : receiptCount(scoped)} paymentCount={view === 'payments' ? viewMovements.length : paymentCount(scoped)} movements={viewMovements} periodLabel={receiptsScopeLabel} externalHeld={view === 'receipts' ? viewExternalHeld : 0} instituteRevenue={view === 'receipts' ? viewTotal - viewExternalHeld : 0} onClose={() => setPrinting(false)} />
         )
       ) : null}
       {printStudent ? <StudentStatementPrint studentName={printStudent.student.name} paid={printStudent.paid} remaining={printStudent.remaining} courses={printStudent.courses} lines={statementFor(statementLines, printStudent.student.id)} onClose={() => setPrintStudentId(null)} /> : null}
@@ -530,8 +536,12 @@ function GeneralStatementTable({ rows, opening, loaded, allEmpty }: { rows: Runn
   )
 }
 
-function SidedSummary({ view, amount, count, periodLabel }: { view: Exclude<ReportView, 'general'>; amount: number; count: number; periodLabel: string }) {
+function SidedSummary({ view, amount, count, periodLabel, externalHeld = 0, instituteRevenue = 0 }: { view: Exclude<ReportView, 'general'>; amount: number; count: number; periodLabel: string; externalHeld?: number; instituteRevenue?: number }) {
   const isReceipts = view === 'receipts'
+  // Institute revenue is shown only when part of the receipts is held for a third
+  // party (a fee split); otherwise cash-in and institute revenue are identical and
+  // the extra figures would be noise.
+  const showSplit = isReceipts && externalHeld > 0
   return (
     <section className="border-y border-border py-5">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -539,7 +549,15 @@ function SidedSummary({ view, amount, count, periodLabel }: { view: Exclude<Repo
           <div className="text-[12px] font-bold tracking-wide text-olive">{isReceipts ? 'إجمالي المقبوضات' : 'إجمالي المدفوعات'} · {periodLabel}</div>
           <Money value={amount} currencyClassName="text-faint" className={`mt-2 block text-[clamp(2.2rem,5vw,3.2rem)] font-semibold leading-none ${isReceipts ? 'text-gold' : 'text-clay'}`} />
         </div>
-        <BalanceFigure label={isReceipts ? 'عدد سندات القبض' : 'عدد سندات الصرف'} value={count} />
+        {showSplit ? (
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
+            <BalanceFigure label="إيراد المعهد" value={instituteRevenue} tone="in" />
+            <BalanceFigure label="لصالح جهة خارجية" value={externalHeld} />
+            <BalanceFigure label="عدد سندات القبض" value={count} />
+          </div>
+        ) : (
+          <BalanceFigure label={isReceipts ? 'عدد سندات القبض' : 'عدد سندات الصرف'} value={count} />
+        )}
       </div>
     </section>
   )

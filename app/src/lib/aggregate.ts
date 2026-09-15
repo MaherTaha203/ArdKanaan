@@ -9,6 +9,10 @@ export type FinancialTotals = {
   totalIn: number
   totalOut: number
   net: number
+  // Portion of receipts held on behalf of third parties (لصالح الغير) — never the
+  // institute's revenue. Institute revenue = totalIn − externalHeld.
+  externalHeld: number
+  instituteRevenue: number
 }
 
 export type StudentAggregate = {
@@ -23,16 +27,18 @@ export type StudentAggregate = {
 export function financialTotals(movements: FinancialMovement[]): FinancialTotals {
   let totalIn = 0
   let totalOut = 0
+  let externalHeld = 0
 
   for (const movement of movements) {
     if (movement.movementType === 'receipt') {
       totalIn += movement.amount
+      externalHeld += movement.externalShare ?? 0
     } else {
       totalOut += movement.amount
     }
   }
 
-  return { totalIn, totalOut, net: totalIn - totalOut }
+  return { totalIn, totalOut, net: totalIn - totalOut, externalHeld, instituteRevenue: totalIn - externalHeld }
 }
 
 function chronological(lines: StudentStatementLine[]) {

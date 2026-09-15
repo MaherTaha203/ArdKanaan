@@ -58,6 +58,7 @@ type MovementRow = {
   amount: number | string
   party_name: string | null
   context: string | null
+  external_share?: number | string | null
 }
 
 function normalizeStudent(row: StudentRow): Student {
@@ -87,6 +88,7 @@ function normalizeMovement(row: MovementRow): FinancialMovement {
     amount: Number(row.amount),
     partyName: row.party_name,
     context: row.context,
+    externalShare: Number(row.external_share ?? 0),
   }
 }
 
@@ -195,7 +197,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         fetchAllRows<MovementRow>((from, to) =>
           supabase
             .from('financial_movements')
-            .select('id, movement_type, voucher_number, voucher_date, amount, party_name, context')
+            .select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share')
             .order('voucher_date', { ascending: true })
             .order('created_at', { ascending: true })
             .range(from, to),

@@ -65,6 +65,9 @@ export type FinancialMovement = {
   amount: number
   partyName: string | null
   context: string | null
+  // Portion of a fee receipt held on behalf of a third party (لصالح الغير) — 0 for
+  // ordinary course receipts and every payment. Institute revenue = amount − externalShare.
+  externalShare?: number
 }
 
 // A cancelled voucher — excluded from every active total, kept for review. Derived

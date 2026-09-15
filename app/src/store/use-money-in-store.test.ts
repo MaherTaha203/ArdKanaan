@@ -73,6 +73,9 @@ function formValues(overrides: Partial<ReceiptVoucherFormValues> = {}): ReceiptV
     amountReceived: 400,
     payerName: '',
     notes: '',
+    entryType: 'course',
+    feeCategory: undefined,
+    externalShare: undefined,
     ...overrides,
   }
 }
@@ -196,5 +199,81 @@ describe('saveReceiptVoucher — student identity guard', () => {
 
     // The authoritative enrollment fee wins so the balance can never drift.
     expect(insertedCourseValue).toBe(1000)
+  })
+})
+
+describe('saveReceiptVoucher — student fees', () => {
+  it('records a shared fee in one receipt with the split, without touching enrollments', async () => {
+    // A 50 graduation fee split 30/20 is a self-contained money-in line: one
+    // receipt voucher, no enrollment, no second voucher.
+    seedRoster([student('s-1', 'محمد علي')])
+    let enrollmentTouched = false
+    let receiptPayload: Record<string, unknown> | undefined
+    hoisted.client = makeClient((state) => {
+      if (state.table === 'enrollments') {
+        enrollmentTouched = true
+        throw new Error('a fee must not touch enrollments')
+      }
+      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
+        receiptPayload = state.payload
+        return { data: { id: 'r-fee', voucher_number: 950, student_id: 's-1' }, error: null }
+      }
+      if (state.table === 'student_statement_lines') return { data: [], error: null }
+      throw new Error(`unexpected query on ${state.table}`)
+    })
+
+    const ok = await useMoneyInStore.getState().saveReceiptVoucher(
+      formValues({ entryType: 'fee', feeCategory: 'shared', courseName: 'رسوم تخريج', courseValue: undefined, amountReceived: 50, externalShare: 20 }),
+    )
+
+    expect(ok).toBe(true)
+    expect(enrollmentTouched).toBe(false)
+    expect(receiptPayload?.fee_category).toBe('shared')
+    expect(receiptPayload?.external_share).toBe(20)
+    // course_value mirrors the fee total (statement shows the full amount, remaining 0).
+    expect(receiptPayload?.course_value).toBe(50)
+    expect(receiptPayload?.amount_received).toBe(50)
+  })
+
+  it('derives the full external share for an external fee', async () => {
+    seedRoster([student('s-1', 'محمد علي')])
+    let receiptPayload: Record<string, unknown> | undefined
+    hoisted.client = makeClient((state) => {
+      if (state.table === 'enrollments') throw new Error('a fee must not touch enrollments')
+      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
+        receiptPayload = state.payload
+        return { data: { id: 'r-ext', voucher_number: 951, student_id: 's-1' }, error: null }
+      }
+      if (state.table === 'student_statement_lines') return { data: [], error: null }
+      throw new Error(`unexpected query on ${state.table}`)
+    })
+
+    await useMoneyInStore.getState().saveReceiptVoucher(
+      formValues({ entryType: 'fee', feeCategory: 'external', courseName: 'رسوم امتحان', courseValue: undefined, amountReceived: 40 }),
+    )
+
+    expect(receiptPayload?.fee_category).toBe('external')
+    expect(receiptPayload?.external_share).toBe(40)
+  })
+
+  it('derives a zero external share for an institute fee', async () => {
+    seedRoster([student('s-1', 'محمد علي')])
+    let receiptPayload: Record<string, unknown> | undefined
+    hoisted.client = makeClient((state) => {
+      if (state.table === 'enrollments') throw new Error('a fee must not touch enrollments')
+      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
+        receiptPayload = state.payload
+        return { data: { id: 'r-inst', voucher_number: 952, student_id: 's-1' }, error: null }
+      }
+      if (state.table === 'student_statement_lines') return { data: [], error: null }
+      throw new Error(`unexpected query on ${state.table}`)
+    })
+
+    await useMoneyInStore.getState().saveReceiptVoucher(
+      formValues({ entryType: 'fee', feeCategory: 'institute', courseName: 'رسوم شهادة', courseValue: undefined, amountReceived: 60 }),
+    )
+
+    expect(receiptPayload?.fee_category).toBe('institute')
+    expect(receiptPayload?.external_share).toBe(0)
   })
 })

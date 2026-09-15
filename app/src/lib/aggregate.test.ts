@@ -57,11 +57,38 @@ describe('financialTotals', () => {
       movement({ id: 'c', movementType: 'payment', amount: 120 }),
     ]
 
-    expect(financialTotals(movements)).toEqual({ totalIn: 500, totalOut: 120, net: 380 })
+    // No fee split present → institute revenue equals cash-in, nothing held for others.
+    expect(financialTotals(movements)).toEqual({ totalIn: 500, totalOut: 120, net: 380, externalHeld: 0, instituteRevenue: 500 })
   })
 
   it('is all zero for no movements', () => {
-    expect(financialTotals([])).toEqual({ totalIn: 0, totalOut: 0, net: 0 })
+    expect(financialTotals([])).toEqual({ totalIn: 0, totalOut: 0, net: 0, externalHeld: 0, instituteRevenue: 0 })
+  })
+
+  it('recognises only the institute share of a shared fee as revenue', () => {
+    // A 50 graduation fee split 30/20: cash-in is 50, but 20 is held for a third
+    // party (لصالح الغير), so institute revenue is 30.
+    const movements = [movement({ id: 'fee', movementType: 'receipt', amount: 50, externalShare: 20 })]
+
+    const totals = financialTotals(movements)
+
+    expect(totals.totalIn).toBe(50)
+    expect(totals.externalHeld).toBe(20)
+    expect(totals.instituteRevenue).toBe(30)
+  })
+
+  it('counts a whole external fee as held-for-others, zero institute revenue', () => {
+    const totals = financialTotals([movement({ id: 'ext', movementType: 'receipt', amount: 40, externalShare: 40 })])
+
+    expect(totals.instituteRevenue).toBe(0)
+    expect(totals.externalHeld).toBe(40)
+  })
+
+  it('counts a whole institute fee entirely as institute revenue', () => {
+    const totals = financialTotals([movement({ id: 'inst', movementType: 'receipt', amount: 60, externalShare: 0 })])
+
+    expect(totals.instituteRevenue).toBe(60)
+    expect(totals.externalHeld).toBe(0)
   })
 })
 

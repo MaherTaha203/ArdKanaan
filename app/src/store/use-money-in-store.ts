@@ -172,27 +172,49 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
         throw new Error('تعذّر تحديد الطالب المطلوب للسند.')
       }
 
-      // The course fee is authoritative per (student, course) via the enrollment.
-      // First receipt for a course establishes it; later receipts reuse it (the
-      // entered value is ignored so the balance can never drift).
       const courseName = values.courseName.trim()
-      const { data: existingEnrollment, error: enrollmentLookupError } = await supabase
-        .from('enrollments')
-        .select('course_value')
-        .eq('student_id', activeStudent.id)
-        .eq('course_name', courseName)
-        .limit(1)
+      const isFee = values.entryType === 'fee'
 
-      if (enrollmentLookupError) throw enrollmentLookupError
+      // The institute/external split for a fee (institute + external = amount, always).
+      // A fee is a self-contained money-in line: no enrolment, no remaining-balance
+      // concept, and the third-party portion is recognised as "held for others" in
+      // this same voucher — no second voucher, no settlement.
+      let courseValue: number
+      let feeCategory: 'institute' | 'external' | 'shared' | null = null
+      let externalShare = 0
 
-      let courseValue = values.courseValue
-      if (existingEnrollment?.[0]) {
-        courseValue = Number(existingEnrollment[0].course_value)
+      if (isFee) {
+        courseValue = values.amountReceived
+        feeCategory = values.feeCategory ?? null
+        externalShare =
+          feeCategory === 'external'
+            ? values.amountReceived
+            : feeCategory === 'shared'
+              ? Number(values.externalShare ?? 0)
+              : 0
       } else {
-        const { error: enrollmentInsertError } = await supabase
+        // The course fee is authoritative per (student, course) via the enrollment.
+        // First receipt for a course establishes it; later receipts reuse it (the
+        // entered value is ignored so the balance can never drift).
+        const enteredCourseValue = values.courseValue ?? 0
+        const { data: existingEnrollment, error: enrollmentLookupError } = await supabase
           .from('enrollments')
-          .insert({ student_id: activeStudent.id, course_name: courseName, course_value: values.courseValue })
-        if (enrollmentInsertError) throw enrollmentInsertError
+          .select('course_value')
+          .eq('student_id', activeStudent.id)
+          .eq('course_name', courseName)
+          .limit(1)
+
+        if (enrollmentLookupError) throw enrollmentLookupError
+
+        courseValue = enteredCourseValue
+        if (existingEnrollment?.[0]) {
+          courseValue = Number(existingEnrollment[0].course_value)
+        } else {
+          const { error: enrollmentInsertError } = await supabase
+            .from('enrollments')
+            .insert({ student_id: activeStudent.id, course_name: courseName, course_value: enteredCourseValue })
+          if (enrollmentInsertError) throw enrollmentInsertError
+        }
       }
 
       const { error: voucherError } = await supabase
@@ -206,6 +228,8 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
           amount_received: values.amountReceived,
           payer_name: values.payerName.trim(),
           notes: values.notes.trim(),
+          fee_category: feeCategory,
+          external_share: externalShare,
         })
         .select(
           'id, voucher_number, voucher_date, student_id, student_name_snapshot, course_name, course_value, amount_received, payer_name, notes',
