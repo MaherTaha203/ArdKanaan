@@ -1,7 +1,3 @@
--- Financial firewall: enforce whole-shekel money, preserve enrollment as the
--- authoritative course fee, block receipt overpayment, and keep posted financial
--- fields immutable. Descriptive fields may still be edited; cancellation is final.
-
 alter table public.enrollments
   add constraint enrollments_course_value_whole_shekel
   check (course_value = trunc(course_value));
@@ -28,7 +24,15 @@ declare
   remaining numeric;
   lock_key bigint;
 begin
+  if current_setting('app.restoring', true) = 'on' then
+    return new;
+  end if;
+
   if tg_op = 'UPDATE' then
+    if old.cancelled_at is not null then
+      raise exception 'CANCELLED_VOUCHER_IS_IMMUTABLE';
+    end if;
+
     if new.voucher_number is distinct from old.voucher_number
        or new.voucher_date is distinct from old.voucher_date
        or new.student_id is distinct from old.student_id
@@ -39,11 +43,7 @@ begin
       raise exception 'FINANCIAL_FIELDS_IMMUTABLE';
     end if;
 
-    if old.cancelled_at is not null and new.cancelled_at is null then
-      raise exception 'CANCELLED_VOUCHER_CANNOT_BE_REOPENED';
-    end if;
-
-    if old.cancelled_at is null and new.cancelled_at is not null
+    if new.cancelled_at is not null
        and nullif(btrim(new.cancel_reason), '') is null then
       raise exception 'CANCELLATION_REASON_REQUIRED';
     end if;
@@ -51,14 +51,17 @@ begin
     return new;
   end if;
 
+  if new.cancelled_at is not null
+     and nullif(btrim(new.cancel_reason), '') is null then
+    raise exception 'CANCELLATION_REASON_REQUIRED';
+  end if;
+
   lock_key := hashtextextended(new.student_id::text || ':' || new.course_name, 0);
   perform pg_advisory_xact_lock(lock_key);
 
-  select e.course_value
-    into enrollment_fee
+  select e.course_value into enrollment_fee
   from public.enrollments e
-  where e.student_id = new.student_id
-    and e.course_name = new.course_name
+  where e.student_id = new.student_id and e.course_name = new.course_name
   for share;
 
   if enrollment_fee is null then
@@ -69,11 +72,9 @@ begin
     raise exception 'COURSE_VALUE_MUST_MATCH_ENROLLMENT';
   end if;
 
-  select coalesce(sum(rv.amount_received), 0)
-    into paid
+  select coalesce(sum(rv.amount_received), 0) into paid
   from public.receipt_vouchers rv
-  where rv.student_id = new.student_id
-    and rv.course_name = new.course_name
+  where rv.student_id = new.student_id and rv.course_name = new.course_name
     and rv.cancelled_at is null;
 
   remaining := enrollment_fee - paid;
@@ -85,9 +86,55 @@ begin
 end;
 $$;
 
+create or replace function public.enforce_payment_financial_firewall()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if current_setting('app.restoring', true) = 'on' then
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' then
+    if old.cancelled_at is not null then
+      raise exception 'CANCELLED_VOUCHER_IS_IMMUTABLE';
+    end if;
+
+    if new.voucher_number is distinct from old.voucher_number
+       or new.voucher_date is distinct from old.voucher_date
+       or new.expense_type is distinct from old.expense_type
+       or new.amount is distinct from old.amount then
+      raise exception 'FINANCIAL_FIELDS_IMMUTABLE';
+    end if;
+
+    if new.cancelled_at is not null
+       and nullif(btrim(new.cancel_reason), '') is null then
+      raise exception 'CANCELLATION_REASON_REQUIRED';
+    end if;
+
+    return new;
+  end if;
+
+  if new.cancelled_at is not null
+     and nullif(btrim(new.cancel_reason), '') is null then
+    raise exception 'CANCELLATION_REASON_REQUIRED';
+  end if;
+
+  return new;
+end;
+$$;
+
 revoke all on function public.enforce_financial_firewall() from public, anon, authenticated;
+revoke all on function public.enforce_payment_financial_firewall() from public, anon, authenticated;
 
 drop trigger if exists receipt_vouchers_financial_firewall on public.receipt_vouchers;
 create trigger receipt_vouchers_financial_firewall
 before insert or update on public.receipt_vouchers
 for each row execute function public.enforce_financial_firewall();
+
+drop trigger if exists payment_vouchers_financial_firewall on public.payment_vouchers;
+create trigger payment_vouchers_financial_firewall
+before insert or update on public.payment_vouchers
+for each row execute function public.enforce_payment_financial_firewall();

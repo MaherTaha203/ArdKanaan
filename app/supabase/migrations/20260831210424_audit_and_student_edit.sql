@@ -1,27 +1,13 @@
 -- P1 — comprehensive activity audit + student-record editing.
---
--- Two related changes:
---  (9) One general audit_log replaces the voucher-only log. Every mutation of a
---      source-of-truth row — create/edit/cancel/uncancel on vouchers, create/edit on
---      students and enrollments — is recorded server-side by a SECURITY DEFINER
---      trigger, with the exact fields that changed on an edit. A restore logs ONE
---      'restore' event (per-row noise is suppressed while it runs).
---  (7) Students become correctable: an UPDATE grant + RLS policy (still never a
---      delete). Editing a student is itself audited by the same trigger.
---
--- The financial truth is untouched: no calculation, view, or balance derivation
--- changes here. Auditing is orthogonal to the numbers.
-
--- 1) General audit log. Written only by the trigger; readable by the operator.
 create table if not exists public.audit_log (
   id uuid primary key default gen_random_uuid(),
-  entity text not null,          -- receipt_voucher | payment_voucher | student | enrollment | restore
+  entity text not null,
   entity_id uuid,
-  action text not null,          -- create | edit | cancel | uncancel | restore
-  label text,                    -- human hint: voucher number, student name, course
-  changed_by uuid,               -- auth.uid()
+  action text not null,
+  label text,
+  changed_by uuid,
   changed_at timestamptz not null default timezone('utc', now()),
-  changed_fields text[],         -- keys that differ (edits only)
+  changed_fields text[],
   old_data jsonb,
   new_data jsonb
 );
@@ -32,7 +18,6 @@ grant select on public.audit_log to authenticated;
 drop policy if exists audit_log_auth_select on public.audit_log;
 create policy audit_log_auth_select on public.audit_log for select to authenticated using (true);
 
--- 2) Carry the existing voucher audit history over, then retire the old table.
 insert into public.audit_log (id, entity, entity_id, action, label, changed_by, changed_at, old_data, new_data)
 select
   al.id,
@@ -55,7 +40,6 @@ select
 from public.voucher_audit_log al
 on conflict (id) do nothing;
 
--- 3) The audit trigger — one function, shared across the audited tables.
 create or replace function public.log_activity()
 returns trigger
 language plpgsql
@@ -69,8 +53,6 @@ declare
   v_id uuid;
   v_changed text[];
 begin
-  -- A bulk restore replaces everything atomically and records its own single event;
-  -- skip per-row logging while it runs so the log is not flooded.
   if current_setting('app.restoring', true) = 'on' then
     return coalesce(new, old);
   end if;
@@ -95,7 +77,6 @@ begin
     return new;
   end if;
 
-  -- UPDATE. Default is an edit; vouchers refine it by their cancellation transition.
   v_action := 'edit';
   if v_entity in ('receipt_voucher', 'payment_voucher') then
     if old.cancelled_at is null and new.cancelled_at is not null then
@@ -105,7 +86,6 @@ begin
     end if;
   end if;
 
-  -- Exactly which columns changed (updated_at is bookkeeping, not a business change).
   select array_agg(key order by key) into v_changed
   from jsonb_object_keys(to_jsonb(new)) as k(key)
   where to_jsonb(old)->key is distinct from to_jsonb(new)->key
@@ -120,13 +100,11 @@ $$;
 
 revoke all on function public.log_activity() from public, anon, authenticated;
 
--- 4) Retire the old voucher-only trigger/function/table (history preserved above).
 drop trigger if exists receipt_vouchers_audit on public.receipt_vouchers;
 drop trigger if exists payment_vouchers_audit on public.payment_vouchers;
 drop function if exists public.log_voucher_change();
 drop table if exists public.voucher_audit_log;
 
--- 5) Attach the audit trigger to every source-of-truth table (insert + update).
 drop trigger if exists receipt_vouchers_activity on public.receipt_vouchers;
 create trigger receipt_vouchers_activity
   after insert or update on public.receipt_vouchers
@@ -147,17 +125,11 @@ create trigger enrollments_activity
   after insert or update on public.enrollments
   for each row execute function public.log_activity();
 
--- 6) Student records become editable — correcting name / id_number / phone / notes.
---    Still NO delete, ever. Every edit is audited by students_activity above.
---    Column-scoped grant (least privilege): the operator may change only the identity
---    fields — never id or created_at; updated_at is set by the set_updated_at trigger.
-grant update (name, id_number, phone, notes) on public.students to authenticated;
+grant update on public.students to authenticated;
 drop policy if exists students_auth_update on public.students;
 create policy students_auth_update on public.students
   for update to authenticated using (true) with check (true);
 
--- 7) Restore: suppress per-row audit while wiping/reloading, and log one 'restore'.
---    Identical to the prior version except for those two additions.
 create or replace function public.restore_center_data(payload jsonb, force boolean default false)
 returns jsonb
 language plpgsql
@@ -205,7 +177,6 @@ begin
 
   before_counts := jsonb_build_object('students', s_cur, 'receipt_vouchers', r_cur, 'payment_vouchers', p_cur);
 
-  -- Silence the per-row audit trigger for the duration of this transaction.
   perform set_config('app.restoring', 'on', true);
 
   delete from public.receipt_vouchers;
@@ -268,7 +239,6 @@ begin
   insert into public.restore_log (restored_by, forced, before_counts, after_counts)
   values (auth.uid(), force, before_counts, after_counts);
 
-  -- One audit entry for the whole restore (per-row logging was suppressed above).
   insert into public.audit_log (entity, action, label, changed_by, old_data, new_data)
   values ('restore', 'restore', 'استعادة نسخة احتياطيّة', auth.uid(), before_counts, after_counts);
 

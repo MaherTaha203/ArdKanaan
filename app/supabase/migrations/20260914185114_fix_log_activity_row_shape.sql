@@ -1,8 +1,3 @@
--- Fix the shared audit trigger so it can run on tables with different row shapes.
--- Direct NEW.column references inside a generic trigger are resolved against the
--- actual trigger row and can abort valid writes when that column does not exist.
--- JSONB access keeps the same audit semantics without assuming a shared schema.
-
 create or replace function public.log_activity()
 returns trigger
 language plpgsql
@@ -107,5 +102,4 @@ begin
   return new;
 end;
 $$;
-
 revoke all on function public.log_activity() from public, anon, authenticated;
