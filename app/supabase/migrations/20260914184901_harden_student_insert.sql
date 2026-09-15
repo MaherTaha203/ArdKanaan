@@ -1,3 +1,6 @@
--- Compatibility marker for the production migration history.
--- The owner-only student INSERT hardening is implemented by the later
--- 20260914230000_harden_student_insert.sql migration in source control.
+grant select, insert on public.students to authenticated;
+drop policy if exists students_auth_insert on public.students;
+drop policy if exists students_owner_insert on public.students;
+create policy students_owner_insert on public.students
+  for insert to authenticated
+  with check (public.is_owner());

@@ -1,12 +1,3 @@
--- Authoritative course fee per (student, course): the enrollment model.
---
--- Previously each receipt re-entered course_value, and the running balance trusted
--- whichever voucher sorted last — so re-dating a voucher could flip a student's
--- remaining with no change to any amount. The fee is really a property of the
--- student's enrollment in a course, set once; receipts are payments against it.
--- This table holds that single value; the statement view derives remaining from it
--- (constant per partition → order-independent).
-
 create table if not exists public.enrollments (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references public.students(id) on delete restrict,
@@ -34,11 +25,8 @@ create policy enrollments_auth_insert on public.enrollments for insert to authen
 drop policy if exists enrollments_auth_update on public.enrollments;
 create policy enrollments_auth_update on public.enrollments for update to authenticated using (true) with check (true);
 
--- Index the FK (Postgres does not auto-index it).
 create index if not exists enrollments_student_id_idx on public.enrollments (student_id);
 
--- Backfill: one enrollment per (student, course) from existing receipts, taking the
--- EARLIEST voucher's course_value as the established fee.
 insert into public.enrollments (student_id, course_name, course_value)
 select distinct on (rv.student_id, rv.course_name)
   rv.student_id, rv.course_name, rv.course_value
@@ -46,22 +34,12 @@ from public.receipt_vouchers rv
 order by rv.student_id, rv.course_name, rv.voucher_date, rv.voucher_number
 on conflict (student_id, course_name) do nothing;
 
--- Derive remaining from the enrollment fee (constant per student+course), so it no
--- longer depends on which voucher sorts last. coalesce keeps it safe if any receipt
--- ever lacks an enrollment row.
 create or replace view public.student_statement_lines as
 select
-  rv.id,
-  rv.voucher_number,
-  rv.voucher_date,
-  rv.student_id,
-  rv.student_name_snapshot as student_name,
-  rv.course_name,
+  rv.id, rv.voucher_number, rv.voucher_date, rv.student_id,
+  rv.student_name_snapshot as student_name, rv.course_name,
   coalesce(en.course_value, rv.course_value) as course_value,
-  rv.amount_received,
-  rv.notes,
-  rv.payer_name,
-  rv.created_at,
+  rv.amount_received, rv.notes, rv.payer_name, rv.created_at,
   coalesce(en.course_value, rv.course_value) - sum(rv.amount_received) over (
     partition by rv.student_id, rv.course_name
     order by rv.voucher_date, rv.voucher_number
@@ -74,14 +52,9 @@ where rv.cancelled_at is null;
 
 alter view public.student_statement_lines set (security_invoker = true);
 
--- Also index the receipt FK + the columns the window partitions/orders by.
 create index if not exists receipt_vouchers_student_course_idx
   on public.receipt_vouchers (student_id, course_name, voucher_date, voucher_number);
 
--- Restore must now also wipe+restore enrollments, or its `delete from students`
--- fails on the enrollments FK (ON DELETE RESTRICT). Enrollments are optional in the
--- payload so older backups (without them) still restore — the view then falls back
--- to each voucher's course_value.
 create or replace function public.restore_center_data(payload jsonb, force boolean default false)
 returns jsonb
 language plpgsql
@@ -102,7 +75,6 @@ begin
     raise exception 'INVALID_BACKUP_FORMAT';
   end if;
 
-  -- Enrollments optional (older backups lack them).
   enrollments := case when jsonb_typeof(payload->'enrollments') = 'array'
                       then payload->'enrollments' else '[]'::jsonb end;
 
@@ -129,7 +101,6 @@ begin
 
   before_counts := jsonb_build_object('students', s_cur, 'receipt_vouchers', r_cur, 'payment_vouchers', p_cur);
 
-  -- Wipe (children before students).
   delete from public.receipt_vouchers;
   delete from public.payment_vouchers;
   delete from public.enrollments;

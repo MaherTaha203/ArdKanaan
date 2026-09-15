@@ -1,19 +1,68 @@
--- Backup/restore fidelity for the courses catalog (additive).
---
--- Phase 1 added the `courses` catalog and a nullable `enrollments.course_id`
--- linking an enrollment to a catalog course. The restore RPC predates both, so a
--- restore silently (a) dropped the entire courses catalog and (b) reset every
--- enrollment's course_id to null. Financial truth was never at risk — it lives in
--- the enrollment snapshot (course_name + course_value) and the vouchers, all of
--- which restored correctly — but the management/catalog layer was lost.
---
--- This migration redefines restore_center_data to also restore `courses` and to
--- carry `enrollments.course_id` through. Both remain OPTIONAL: an older backup
--- with no `courses`/`course_id` restores exactly as before (empty catalog,
--- null links), so nothing about legacy backups changes. Courses are deliberately
--- NOT part of the RESTORE_SHRINKS guard: that guard protects financial records
--- (students/receipts/payments), and a smaller catalog must not block restoring a
--- valid financial backup.
+create or replace function public.is_owner()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select auth.uid() is not null
+     and auth.uid() = (
+       select u.id
+       from auth.users as u
+       order by u.created_at asc, u.id asc
+       limit 1
+     );
+$$;
+
+revoke all on function public.is_owner() from public, anon;
+grant execute on function public.is_owner() to authenticated;
+
+drop policy if exists students_auth_select on public.students;
+create policy students_owner_select on public.students
+  for select to authenticated using (public.is_owner());
+drop policy if exists students_auth_insert on public.students;
+create policy students_owner_insert on public.students
+  for insert to authenticated with check (public.is_owner());
+drop policy if exists students_auth_update on public.students;
+create policy students_owner_update on public.students
+  for update to authenticated using (public.is_owner()) with check (public.is_owner());
+
+drop policy if exists receipts_auth_select on public.receipt_vouchers;
+create policy receipts_owner_select on public.receipt_vouchers
+  for select to authenticated using (public.is_owner());
+drop policy if exists receipts_auth_insert on public.receipt_vouchers;
+create policy receipts_owner_insert on public.receipt_vouchers
+  for insert to authenticated with check (public.is_owner());
+drop policy if exists receipts_auth_update on public.receipt_vouchers;
+create policy receipts_owner_update on public.receipt_vouchers
+  for update to authenticated using (public.is_owner()) with check (public.is_owner());
+
+drop policy if exists payments_auth_select on public.payment_vouchers;
+create policy payments_owner_select on public.payment_vouchers
+  for select to authenticated using (public.is_owner());
+drop policy if exists payments_auth_insert on public.payment_vouchers;
+create policy payments_owner_insert on public.payment_vouchers
+  for insert to authenticated with check (public.is_owner());
+drop policy if exists payments_auth_update on public.payment_vouchers;
+create policy payments_owner_update on public.payment_vouchers
+  for update to authenticated using (public.is_owner()) with check (public.is_owner());
+
+drop policy if exists enrollments_auth_select on public.enrollments;
+create policy enrollments_owner_select on public.enrollments
+  for select to authenticated using (public.is_owner());
+drop policy if exists enrollments_auth_insert on public.enrollments;
+create policy enrollments_owner_insert on public.enrollments
+  for insert to authenticated with check (public.is_owner());
+drop policy if exists enrollments_auth_update on public.enrollments;
+create policy enrollments_owner_update on public.enrollments
+  for update to authenticated using (public.is_owner()) with check (public.is_owner());
+
+drop policy if exists audit_log_auth_select on public.audit_log;
+create policy audit_log_owner_select on public.audit_log
+  for select to authenticated using (public.is_owner());
+drop policy if exists restore_log_select on public.restore_log;
+create policy restore_log_owner_select on public.restore_log
+  for select to authenticated using (public.is_owner());
 
 create or replace function public.restore_center_data(payload jsonb, force boolean default false)
 returns jsonb
@@ -24,8 +73,7 @@ as $$
 declare
   s_in int; r_in int; p_in int;
   s_cur int; r_cur int; p_cur int;
-  s_out int; r_out int; p_out int; e_out int; c_out int;
-  courses jsonb;
+  s_out int; r_out int; p_out int; e_out int;
   enrollments jsonb;
   before_counts jsonb;
   after_counts jsonb;
@@ -41,8 +89,6 @@ begin
     raise exception 'INVALID_BACKUP_FORMAT';
   end if;
 
-  courses := case when jsonb_typeof(payload->'courses') = 'array'
-                  then payload->'courses' else '[]'::jsonb end;
   enrollments := case when jsonb_typeof(payload->'enrollments') = 'array'
                       then payload->'enrollments' else '[]'::jsonb end;
 
@@ -75,20 +121,6 @@ begin
   delete from public.payment_vouchers;
   delete from public.enrollments;
   delete from public.students;
-  delete from public.courses;
-
-  -- Courses first: enrollments.course_id references courses(id), so the catalog
-  -- must exist before enrollments are inserted.
-  insert into public.courses (id, name, base_fee, start_date, end_date, status, notes, created_at, updated_at)
-  select
-    coalesce((e->>'id')::uuid, gen_random_uuid()), e->>'name',
-    nullif(e->>'base_fee', '')::numeric,
-    nullif(e->>'start_date', '')::date, nullif(e->>'end_date', '')::date,
-    coalesce(nullif(e->>'status', ''), 'active'), coalesce(e->>'notes', ''),
-    coalesce((e->>'created_at')::timestamptz, timezone('utc', now())),
-    coalesce((e->>'updated_at')::timestamptz, timezone('utc', now()))
-  from jsonb_array_elements(courses) e;
-  get diagnostics c_out = row_count;
 
   insert into public.students (id, name, id_number, phone, notes, created_at, updated_at)
   select
@@ -98,13 +130,9 @@ begin
   from jsonb_array_elements(payload->'students') e;
   get diagnostics s_out = row_count;
 
-  -- course_id is resolved against the catalog just inserted: a link to a course
-  -- that is not present (older/partial backup) is dropped to null rather than
-  -- failing the whole restore — the enrollment's snapshot fee still stands.
-  insert into public.enrollments (id, student_id, course_id, course_name, course_value, created_at, updated_at)
+  insert into public.enrollments (id, student_id, course_name, course_value, created_at, updated_at)
   select
     coalesce((e->>'id')::uuid, gen_random_uuid()), (e->>'student_id')::uuid,
-    (select c.id from public.courses c where c.id = nullif(e->>'course_id', '')::uuid),
     e->>'course_name', (e->>'course_value')::numeric,
     coalesce((e->>'created_at')::timestamptz, timezone('utc', now())),
     coalesce((e->>'updated_at')::timestamptz, timezone('utc', now()))
@@ -144,9 +172,7 @@ begin
     pg_get_serial_sequence('public.payment_vouchers', 'voucher_number'),
     coalesce((select max(voucher_number) from public.payment_vouchers), 0) + 1, false);
 
-  after_counts := jsonb_build_object(
-    'students', s_out, 'courses', c_out, 'enrollments', e_out,
-    'receipt_vouchers', r_out, 'payment_vouchers', p_out);
+  after_counts := jsonb_build_object('students', s_out, 'enrollments', e_out, 'receipt_vouchers', r_out, 'payment_vouchers', p_out);
 
   insert into public.restore_log (restored_by, forced, before_counts, after_counts)
   values (auth.uid(), force, before_counts, after_counts);

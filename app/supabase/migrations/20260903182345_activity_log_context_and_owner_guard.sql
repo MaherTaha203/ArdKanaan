@@ -1,8 +1,3 @@
--- System activity view context.
--- Extends the existing append-only audit_log without changing financial truth.
--- The same audit stream now carries actor, device, network and timezone context,
--- and exposes a guarded RPC for authenticated lifecycle events such as login/logout.
-
 alter table public.audit_log
   add column if not exists actor_email text,
   add column if not exists source text,
@@ -13,7 +8,6 @@ alter table public.audit_log
   add column if not exists timezone text,
   add column if not exists metadata jsonb not null default '{}'::jsonb;
 
--- Preserve existing rows with useful source/description values.
 update public.audit_log
 set
   source = coalesce(source,
@@ -24,8 +18,7 @@ set
       when 'enrollment' then 'التسجيلات'
       when 'restore' then 'النسخ الاحتياطي'
       else 'النظام'
-    end
-  ),
+    end),
   description = coalesce(description, label)
 where source is null or description is null;
 
@@ -56,21 +49,16 @@ begin
 
   if tg_table_name = 'receipt_vouchers' then
     v_entity := 'receipt_voucher'; v_id := new.id;
-    v_label := 'سند قبض رقم ' || new.voucher_number;
-    v_source := 'سندات القبض';
+    v_label := 'سند قبض رقم ' || new.voucher_number; v_source := 'سندات القبض';
   elsif tg_table_name = 'payment_vouchers' then
     v_entity := 'payment_voucher'; v_id := new.id;
-    v_label := 'سند صرف رقم ' || new.voucher_number;
-    v_source := 'سندات الصرف';
+    v_label := 'سند صرف رقم ' || new.voucher_number; v_source := 'سندات الصرف';
   elsif tg_table_name = 'students' then
-    v_entity := 'student'; v_id := new.id; v_label := new.name;
-    v_source := 'الطلاب';
+    v_entity := 'student'; v_id := new.id; v_label := new.name; v_source := 'الطلاب';
   elsif tg_table_name = 'enrollments' then
-    v_entity := 'enrollment'; v_id := new.id; v_label := new.course_name;
-    v_source := 'التسجيلات';
+    v_entity := 'enrollment'; v_id := new.id; v_label := new.course_name; v_source := 'التسجيلات';
   else
-    v_entity := tg_table_name; v_id := new.id;
-    v_source := 'النظام';
+    v_entity := tg_table_name; v_id := new.id; v_source := 'النظام';
   end if;
 
   if tg_op = 'INSERT' then
@@ -129,8 +117,6 @@ $$;
 
 revoke all on function public.log_activity() from public, anon, authenticated;
 
--- Authenticated lifecycle events use this function because Supabase Auth is not a
--- public application table and browser login itself does not pass through our data triggers.
 create or replace function public.record_activity_event(
   p_entity text,
   p_action text,
@@ -147,8 +133,8 @@ declare
   v_headers jsonb := coalesce(nullif(current_setting('request.headers', true), ''), '{}')::jsonb;
   v_id uuid;
 begin
-  if auth.uid() is null then
-    raise exception 'AUTH_REQUIRED';
+  if not public.is_owner() then
+    raise exception 'OWNER_ONLY';
   end if;
 
   insert into public.audit_log

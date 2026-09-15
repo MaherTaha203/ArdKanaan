@@ -1,15 +1,3 @@
--- Harden restore against data loss.
---
--- The previous restore_center_data accepted any arrays — including empty ones —
--- and wiped everything before re-inserting, with no trace. On a real financial
--- system that is an unrecoverable-data-loss footgun. This version:
---   * refuses an empty payload outright (never wipe-to-empty via "restore"),
---   * refuses a payload that SHRINKS any table unless the caller passes force=true
---     (so the client can show an explicit "this backup has fewer records" prompt),
---   * caps payload size to prevent resource-exhaustion abuse,
---   * records every restore (actor, before/after counts, forced) in restore_log.
--- It stays a single atomic transaction: any failure rolls back with data intact.
-
 create table if not exists public.restore_log (
   id uuid primary key default gen_random_uuid(),
   restored_by uuid,
@@ -18,14 +6,12 @@ create table if not exists public.restore_log (
   before_counts jsonb,
   after_counts jsonb
 );
-
 alter table public.restore_log enable row level security;
 revoke all on public.restore_log from anon, authenticated;
 grant select on public.restore_log to authenticated;
 drop policy if exists restore_log_select on public.restore_log;
 create policy restore_log_select on public.restore_log for select to authenticated using (true);
 
--- Replace the RPC with a guarded, logged, force-aware version.
 drop function if exists public.restore_center_data(jsonb);
 
 create or replace function public.restore_center_data(payload jsonb, force boolean default false)
@@ -51,7 +37,6 @@ begin
   r_in := jsonb_array_length(payload->'receipt_vouchers');
   p_in := jsonb_array_length(payload->'payment_vouchers');
 
-  -- Size ceiling (abuse / accidental huge payload).
   if s_in > 200000 or r_in > 1000000 or p_in > 1000000 then
     raise exception 'RESTORE_TOO_LARGE';
   end if;
@@ -60,12 +45,10 @@ begin
   select count(*) into r_cur from public.receipt_vouchers;
   select count(*) into p_cur from public.payment_vouchers;
 
-  -- Never let a "restore" empty a non-empty system.
   if (s_in + r_in + p_in) = 0 and (s_cur + r_cur + p_cur) > 0 then
     raise exception 'RESTORE_REFUSED_EMPTY';
   end if;
 
-  -- Shrinking any table needs an explicit force (the client confirms first).
   if not force and (s_in < s_cur or r_in < r_cur or p_in < p_cur) then
     raise exception 'RESTORE_SHRINKS students=%->% receipts=%->% payments=%->%',
       s_cur, s_in, r_cur, r_in, p_cur, p_in;
@@ -73,7 +56,6 @@ begin
 
   before_counts := jsonb_build_object('students', s_cur, 'receipt_vouchers', r_cur, 'payment_vouchers', p_cur);
 
-  -- Wipe (FK-safe order) then re-insert (students first).
   delete from public.receipt_vouchers;
   delete from public.payment_vouchers;
   delete from public.students;
