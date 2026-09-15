@@ -68,7 +68,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       <div className="mt-16 flex flex-col items-end">
         <div className="w-[46%] text-center">
           <div className={`mb-2 border-t ${HAIR}`} />
-          <span className="text-[12px] font-bold text-[#1d4ed8]">توقيع أرض كنعان</span>
+          <span className="text-[12px] font-bold text-[#1d4ed8]">التوقيع والاعتماد</span>
         </div>
 
         {isReceipt ? (
