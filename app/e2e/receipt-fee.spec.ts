@@ -17,7 +17,9 @@ test('course page can assign a fee obligation to selected students', async ({ pa
   })
 
   await login(page)
-  await page.getByText('دورة الإدارة').first().click()
+  await page.getByRole('button', { name: 'الدورات', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'الدورات', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /دورة الإدارة/ }).click()
   await page.getByRole('button', { name: 'إضافة رسوم' }).click()
   const sheet = page.getByRole('dialog', { name: /إضافة رسوم/ })
   await expect(sheet).toBeVisible()
