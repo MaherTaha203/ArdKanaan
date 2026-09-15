@@ -45,6 +45,7 @@ test('opens the activity log as a read-only workspace', async ({ page }) => {
 test('creates a receipt, reaches the student statement, then opens its print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: '900000000', phone: '0590000000', notes: null }],
+    enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
   })
 
   await login(page)
@@ -54,9 +55,9 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await expect(dialog).toBeVisible()
   await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
   await page.getByRole('option', { name: /سارة أحمد/ }).click()
-  await dialog.getByRole('textbox', { name: /اسم الدورة/ }).fill('دورة الرياضيات')
-  await dialog.getByRole('spinbutton', { name: 'قيمة الدورة' }).fill('1000')
-  await dialog.getByRole('spinbutton', { name: 'المبلغ المقبوض' }).fill('400')
+  await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
+  await expect(dialog.getByText('دورة الرياضيات').last()).toBeVisible()
+  await expect(dialog.getByLabel('المبلغ المقبوض')).toHaveValue('400')
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
 
   await expect.poll(() => handle.receiptInserts.length).toBe(1)
