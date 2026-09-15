@@ -16,7 +16,7 @@ export const receiptVoucherFormSchema = z
     studentId: z.string().trim(),
     studentIdNumber: z.string().trim(),
     studentPhone: z.string().trim(),
-    courseName: z.string().trim().min(1, 'اسم الدورة مطلوب'),
+    courseName: z.string().trim(),
     courseValue: z.coerce.number().int('قيمة الدورة يجب أن تكون عددًا صحيحًا من الشواكل').min(0).max(MAX_SHEKEL_AMOUNT).optional(),
     amountReceived: z.coerce.number().int('المبلغ المقبوض يجب أن يكون عددًا صحيحًا من الشواكل').positive('المبلغ المقبوض يجب أن يكون أكبر من صفر').max(MAX_SHEKEL_AMOUNT),
     payerName: z.string().trim(),
@@ -38,6 +38,10 @@ export const receiptVoucherFormSchema = z
     if (values.entryType === 'fee') {
       ctx.addIssue({ path: ['allocations'], code: z.ZodIssueCode.custom, message: 'اختر الرسم المستحق' })
       return
+    }
+
+    if (values.entryType === 'course' && values.courseName.length === 0) {
+      ctx.addIssue({ path: ['courseName'], code: z.ZodIssueCode.custom, message: 'اسم الدورة مطلوب' })
     }
 
     if (values.entryType === 'course' && values.courseValue == null) {
