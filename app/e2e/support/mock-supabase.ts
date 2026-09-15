@@ -130,7 +130,6 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       const allocations = Array.isArray(payload.allocations) ? payload.allocations as Array<Record<string, unknown>> : []
       handle.receiptInserts.push({ ...payload, allocation_mode: true })
       handle.receiptAllocations.push(...allocations)
-      const studentId = String(payload.student_id ?? '')
       const amount = Number(payload.amount_received ?? 0)
       activeMovements.push({ id: `receipt-${handle.receiptInserts.length}`, movement_type: 'receipt', voucher_number: 900 + handle.receiptInserts.length, voucher_date: String(payload.voucher_date ?? '2026-08-31'), amount, party_name: String(payload.student_name ?? ''), context: String(payload.course_name ?? 'تحصيل متعدّد') })
       return json(route, { id: `receipt-${handle.receiptInserts.length}`, voucher_number: 900 + handle.receiptInserts.length, amount_received: amount })
