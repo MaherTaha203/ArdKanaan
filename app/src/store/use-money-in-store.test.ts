@@ -49,6 +49,7 @@ function formValues(overrides: Partial<ReceiptVoucherFormValues> = {}): ReceiptV
 
 const happyPathRespond: Respond = (state) => {
   const { table, op } = state
+  if (table === 'students' && op === 'select') return { data: [{ id: 's-1', name: 'محمد علي', id_number: null, phone: null, notes: null }], error: null }
   if (table === 'students' && op === 'insert') return { data: { id: 'new-student', name: 'خالد', id_number: null, phone: null, notes: null }, error: null }
   if (table === 'enrollments' && op === 'select') return { data: [], error: null }
   if (table === 'enrollments' && op === 'insert') return { data: null, error: null }
@@ -131,6 +132,7 @@ describe('saveReceiptVoucher — allocation posting', () => {
     let rpcName = ''
     let rpcArgs: RpcPayload | null = null
     const client: MockClient = makeClient((state) => {
+      if (state.table === 'students' && state.op === 'select') return { data: [{ id: 's-1', name: 'محمد علي', id_number: null, phone: null, notes: null }], error: null }
       if (state.table === 'student_statement_lines') return { data: [], error: null }
       throw new Error(`unexpected query on ${state.table}`)
     }, () => ({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }))
