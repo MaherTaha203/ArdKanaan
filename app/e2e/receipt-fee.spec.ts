@@ -65,7 +65,7 @@ test('one receipt can cover course dues and multiple fee obligations', async ({ 
 
   await expect.poll(
     () => handle.receiptInserts.length,
-    { timeout: 5000, message: `receipt count=0; console=${consoleErrors.join(' | ')}; requests=${requests.join(' | ')}` },
+    { timeout: 5000, message: `receipt count=0; console=${consoleErrors.join(' | ')}; requests=${requests.join(' | ')}; invalid=${await dialog.locator('[aria-invalid="true"]').evaluateAll((nodes) => nodes.map((node) => ({ name: node.getAttribute('name'), ariaLabel: node.getAttribute('aria-label'), value: (node as HTMLInputElement).value, describedBy: node.getAttribute('aria-describedby') })))}` },
   ).toBe(1)
   expect(handle.receiptAllocations).toHaveLength(3)
   expect(handle.paymentInserts).toHaveLength(0)
