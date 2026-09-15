@@ -24,7 +24,7 @@ export const receiptVoucherFormSchema = z
     entryType: z.enum(['course', 'fee', 'mixed']),
     feeCategory: z.enum(['institute', 'external', 'shared']).optional(),
     externalShare: z.coerce.number().int('حصة الجهة الخارجية يجب أن تكون عددًا صحيحًا من الشواكل').min(0).max(MAX_SHEKEL_AMOUNT).optional(),
-    allocations: z.array(receiptAllocationSchema).default([]),
+    allocations: z.array(receiptAllocationSchema),
   })
   .superRefine((values, ctx) => {
     if (values.allocations.length > 0) {
