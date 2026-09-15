@@ -18,10 +18,11 @@ export type StudentStatementLine = {
   courseValue: number
   amountReceived: number
   remainingBalance: number
+  entryType?: 'course' | 'fee'
+  feeObligationId?: string | null
+  enrollmentId?: string | null
 }
 
-// A course in the catalog. base_fee is only the DEFAULT fee proposed at
-// registration; the authoritative fee per student lives on the Enrollment.
 export type CourseStatus = 'active' | 'ended'
 
 export type Course = {
@@ -34,9 +35,6 @@ export type Course = {
   notes: string
 }
 
-// A student's enrolment in a course. This is the authoritative financial link:
-// (studentId + courseName) carries the snapshot fee (courseValue) the firewall
-// enforces. courseId links to the catalog Course when one exists (null for legacy).
 export type Enrollment = {
   id: string
   studentId: string
@@ -45,7 +43,32 @@ export type Enrollment = {
   courseValue: number
 }
 
-// Money Out — an outgoing center expense. Never linked to a student or course.
+export type FeeCategory = 'institute' | 'external' | 'shared'
+
+export type FeeObligation = {
+  id: string
+  studentId: string
+  courseId: string | null
+  courseName: string
+  description: string
+  amount: number
+  feeCategory: FeeCategory
+  externalShare: number
+  cancelledAt: string | null
+  cancelReason: string | null
+  createdAt: string
+}
+
+export type ReceiptAllocation = {
+  id: string
+  receiptVoucherId: string
+  allocationType: 'course' | 'fee'
+  enrollmentId: string | null
+  feeObligationId: string | null
+  amount: number
+  createdAt: string
+}
+
 export type PaymentVoucherLine = {
   id: string
   voucherNumber: number
@@ -55,8 +78,6 @@ export type PaymentVoucherLine = {
   notes: string
 }
 
-// Financial Report — a derived movement. Never a source of truth.
-// party_name = student name (receipts); context = course (receipts) or expense type (payments).
 export type FinancialMovement = {
   id: string
   movementType: 'receipt' | 'payment'
@@ -65,13 +86,9 @@ export type FinancialMovement = {
   amount: number
   partyName: string | null
   context: string | null
-  // Portion of a fee receipt held on behalf of a third party (لصالح الغير) — 0 for
-  // ordinary course receipts and every payment. Institute revenue = amount − externalShare.
   externalShare?: number
 }
 
-// A cancelled voucher — excluded from every active total, kept for review. Derived
-// from the cancelled_vouchers view; never counted anywhere.
 export type CancelledVoucher = {
   id: string
   movementType: 'receipt' | 'payment'
