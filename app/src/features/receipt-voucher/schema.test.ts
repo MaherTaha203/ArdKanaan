@@ -15,77 +15,82 @@ describe('receiptVoucherFormSchema', () => {
     payerName: '',
     notes: '',
     entryType: 'course' as const,
+    allocations: [],
   }
 
-  it('accepts whole-shekel financial values', () => {
+  it('accepts an ordinary course receipt without allocations', () => {
     expect(receiptVoucherFormSchema.safeParse(valid).success).toBe(true)
   })
 
   it('rejects fractional course values', () => {
-    expect(
-      receiptVoucherFormSchema.safeParse({ ...valid, courseValue: 1000.5 }).success,
-    ).toBe(false)
+    expect(receiptVoucherFormSchema.safeParse({ ...valid, courseValue: 1000.5 }).success).toBe(false)
   })
 
   it('rejects fractional receipt amounts', () => {
-    expect(
-      receiptVoucherFormSchema.safeParse({ ...valid, amountReceived: 250.5 }).success,
-    ).toBe(false)
+    expect(receiptVoucherFormSchema.safeParse({ ...valid, amountReceived: 250.5 }).success).toBe(false)
   })
 
   it('rejects zero or negative receipts', () => {
-    expect(
-      receiptVoucherFormSchema.safeParse({ ...valid, amountReceived: 0 }).success,
-    ).toBe(false)
-    expect(
-      receiptVoucherFormSchema.safeParse({ ...valid, amountReceived: -1 }).success,
-    ).toBe(false)
+    expect(receiptVoucherFormSchema.safeParse({ ...valid, amountReceived: 0 }).success).toBe(false)
+    expect(receiptVoucherFormSchema.safeParse({ ...valid, amountReceived: -1 }).success).toBe(false)
   })
 
-  describe('fee entries', () => {
-    const fee = {
-      paymentDate: '2026-09-02',
-      studentName: 'طالب تجريبي',
-      studentId: 'student-1',
-      studentIdNumber: '',
-      studentPhone: '',
-      courseName: 'رسوم تخريج',
-      amountReceived: 50,
-      payerName: '',
-      notes: '',
-      entryType: 'fee' as const,
-    }
+  describe('allocation receipts', () => {
+    const allocations = [
+      { type: 'course' as const, enrollmentId: '11111111-1111-4111-8111-111111111111', amount: 250 },
+      { type: 'fee' as const, feeObligationId: '22222222-2222-4222-8222-222222222222', amount: 50 },
+      { type: 'fee' as const, feeObligationId: '33333333-3333-4333-8333-333333333333', amount: 20 },
+    ]
 
-    it('accepts an institute fee with no external share', () => {
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'institute' }).success).toBe(true)
+    it('accepts course + multiple fee allocations when the total matches', () => {
+      expect(
+        receiptVoucherFormSchema.safeParse({
+          ...valid,
+          amountReceived: 320,
+          entryType: 'mixed',
+          courseValue: undefined,
+          allocations,
+        }).success,
+      ).toBe(true)
     })
 
-    it('accepts an external fee', () => {
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'external' }).success).toBe(true)
+    it('rejects allocation totals that do not equal the receipt total', () => {
+      expect(
+        receiptVoucherFormSchema.safeParse({
+          ...valid,
+          amountReceived: 319,
+          entryType: 'mixed',
+          courseValue: undefined,
+          allocations,
+        }).success,
+      ).toBe(false)
     })
 
-    it('accepts a shared fee split within the total', () => {
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'shared', externalShare: 20 }).success).toBe(true)
+    it('rejects a fee receipt with no selected fee obligation', () => {
+      expect(
+        receiptVoucherFormSchema.safeParse({ ...valid, entryType: 'fee', courseValue: undefined, amountReceived: 50 }).success,
+      ).toBe(false)
     })
 
-    it('rejects a fee with no category', () => {
-      expect(receiptVoucherFormSchema.safeParse(fee).success).toBe(false)
-    })
-
-    it('rejects a shared fee whose external share reaches or exceeds the total', () => {
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'shared', externalShare: 50 }).success).toBe(false)
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'shared', externalShare: 60 }).success).toBe(false)
-    })
-
-    it('rejects a shared fee with a zero or fractional external share', () => {
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'shared', externalShare: 0 }).success).toBe(false)
-      expect(receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'shared', externalShare: 20.5 }).success).toBe(false)
-    })
-
-    it('does not require a course value for a fee', () => {
-      // courseValue omitted entirely — a fee derives it from the amount.
-      const parsed = receiptVoucherFormSchema.safeParse({ ...fee, feeCategory: 'institute' })
-      expect(parsed.success).toBe(true)
+    it('rejects zero or fractional allocation amounts', () => {
+      expect(
+        receiptVoucherFormSchema.safeParse({
+          ...valid,
+          amountReceived: 50,
+          entryType: 'fee',
+          courseValue: undefined,
+          allocations: [{ type: 'fee' as const, feeObligationId: '22222222-2222-4222-8222-222222222222', amount: 0 }],
+        }).success,
+      ).toBe(false)
+      expect(
+        receiptVoucherFormSchema.safeParse({
+          ...valid,
+          amountReceived: 50,
+          entryType: 'fee',
+          courseValue: undefined,
+          allocations: [{ type: 'fee' as const, feeObligationId: '22222222-2222-4222-8222-222222222222', amount: 20.5 }],
+        }).success,
+      ).toBe(false)
     })
   })
 })
