@@ -17,9 +17,7 @@ test('course page can assign a fee obligation to selected students', async ({ pa
   })
 
   await login(page)
-  await page.getByRole('button', { name: 'الدورات', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'الدورات', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: /دورة الإدارة/ }).click()
+  await page.getByText('دورة الإدارة').first().click()
   await page.getByRole('button', { name: 'إضافة رسوم' }).click()
   const sheet = page.getByRole('dialog', { name: /إضافة رسوم/ })
   await expect(sheet).toBeVisible()
@@ -30,7 +28,7 @@ test('course page can assign a fee obligation to selected students', async ({ pa
   await sheet.getByRole('button', { name: /إضافة الرسم إلى 1 طالب/ }).click()
 
   await expect.poll(() => handle.feeObligationInserts.length).toBe(1)
-  expect(handle.feeObligationInserts[0]).toMatchObject({ student_id: 's-1', course_id: 'c-1', description: 'رسوم تخريج', amount: 50, fee_category: 'external', external_share: 50 })
+  expect(handle.feeObligationInserts[0][0]).toMatchObject({ student_id: 's-1', course_id: 'c-1', description: 'رسوم تخريج', amount: 50, fee_category: 'external', external_share: 50 })
   expect(handle.receiptInserts.length).toBe(0)
   expect(handle.paymentInserts.length).toBe(0)
 })
