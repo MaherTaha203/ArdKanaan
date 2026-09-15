@@ -128,7 +128,14 @@ export function ReceiptSheet() {
   }
 
   function validateAndSubmit() {
-    const result = receiptVoucherFormSchema.safeParse(form.getValues())
+    const current = form.getValues()
+    const values: ReceiptVoucherFormValues = {
+      ...current,
+      allocations: watchedAllocations,
+      amountReceived: watchedAllocations.length > 0 ? selectedAmount : current.amountReceived,
+      entryType: activeType,
+    }
+    const result = receiptVoucherFormSchema.safeParse(values)
     if (!result.success) {
       for (const issue of result.error.issues) {
         const field = issue.path[0]
