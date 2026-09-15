@@ -35,6 +35,11 @@ test('course page can assign a fee obligation to selected students', async ({ pa
 })
 
 test('one receipt can cover course dues and multiple fee obligations', async ({ page }) => {
+  const consoleErrors: string[] = []
+  const requests: string[] = []
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()) })
+  page.on('request', (request) => { if (request.url().includes('/rest/v1/')) requests.push(`${request.method()} ${request.url()}`) })
+
   const handle = await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
     enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الإدارة', course_value: 300 }],
@@ -55,9 +60,13 @@ test('one receipt can cover course dues and multiple fee obligations', async ({ 
   await dialog.getByRole('button', { name: /رسوم شهادة/ }).click()
 
   await expect(dialog.getByText('إجمالي البنود: 370')).toBeVisible()
+  await expect(dialog.getByLabel('المبلغ المقبوض')).toHaveValue('370')
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
 
-  await expect.poll(() => handle.receiptInserts.length).toBe(1)
+  await expect.poll(
+    () => handle.receiptInserts.length,
+    { timeout: 5000, message: `receipt count=0; console=${consoleErrors.join(' | ')}; requests=${requests.join(' | ')}` },
+  ).toBe(1)
   expect(handle.receiptAllocations).toHaveLength(3)
   expect(handle.paymentInserts).toHaveLength(0)
   expect(handle.receiptInserts[0]).toMatchObject({ amount_received: 370, allocation_mode: true })
