@@ -36,7 +36,7 @@ function makeClient(respond: Respond, rpcRespond?: () => { data: unknown; error:
       }
       return builder
     },
-    rpc: (_name: string, _args: unknown) => Promise.resolve(rpcRespond ? rpcRespond() : { data: null, error: null }),
+    rpc: () => Promise.resolve(rpcRespond ? rpcRespond() : { data: null, error: null }),
   }
 }
 
