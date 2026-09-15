@@ -11,8 +11,12 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 type QueryState = { table: string; op: 'select' | 'insert'; filters: Record<string, unknown>; payload?: Record<string, unknown> }
 type Respond = (state: QueryState) => { data: unknown; error: unknown }
-type RpcPayload = { payload: { allocations: Array<{ type: string; enrollment_id: string | null; fee_obligation_id: string | null; amount: number }; amount_received: number } }
-
+type RpcPayload = {
+  payload: {
+    allocations: Array<{ type: string; enrollment_id: string | null; fee_obligation_id: string | null; amount: number }>
+    amount_received: number
+  }
+}
 type MockClient = ReturnType<typeof makeClient>
 
 function makeClient(respond: Respond, rpcRespond?: () => { data: unknown; error: unknown }) {
@@ -56,7 +60,7 @@ const happyPathRespond: Respond = (state) => {
 beforeEach(() => {
   useMoneyInStore.setState({ currentView: 'receipt-voucher', statementLines: [], activeStudent: null, isSaving: false, error: null })
   useWorkspaceStore.setState({ students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null })
-}
+})
 
 describe('saveReceiptVoucher — student identity guard', () => {
   it('refuses ambiguous unpicked names before any I/O', async () => {
@@ -111,8 +115,8 @@ describe('saveReceiptVoucher — student identity guard', () => {
     seedRoster([student('s-1', 'محمد علي')])
     let insertedCourseValue: unknown
     hoisted.client = makeClient((state) => {
-      if (state.table === 'enrollments' && opIs(state, 'select')) return { data: [{ course_value: 1000 }], error: null }
-      if (state.table === 'receipt_vouchers' && opIs(state, 'insert')) { insertedCourseValue = state.payload?.course_value; return { data: { id: 'r-2', voucher_number: 901, student_id: 's-1' }, error: null } }
+      if (state.table === 'enrollments' && state.op === 'select') return { data: [{ course_value: 1000 }], error: null }
+      if (state.table === 'receipt_vouchers' && state.op === 'insert') { insertedCourseValue = state.payload?.course_value; return { data: { id: 'r-2', voucher_number: 901, student_id: 's-1' }, error: null } }
       if (state.table === 'student_statement_lines') return { data: [], error: null }
       throw new Error(`unexpected query on ${state.table}`)
     })
@@ -153,5 +157,3 @@ describe('saveReceiptVoucher — allocation posting', () => {
     expect(rpcArgs?.payload.amount_received).toBe(320)
   })
 })
-
-function opIs(state: QueryState, op: QueryState['op']) { return state.op === op }
