@@ -135,6 +135,16 @@ export function ReceiptSheet() {
       amountReceived: watchedAllocations.length > 0 ? selectedAmount : current.amountReceived,
       entryType: activeType,
     }
+
+    // Allocation mode is assembled from the rendered, already-validated controls.
+    // Do not send it through RHF's resolver again: that resolver is coupled to the
+    // legacy single-course fields, while allocation mode deliberately leaves those
+    // fields empty. The store/RPC remain the authoritative validation boundary.
+    if (values.allocations.length > 0) {
+      void onSubmit(values)
+      return
+    }
+
     const result = receiptVoucherFormSchema.safeParse(values)
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -162,7 +172,7 @@ export function ReceiptSheet() {
           {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="number" min="1" step="1" value={allocation.amount} readOnly={allocation.type === 'fee'} onChange={(event) => updateAllocation(index, Number(event.target.value))} className="figure w-28 rounded-lg border border-border-strong bg-transparent px-2 py-1.5 text-end text-sm outline-none" aria-label={`قيمة ${label}`} /><button type="button" className="p-1 text-muted-foreground" onClick={() => removeAllocation(index)} aria-label={`إزالة ${label}`}><Trash2 className="size-4" /></button></div> })}</div> : null}
         </section> : null}
         {!hasAllocations ? <><Field label="اسم الدورة" error={form.formState.errors.courseName?.message}>{(control) => <Input placeholder="اكتب اسم الدورة" readOnly={isEdit} {...control} {...form.register('courseName')} />}</Field><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label="قيمة الدورة" error={form.formState.errors.courseValue?.message}>{(control) => <Input type="number" min="0" step="1" placeholder="0" readOnly={isEdit} className="figure" {...control} {...form.register('courseValue', { valueAsNumber: true })} />}</Field><Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>{(control) => isEdit ? <Input readOnly dir="ltr" className="figure" value={formatDate(paymentDate)} {...control} /> : <SmartDateInput max={maxDate} value={paymentDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} {...control} />}</Field></div></> : <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>{(control) => <SmartDateInput max={maxDate} value={paymentDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} {...control} />}</Field>}
-        <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>{(control) => <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive"><input type="number" min="1" step="1" inputMode="numeric" readOnly={hasAllocations} className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint" placeholder="0" {...control} {...form.register('amountReceived', { valueAsNumber: true })} /></div>}</Field>
+        <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>{(control) => <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive"><input type="number" min="1" step="1" inputMode="numeric" readOnly={hasAllocations} className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint" placeholder="0" {...control} {...form.register('amountReceived', { valueAsNumber: true })} /><span className="text-sm font-medium text-muted-foreground">{currencySymbol}</span></div>}</Field>
         {hasAllocations ? <p className="text-[12.5px] text-muted-foreground">إجمالي البنود: <span className="figure font-semibold text-foreground">{formatNumber(selectedAmount)}</span></p> : null}
         <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>{(control) => <Input placeholder="اسم من يدفع نيابةً عن الطالب" {...control} {...form.register('payerName')} />}</Field>
         <Field label="الملاحظات (اختياري)" error={form.formState.errors.notes?.message}>{(control) => <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />}</Field>
