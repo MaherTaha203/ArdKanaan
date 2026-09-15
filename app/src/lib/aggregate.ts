@@ -141,8 +141,12 @@ export function aggregateStudents(
       }
     }
 
+    // Each course contributes only what it still OWES, clamped at zero. A legacy
+    // (enrollment-less) course that was overpaid has a negative remaining in the view
+    // (the overpayment firewall only guards enrolled courses); left unclamped it would
+    // silently net against — and hide — real debt the student owes on another course.
     let remaining = 0
-    for (const course of breakdown) remaining += course.remaining
+    for (const course of breakdown) remaining += Math.max(0, course.remaining)
 
     return {
       student,

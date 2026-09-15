@@ -47,6 +47,7 @@ export type MockHandle = {
   cancellations: Array<{ table: 'receipt_vouchers' | 'payment_vouchers'; id: string | null; reason: string }>
   activeMovements: MockMovement[]
   cancelledVouchers: MockCancelledVoucher[]
+  auditLog: Array<Record<string, unknown>>
   restoreCalls: Array<{ force: boolean; payload: Record<string, unknown> }>
   passwordResets: string[]
   passwordUpdates: string[]
@@ -73,6 +74,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
     cancellations: [],
     activeMovements,
     cancelledVouchers,
+    auditLog: [],
     restoreCalls: [],
     passwordResets: [],
     passwordUpdates: [],
@@ -154,6 +156,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       if (table === 'payment_vouchers') return arr(handle.paymentInserts.map((payment) => ({ id: 'new-payment', voucher_number: 901, voucher_date: '2026-08-31', expense_type: String(payment.expense_type ?? 'مصروف'), amount: Number(payment.amount ?? 0), notes: String(payment.notes ?? '') })))
       if (table === 'financial_movements') return arr(handle.activeMovements)
       if (table === 'cancelled_vouchers') return arr(handle.cancelledVouchers)
+      if (table === 'audit_log') return arr(handle.auditLog)
       return arr([])
     }
 
@@ -195,6 +198,24 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
             cancelledVouchers.unshift({ ...movement, cancelled_at: cancelledAt, cancel_reason: reason || null })
           }
           handle.cancellations.push({ table, id, reason })
+          // Mirror the production DB trigger: cancelling a voucher records an audit
+          // entry, so the activity log (which reads audit_log) is non-empty afterward.
+          handle.auditLog.unshift({
+            id: `audit-${handle.auditLog.length + 1}`,
+            entity: table,
+            entity_id: id,
+            action: 'cancel',
+            label: 'إبطال سند',
+            changed_by: 'u-1',
+            actor_email: 'owner@example.com',
+            changed_at: cancelledAt,
+            source: 'web',
+            description: reason,
+            device_id: null,
+            device_user_agent: null,
+            ip_address: null,
+            timezone: null,
+          })
         }
         return json(route, [{}], 200)
       }

@@ -104,6 +104,8 @@ export function StudentDirectoryWorkspace() {
                 onSelect={() => setPreviewId(item.student.id)}
               />
             ))
+          ) : students.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-faint">لا يوجد طلاب بعد.</p>
           ) : (
             <p className="px-4 py-10 text-center text-sm text-faint">لا نتائج مطابقة.</p>
           )}

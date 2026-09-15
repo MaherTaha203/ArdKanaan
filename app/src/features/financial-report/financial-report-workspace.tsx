@@ -407,7 +407,7 @@ function ScopeSearch({
       {open ? (
         <div role="listbox" className="menu-in absolute start-0 z-30 mt-1 w-72 overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg">
           <div className="px-2.5 pb-1.5 pt-1">
-            <Input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث عن طالب أو نوع" className="h-9 text-[13px]" />
+            <Input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} aria-label="ابحث عن طالب أو نوع" placeholder="ابحث عن طالب أو نوع" className="h-9 text-[13px]" />
           </div>
           <ScopeOption label="كامل كشف الحساب" active={!accountName} onClick={() => pick(onPickAll)} />
           <ScopeOption label="سندات القبض" onClick={() => pick(onPickReceipts)} />

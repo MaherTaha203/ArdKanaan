@@ -1,5 +1,6 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useState } from 'react'
 
+import type { KeyboardEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -17,9 +18,10 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const MAX_SUGGESTIONS = 8
 
-// Register an existing student in a course. Picking a student is required; the fee
-// defaults to the course's base fee and is editable, and it is stored as the
-// authoritative enrollment fee (unchanged by later course-fee edits).
+// Register an existing student in a course. Picking a student is required (keyboard
+// or mouse); the fee defaults to the course's base fee — or, when the course has no
+// standard fee, starts empty and must be entered — and is stored as the authoritative
+// enrollment fee (unchanged by later course-fee edits).
 export function EnrollStudentSheet() {
   const closeOverlay = useShellStore((state) => state.closeOverlay)
   const enrollCourseId = useShellStore((state) => state.enrollCourseId)
@@ -39,14 +41,22 @@ export function EnrollStudentSheet() {
     defaultValues: {
       studentId: '',
       studentName: '',
-      fee: course?.baseFee ?? 0,
+      // A course with a standard fee pre-fills it; one without starts blank so the
+      // operator enters an amount consciously (a blank field is rejected, not saved as 0).
+      fee: course?.baseFee != null ? String(course.baseFee) : '',
     },
   })
 
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
+  // Index of the keyboard-highlighted option, or -1 for none.
+  const [highlighted, setHighlighted] = useState(-1)
+  const listId = useId()
+  const optionId = (index: number) => `${listId}-opt-${index}`
   const studentId = useWatch({ control: form.control, name: 'studentId' })
-  const studentName = useWatch({ control: form.control, name: 'studentName' })
+  // The picked student's display name is derived from the id — one source of truth, so
+  // the search box and the confirmation line can never drift apart.
+  const pickedName = studentId ? (students.find((item) => item.id === studentId)?.name ?? '') : ''
 
   useLayoutEffect(() => {
     clearError()
@@ -59,6 +69,18 @@ export function EnrollStudentSheet() {
       .filter((student) => normalizeArabic(student.name).includes(term))
       .slice(0, MAX_SUGGESTIONS)
   }, [students, query])
+
+  const showDropdown = open && query.trim().length > 0
+  const activeOptionId = showDropdown && highlighted >= 0 ? optionId(highlighted) : undefined
+
+  // Keep the highlighted option scrolled into view as it changes.
+  useEffect(() => {
+    if (showDropdown && highlighted >= 0) {
+      document.getElementById(optionId(highlighted))?.scrollIntoView?.({ block: 'nearest' })
+    }
+    // optionId is derived from a stable useId; not a reactive dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlighted, showDropdown])
 
   if (!course) {
     return (
@@ -73,6 +95,46 @@ export function EnrollStudentSheet() {
     form.setValue('studentName', name)
     setQuery(name)
     setOpen(false)
+    setHighlighted(-1)
+  }
+
+  function onType(value: string) {
+    setQuery(value)
+    setOpen(true)
+    setHighlighted(-1)
+    if (studentId) {
+      form.setValue('studentId', '', { shouldValidate: true })
+      form.setValue('studentName', '')
+    }
+  }
+
+  // Full keyboard operation of the combobox: arrows move the highlight, Enter picks the
+  // highlighted student, Escape closes just the list. With nothing highlighted, Enter /
+  // Escape bubble to the sheet (advance / close).
+  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      if (!open) setOpen(true)
+      setHighlighted((index) => Math.min(index + 1, suggestions.length - 1))
+      return
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setHighlighted((index) => Math.max(index - 1, 0))
+      return
+    }
+    if (event.key === 'Enter' && showDropdown && highlighted >= 0 && suggestions[highlighted]) {
+      event.preventDefault()
+      event.stopPropagation()
+      const chosen = suggestions[highlighted]
+      pick(chosen.id, chosen.name)
+      return
+    }
+    if (event.key === 'Escape' && showDropdown) {
+      event.stopPropagation()
+      setOpen(false)
+      setHighlighted(-1)
+    }
   }
 
   async function onSubmit(values: EnrollFormValues) {
@@ -102,38 +164,52 @@ export function EnrollStudentSheet() {
                 autoComplete="off"
                 placeholder="ابحث عن الطالب بالاسم"
                 value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value)
-                  setOpen(true)
-                  if (studentId) {
-                    form.setValue('studentId', '', { shouldValidate: true })
-                    form.setValue('studentName', '')
-                  }
-                }}
+                role="combobox"
+                aria-expanded={showDropdown}
+                aria-controls={listId}
+                aria-autocomplete="list"
+                aria-activedescendant={activeOptionId}
+                onChange={(event) => onType(event.target.value)}
                 onFocus={() => setOpen(true)}
+                onBlur={() => {
+                  setOpen(false)
+                  setHighlighted(-1)
+                }}
+                onKeyDown={onKeyDown}
               />
-              {open && suggestions.length > 0 ? (
+              {showDropdown ? (
                 <ul
+                  id={listId}
                   role="listbox"
                   className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-border-strong bg-panel py-1 shadow-lg"
                   onMouseDown={(event) => event.preventDefault()}
                 >
-                  {suggestions.map((student) => (
-                    <li
-                      key={student.id}
-                      role="option"
-                      aria-selected={studentId === student.id}
-                      onClick={() => pick(student.id, student.name)}
-                      className="flex cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start hover:bg-highlight"
-                    >
-                      <span className="text-sm font-medium text-foreground">{student.name}</span>
-                      {student.idNumber || student.phone ? (
-                        <span className="figure text-[11.5px] text-faint" dir="ltr">
-                          {[student.idNumber, student.phone].filter(Boolean).join(' · ')}
-                        </span>
-                      ) : null}
+                  {suggestions.length > 0 ? (
+                    suggestions.map((student, index) => (
+                      <li
+                        key={student.id}
+                        id={optionId(index)}
+                        role="option"
+                        aria-selected={highlighted === index}
+                        onMouseMove={() => setHighlighted(index)}
+                        onClick={() => pick(student.id, student.name)}
+                        className={`flex w-full cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start ${
+                          highlighted === index ? 'bg-highlight' : ''
+                        }`}
+                      >
+                        <span className="text-sm font-medium text-foreground">{student.name}</span>
+                        {student.idNumber || student.phone ? (
+                          <span className="figure text-[11.5px] text-faint" dir="ltr">
+                            {[student.idNumber, student.phone].filter(Boolean).join(' · ')}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))
+                  ) : (
+                    <li role="option" aria-disabled aria-selected={false} className="px-3.5 py-3 text-center text-[12.5px] text-faint">
+                      لا يوجد طلاب مطابقون.
                     </li>
-                  ))}
+                  )}
                 </ul>
               ) : null}
             </div>
@@ -142,16 +218,14 @@ export function EnrollStudentSheet() {
 
         {studentId ? (
           <p className="text-[12.5px] text-muted-foreground">
-            الطالب المختار: <span className="font-semibold text-foreground">{studentName}</span>
+            الطالب المختار: <span className="font-semibold text-foreground">{pickedName}</span>
           </p>
         ) : null}
 
         <Field label="رسوم التسجيل" error={form.formState.errors.fee?.message}>
           {(control) => (
             <Input
-              type="number"
-              min="0"
-              step="1"
+              type="text"
               inputMode="numeric"
               className="figure"
               placeholder="0"

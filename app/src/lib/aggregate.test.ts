@@ -117,6 +117,21 @@ describe('aggregateStudents', () => {
     expect(aggregate.lastActivity).toBeNull()
   })
 
+  it('does not let an overpaid legacy course net against real debt on another course', () => {
+    // Course أ (legacy, no enrollment) was overpaid: fee 500, paid 700 → remaining -200.
+    // Course ب owes 300. The student's total remaining must be 300, not 100 — an
+    // overpaid course must never mask what is owed elsewhere.
+    const [aggregate] = aggregateStudents(
+      [student('s-1', 'سارة')],
+      [
+        line({ id: 'l1', studentId: 's-1', courseName: 'أ', courseValue: 500, amountReceived: 700, remainingBalance: -200 }),
+        line({ id: 'l2', studentId: 's-1', courseName: 'ب', courseValue: 1000, amountReceived: 700, remainingBalance: 300 }),
+      ],
+    )
+
+    expect(aggregate.remaining).toBe(300)
+  })
+
   it('counts a registered-but-unpaid course: full enrolment fee is due', () => {
     // Student enrolled in a 300-fee course with no receipts yet → owes 300.
     const [aggregate] = aggregateStudents(
