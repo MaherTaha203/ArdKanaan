@@ -69,7 +69,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       </div>
 
       {isReceipt ? (
-        <div className="mt-8 flex justify-end">
+        <div className="mt-8 flex justify-start">
           <SiteQr />
         </div>
       ) : null}
