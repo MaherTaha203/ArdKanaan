@@ -1,4 +1,5 @@
 import { PrintPreview } from '@/components/print/print-preview'
+import { SiteQr } from '@/components/print/site-qr'
 import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
 import type { StudentStatementLine } from '@/types/domain'
@@ -94,6 +95,10 @@ export function StudentStatementPrint({
           ))}
         </tbody>
       </table>
+
+      <div className="mt-10 flex justify-start">
+        <SiteQr />
+      </div>
     </PrintPreview>
   )
 }
