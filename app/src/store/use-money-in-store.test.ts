@@ -9,14 +9,11 @@ vi.mock('@/lib/supabase', () => ({ getSupabaseBrowserClient: () => hoisted.clien
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-type QueryState = {
-  table: string
-  op: 'select' | 'insert'
-  filters: Record<string, unknown>
-  payload?: Record<string, unknown>
-}
-
+type QueryState = { table: string; op: 'select' | 'insert'; filters: Record<string, unknown>; payload?: Record<string, unknown> }
 type Respond = (state: QueryState) => { data: unknown; error: unknown }
+type RpcPayload = { payload: { allocations: Array<{ type: string; enrollment_id: string | null; fee_obligation_id: string | null; amount: number }; amount_received: number } }
+
+type MockClient = ReturnType<typeof makeClient>
 
 function makeClient(respond: Respond, rpcRespond?: () => { data: unknown; error: unknown }) {
   return {
@@ -39,32 +36,11 @@ function makeClient(respond: Respond, rpcRespond?: () => { data: unknown; error:
   }
 }
 
-function student(id: string, name: string): Student {
-  return { id, name, idNumber: null, phone: null, notes: null }
-}
-
-function seedRoster(students: Student[]) {
-  useWorkspaceStore.setState({ students })
-}
+function student(id: string, name: string): Student { return { id, name, idNumber: null, phone: null, notes: null } }
+function seedRoster(students: Student[]) { useWorkspaceStore.setState({ students }) }
 
 function formValues(overrides: Partial<ReceiptVoucherFormValues> = {}): ReceiptVoucherFormValues {
-  return {
-    paymentDate: '2026-08-31',
-    studentName: 'محمد علي',
-    studentId: '',
-    studentIdNumber: '',
-    studentPhone: '',
-    courseName: 'دورة الإنجليزية',
-    courseValue: 1000,
-    amountReceived: 400,
-    payerName: '',
-    notes: '',
-    entryType: 'course',
-    feeCategory: undefined,
-    externalShare: undefined,
-    allocations: [],
-    ...overrides,
-  }
+  return { paymentDate: '2026-08-31', studentName: 'محمد علي', studentId: '', studentIdNumber: '', studentPhone: '', courseName: 'دورة الإنجليزية', courseValue: 1000, amountReceived: 400, payerName: '', notes: '', entryType: 'course', feeCategory: undefined, externalShare: undefined, allocations: [], ...overrides }
 }
 
 const happyPathRespond: Respond = (state) => {
@@ -80,11 +56,10 @@ const happyPathRespond: Respond = (state) => {
 beforeEach(() => {
   useMoneyInStore.setState({ currentView: 'receipt-voucher', statementLines: [], activeStudent: null, isSaving: false, error: null })
   useWorkspaceStore.setState({ students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null })
-  seedRoster([])
-})
+}
 
 describe('saveReceiptVoucher — student identity guard', () => {
-  it('refuses to save when the typed name matches several students and none is picked', async () => {
+  it('refuses ambiguous unpicked names before any I/O', async () => {
     seedRoster([student('s-1', 'محمد علي'), student('s-2', 'محمد علي')])
     hoisted.client = makeClient(() => { throw new Error('no query should run for an ambiguous name') })
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues())
@@ -106,7 +81,7 @@ describe('saveReceiptVoucher — student identity guard', () => {
     expect(useMoneyInStore.getState().activeStudent?.id).toBe('s-1')
   })
 
-  it('binds to the one match and saves when the name is unique', async () => {
+  it('binds to one unique match and saves', async () => {
     seedRoster([student('s-1', 'محمد علي')])
     let receiptInserted = false
     hoisted.client = makeClient((state) => {
@@ -119,7 +94,7 @@ describe('saveReceiptVoucher — student identity guard', () => {
     expect(useMoneyInStore.getState().activeStudent?.id).toBe('s-1')
   })
 
-  it('creates a genuinely new student when the name matches no one', async () => {
+  it('creates a new student when the name matches no one', async () => {
     seedRoster([student('s-1', 'سارة')])
     let studentInserted = false
     hoisted.client = makeClient((state) => {
@@ -150,35 +125,33 @@ describe('saveReceiptVoucher — allocation posting', () => {
   it('sends course + multiple fee allocations to one atomic RPC', async () => {
     seedRoster([student('s-1', 'محمد علي')])
     let rpcName = ''
-    let rpcArgs: any
-    hoisted.client = makeClient((state) => {
+    let rpcArgs: RpcPayload | null = null
+    const client: MockClient = makeClient((state) => {
       if (state.table === 'student_statement_lines') return { data: [], error: null }
       throw new Error(`unexpected query on ${state.table}`)
     }, () => ({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }))
+    client.rpc = (name: string, args: unknown) => {
+      rpcName = name
+      rpcArgs = args as RpcPayload
+      return Promise.resolve({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null })
+    }
+    hoisted.client = client
+
     const allocations = [
       { type: 'course' as const, enrollmentId: '11111111-1111-4111-8111-111111111111', amount: 250 },
       { type: 'fee' as const, feeObligationId: '22222222-2222-4222-8222-222222222222', amount: 50 },
       { type: 'fee' as const, feeObligationId: '33333333-3333-4333-8333-333333333333', amount: 20 },
     ]
-    const client = makeClient((state) => {
-      if (state.table === 'student_statement_lines') return { data: [], error: null }
-      throw new Error(`unexpected query on ${state.table}`)
-    }, () => ({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }))
-    client.rpc = (name: string, args: any) => { rpcName = name; rpcArgs = args; return Promise.resolve({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }) }
-    hoisted.client = client
-
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ studentId: 's-1', entryType: 'mixed', courseValue: undefined, amountReceived: 320, allocations }))
     expect(ok).toBe(true)
     expect(rpcName).toBe('post_receipt_with_allocations')
-    expect(rpcArgs.payload.allocations).toEqual([
+    expect(rpcArgs?.payload.allocations).toEqual([
       { type: 'course', enrollment_id: '11111111-1111-4111-8111-111111111111', fee_obligation_id: null, amount: 250 },
       { type: 'fee', enrollment_id: null, fee_obligation_id: '22222222-2222-4222-8222-222222222222', amount: 50 },
       { type: 'fee', enrollment_id: null, fee_obligation_id: '33333333-3333-4333-8333-333333333333', amount: 20 },
     ])
-    expect(rpcArgs.payload.amount_received).toBe(320)
+    expect(rpcArgs?.payload.amount_received).toBe(320)
   })
 })
 
-function opIs(state: QueryState, op: QueryState['op']) {
-  return state.op === op
-}
+function opIs(state: QueryState, op: QueryState['op']) { return state.op === op }
