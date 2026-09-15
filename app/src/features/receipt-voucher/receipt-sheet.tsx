@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowDownLeft } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useForm, useWatch, type DefaultValues } from 'react-hook-form'
 
 import { ActionSheet } from '@/components/shell/action-sheet'
@@ -11,22 +11,20 @@ import { Input } from '@/components/ui/input'
 import { SmartDateInput } from '@/components/ui/smart-date-input'
 import { Textarea } from '@/components/ui/textarea'
 import { VoucherPrint } from '@/features/print/voucher-print'
-import { receiptVoucherFormSchema, type ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
+import { receiptVoucherFormSchema, type ReceiptAllocationFormValue, type ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { StudentPicker } from '@/features/receipt-voucher/student-picker'
 import { studentCourseBreakdown } from '@/lib/aggregate'
-import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
+import { formatNumber, todayIsoDate } from '@/lib/format'
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useSettingsStore } from '@/store/use-settings-store'
 import { useShellStore } from '@/store/use-shell-store'
 import { useToastStore } from '@/components/ui/use-toast-store'
 import { useVoucherAdminStore } from '@/store/use-voucher-admin-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
-import type { FinancialMovement } from '@/types/domain'
+import type { FinancialMovement, FeeObligation } from '@/types/domain'
 
 function buildDefaults(studentName: string | null): DefaultValues<ReceiptVoucherFormValues> {
-  // Amount fields start empty (not 0) so typing doesn't produce a leading zero
-  // like "0500"; the input shows a grey "0" placeholder instead.
-  return { paymentDate: todayIsoDate(), studentName: studentName ?? '', studentId: '', studentIdNumber: '', studentPhone: '', courseName: '', courseValue: undefined, amountReceived: undefined, payerName: '', notes: '' }
+  return { paymentDate: todayIsoDate(), studentName: studentName ?? '', studentId: '', studentIdNumber: '', studentPhone: '', courseName: '', courseValue: undefined, amountReceived: undefined, payerName: '', notes: '', entryType: 'course', feeCategory: undefined, externalShare: undefined, allocations: [] }
 }
 
 export function ReceiptSheet() {
@@ -48,6 +46,7 @@ export function ReceiptSheet() {
   const students = useWorkspaceStore((state) => state.students)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const currencySymbol = useSettingsStore((state) => state.settings.currencySymbol)
   const maxAmount = useSettingsStore((state) => state.settings.maxVoucherAmount)
   const blockFutureDate = useSettingsStore((state) => state.settings.blockFutureDate)
@@ -56,22 +55,23 @@ export function ReceiptSheet() {
   const [editStudentName, setEditStudentName] = useState('')
   const [savedVoucher, setSavedVoucher] = useState<FinancialMovement | null>(null)
 
-  const form = useForm<ReceiptVoucherFormValues>({ resolver: zodResolver(receiptVoucherFormSchema), defaultValues: buildDefaults(prefillName) })
+  const form = useForm<ReceiptVoucherFormValues>({ resolver: zodResolver(receiptVoucherFormSchema, undefined, { mode: 'sync' }), defaultValues: buildDefaults(prefillName) })
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
   const pickedStudentId = useWatch({ control: form.control, name: 'studentId' }) ?? ''
-  const courseName = useWatch({ control: form.control, name: 'courseName' }) ?? ''
+  const watchedAllocations = useWatch({ control: form.control, name: 'allocations' }) ?? []
 
-  // Courses the picked student is enrolled in, each with its remaining balance —
-  // offered as quick-pick so the operator chooses the right course (and its
-  // authoritative fee) instead of re-typing it. Only in create mode.
-  const studentCourses = useMemo(
-    () => (!isEdit && pickedStudentId ? studentCourseBreakdown(pickedStudentId, statementLines, enrollments) : []),
-    [isEdit, pickedStudentId, statementLines, enrollments],
-  )
-  const selectedCourse = studentCourses.find((course) => course.courseName === courseName) ?? null
+  const studentCourses = useMemo(() => (!isEdit && pickedStudentId ? studentCourseBreakdown(pickedStudentId, statementLines, enrollments) : []), [isEdit, pickedStudentId, statementLines, enrollments])
+  const studentEnrollments = useMemo(() => (pickedStudentId ? enrollments.filter((item) => item.studentId === pickedStudentId) : []), [pickedStudentId, enrollments])
+  const studentFees = useMemo(() => {
+    if (!pickedStudentId) return []
+    return feeObligations.filter((fee) => fee.studentId === pickedStudentId && !fee.cancelledAt).map((fee) => {
+      const paid = statementLines.filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id).reduce((sum, line) => sum + line.amountReceived, 0)
+      return { fee, remaining: Math.max(0, fee.amount - paid) }
+    }).filter((item) => item.remaining > 0)
+  }, [pickedStudentId, feeObligations, statementLines])
 
   useLayoutEffect(() => { clearError(); clearAdminError() }, [clearError, clearAdminError])
-
+  useEffect(() => { if (!pickedStudentId) return; form.setValue('allocations', [], { shouldValidate: false }); form.resetField('amountReceived') }, [pickedStudentId, form])
   useEffect(() => {
     if (!editVoucherId) return
     let active = true
@@ -80,109 +80,102 @@ export function ReceiptSheet() {
       if (!active) return
       if (data) {
         setEditStudentName(data.studentName)
-        form.reset({ paymentDate: data.paymentDate, studentName: data.studentName, studentId: '', studentIdNumber: '', studentPhone: '', courseName: data.courseName, courseValue: data.courseValue, amountReceived: data.amountReceived, payerName: data.payerName, notes: data.notes })
+        form.reset({ paymentDate: data.paymentDate, studentName: data.studentName, studentId: '', studentIdNumber: '', studentPhone: '', courseName: data.courseName, courseValue: data.courseValue, amountReceived: data.amountReceived, payerName: data.payerName, notes: data.notes, entryType: 'course', feeCategory: undefined, externalShare: undefined, allocations: [] })
       }
       setLoadingEdit(false)
     })()
     return () => { active = false }
   }, [editVoucherId, fetchReceipt, form])
 
+  const selectedAmount = watchedAllocations.reduce((sum, item) => sum + item.amount, 0)
+  const activeType: 'course' | 'fee' | 'mixed' = watchedAllocations.length === 0 ? 'course' : watchedAllocations.every((item) => item.type === 'fee') ? 'fee' : watchedAllocations.every((item) => item.type === 'course') ? 'course' : 'mixed'
+
+  function setAllocations(next: ReceiptAllocationFormValue[]) {
+    form.setValue('allocations', next, { shouldValidate: false, shouldDirty: true })
+    if (next.length > 0) form.setValue('amountReceived', next.reduce((sum, item) => sum + item.amount, 0), { shouldValidate: false, shouldDirty: true })
+    else form.resetField('amountReceived')
+  }
+  function addCourseAllocation(course: { courseName: string; fee: number; remaining: number }) {
+    const enrollment = studentEnrollments.find((item) => item.courseName === course.courseName)
+    if (!enrollment || course.remaining <= 0 || watchedAllocations.some((item) => item.type === 'course' && item.enrollmentId === enrollment.id)) return
+    setAllocations([...watchedAllocations, { type: 'course', enrollmentId: enrollment.id, amount: course.remaining }])
+  }
+  function addFeeAllocation(item: { fee: FeeObligation; remaining: number }) {
+    if (item.remaining <= 0 || watchedAllocations.some((allocation) => allocation.type === 'fee' && allocation.feeObligationId === item.fee.id)) return
+    setAllocations([...watchedAllocations, { type: 'fee', feeObligationId: item.fee.id, amount: item.remaining }])
+  }
+  function updateAllocation(index: number, amount: number) {
+    const current = watchedAllocations[index]
+    if (!current || !Number.isInteger(amount) || amount <= 0) return
+    const next = watchedAllocations.slice(); next[index] = { ...current, amount }; setAllocations(next)
+  }
+  function removeAllocation(index: number) { setAllocations(watchedAllocations.filter((_, itemIndex) => itemIndex !== index)) }
+
   async function onSubmit(values: ReceiptVoucherFormValues) {
     if (isEdit && editVoucherId) {
-      const ok = await updateReceipt(editVoucherId, values)
-      if (!ok) return
-      await reloadWorkspace()
-      useToastStore.getState().show('تم حفظ التعديل')
-      closeOverlay()
-      return
+      const ok = await updateReceipt(editVoucherId, values); if (!ok) return
+      await reloadWorkspace(); useToastStore.getState().show('تم حفظ التعديل'); closeOverlay(); return
     }
-
-    // Soft data-entry guard: the operator's configurable ceiling catches a
-    // fat-fingered extra zero before it reaches the server. The DB financial
-    // firewall stays the authoritative limit.
-    if (values.amountReceived > maxAmount) {
-      form.setError('amountReceived', { message: `المبلغ أكبر من الحدّ المسموح (${formatNumber(maxAmount)})` })
-      return
-    }
-    if (values.courseValue > maxAmount) {
-      form.setError('courseValue', { message: `القيمة أكبر من الحدّ المسموح (${formatNumber(maxAmount)})` })
-      return
-    }
-
-    const saved = await saveReceiptVoucher(values)
-    if (!saved) return
-
+    if (values.amountReceived > maxAmount) { form.setError('amountReceived', { message: `المبلغ أكبر من الحدّ المسموح (${formatNumber(maxAmount)})` }); return }
+    if (values.courseValue != null && values.courseValue > maxAmount) { form.setError('courseValue', { message: `القيمة أكبر من الحدّ المسموح (${formatNumber(maxAmount)})` }); return }
+    const saved = await saveReceiptVoucher({ ...values, entryType: activeType }); if (!saved) return
     await reloadWorkspace()
     const activeStudent = useMoneyInStore.getState().activeStudent
     const latestLine = useMoneyInStore.getState().statementLines.at(-1)
     if (activeStudent) selectStudent(activeStudent.id)
-    if (latestLine) {
-      setSavedVoucher({ id: latestLine.id, movementType: 'receipt', voucherNumber: latestLine.voucherNumber, voucherDate: latestLine.voucherDate, amount: latestLine.amountReceived, partyName: latestLine.studentName, context: latestLine.courseName })
+    const voucherLine = latestLine ?? useMoneyInStore.getState().statementLines.find((line) => line.studentId === activeStudent?.id)
+    if (voucherLine) {
+      setSavedVoucher({ id: voucherLine.id, movementType: 'receipt', voucherNumber: voucherLine.voucherNumber, voucherDate: voucherLine.voucherDate, amount: values.amountReceived, partyName: voucherLine.studentName, context: voucherLine.courseName })
+    } else {
+      setSavedVoucher({ id: `saved-${Date.now()}`, movementType: 'receipt', voucherNumber: 0, voucherDate: values.paymentDate, amount: values.amountReceived, partyName: values.studentName, context: values.courseName })
     }
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
+  function buildAndSubmit() {
+    const current = form.getValues()
+    const values: ReceiptVoucherFormValues = {
+      ...current,
+      allocations: watchedAllocations,
+      amountReceived: watchedAllocations.length > 0 ? selectedAmount : current.amountReceived,
+      entryType: activeType,
+    }
+    if (values.allocations.length > 0) {
+      void onSubmit(values)
+      return
+    }
+    const result = receiptVoucherFormSchema.safeParse(values)
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const field = issue.path[0]
+        if (typeof field === 'string') form.setError(field as keyof ReceiptVoucherFormValues, { type: issue.code, message: issue.message })
+      }
+      return
+    }
+    void onSubmit(result.data)
+  }
+
   const busy = isEdit ? adminBusy : isSaving
   const showError = error || adminError
+  const hasAllocations = watchedAllocations.length > 0
 
-  return (
-    <>
-      <ActionSheet title={isEdit ? 'تعديل سند قبض' : 'سند قبض'} onClose={closeOverlay}>
-        {showError ? <div role="alert" className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}</div> : null}
-        {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? (
-          <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={closeOverlay}>إغلاق بعد الطباعة</Button></div>
-        ) : (
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-            {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
-            {studentCourses.length > 0 ? (
-              <div>
-                <span className="mb-1.5 block text-[13px] font-medium text-muted-foreground">دورات الطالب</span>
-                <div className="flex flex-wrap gap-2">
-                  {studentCourses.map((course) => {
-                    const active = course.courseName === courseName
-                    return (
-                      <button
-                        key={course.courseName}
-                        type="button"
-                        onClick={() => {
-                          form.setValue('courseName', course.courseName, { shouldValidate: true })
-                          form.setValue('courseValue', course.fee, { shouldValidate: true })
-                        }}
-                        className={`rounded-xl border px-3 py-2 text-start text-[13px] ${active ? 'border-olive bg-olive-weak text-olive' : 'border-border-strong bg-panel text-muted-foreground'}`}
-                      >
-                        <span className="font-semibold">{course.courseName}</span>
-                        <span className="figure ms-2 text-[12px]">المتبقّي {formatNumber(course.remaining)}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : null}
-            <Field label={studentCourses.length > 0 ? 'الدورة (أو اكتب دورة جديدة)' : 'اسم الدورة'} error={form.formState.errors.courseName?.message}>{(control) => <Input placeholder="اكتب اسم الدورة" readOnly={isEdit} {...control} {...form.register('courseName')} />}</Field>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="قيمة الدورة" error={form.formState.errors.courseValue?.message}>{(control) => <Input type="number" min="0" step="1" placeholder="0" readOnly={isEdit} className="figure" {...control} {...form.register('courseValue', { valueAsNumber: true })} />}</Field>
-              <Field label="تاريخ الدفع" error={form.formState.errors.paymentDate?.message}>{(control) => isEdit ? <Input readOnly dir="ltr" className="figure" value={formatDate(paymentDate)} {...control} /> : <SmartDateInput max={maxDate} value={paymentDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} {...control} />}</Field>
-            </div>
-            {selectedCourse ? (
-              <p className="text-[12.5px] text-muted-foreground">
-                الرصيد المستحقّ لهذه الدورة: <span className="figure font-semibold text-warn">{formatNumber(selectedCourse.remaining)}</span>
-              </p>
-            ) : null}
-            <Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>
-              {(control) => (
-                <div className="flex items-center gap-2 rounded-xl border border-olive/30 bg-olive-weak/40 px-4 py-1 focus-within:border-olive">
-                  <input type="number" min="1" step="1" inputMode="numeric" readOnly={isEdit} className="figure h-12 w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-faint" placeholder="0" {...control} {...form.register('amountReceived', { valueAsNumber: true })} />
-                  <span className="text-sm font-medium text-muted-foreground">{currencySymbol}</span>
-                </div>
-              )}
-            </Field>
-            <Field label="اسم الدافع (اختياري)" error={form.formState.errors.payerName?.message}>{(control) => <Input placeholder="اسم من يدفع نيابةً عن الطالب" {...control} {...form.register('payerName')} />}</Field>
-            <Field label="الملاحظات (اختياري)" error={form.formState.errors.notes?.message}>{(control) => <Textarea placeholder="ملاحظات اختيارية" {...control} {...form.register('notes')} />}</Field>
-            <Button type="submit" size="lg" className="w-full" disabled={busy}><ArrowDownLeft className="size-4" />{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
-          </form>
-        )}
-      </ActionSheet>
-      {savedVoucher ? <VoucherPrint movement={savedVoucher} onClose={closeOverlay} /> : null}
-    </>
-  )
+  return <>
+    <ActionSheet title="سند قبض" onClose={closeOverlay}>
+      {showError ? <div role="alert" className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}</div> : null}
+      {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={closeOverlay}>إغلاق بعد الطباعة</Button></div> : <form className="space-y-4" noValidate>
+        {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
+        {!isEdit && pickedStudentId ? <section className="space-y-3 border-y border-border py-4"><div><div className="text-[13px] font-semibold text-foreground">بنود التحصيل</div><p className="mt-1 text-[12px] text-muted-foreground">أضف الدورة والرسوم التي سيدفعها الطالب، ثم يصدرها النظام في سند قبض واحد.</p></div>
+          {studentCourses.filter((course) => course.remaining > 0).map((course) => { const enrollment = studentEnrollments.find((item) => item.courseName === course.courseName); const selected = enrollment ? watchedAllocations.some((item) => item.type === 'course' && item.enrollmentId === enrollment.id) : false; return <button key={course.courseName} type="button" disabled={!enrollment || selected} onClick={() => addCourseAllocation(course)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{course.courseName}</span><span className="text-[12px] text-muted-foreground">متبقّي الدورة: {formatNumber(course.remaining)}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
+          {studentFees.map((item) => { const selected = watchedAllocations.some((allocation) => allocation.type === 'fee' && allocation.feeObligationId === item.fee.id); return <button key={item.fee.id} type="button" disabled={selected} onClick={() => addFeeAllocation(item)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{item.fee.description}</span><span className="text-[12px] text-muted-foreground">رسم · متبقّي: {formatNumber(item.remaining)} · {item.fee.feeCategory === 'institute' ? 'للمعهد' : item.fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
+          {studentCourses.every((course) => course.remaining <= 0) && studentFees.length === 0 ? <p className="py-5 text-center text-sm text-faint">لا توجد مستحقات مفتوحة لهذا الطالب.</p> : null}
+          {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="number" min="1" step="1" value={allocation.amount} readOnly={allocation.type === 'fee'} onChange={(event) => updateAllocation(index, Number(event.target.value))} className="figure-input w-28 rounded-lg border border-border bg-background px-2 py-1.5 text-sm" /><button type="button" aria-label={`حذف ${label}`} onClick={() => removeAllocation(index)} className="p-1.5 text-muted-foreground" title="حذف"><Trash2 className="size-4" /></button></div> })}<div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold"><span>إجمالي البنود</span><span>{formatNumber(selectedAmount)} {currencySymbol}</span></div></div> : null}
+        </section> : null}
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض">{(control) => <Input {...control} type="number" min="1" step="1" readOnly={hasAllocations} />}</Field></div>
+        <Field label="اسم الدافع">{(control) => <Input {...control} placeholder="اختياري" />}</Field>
+        <Field label="ملاحظات">{(control) => <Textarea {...control} rows={3} placeholder="اختياري" />}</Field>
+        <Button type="button" size="lg" className="w-full" disabled={busy} onClick={buildAndSubmit}>{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
+      </form>}
+    </ActionSheet>
+    {savedVoucher ? <VoucherPrint movement={savedVoucher} onClose={closeOverlay} /> : null}
+  </>
 }

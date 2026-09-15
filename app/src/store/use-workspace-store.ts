@@ -7,14 +7,12 @@ import type {
   Course,
   CourseStatus,
   Enrollment,
+  FeeCategory,
+  FeeObligation,
   FinancialMovement,
   Student,
   StudentStatementLine,
 } from '@/types/domain'
-
-// The workspace read model. It only READS the two sources of truth through their
-// derived views; it never writes and never stores a balance. Writes stay in the
-// dedicated voucher stores (use-money-in-store, use-money-out-store).
 
 type WorkspaceStore = {
   students: Student[]
@@ -23,6 +21,7 @@ type WorkspaceStore = {
   cancelledVouchers: CancelledVoucher[]
   courses: Course[]
   enrollments: Enrollment[]
+  feeObligations: FeeObligation[]
   isLoading: boolean
   loaded: boolean
   error: string | null
@@ -30,226 +29,51 @@ type WorkspaceStore = {
   clearError: () => void
 }
 
-type StudentRow = {
-  id: string
-  name: string
-  id_number: string | null
-  phone: string | null
-  notes: string | null
-}
-
-type StatementRow = {
-  id: string
-  voucher_number: number
-  voucher_date: string
-  student_id: string
-  student_name: string
-  course_name: string
-  course_value: number | string
-  amount_received: number | string
-  remaining_balance: number | string
-}
-
-type MovementRow = {
-  id: string
-  movement_type: 'receipt' | 'payment'
-  voucher_number: number
-  voucher_date: string
-  amount: number | string
-  party_name: string | null
-  context: string | null
-}
-
-function normalizeStudent(row: StudentRow): Student {
-  return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes }
-}
-
-function normalizeStatementLine(row: StatementRow): StudentStatementLine {
-  return {
-    id: row.id,
-    voucherNumber: row.voucher_number,
-    voucherDate: row.voucher_date,
-    studentId: row.student_id,
-    studentName: row.student_name,
-    courseName: row.course_name,
-    courseValue: Number(row.course_value),
-    amountReceived: Number(row.amount_received),
-    remainingBalance: Number(row.remaining_balance),
-  }
-}
-
-function normalizeMovement(row: MovementRow): FinancialMovement {
-  return {
-    id: row.id,
-    movementType: row.movement_type,
-    voucherNumber: row.voucher_number,
-    voucherDate: row.voucher_date,
-    amount: Number(row.amount),
-    partyName: row.party_name,
-    context: row.context,
-  }
-}
-
-type CourseRow = {
-  id: string
-  name: string
-  base_fee: number | string | null
-  start_date: string | null
-  end_date: string | null
-  status: string
-  notes: string | null
-}
-
-function normalizeCourse(row: CourseRow): Course {
-  return {
-    id: row.id,
-    name: row.name,
-    baseFee: row.base_fee === null ? null : Number(row.base_fee),
-    startDate: row.start_date,
-    endDate: row.end_date,
-    status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus,
-    notes: row.notes ?? '',
-  }
-}
-
-type EnrollmentRow = {
-  id: string
-  student_id: string
-  course_id: string | null
-  course_name: string
-  course_value: number | string
-}
-
-function normalizeEnrollment(row: EnrollmentRow): Enrollment {
-  return {
-    id: row.id,
-    studentId: row.student_id,
-    courseId: row.course_id,
-    courseName: row.course_name,
-    courseValue: Number(row.course_value),
-  }
-}
-
+type StudentRow = { id: string; name: string; id_number: string | null; phone: string | null; notes: string | null }
+type StatementRow = { id: string; voucher_number: number; voucher_date: string; student_id: string; student_name: string; course_name: string; course_value: number | string; amount_received: number | string; remaining_balance: number | string; entry_type?: 'course' | 'fee' | null; fee_obligation_id?: string | null; enrollment_id?: string | null }
+type MovementRow = { id: string; movement_type: 'receipt' | 'payment'; voucher_number: number; voucher_date: string; amount: number | string; party_name: string | null; context: string | null; external_share?: number | string | null }
+function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes } }
+function normalizeStatementLine(row: StatementRow): StudentStatementLine { return { id: row.id, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, studentId: row.student_id, studentName: row.student_name, courseName: row.course_name, courseValue: Number(row.course_value), amountReceived: Number(row.amount_received), remainingBalance: Number(row.remaining_balance), entryType: row.entry_type ?? 'course', feeObligationId: row.fee_obligation_id ?? null, enrollmentId: row.enrollment_id ?? null } }
+function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
+type CourseRow = { id: string; name: string; base_fee: number | string | null; start_date: string | null; end_date: string | null; status: string; notes: string | null }
+function normalizeCourse(row: CourseRow): Course { return { id: row.id, name: row.name, baseFee: row.base_fee === null ? null : Number(row.base_fee), startDate: row.start_date, endDate: row.end_date, status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus, notes: row.notes ?? '' } }
+type EnrollmentRow = { id: string; student_id: string; course_id: string; course_name: string; course_value: number | string }
+function normalizeEnrollment(row: EnrollmentRow): Enrollment { return { id: row.id, studentId: row.student_id, courseId: row.course_id, courseName: row.course_name, courseValue: Number(row.course_value) } }
+type FeeObligationRow = { id: string; student_id: string; enrollment_id: string; course_id: string; course_name: string; description: string; amount: number | string; fee_category: FeeCategory; external_share: number | string; cancelled_at: string | null; cancel_reason: string | null; created_at: string }
+function normalizeFeeObligation(row: FeeObligationRow): FeeObligation { return { id: row.id, studentId: row.student_id, enrollmentId: row.enrollment_id, courseId: row.course_id, courseName: row.course_name, description: row.description, amount: Number(row.amount), feeCategory: row.fee_category, externalShare: Number(row.external_share), cancelledAt: row.cancelled_at, cancelReason: row.cancel_reason, createdAt: row.created_at } }
 type CancelledRow = MovementRow & { cancelled_at: string; cancel_reason: string | null }
-
-function normalizeCancelled(row: CancelledRow): CancelledVoucher {
-  return {
-    id: row.id,
-    movementType: row.movement_type,
-    voucherNumber: row.voucher_number,
-    voucherDate: row.voucher_date,
-    amount: Number(row.amount),
-    partyName: row.party_name,
-    context: row.context,
-    cancelledAt: row.cancelled_at,
-    cancelReason: row.cancel_reason,
-  }
-}
+function normalizeCancelled(row: CancelledRow): CancelledVoucher { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, cancelledAt: row.cancelled_at, cancelReason: row.cancel_reason } }
 
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
-  students: [],
-  statementLines: [],
-  movements: [],
-  cancelledVouchers: [],
-  courses: [],
-  enrollments: [],
-  isLoading: false,
-  loaded: false,
-  error: null,
+  students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
   clearError: () => set({ error: null }),
   load: async () => {
     const supabase = getSupabaseBrowserClient()
-
-    if (!supabase) {
-      set({
-        error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.',
-        loaded: true,
-        isLoading: false,
-      })
-      return
-    }
-
+    if (!supabase) { set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.', loaded: true, isLoading: false }); return }
     set({ isLoading: true, error: null })
-
     try {
-      // Every read is fully paginated: a financial view must never operate on the
-      // first 1000 rows only (PostgREST's default cap), or totals silently under-count.
-      const [studentsResult, statementResult, movementsResult, cancelledResult, coursesResult, enrollmentsResult] = await Promise.all([
-        fetchAllRows<StudentRow>((from, to) =>
-          supabase
-            .from('students')
-            .select('id, name, id_number, phone, notes')
-            .order('name', { ascending: true })
-            .range(from, to),
-        ),
-        fetchAllRows<StatementRow>((from, to) =>
-          supabase
-            .from('student_statement_lines')
-            .select(
-              'id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance',
-            )
-            .order('voucher_date', { ascending: true })
-            .order('voucher_number', { ascending: true })
-            .range(from, to),
-        ),
-        fetchAllRows<MovementRow>((from, to) =>
-          supabase
-            .from('financial_movements')
-            .select('id, movement_type, voucher_number, voucher_date, amount, party_name, context')
-            .order('voucher_date', { ascending: true })
-            .order('created_at', { ascending: true })
-            .range(from, to),
-        ),
-        fetchAllRows<CancelledRow>((from, to) =>
-          supabase
-            .from('cancelled_vouchers')
-            .select(
-              'id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason',
-            )
-            .order('cancelled_at', { ascending: false })
-            .range(from, to),
-        ),
-        fetchAllRows<CourseRow>((from, to) =>
-          supabase
-            .from('courses')
-            .select('id, name, base_fee, start_date, end_date, status, notes')
-            .order('name', { ascending: true })
-            .range(from, to),
-        ),
-        fetchAllRows<EnrollmentRow>((from, to) =>
-          supabase
-            .from('enrollments')
-            .select('id, student_id, course_id, course_name, course_value')
-            .range(from, to),
-        ),
+      const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
+        fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to)),
+        fetchAllRows<StatementRow>((from, to) => supabase.from('student_statement_lines').select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id').order('voucher_date', { ascending: true }).order('voucher_number', { ascending: true }).range(from, to)),
+        fetchAllRows<MovementRow>((from, to) => supabase.from('financial_movements').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share').order('voucher_date', { ascending: true }).order('created_at', { ascending: true }).range(from, to)),
+        fetchAllRows<CancelledRow>((from, to) => supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to)),
       ])
-
       if (studentsResult.error) throw studentsResult.error
       if (statementResult.error) throw statementResult.error
       if (movementsResult.error) throw movementsResult.error
       if (cancelledResult.error) throw cancelledResult.error
-      if (coursesResult.error) throw coursesResult.error
-      if (enrollmentsResult.error) throw enrollmentsResult.error
+      set({ students: studentsResult.data.map(normalizeStudent), statementLines: statementResult.data.map(normalizeStatementLine), movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
 
-      set({
-        students: studentsResult.data.map(normalizeStudent),
-        statementLines: statementResult.data.map(normalizeStatementLine),
-        movements: movementsResult.data.map(normalizeMovement),
-        cancelledVouchers: cancelledResult.data.map(normalizeCancelled),
-        courses: coursesResult.data.map(normalizeCourse),
-        enrollments: enrollmentsResult.data.map(normalizeEnrollment),
-        isLoading: false,
-        loaded: true,
-      })
+      const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
+        fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
+        fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value').range(from, to)),
+        fetchAllRows<FeeObligationRow>((from, to) => supabase.from('fee_obligations').select('id, student_id, enrollment_id, course_id, course_name, description, amount, fee_category, external_share, cancelled_at, cancel_reason, created_at').order('created_at', { ascending: true }).range(from, to)),
+      ])
+      if (coursesResult.error || enrollmentsResult.error || feesResult.error) console.error('optional workspace load failed', { courses: coursesResult.error, enrollments: enrollmentsResult.error, feeObligations: feesResult.error })
+      set({ courses: coursesResult.error ? [] : coursesResult.data.map(normalizeCourse), enrollments: enrollmentsResult.error ? [] : enrollmentsResult.data.map(normalizeEnrollment), feeObligations: feesResult.error ? [] : feesResult.data.map(normalizeFeeObligation), isLoading: false, loaded: true })
     } catch (error) {
-      // A raw Postgres/PostgREST message can carry RLS/permission/schema detail —
-      // never show it. Log it for diagnosis and surface a calm, safe message.
       console.error('workspace load failed', error)
-      set({
-        isLoading: false,
-        loaded: true,
-        error: 'تعذّر تحميل بيانات المركز. تحقّق من الاتصال وحاول تحديث الصفحة.',
-      })
+      set({ isLoading: false, loaded: true, error: 'تعذّر تحميل بيانات المركز. تحقّق من الاتصال وحاول تحديث الصفحة.' })
     }
   },
 }))

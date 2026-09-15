@@ -9,18 +9,20 @@ import {
   type RestorePayload,
 } from '@/lib/backup'
 
-// Backup = a read snapshot of the three source-of-truth tables. Restore = one
-// atomic server-side call (restore_center_data RPC) that replaces everything or
-// nothing. The store owns only the async I/O; file download/parse live in lib/backup.
+// Backup = a read snapshot of the source-of-truth tables. Restore = one atomic
+// server-side call (restore_center_data RPC) that replaces everything or nothing.
+// The store owns only the async I/O; file download/parse live in lib/backup.
 
 export type RestoreCounts = {
   students: number
   receipt_vouchers: number
   payment_vouchers: number
+  courses: number
+  enrollments: number
+  fee_obligations: number
+  receipt_allocations: number
 }
 
-// A restore either completes, needs an explicit "shrink" confirmation (the backup
-// has fewer records than the live data), or fails.
 export type RestoreResult =
   | { status: 'done'; counts: RestoreCounts }
   | { status: 'confirm'; message: string }
@@ -50,9 +52,6 @@ export const useBackupStore = create<BackupState>((set) => ({
     set({ isBusy: true, error: null })
     const db = supabase
 
-    // Fully paginate each table (never the first-1000-rows cap), then verify the
-    // fetched count against an exact server count — a backup that is short even by
-    // one row must NOT be written, because restoring it would delete the rest.
     async function dumpTable(table: string) {
       const rows = await fetchAllRows<Record<string, unknown>>((from, to) =>
         db.from(table).select('*').order('id', { ascending: true }).range(from, to),
@@ -68,18 +67,20 @@ export const useBackupStore = create<BackupState>((set) => ({
       return { rows: rows.data, error: null }
     }
 
-    const [students, courses, enrollments, receipts, payments] = await Promise.all([
+    const [students, courses, enrollments, fees, receipts, allocations, payments] = await Promise.all([
       dumpTable('students'),
       dumpTable('courses'),
       dumpTable('enrollments'),
+      dumpTable('fee_obligations'),
       dumpTable('receipt_vouchers'),
+      dumpTable('receipt_allocations'),
       dumpTable('payment_vouchers'),
     ])
     set({ isBusy: false })
 
     if (
-      students.error || courses.error || enrollments.error || receipts.error || payments.error ||
-      !students.rows || !courses.rows || !enrollments.rows || !receipts.rows || !payments.rows
+      students.error || courses.error || enrollments.error || fees.error || receipts.error || allocations.error || payments.error ||
+      !students.rows || !courses.rows || !enrollments.rows || !fees.rows || !receipts.rows || !allocations.rows || !payments.rows
     ) {
       set({ error: 'تعذّر إنشاء نسخة احتياطيّة كاملة؛ لم يُنشأ الملف.' })
       return null
@@ -92,7 +93,9 @@ export const useBackupStore = create<BackupState>((set) => ({
       students: students.rows,
       courses: courses.rows,
       enrollments: enrollments.rows,
+      fee_obligations: fees.rows,
       receipt_vouchers: receipts.rows,
+      receipt_allocations: allocations.rows,
       payment_vouchers: payments.rows,
     }
   },
@@ -108,7 +111,6 @@ export const useBackupStore = create<BackupState>((set) => ({
     set({ isBusy: false })
     if (error) {
       const message = (error as { message?: string }).message ?? ''
-      // The server guard asks for an explicit confirmation when the backup is smaller.
       if (message.includes('RESTORE_SHRINKS')) {
         return { status: 'confirm', message }
       }

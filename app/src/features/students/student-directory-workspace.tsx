@@ -27,6 +27,7 @@ export function StudentDirectoryWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
+  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
@@ -38,7 +39,7 @@ export function StudentDirectoryWorkspace() {
   const [query, setQuery] = useState('')
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments), [students, statementLines, enrollments])
+  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
     [aggregates],
@@ -81,14 +82,7 @@ export function StudentDirectoryWorkspace() {
 
       <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive">
         <Search aria-hidden className="size-4 flex-none text-faint" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          aria-label="البحث عن طالب"
-          placeholder="بالاسم أو الهاتف أو الرقم التعريفي"
-          className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
-        />
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
       </div>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
@@ -96,14 +90,7 @@ export function StudentDirectoryWorkspace() {
           {!loaded ? (
             <div className="p-3"><SkeletonRows rows={8} /></div>
           ) : filtered.length > 0 ? (
-            filtered.map((item) => (
-              <DirectoryRow
-                key={item.student.id}
-                item={item}
-                selected={item.student.id === previewId}
-                onSelect={() => setPreviewId(item.student.id)}
-              />
-            ))
+            filtered.map((item) => <DirectoryRow key={item.student.id} item={item} selected={item.student.id === previewId} onSelect={() => setPreviewId(item.student.id)} />)
           ) : students.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-faint">لا يوجد طلاب بعد.</p>
           ) : (
@@ -150,19 +137,9 @@ function DirectoryRow({ item, selected, onSelect }: { item: StudentAggregate; se
   )
 }
 
-function StudentPreviewPanel({
-  item,
-  onOpenStatement,
-}: {
-  item: StudentAggregate | null
-  onOpenStatement: () => void
-}) {
+function StudentPreviewPanel({ item, onOpenStatement }: { item: StudentAggregate | null; onOpenStatement: () => void }) {
   if (!item) {
-    return (
-      <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint md:block">
-        اختر طالبًا من القائمة لعرض ملخّص حسابه هنا.
-      </div>
-    )
+    return <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint md:block">اختر طالبًا من القائمة لعرض ملخّص حسابه هنا.</div>
   }
 
   return (
@@ -171,34 +148,15 @@ function StudentPreviewPanel({
         <span aria-hidden className="grid size-11 flex-none place-items-center rounded-full bg-olive-weak text-olive"><User className="size-5" /></span>
         <div className="min-w-0">
           <div className="truncate text-sm font-bold text-foreground">{item.student.name}</div>
-          <div className="text-[12px] text-muted-foreground">
-            {item.student.phone ? item.student.phone : 'لا يوجد رقم هاتف'}
-            {item.student.idNumber ? ` · ${item.student.idNumber}` : ''}
-          </div>
+          <div className="text-[12px] text-muted-foreground">{item.student.phone ? item.student.phone : 'لا يوجد رقم هاتف'}{item.student.idNumber ? ` · ${item.student.idNumber}` : ''}</div>
         </div>
       </div>
-
-      <div className="mt-3 text-xs text-faint">
-        {formatNumber(item.courses)} دورة · آخر حركة {item.lastActivity ? formatDate(item.lastActivity) : '—'}
-      </div>
-
+      <div className="mt-3 text-xs text-faint">{formatNumber(item.courses)} دورة · آخر حركة {item.lastActivity ? formatDate(item.lastActivity) : '—'}</div>
       <div className="mt-4 flex gap-6 border-t border-border pt-4">
-        <div>
-          <div className="text-[11px] font-medium text-faint">المسدَّد</div>
-          <Money value={item.paid} currency={false} className="text-lg font-semibold text-foreground" />
-        </div>
-        <div>
-          <div className="text-[11px] font-medium text-faint">الرصيد المستحق</div>
-          <Money value={item.remaining} currency={false} className={`text-lg font-semibold ${item.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`} />
-        </div>
+        <div><div className="text-[11px] font-medium text-faint">المسدَّد</div><Money value={item.paid} currency={false} className="text-lg font-semibold text-foreground" /></div>
+        <div><div className="text-[11px] font-medium text-faint">الرصيد المستحق</div><Money value={item.remaining} currency={false} className={`text-lg font-semibold ${item.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`} /></div>
       </div>
-
-      <div className="mt-4">
-        <Button variant="quiet" size="sm" onClick={onOpenStatement}>
-          <ChevronLeft className="size-4" />
-          فتح الكشف الكامل
-        </Button>
-      </div>
+      <div className="mt-4"><Button variant="quiet" size="sm" onClick={onOpenStatement}><ChevronLeft className="size-4" />فتح الكشف الكامل</Button></div>
     </div>
   )
 }

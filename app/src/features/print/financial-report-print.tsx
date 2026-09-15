@@ -17,6 +17,10 @@ type FinancialReportPrintProps = {
   paymentCount: number
   movements: FinancialMovement[]
   periodLabel?: string
+  // Fee-split figures (receipts report only). externalHeld > 0 reveals an
+  // institute-revenue breakdown; otherwise cash-in is the institute's revenue.
+  externalHeld?: number
+  instituteRevenue?: number
   onClose: () => void
 }
 
@@ -41,9 +45,12 @@ export function FinancialReportPrint({
   paymentCount,
   movements,
   periodLabel,
+  externalHeld = 0,
+  instituteRevenue = 0,
   onClose,
 }: FinancialReportPrintProps) {
   const centerName = getSettings().name
+  const showSplit = view === 'receipts' && externalHeld > 0
   const titleEn = view === 'receipts' ? 'Receipts Report' : view === 'payments' ? 'Payments Report' : 'General Statement'
   const orderedRows = chronological(movements)
   const runningRows = withRunningBalance(movements, opening)
@@ -73,6 +80,13 @@ export function FinancialReportPrint({
           <SummaryCell label="إجمالي المقبوضات" value={totalIn} color="text-[#059669]" />
           <SummaryCell label="إجمالي المدفوعات" value={totalOut} color="text-[#dc2626]" />
           <SummaryCell label="صافي التدفق النقدي" value={net} />
+        </div>
+      ) : showSplit ? (
+        <div className="grid grid-cols-4 gap-4 border-y border-[#e2e8f0] py-5">
+          <SummaryCell label="إجمالي المقبوضات" value={totalIn} color="text-[#059669]" />
+          <SummaryCell label="إيراد المعهد" value={instituteRevenue} color="text-[#059669]" />
+          <SummaryCell label="لصالح جهة خارجية" value={externalHeld} />
+          <SummaryCell label="عدد سندات القبض" value={receiptCount} />
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 border-y border-[#e2e8f0] py-5">

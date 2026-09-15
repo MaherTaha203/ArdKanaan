@@ -1,13 +1,10 @@
 // Backup file helpers — pure, presentation-adjacent utilities. The actual data
 // read/write goes through the backup store (Supabase). A backup is a plain JSON
-// snapshot of the three source-of-truth tables; restore is atomic server-side.
+// snapshot of the source-of-truth tables; restore is atomic server-side.
 
 export const BACKUP_APP = 'ard-kanaan'
-// Stays 1 on purpose: `courses` is an additive, optional array. A build that
-// predates it harmlessly ignores the extra field and still restores all financial
-// data, and this build treats a backup without `courses` (an older file) as an
-// empty catalog. Bumping the version would make older builds reject new backups
-// wholesale, which is worse than gracefully degrading the catalog.
+// Keep the current version for backward compatibility. The new arrays are optional
+// when reading older backups, while current exports always include them.
 export const BACKUP_VERSION = 1
 
 export type BackupPayload = {
@@ -17,7 +14,9 @@ export type BackupPayload = {
   students: unknown[]
   courses: unknown[]
   enrollments: unknown[]
+  fee_obligations: unknown[]
   receipt_vouchers: unknown[]
+  receipt_allocations: unknown[]
   payment_vouchers: unknown[]
 }
 
@@ -26,7 +25,9 @@ export type RestorePayload = {
   students: unknown[]
   courses: unknown[]
   enrollments: unknown[]
+  fee_obligations: unknown[]
   receipt_vouchers: unknown[]
+  receipt_allocations: unknown[]
   payment_vouchers: unknown[]
 }
 
@@ -40,8 +41,8 @@ export type BackupValidation =
 
 /**
  * Validate a parsed object as a restorable backup: it must be this app's backup,
- * a version this build understands, and carry the three expected arrays. Returns a
- * tagged result so the caller can explain *why* a file was rejected.
+ * a version this build understands, and carry the required source arrays. New
+ * fee/allocation arrays remain optional on input so older backups stay restorable.
  */
 export function validateBackup(value: unknown): BackupValidation {
   if (!value || typeof value !== 'object') {
@@ -61,14 +62,11 @@ export function validateBackup(value: unknown): BackupValidation {
     ok: true,
     payload: {
       students: record.students,
-      // Courses are optional so backups taken before the catalog existed still
-      // restore (as an empty catalog); the enrollment snapshot remains the source
-      // of financial truth regardless.
       courses: isArray(record.courses) ? record.courses : [],
-      // Enrollments are optional so older backups (before the enrollment model) still
-      // restore; the statement view then falls back to each voucher's course_value.
       enrollments: isArray(record.enrollments) ? record.enrollments : [],
+      fee_obligations: isArray(record.fee_obligations) ? record.fee_obligations : [],
       receipt_vouchers: record.receipt_vouchers,
+      receipt_allocations: isArray(record.receipt_allocations) ? record.receipt_allocations : [],
       payment_vouchers: record.payment_vouchers,
     },
   }
@@ -91,7 +89,6 @@ export function downloadBackup(payload: BackupPayload, filename = backupFilename
   document.body.appendChild(anchor)
   anchor.click()
   document.body.removeChild(anchor)
-  // Revoke on the next tick so the download has started.
   setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 

@@ -15,17 +15,12 @@ test('warns and refuses to save a receipt for an ambiguous student name', async 
   await login(page)
   await openReceiptSheet(page)
 
-  // Typing the shared name (without picking from the list) raises an inline warning.
-  await page.getByPlaceholder('ابحث عن طالب بالاسم أو الهاتف أو الرقم التعريفي').fill('محمد علي')
+  const picker = page.getByPlaceholder('ابحث عن طالب بالاسم أو الهاتف أو الرقم التعريفي')
+  await picker.fill('محمد علي')
   await expect(page.getByText('يوجد أكثر من طالب بهذا الاسم').first()).toBeVisible()
 
-  // Fill the rest and try to save anyway.
-  await page.getByLabel('اسم الدورة').fill('دورة الإنجليزية')
-  await page.getByLabel('قيمة الدورة').fill('1000')
-  await page.locator('input[type="number"]').last().fill('400')
   await page.getByRole('button', { name: /حفظ سند القبض/ }).click()
 
-  // The save is refused with the specific, actionable message — and no receipt was written.
   await expect(
     page.getByRole('alert').filter({
       hasText: 'اختر المقصود من القائمة لتفادي ربط السند بالطالب غير المقصود',
