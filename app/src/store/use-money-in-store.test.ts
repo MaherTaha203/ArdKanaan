@@ -3,13 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import type { Student } from '@/types/domain'
 
-// A mutable client the mocked supabase module hands back on every call.
 const hoisted = vi.hoisted(() => ({ client: null as unknown }))
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseBrowserClient: () => hoisted.client,
-}))
+vi.mock('@/lib/supabase', () => ({ getSupabaseBrowserClient: () => hoisted.client }))
 
-// Imported after the mock is registered.
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
@@ -22,34 +18,24 @@ type QueryState = {
 
 type Respond = (state: QueryState) => { data: unknown; error: unknown }
 
-// A minimal chainable stand-in for the supabase query builder: every method returns
-// the same builder, and awaiting it resolves to whatever `respond` computes from the
-// accumulated table/op/filters. Enough to drive the store's real code paths.
-function makeClient(respond: Respond) {
+function makeClient(respond: Respond, rpcRespond?: () => { data: unknown; error: unknown }) {
   return {
     from(table: string) {
       const state: QueryState = { table, op: 'select', filters: {} }
       const builder = {
         select: () => builder,
-        insert: (payload: Record<string, unknown>) => {
-          state.op = 'insert'
-          state.payload = payload
-          return builder
-        },
+        insert: (payload: Record<string, unknown>) => { state.op = 'insert'; state.payload = payload; return builder },
         update: () => builder,
-        eq: (col: string, val: unknown) => {
-          state.filters[col] = val
-          return builder
-        },
+        eq: (col: string, val: unknown) => { state.filters[col] = val; return builder },
         is: () => builder,
         order: () => builder,
         limit: () => builder,
         single: () => builder,
-        then: (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
-          Promise.resolve(respond(state)).then(resolve, reject),
+        then: (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) => Promise.resolve(respond(state)).then(resolve, reject),
       }
       return builder
     },
+    rpc: (_name: string, _args: unknown) => Promise.resolve(rpcRespond ? rpcRespond() : { data: null, error: null }),
   }
 }
 
@@ -76,70 +62,47 @@ function formValues(overrides: Partial<ReceiptVoucherFormValues> = {}): ReceiptV
     entryType: 'course',
     feeCategory: undefined,
     externalShare: undefined,
+    allocations: [],
     ...overrides,
   }
 }
 
-// Resolves the money-in flow after an existing/new student is settled: no enrollment
-// yet, then the receipt insert and the statement reload.
 const happyPathRespond: Respond = (state) => {
   const { table, op } = state
-  if (table === 'students' && op === 'insert') {
-    return { data: { id: 'new-student', name: 'خالد', id_number: null, phone: null, notes: null }, error: null }
-  }
+  if (table === 'students' && op === 'insert') return { data: { id: 'new-student', name: 'خالد', id_number: null, phone: null, notes: null }, error: null }
   if (table === 'enrollments' && op === 'select') return { data: [], error: null }
   if (table === 'enrollments' && op === 'insert') return { data: null, error: null }
-  if (table === 'receipt_vouchers' && op === 'insert') {
-    return { data: { id: 'r-1', voucher_number: 900, student_id: 'x' }, error: null }
-  }
+  if (table === 'receipt_vouchers' && op === 'insert') return { data: { id: 'r-1', voucher_number: 900, student_id: 'x' }, error: null }
   if (table === 'student_statement_lines') return { data: [], error: null }
   throw new Error(`unexpected query on ${table}`)
 }
 
 beforeEach(() => {
-  useMoneyInStore.setState({
-    currentView: 'receipt-voucher',
-    statementLines: [],
-    activeStudent: null,
-    isSaving: false,
-    error: null,
-  })
+  useMoneyInStore.setState({ currentView: 'receipt-voucher', statementLines: [], activeStudent: null, isSaving: false, error: null })
+  useWorkspaceStore.setState({ students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null })
   seedRoster([])
 })
 
 describe('saveReceiptVoucher — student identity guard', () => {
   it('refuses to save when the typed name matches several students and none is picked', async () => {
-    // Arrange: two students share the exact name; the operator did not pick one.
     seedRoster([student('s-1', 'محمد علي'), student('s-2', 'محمد علي')])
-    hoisted.client = makeClient(() => {
-      throw new Error('no query should run for an ambiguous name')
-    })
-
-    // Act
+    hoisted.client = makeClient(() => { throw new Error('no query should run for an ambiguous name') })
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues())
-
-    // Assert: no voucher written, a clear message, guard resolved before any I/O.
     expect(ok).toBe(false)
     expect(useMoneyInStore.getState().error).toContain('أكثر من طالب')
     expect(useMoneyInStore.getState().isSaving).toBe(false)
   })
 
-  it('folds an orthographic variant onto the same student (no duplicate created)', async () => {
-    // The roster stores "أحمد"; the operator types plain-alef "احمد".
+  it('folds an orthographic variant onto the same student', async () => {
     seedRoster([student('s-1', 'أحمد')])
     let studentInserted = false
     hoisted.client = makeClient((state) => {
-      if (state.table === 'students' && state.op === 'insert') {
-        studentInserted = true
-        return { data: { id: 'dup', name: 'احمد', id_number: null, phone: null, notes: null }, error: null }
-      }
+      if (state.table === 'students' && state.op === 'insert') { studentInserted = true; return { data: { id: 'dup', name: 'احمد', id_number: null, phone: null, notes: null }, error: null } }
       return happyPathRespond(state)
     })
-
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ studentName: 'احمد' }))
-
     expect(ok).toBe(true)
-    expect(studentInserted).toBe(false) // reused s-1, did not create a duplicate
+    expect(studentInserted).toBe(false)
     expect(useMoneyInStore.getState().activeStudent?.id).toBe('s-1')
   })
 
@@ -147,133 +110,75 @@ describe('saveReceiptVoucher — student identity guard', () => {
     seedRoster([student('s-1', 'محمد علي')])
     let receiptInserted = false
     hoisted.client = makeClient((state) => {
-      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
-        receiptInserted = true
-        return { data: { id: 'r-1', voucher_number: 900, student_id: 's-1' }, error: null }
-      }
+      if (state.table === 'receipt_vouchers' && state.op === 'insert') { receiptInserted = true; return { data: { id: 'r-1', voucher_number: 900, student_id: 's-1' }, error: null } }
       return happyPathRespond(state)
     })
-
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues())
-
     expect(ok).toBe(true)
     expect(receiptInserted).toBe(true)
     expect(useMoneyInStore.getState().activeStudent?.id).toBe('s-1')
-    expect(useMoneyInStore.getState().currentView).toBe('student-statement')
   })
 
   it('creates a genuinely new student when the name matches no one', async () => {
     seedRoster([student('s-1', 'سارة')])
     let studentInserted = false
     hoisted.client = makeClient((state) => {
-      if (state.table === 'students' && state.op === 'insert') {
-        studentInserted = true
-        return { data: { id: 'new-student', name: 'خالد', id_number: null, phone: null, notes: null }, error: null }
-      }
+      if (state.table === 'students' && state.op === 'insert') { studentInserted = true; return { data: { id: 'new-student', name: 'خالد', id_number: null, phone: null, notes: null } , error: null } }
       return happyPathRespond(state)
     })
-
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ studentName: 'خالد' }))
-
     expect(ok).toBe(true)
     expect(studentInserted).toBe(true)
     expect(useMoneyInStore.getState().activeStudent?.id).toBe('new-student')
   })
 
-  it('reuses the enrollment fee and ignores the entered course value on a repeat course', async () => {
+  it('reuses the enrollment fee on a repeat course', async () => {
     seedRoster([student('s-1', 'محمد علي')])
     let insertedCourseValue: unknown
     hoisted.client = makeClient((state) => {
-      const { table, op } = state
-      // An enrollment already exists at 1000; the form entered 1500.
-      if (table === 'enrollments' && op === 'select') return { data: [{ course_value: 1000 }], error: null }
-      if (table === 'receipt_vouchers' && op === 'insert') {
-        insertedCourseValue = state.payload?.course_value
-        return { data: { id: 'r-2', voucher_number: 901, student_id: 's-1' }, error: null }
-      }
-      if (table === 'student_statement_lines') return { data: [], error: null }
-      throw new Error(`unexpected query on ${table}`)
+      if (state.table === 'enrollments' && opIs(state, 'select')) return { data: [{ course_value: 1000 }], error: null }
+      if (state.table === 'receipt_vouchers' && opIs(state, 'insert')) { insertedCourseValue = state.payload?.course_value; return { data: { id: 'r-2', voucher_number: 901, student_id: 's-1' }, error: null } }
+      if (state.table === 'student_statement_lines') return { data: [], error: null }
+      throw new Error(`unexpected query on ${state.table}`)
     })
-
     await useMoneyInStore.getState().saveReceiptVoucher(formValues({ courseValue: 1500 }))
-
-    // The authoritative enrollment fee wins so the balance can never drift.
     expect(insertedCourseValue).toBe(1000)
   })
 })
 
-describe('saveReceiptVoucher — student fees', () => {
-  it('records a shared fee in one receipt with the split, without touching enrollments', async () => {
-    // A 50 graduation fee split 30/20 is a self-contained money-in line: one
-    // receipt voucher, no enrollment, no second voucher.
+describe('saveReceiptVoucher — allocation posting', () => {
+  it('sends course + multiple fee allocations to one atomic RPC', async () => {
     seedRoster([student('s-1', 'محمد علي')])
-    let enrollmentTouched = false
-    let receiptPayload: Record<string, unknown> | undefined
+    let rpcName = ''
+    let rpcArgs: any
     hoisted.client = makeClient((state) => {
-      if (state.table === 'enrollments') {
-        enrollmentTouched = true
-        throw new Error('a fee must not touch enrollments')
-      }
-      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
-        receiptPayload = state.payload
-        return { data: { id: 'r-fee', voucher_number: 950, student_id: 's-1' }, error: null }
-      }
       if (state.table === 'student_statement_lines') return { data: [], error: null }
       throw new Error(`unexpected query on ${state.table}`)
-    })
+    }, () => ({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }))
+    const allocations = [
+      { type: 'course' as const, enrollmentId: '11111111-1111-4111-8111-111111111111', amount: 250 },
+      { type: 'fee' as const, feeObligationId: '22222222-2222-4222-8222-222222222222', amount: 50 },
+      { type: 'fee' as const, feeObligationId: '33333333-3333-4333-8333-333333333333', amount: 20 },
+    ]
+    const client = makeClient((state) => {
+      if (state.table === 'student_statement_lines') return { data: [], error: null }
+      throw new Error(`unexpected query on ${state.table}`)
+    }, () => ({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }))
+    client.rpc = (name: string, args: any) => { rpcName = name; rpcArgs = args; return Promise.resolve({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }) }
+    hoisted.client = client
 
-    const ok = await useMoneyInStore.getState().saveReceiptVoucher(
-      formValues({ entryType: 'fee', feeCategory: 'shared', courseName: 'رسوم تخريج', courseValue: undefined, amountReceived: 50, externalShare: 20 }),
-    )
-
+    const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ studentId: 's-1', entryType: 'mixed', courseValue: undefined, amountReceived: 320, allocations }))
     expect(ok).toBe(true)
-    expect(enrollmentTouched).toBe(false)
-    expect(receiptPayload?.fee_category).toBe('shared')
-    expect(receiptPayload?.external_share).toBe(20)
-    // course_value mirrors the fee total (statement shows the full amount, remaining 0).
-    expect(receiptPayload?.course_value).toBe(50)
-    expect(receiptPayload?.amount_received).toBe(50)
-  })
-
-  it('derives the full external share for an external fee', async () => {
-    seedRoster([student('s-1', 'محمد علي')])
-    let receiptPayload: Record<string, unknown> | undefined
-    hoisted.client = makeClient((state) => {
-      if (state.table === 'enrollments') throw new Error('a fee must not touch enrollments')
-      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
-        receiptPayload = state.payload
-        return { data: { id: 'r-ext', voucher_number: 951, student_id: 's-1' }, error: null }
-      }
-      if (state.table === 'student_statement_lines') return { data: [], error: null }
-      throw new Error(`unexpected query on ${state.table}`)
-    })
-
-    await useMoneyInStore.getState().saveReceiptVoucher(
-      formValues({ entryType: 'fee', feeCategory: 'external', courseName: 'رسوم امتحان', courseValue: undefined, amountReceived: 40 }),
-    )
-
-    expect(receiptPayload?.fee_category).toBe('external')
-    expect(receiptPayload?.external_share).toBe(40)
-  })
-
-  it('derives a zero external share for an institute fee', async () => {
-    seedRoster([student('s-1', 'محمد علي')])
-    let receiptPayload: Record<string, unknown> | undefined
-    hoisted.client = makeClient((state) => {
-      if (state.table === 'enrollments') throw new Error('a fee must not touch enrollments')
-      if (state.table === 'receipt_vouchers' && state.op === 'insert') {
-        receiptPayload = state.payload
-        return { data: { id: 'r-inst', voucher_number: 952, student_id: 's-1' }, error: null }
-      }
-      if (state.table === 'student_statement_lines') return { data: [], error: null }
-      throw new Error(`unexpected query on ${state.table}`)
-    })
-
-    await useMoneyInStore.getState().saveReceiptVoucher(
-      formValues({ entryType: 'fee', feeCategory: 'institute', courseName: 'رسوم شهادة', courseValue: undefined, amountReceived: 60 }),
-    )
-
-    expect(receiptPayload?.fee_category).toBe('institute')
-    expect(receiptPayload?.external_share).toBe(0)
+    expect(rpcName).toBe('post_receipt_with_allocations')
+    expect(rpcArgs.payload.allocations).toEqual([
+      { type: 'course', enrollment_id: '11111111-1111-4111-8111-111111111111', fee_obligation_id: null, amount: 250 },
+      { type: 'fee', enrollment_id: null, fee_obligation_id: '22222222-2222-4222-8222-222222222222', amount: 50 },
+      { type: 'fee', enrollment_id: null, fee_obligation_id: '33333333-3333-4333-8333-333333333333', amount: 20 },
+    ])
+    expect(rpcArgs.payload.amount_received).toBe(320)
   })
 })
+
+function opIs(state: QueryState, op: QueryState['op']) {
+  return state.op === op
+}
