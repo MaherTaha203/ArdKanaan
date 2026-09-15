@@ -96,7 +96,7 @@ export function StudentStatementPrint({
         </tbody>
       </table>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-start">
         <SiteQr />
       </div>
     </PrintPreview>
