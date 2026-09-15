@@ -59,7 +59,8 @@ test('one receipt can cover course dues and multiple fee obligations', async ({ 
   await dialog.getByRole('button', { name: /رسوم تخريج/ }).click()
   await dialog.getByRole('button', { name: /رسوم شهادة/ }).click()
 
-  await expect(dialog.getByText('إجمالي البنود: 370')).toBeVisible()
+  await expect(dialog.getByText('إجمالي البنود').last()).toBeVisible()
+  await expect(dialog.getByText('370').last()).toBeVisible()
   await expect(dialog.getByLabel('المبلغ المقبوض')).toHaveValue('370')
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
 
@@ -68,6 +69,11 @@ test('one receipt can cover course dues and multiple fee obligations', async ({ 
     { timeout: 5000, message: `receipt count=0; console=${consoleErrors.join(' | ')}; requests=${requests.join(' | ')}; invalid=${await dialog.locator('[aria-invalid="true"]').evaluateAll((nodes) => nodes.map((node) => ({ name: node.getAttribute('name'), ariaLabel: node.getAttribute('aria-label'), value: (node as HTMLInputElement).value, describedBy: node.getAttribute('aria-describedby') })))}` },
   ).toBe(1)
   expect(handle.receiptAllocations).toHaveLength(3)
+  expect(handle.receiptAllocations).toEqual(expect.arrayContaining([
+    expect.objectContaining({ allocation_type: 'course', amount: 300 }),
+    expect.objectContaining({ allocation_type: 'fee', amount: 50 }),
+    expect.objectContaining({ allocation_type: 'fee', amount: 20 }),
+  ]))
   expect(handle.paymentInserts).toHaveLength(0)
   expect(handle.receiptInserts[0]).toMatchObject({ amount_received: 370, allocation_mode: true })
   await expect(dialog.getByText('تم حفظ السند')).toBeVisible()
