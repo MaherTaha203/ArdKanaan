@@ -155,9 +155,6 @@ export function ReceiptSheet() {
           : 'mixed'
 
   function setAllocations(next: ReceiptAllocationFormValue[]) {
-    // Allocation validation belongs to the submit boundary. Running an async
-    // resolver on every click can race with an immediate submit in E2E/browser
-    // interaction, while the submit itself remains fully schema-validated.
     form.setValue('allocations', next, { shouldValidate: false, shouldDirty: true })
     if (next.length > 0) {
       form.setValue('amountReceived', next.reduce((sum, item) => sum + item.amount, 0), { shouldValidate: false, shouldDirty: true })
@@ -231,6 +228,21 @@ export function ReceiptSheet() {
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
+  function submitForm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const result = receiptVoucherFormSchema.safeParse(form.getValues())
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const field = issue.path[0]
+        if (typeof field === 'string') {
+          form.setError(field as keyof ReceiptVoucherFormValues, { type: issue.code, message: issue.message })
+        }
+      }
+      return
+    }
+    void onSubmit(result.data)
+  }
+
   const busy = isEdit ? adminBusy : isSaving
   const showError = error || adminError
   const hasAllocations = watchedAllocations.length > 0
@@ -242,7 +254,7 @@ export function ReceiptSheet() {
         {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? (
           <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={closeOverlay}>إغلاق بعد الطباعة</Button></div>
         ) : (
-          <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          <form className="space-y-4" noValidate onSubmit={submitForm}>
             {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
 
             {!isEdit && pickedStudentId ? (
