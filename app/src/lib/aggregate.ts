@@ -43,6 +43,7 @@ function chronological(lines: StudentStatementLine[]) {
 }
 
 export type StudentCourseBreakdown = {
+  enrollmentId?: string
   courseName: string
   fee: number
   paid: number
@@ -66,36 +67,55 @@ export function studentCourseBreakdown(
 ): StudentCourseBreakdown[] {
   const studentLines = lines.filter((line) => line.studentId === studentId && (line.entryType ?? 'course') === 'course')
   const studentEnrollments = enrollments.filter((enrollment) => enrollment.studentId === studentId)
+  const enrollmentsById = new Map(studentEnrollments.map((enrollment) => [enrollment.id, enrollment]))
+  const enrollmentsByName = new Map<string, Enrollment[]>()
+  for (const enrollment of studentEnrollments) {
+    const bucket = enrollmentsByName.get(enrollment.courseName)
+    if (bucket) bucket.push(enrollment)
+    else enrollmentsByName.set(enrollment.courseName, [enrollment])
+  }
 
-  type Bucket = { paid: number; fee: number; remaining: number; latestKey: string }
-  const byCourse = new Map<string, Bucket>()
+  type Bucket = { enrollmentId?: string; courseName: string; paid: number; fee: number; remaining: number; latestKey: string }
+  const byEnrollment = new Map<string, Bucket>()
+
   for (const line of studentLines) {
-    const key = `${line.voucherDate}#${String(line.voucherNumber).padStart(12, '0')}`
-    const bucket = byCourse.get(line.courseName)
+    const enrollment = line.enrollmentId ? enrollmentsById.get(line.enrollmentId) : undefined
+    const fallbackMatches = enrollment ? [] : (enrollmentsByName.get(line.courseName) ?? [])
+    const resolvedEnrollment = enrollment ?? (fallbackMatches.length === 1 ? fallbackMatches[0] : undefined)
+    const key = resolvedEnrollment ? `enrollment:${resolvedEnrollment.id}` : `legacy:${line.courseName}`
+    const chronologicalKey = `${line.voucherDate}#${String(line.voucherNumber).padStart(12, '0')}`
+    const bucket = byEnrollment.get(key)
     if (!bucket) {
-      byCourse.set(line.courseName, { paid: line.amountReceived, fee: line.courseValue, remaining: line.remainingBalance, latestKey: key })
+      byEnrollment.set(key, {
+        enrollmentId: resolvedEnrollment?.id,
+        courseName: resolvedEnrollment?.courseName ?? line.courseName,
+        paid: line.amountReceived,
+        fee: resolvedEnrollment?.courseValue ?? line.courseValue,
+        remaining: line.remainingBalance,
+        latestKey: chronologicalKey,
+      })
     } else {
       bucket.paid += line.amountReceived
-      if (key >= bucket.latestKey) {
-        bucket.fee = line.courseValue
+      if (chronologicalKey >= bucket.latestKey) {
+        bucket.fee = resolvedEnrollment?.courseValue ?? line.courseValue
         bucket.remaining = line.remainingBalance
-        bucket.latestKey = key
+        bucket.latestKey = chronologicalKey
       }
     }
   }
 
   const result: StudentCourseBreakdown[] = []
-  const seen = new Set<string>()
-  for (const [courseName, bucket] of byCourse) {
-    seen.add(courseName)
-    result.push({ courseName, fee: bucket.fee, paid: bucket.paid, remaining: bucket.remaining })
+  for (const bucket of byEnrollment.values()) {
+    result.push({ enrollmentId: bucket.enrollmentId, courseName: bucket.courseName, fee: bucket.fee, paid: bucket.paid, remaining: bucket.remaining })
   }
+
+  const seenEnrollmentIds = new Set(result.flatMap((entry) => entry.enrollmentId ? [entry.enrollmentId] : []))
   for (const enrollment of studentEnrollments) {
-    if (seen.has(enrollment.courseName)) continue
-    seen.add(enrollment.courseName)
-    result.push({ courseName: enrollment.courseName, fee: enrollment.courseValue, paid: 0, remaining: enrollment.courseValue })
+    if (seenEnrollmentIds.has(enrollment.id)) continue
+    result.push({ enrollmentId: enrollment.id, courseName: enrollment.courseName, fee: enrollment.courseValue, paid: 0, remaining: enrollment.courseValue })
   }
-  return result.sort((a, b) => a.courseName.localeCompare(b.courseName, 'ar'))
+
+  return result.sort((a, b) => a.courseName.localeCompare(b.courseName, 'ar') || (a.enrollmentId ?? '').localeCompare(b.enrollmentId ?? ''))
 }
 
 function feeRemaining(fee: FeeObligation, lines: StudentStatementLine[]) {

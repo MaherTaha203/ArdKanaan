@@ -18,10 +18,9 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const MAX_SUGGESTIONS = 8
 
-// Register an existing student in a course. Picking a student is required (keyboard
-// or mouse); the fee defaults to the course's base fee — or, when the course has no
-// standard fee, starts empty and must be entered — and is stored as the authoritative
-// enrollment fee (unchanged by later course-fee edits).
+// Register an existing student in a course. The amount shown here comes from the
+// course catalog price and is read-only. The server/store also derives the enrollment
+// snapshot from that same course price, so the client cannot create a different fee.
 export function EnrollStudentSheet() {
   const closeOverlay = useShellStore((state) => state.closeOverlay)
   const enrollCourseId = useShellStore((state) => state.enrollCourseId)
@@ -41,21 +40,16 @@ export function EnrollStudentSheet() {
     defaultValues: {
       studentId: '',
       studentName: '',
-      // A course with a standard fee pre-fills it; one without starts blank so the
-      // operator enters an amount consciously (a blank field is rejected, not saved as 0).
       fee: course?.baseFee != null ? String(course.baseFee) : '',
     },
   })
 
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  // Index of the keyboard-highlighted option, or -1 for none.
   const [highlighted, setHighlighted] = useState(-1)
   const listId = useId()
   const optionId = (index: number) => `${listId}-opt-${index}`
   const studentId = useWatch({ control: form.control, name: 'studentId' })
-  // The picked student's display name is derived from the id — one source of truth, so
-  // the search box and the confirmation line can never drift apart.
   const pickedName = studentId ? (students.find((item) => item.id === studentId)?.name ?? '') : ''
 
   useLayoutEffect(() => {
@@ -65,20 +59,16 @@ export function EnrollStudentSheet() {
   const suggestions = useMemo(() => {
     const term = normalizeArabic(query.trim())
     if (!term) return []
-    return students
-      .filter((student) => normalizeArabic(student.name).includes(term))
-      .slice(0, MAX_SUGGESTIONS)
+    return students.filter((student) => normalizeArabic(student.name).includes(term)).slice(0, MAX_SUGGESTIONS)
   }, [students, query])
 
   const showDropdown = open && query.trim().length > 0
   const activeOptionId = showDropdown && highlighted >= 0 ? optionId(highlighted) : undefined
 
-  // Keep the highlighted option scrolled into view as it changes.
   useEffect(() => {
     if (showDropdown && highlighted >= 0) {
       document.getElementById(optionId(highlighted))?.scrollIntoView?.({ block: 'nearest' })
     }
-    // optionId is derived from a stable useId; not a reactive dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlighted, showDropdown])
 
@@ -108,9 +98,6 @@ export function EnrollStudentSheet() {
     }
   }
 
-  // Full keyboard operation of the combobox: arrows move the highlight, Enter picks the
-  // highlighted student, Escape closes just the list. With nothing highlighted, Enter /
-  // Escape bubble to the sheet (advance / close).
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
@@ -193,9 +180,7 @@ export function EnrollStudentSheet() {
                         aria-selected={highlighted === index}
                         onMouseMove={() => setHighlighted(index)}
                         onClick={() => pick(student.id, student.name)}
-                        className={`flex w-full cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start ${
-                          highlighted === index ? 'bg-highlight' : ''
-                        }`}
+                        className={`flex w-full cursor-pointer flex-col items-start gap-0.5 px-3.5 py-2 text-start ${highlighted === index ? 'bg-highlight' : ''}`}
                       >
                         <span className="text-sm font-medium text-foreground">{student.name}</span>
                         {student.idNumber || student.phone ? (
@@ -222,20 +207,23 @@ export function EnrollStudentSheet() {
           </p>
         ) : null}
 
-        <Field label="رسوم التسجيل" error={form.formState.errors.fee?.message}>
+        <Field label="رسوم الدورة" error={form.formState.errors.fee?.message}>
           {(control) => (
             <Input
               type="text"
               inputMode="numeric"
               className="figure"
               placeholder="0"
+              readOnly
               {...control}
               {...form.register('fee')}
             />
           )}
         </Field>
 
-        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy}>
+        {course.baseFee == null ? <p role="alert" className="text-sm text-clay">لا يمكن تسجيل الطالب قبل تحديد رسوم الدورة.</p> : null}
+
+        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy || course.baseFee == null}>
           <Check className="size-4" />
           {isBusy ? 'جارٍ التسجيل…' : 'تسجيل الطالب'}
         </Button>

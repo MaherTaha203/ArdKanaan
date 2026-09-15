@@ -5,13 +5,13 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 // Course catalog administration + student registration. Courses are pure catalog
-// metadata (no financial fact). Registering a student writes an ENROLLMENT — the
-// authoritative (student, course, fee) link the financial firewall relies on — so
-// this stays consistent with the existing money logic; it never touches a voucher.
+// metadata. Registering a student writes an enrollment using the course's pre-defined
+// price as the authoritative financial snapshot; it never asks the receipt to re-enter
+// the course price.
 
 const NOT_CONFIGURED = 'الاتصال بقاعدة البيانات غير مهيأ بعد.'
 
-type CourseAdminStore = {
+ type CourseAdminStore = {
   isBusy: boolean
   error: string | null
   clearError: () => void
@@ -85,21 +85,20 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
     try {
       const course = useWorkspaceStore.getState().courses.find((item) => item.id === courseId)
       if (!course) throw new Error('COURSE_NOT_FOUND')
+      if (course.baseFee == null) {
+        set({ isBusy: false, error: 'لا يمكن تسجيل الطالب قبل تحديد رسوم الدورة.' })
+        return false
+      }
 
-      // "Already enrolled" is checked canonically on course_id — the catalog identity
-      // that survives a course rename — OR on the snapshot course_name, which catches a
-      // legacy enrollment (course_id null) for the same course. Keying on the (possibly
-      // renamed) name alone would let a rename spawn a second enrollment for one course,
-      // giving the student two independent firewall ceilings; keying on the id prevents
-      // that. We never silently change an existing enrollment's (authoritative) fee.
+      // Enrollment identity is (student, course). The course price is copied once into
+      // the enrollment and becomes the immutable financial snapshot. A course rename or
+      // another course with the same display name must never change this identity.
       const { data: existing, error: lookupError } = await supabase
         .from('enrollments')
-        .select('id, course_id, course_name')
+        .select('id, course_id')
         .eq('student_id', values.studentId)
       if (lookupError) throw lookupError
-      const alreadyEnrolled = (existing ?? []).some(
-        (row) => row.course_id === courseId || row.course_name === course.name,
-      )
+      const alreadyEnrolled = (existing ?? []).some((row) => row.course_id === courseId)
       if (alreadyEnrolled) {
         set({ isBusy: false, error: 'هذا الطالب مسجّل في هذه الدورة بالفعل.' })
         return false
@@ -109,15 +108,13 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
         student_id: values.studentId,
         course_id: courseId,
         course_name: course.name,
-        course_value: Number(values.fee),
+        course_value: course.baseFee,
       })
       if (insertError) throw insertError
       set({ isBusy: false })
       return true
     } catch (error) {
       console.error('registerStudent failed', error)
-      // A unique-violation here means a concurrent submission won the race and the DB
-      // constraint (student+course) blocked the duplicate — report it accurately.
       const isDuplicate = (error as { code?: string }).code === '23505'
       set({
         isBusy: false,

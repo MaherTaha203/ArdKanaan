@@ -1,6 +1,22 @@
 begin;
 
 -- Enrollment is the authoritative financial identity. Course names remain display data.
+-- Preserve legacy enrollments whose course definition was removed by reconstructing the
+-- missing course from their immutable enrollment snapshot before enforcing the FK identity.
+insert into public.courses (name, base_fee)
+select e.course_name, min(e.course_value)
+from public.enrollments e
+where e.course_id is null
+  and not exists (select 1 from public.courses c where c.name = e.course_name)
+group by e.course_name
+having min(e.course_value) = max(e.course_value);
+
+do $$ begin
+  if exists (select 1 from public.enrollments e where e.course_id is null and not exists (select 1 from public.courses c where c.name = e.course_name)) then
+    raise exception 'ENROLLMENT_COURSE_LINK_MISSING';
+  end if;
+end $$;
+
 update public.enrollments e
 set course_id = c.id
 from public.courses c
