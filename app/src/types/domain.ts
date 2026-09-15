@@ -38,7 +38,7 @@ export type Course = {
 export type Enrollment = {
   id: string
   studentId: string
-  courseId: string | null
+  courseId: string
   courseName: string
   courseValue: number
 }
@@ -48,7 +48,8 @@ export type FeeCategory = 'institute' | 'external' | 'shared'
 export type FeeObligation = {
   id: string
   studentId: string
-  courseId: string | null
+  enrollmentId: string
+  courseId: string
   courseName: string
   description: string
   amount: number
