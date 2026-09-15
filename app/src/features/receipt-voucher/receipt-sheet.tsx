@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowDownLeft, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useForm, useWatch, type DefaultValues } from 'react-hook-form'
 
 import { ActionSheet } from '@/components/shell/action-sheet'
@@ -14,7 +14,7 @@ import { VoucherPrint } from '@/features/print/voucher-print'
 import { receiptVoucherFormSchema, type ReceiptAllocationFormValue, type ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { StudentPicker } from '@/features/receipt-voucher/student-picker'
 import { studentCourseBreakdown } from '@/lib/aggregate'
-import { formatDate, formatNumber, todayIsoDate } from '@/lib/format'
+import { formatNumber, todayIsoDate } from '@/lib/format'
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useSettingsStore } from '@/store/use-settings-store'
 import { useShellStore } from '@/store/use-shell-store'
@@ -170,7 +170,7 @@ export function ReceiptSheet() {
           {studentCourses.every((course) => course.remaining <= 0) && studentFees.length === 0 ? <p className="py-5 text-center text-sm text-faint">لا توجد مستحقات مفتوحة لهذا الطالب.</p> : null}
           {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="number" min="1" step="1" value={allocation.amount} readOnly={allocation.type === 'fee'} onChange={(event) => updateAllocation(index, Number(event.target.value))} className="figure-input w-28 rounded-lg border border-border bg-background px-2 py-1.5 text-sm" /><button type="button" aria-label={`حذف ${label}`} onClick={() => removeAllocation(index)} className="p-1.5 text-muted-foreground" title="حذف"><Trash2 className="size-4" /></button></div> })}<div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold"><span>إجمالي البنود</span><span>{formatNumber(selectedAmount)} {currencySymbol}</span></div></div> : null}
         </section> : null}
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} />}</Field><Field label="المبلغ المقبوض">{(control) => <Input {...control} type="number" min="1" step="1" readOnly={hasAllocations} />}</Field></div>
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض">{(control) => <Input {...control} type="number" min="1" step="1" readOnly={hasAllocations} />}</Field></div>
         <Field label="اسم الدافع">{(control) => <Input {...control} placeholder="اختياري" />}</Field>
         <Field label="ملاحظات">{(control) => <Textarea {...control} rows={3} placeholder="اختياري" />}</Field>
         <Button type="button" size="lg" className="w-full" disabled={busy} onClick={buildAndSubmit}>{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
