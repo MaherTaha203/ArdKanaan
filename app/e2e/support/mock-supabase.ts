@@ -57,7 +57,7 @@ const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers
 export type MockHandle = {
   receiptInserts: Array<Record<string, unknown>>
   paymentInserts: Array<Record<string, unknown>>
-  feeObligationInserts: Array<Record<string, unknown>>
+  feeObligationInserts: Array<Record<string, unknown>[]>
   receiptAllocations: Array<Record<string, unknown>>
   studentInserts: Array<Record<string, unknown>>
   studentUpdates: Array<{ id: string | null; body: Record<string, unknown> }>
@@ -128,11 +128,12 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       const body = safeJson(request.postData()) as { payload?: Record<string, unknown> }
       const payload = body.payload ?? {}
       const allocations = Array.isArray(payload.allocations) ? payload.allocations as Array<Record<string, unknown>> : []
-      handle.receiptInserts.push({ ...payload, allocation_mode: true })
-      handle.receiptAllocations.push(...allocations)
+      const receiptId = `receipt-${handle.receiptInserts.length + 1}`
+      handle.receiptInserts.push({ ...payload, id: receiptId, voucher_number: 900 + handle.receiptInserts.length + 1, allocation_mode: true })
+      handle.receiptAllocations.push(...allocations.map((allocation, index) => ({ ...allocation, id: `${receiptId}-allocation-${index + 1}`, receipt_voucher_id: receiptId, allocation_type: allocation.type, receipt_id: receiptId })))
       const amount = Number(payload.amount_received ?? 0)
-      activeMovements.push({ id: `receipt-${handle.receiptInserts.length}`, movement_type: 'receipt', voucher_number: 900 + handle.receiptInserts.length, voucher_date: String(payload.voucher_date ?? '2026-08-31'), amount, party_name: String(payload.student_name ?? ''), context: String(payload.course_name ?? 'تحصيل متعدّد') })
-      return json(route, { id: `receipt-${handle.receiptInserts.length}`, voucher_number: 900 + handle.receiptInserts.length, amount_received: amount })
+      activeMovements.push({ id: receiptId, movement_type: 'receipt', voucher_number: 900 + handle.receiptInserts.length, voucher_date: String(payload.voucher_date ?? '2026-08-31'), amount, party_name: String(payload.student_name ?? ''), context: String(payload.course_name ?? 'تحصيل متعدّد') })
+      return json(route, { id: receiptId, voucher_number: 900 + handle.receiptInserts.length, amount_received: amount })
     }
 
     if (method === 'HEAD') {
@@ -151,15 +152,14 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       if (table === 'student_statement_lines') {
         const lines: Record<string, unknown>[] = []
         for (const receipt of handle.receiptInserts) {
-          const allocations = handle.receiptAllocations.filter((allocation) => allocation)
-          const receiptAllocations = allocations.filter((allocation) => String(allocation.receipt_voucher_id ?? '') === String(receipt.id ?? ''))
+          const receiptAllocations = handle.receiptAllocations.filter((allocation) => String(allocation.receipt_voucher_id ?? '') === String(receipt.id ?? ''))
           if (receiptAllocations.length > 0) {
             for (const allocation of receiptAllocations) {
               const isFee = allocation.allocation_type === 'fee'
               const fee = feeObligations.find((item) => item.id === allocation.fee_obligation_id)
               const enrollment = enrollments.find((item) => item.id === allocation.enrollment_id)
               const amount = Number(allocation.amount ?? 0)
-              lines.push({ id: String(allocation.id ?? `${receipt.id}-${lines.length}`), voucher_number: Number(receipt.voucher_number ?? 900), voucher_date: String(receipt.voucher_date ?? '2026-08-31'), student_id: String(receipt.student_id ?? ''), student_name: String(receipt.student_name ?? ''), course_name: isFee ? fee?.description ?? 'رسم' : enrollment?.course_name ?? String(receipt.course_name ?? 'دورة'), course_value: isFee ? fee?.amount ?? amount : enrollment?.course_value ?? Number(receipt.course_value ?? amount), amount_received: amount, remaining_balance: 0, entry_type: isFee ? 'fee' : 'course', fee_obligation_id: isFee ? fee?.id ?? null : null, enrollment_id: isFee ? null : enrollment?.id ?? null })
+              lines.push({ id: String(allocation.id), voucher_number: Number(receipt.voucher_number ?? 900), voucher_date: String(receipt.voucher_date ?? '2026-08-31'), student_id: String(receipt.student_id ?? ''), student_name: String(receipt.student_name ?? ''), course_name: isFee ? fee?.description ?? 'رسم' : enrollment?.course_name ?? String(receipt.course_name ?? 'دورة'), course_value: isFee ? fee?.amount ?? amount : enrollment?.course_value ?? Number(receipt.course_value ?? amount), amount_received: amount, remaining_balance: 0, entry_type: isFee ? 'fee' : 'course', fee_obligation_id: isFee ? fee?.id ?? null : null, enrollment_id: isFee ? null : enrollment?.id ?? null })
             }
           } else {
             lines.push({ id: String(receipt.id ?? `legacy-${lines.length}`), voucher_number: Number(receipt.voucher_number ?? 900), voucher_date: String(receipt.voucher_date ?? '2026-08-31'), student_id: String(receipt.student_id ?? ''), student_name: String(receipt.student_name ?? ''), course_name: String(receipt.course_name ?? 'دورة'), course_value: Number(receipt.course_value ?? 0), amount_received: Number(receipt.amount_received ?? 0), remaining_balance: Number(receipt.course_value ?? 0) - Number(receipt.amount_received ?? 0), entry_type: 'course', fee_obligation_id: null, enrollment_id: null })
@@ -183,7 +183,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         return json(route, { id: 'new-student', name: '', id_number: null, phone: null, notes: null, ...(payload as object) }, 201)
       }
       if (table === 'enrollments') return json(route, [{}], 201)
-      if (table === 'fee_obligations') { handle.feeObligationInserts.push(payload as Record<string, unknown>); return json(route, [payload], 201) }
+      if (table === 'fee_obligations') { handle.feeObligationInserts.push([payload as Record<string, unknown>]); return json(route, [payload], 201) }
       if (table === 'receipt_vouchers') { handle.receiptInserts.push(payload as Record<string, unknown>); return json(route, { id: 'new-receipt', voucher_number: 900, voucher_date: '2026-08-31', student_id: 'new-student', student_name_snapshot: 'x', course_name: 'دورة', course_value: 1000, amount_received: 400, payer_name: '', notes: '', ...(payload as object) }, 201) }
       if (table === 'payment_vouchers') { handle.paymentInserts.push(payload as Record<string, unknown>); return json(route, { id: 'new-payment', voucher_number: 901, voucher_date: '2026-08-31', expense_type: 'مصروف', amount: 0, notes: '', ...(payload as object) }, 201) }
       return json(route, [{}], 201)
@@ -229,12 +229,12 @@ function applyEqFilters(rows: MockStudent[], params: URLSearchParams): MockStude
   return result
 }
 
-function applyEqFiltersLoose<T extends object>(rows: T[], params: URLSearchParams): T[] {
+function applyEqFiltersLoose<T extends Record<string, unknown>>(rows: T[], params: URLSearchParams): T[] {
   let result = rows
   for (const [key, raw] of params.entries()) {
     if (!raw.startsWith('eq.')) continue
     const value = raw.slice(3)
-    result = result.filter((row) => String((row as Record<string, unknown>)[key] ?? '') === value)
+    result = result.filter((row) => String(row[key] ?? '') === value)
   }
   return result
 }
