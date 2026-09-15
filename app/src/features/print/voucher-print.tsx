@@ -32,7 +32,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       onClose={onClose}
       meta={
         <>
-          <div className="figure text-[15px] font-extrabold text-[#dc2626]" dir="ltr">
+          <div className="figure text-left text-[15px] font-extrabold text-[#dc2626]" dir="ltr">
             <span dir="ltr" className="inline-block"># {ref}</span>
           </div>
           <div>
