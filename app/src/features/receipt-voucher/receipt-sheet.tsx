@@ -70,7 +70,10 @@ export function ReceiptSheet() {
   const [editStudentName, setEditStudentName] = useState('')
   const [savedVoucher, setSavedVoucher] = useState<FinancialMovement | null>(null)
 
-  const form = useForm<ReceiptVoucherFormValues>({ resolver: zodResolver(receiptVoucherFormSchema), defaultValues: buildDefaults(prefillName) })
+  const form = useForm<ReceiptVoucherFormValues>({
+    resolver: zodResolver(receiptVoucherFormSchema, undefined, { mode: 'sync' }),
+    defaultValues: buildDefaults(prefillName),
+  })
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
   const pickedStudentId = useWatch({ control: form.control, name: 'studentId' }) ?? ''
   const watchedAllocations = useWatch({ control: form.control, name: 'allocations' }) ?? []
@@ -90,13 +93,18 @@ export function ReceiptSheet() {
     return feeObligations
       .filter((fee) => fee.studentId === pickedStudentId && !fee.cancelledAt)
       .map((fee) => {
-        const paid = statementLines.filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id).reduce((sum, line) => sum + line.amountReceived, 0)
+        const paid = statementLines
+          .filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id)
+          .reduce((sum, line) => sum + line.amountReceived, 0)
         return { fee, remaining: Math.max(0, fee.amount - paid) }
       })
       .filter((item) => item.remaining > 0)
   }, [pickedStudentId, feeObligations, statementLines])
 
-  useLayoutEffect(() => { clearError(); clearAdminError() }, [clearError, clearAdminError])
+  useLayoutEffect(() => {
+    clearError()
+    clearAdminError()
+  }, [clearError, clearAdminError])
 
   useEffect(() => {
     if (!pickedStudentId) return
@@ -112,20 +120,50 @@ export function ReceiptSheet() {
       if (!active) return
       if (data) {
         setEditStudentName(data.studentName)
-        form.reset({ paymentDate: data.paymentDate, studentName: data.studentName, studentId: '', studentIdNumber: '', studentPhone: '', courseName: data.courseName, courseValue: data.courseValue, amountReceived: data.amountReceived, payerName: data.payerName, notes: data.notes, entryType: 'course', feeCategory: undefined, externalShare: undefined, allocations: [] })
+        form.reset({
+          paymentDate: data.paymentDate,
+          studentName: data.studentName,
+          studentId: '',
+          studentIdNumber: '',
+          studentPhone: '',
+          courseName: data.courseName,
+          courseValue: data.courseValue,
+          amountReceived: data.amountReceived,
+          payerName: data.payerName,
+          notes: data.notes,
+          entryType: 'course',
+          feeCategory: undefined,
+          externalShare: undefined,
+          allocations: [],
+        })
       }
       setLoadingEdit(false)
     })()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [editVoucherId, fetchReceipt, form])
 
   const selectedAmount = watchedAllocations.reduce((sum, item) => sum + item.amount, 0)
-  const activeType: 'course' | 'fee' | 'mixed' = watchedAllocations.length === 0 ? 'course' : watchedAllocations.every((item) => item.type === 'fee') ? 'fee' : watchedAllocations.every((item) => item.type === 'course') ? 'course' : 'mixed'
+  const activeType: 'course' | 'fee' | 'mixed' =
+    watchedAllocations.length === 0
+      ? 'course'
+      : watchedAllocations.every((item) => item.type === 'fee')
+        ? 'fee'
+        : watchedAllocations.every((item) => item.type === 'course')
+          ? 'course'
+          : 'mixed'
 
   function setAllocations(next: ReceiptAllocationFormValue[]) {
-    form.setValue('allocations', next, { shouldValidate: true, shouldDirty: true })
-    if (next.length > 0) form.setValue('amountReceived', next.reduce((sum, item) => sum + item.amount, 0), { shouldValidate: true, shouldDirty: true })
-    else form.resetField('amountReceived')
+    // Allocation validation belongs to the submit boundary. Running an async
+    // resolver on every click can race with an immediate submit in E2E/browser
+    // interaction, while the submit itself remains fully schema-validated.
+    form.setValue('allocations', next, { shouldValidate: false, shouldDirty: true })
+    if (next.length > 0) {
+      form.setValue('amountReceived', next.reduce((sum, item) => sum + item.amount, 0), { shouldValidate: false, shouldDirty: true })
+    } else {
+      form.resetField('amountReceived')
+    }
   }
 
   function addCourseAllocation(course: { courseName: string; fee: number; remaining: number }) {
@@ -180,7 +218,15 @@ export function ReceiptSheet() {
     const latestLine = useMoneyInStore.getState().statementLines.at(-1)
     if (activeStudent) selectStudent(activeStudent.id)
     if (latestLine) {
-      setSavedVoucher({ id: latestLine.id, movementType: 'receipt', voucherNumber: latestLine.voucherNumber, voucherDate: latestLine.voucherDate, amount: latestLine.amountReceived, partyName: latestLine.studentName, context: latestLine.courseName })
+      setSavedVoucher({
+        id: latestLine.id,
+        movementType: 'receipt',
+        voucherNumber: latestLine.voucherNumber,
+        voucherDate: latestLine.voucherDate,
+        amount: values.amountReceived,
+        partyName: latestLine.studentName,
+        context: latestLine.courseName,
+      })
     }
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
@@ -196,7 +242,7 @@ export function ReceiptSheet() {
         {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? (
           <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={closeOverlay}>إغلاق بعد الطباعة</Button></div>
         ) : (
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
             {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
 
             {!isEdit && pickedStudentId ? (
