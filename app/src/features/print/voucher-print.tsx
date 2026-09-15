@@ -65,8 +65,8 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
         </div>
       </div>
 
-      <div className="mt-16 flex justify-end">
-        <div className="flex w-[30%] min-w-[150px] flex-col items-center text-center">
+      <div className="mt-16 flex justify-end" dir="ltr">
+        <div className="flex w-[30%] min-w-[150px] flex-col items-center text-center" dir="rtl">
           <div className={`mb-2 w-[72%] border-t-2 ${HAIR}`} />
           <span className="text-[12px] font-bold text-[#1d4ed8]">التوقيع والاعتماد</span>
 
