@@ -172,7 +172,7 @@ export function ReceiptSheet() {
         </section> : null}
         <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض">{(control) => <Input {...control} type="number" min="1" step="1" readOnly={hasAllocations} />}</Field></div>
         <Field label="اسم الدافع">{(control) => <Input {...control} placeholder="اختياري" />}</Field>
-        <Field label="ملاحظات">{(control) => <Textarea {...control} rows={3} placeholder="اختياري" /></Field>
+        <Field label="ملاحظات">{(control) => <Textarea {...control} rows={3} placeholder="اختياري" />}</Field>
         <Button type="button" size="lg" className="w-full" disabled={busy} onClick={buildAndSubmit}>{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
       </form>}
     </ActionSheet>
