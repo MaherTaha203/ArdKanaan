@@ -31,7 +31,10 @@ describe('student fee architecture contracts', () => {
   })
 
   it('keeps external share out of institute revenue while preserving total cash', () => {
-    expect(hardening).toContain("v_external := v_external + v_fee_external")
+    expect(migration).toContain('v_external := v_external +')
+    expect(migration).toContain('external_share')
+    expect(hardening).toContain('v_external := v_external +')
+    expect(hardening).toContain('external_share')
   })
 
   it('requires fee receipts to use allocation mode', () => {
