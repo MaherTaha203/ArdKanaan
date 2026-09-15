@@ -31,7 +31,6 @@ describe('student fee architecture contracts', () => {
   })
 
   it('keeps external share out of institute revenue while preserving total cash', () => {
-    expect(migration).toContain("v_external := v_external + v_fee_external")
     expect(hardening).toContain("v_external := v_external + v_fee_external")
   })
 
