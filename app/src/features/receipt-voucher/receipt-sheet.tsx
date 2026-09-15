@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState, type FormEvent } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowDownLeft, Trash2 } from 'lucide-react'
@@ -228,7 +228,7 @@ export function ReceiptSheet() {
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
-  function submitForm(event: React.FormEvent<HTMLFormElement>) {
+  function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const result = receiptVoucherFormSchema.safeParse(form.getValues())
     if (!result.success) {
