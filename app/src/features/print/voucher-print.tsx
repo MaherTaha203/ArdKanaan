@@ -1,4 +1,5 @@
 import { PrintPreview } from '@/components/print/print-preview'
+import { SiteQr } from '@/components/print/site-qr'
 import { amountInWords } from '@/lib/amount-in-words'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef, voucherTypeLabel } from '@/lib/voucher'
@@ -66,6 +67,12 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
         <Signature label="أرض كنعان" brand />
         <Signature label={isReceipt ? 'توقيع الدافع' : 'توقيع المستلِم'} />
       </div>
+
+      {isReceipt ? (
+        <div className="mt-8 flex justify-end">
+          <SiteQr />
+        </div>
+      ) : null}
     </PrintPreview>
   )
 }
