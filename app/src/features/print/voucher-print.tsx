@@ -44,9 +44,9 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
         {movement.context ? <Row label={isReceipt ? 'عن الدورة' : 'بند المصروف'} value={movement.context} /> : null}
         <div className={`mt-4 border-t ${HAIR} pt-4`}>
           <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-            <div className="min-w-0">
+            <div className="min-w-0 text-right">
               <div className="text-[11px] font-medium text-[#64748b]">المبلغ بالحروف</div>
-              <div className="mt-1 w-full text-center">
+              <div className="mt-1 w-full text-right">
                 <div dir="rtl" className="text-[12.5px] font-semibold leading-5 text-[#334155]">{words.ar}</div>
                 <div dir="ltr" className="text-[12px] leading-5 text-[#64748b]">{words.en}</div>
               </div>
