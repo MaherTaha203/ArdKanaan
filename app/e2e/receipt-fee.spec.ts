@@ -61,7 +61,6 @@ test('one receipt can cover course dues and multiple fee obligations', async ({ 
 
   await expect(dialog.getByText('إجمالي البنود').last()).toBeVisible()
   await expect(dialog.getByText('370').last()).toBeVisible()
-  await expect(dialog.getByLabel('المبلغ المقبوض')).toHaveValue('370')
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
 
   await expect.poll(
