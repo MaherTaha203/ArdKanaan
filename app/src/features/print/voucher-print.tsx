@@ -32,7 +32,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       onClose={onClose}
       meta={
         <>
-          <div className="figure text-[15px] font-extrabold text-[#dc2626]">رقم {ref}</div>
+          <div className="figure text-[15px] font-extrabold text-[#dc2626]"># {ref}</div>
           <div>
             التاريخ <span className="figure">{formatDate(movement.voucherDate)}</span>
           </div>
@@ -45,10 +45,10 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
         <div className={`mt-4 border-t ${HAIR} pt-4`}>
           <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0">
-              <div className="text-[11px] font-medium text-[#64748b]">المبلغ كتابةً</div>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <span dir="rtl" className="text-[13px] font-semibold leading-6 text-[#334155]">{words.ar}</span>
-                <span dir="ltr" className="text-[11.5px] leading-5 text-[#64748b]">{words.en}</span>
+              <div className="text-[11px] font-medium text-[#64748b]">المبلغ بالحروف</div>
+              <div className="mt-1 w-full text-center">
+                <div dir="rtl" className="text-[12.5px] font-semibold leading-5 text-[#334155]">{words.ar}</div>
+                <div dir="ltr" className="text-[12px] leading-5 text-[#64748b]">{words.en}</div>
               </div>
             </div>
             <div className="text-end sm:min-w-[150px]">
@@ -69,7 +69,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       </div>
 
       {isReceipt ? (
-        <div className="mt-8 flex justify-start">
+        <div className="mt-10 flex justify-start">
           <SiteQr />
         </div>
       ) : null}
