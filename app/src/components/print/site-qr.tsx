@@ -13,7 +13,9 @@ export function SiteQr() {
         title={SITE_URL}
         className="block size-[20mm] shrink-0 object-contain"
       />
-      <span className="whitespace-nowrap text-[8px] font-medium text-[#64748b]">موقع أرض كنعان</span>
+      <span className="whitespace-nowrap text-center text-[7px] font-medium leading-3 text-[#64748b]">
+        امسح الكود للوصول الى موقع ارض كنعان
+      </span>
     </div>
   )
 }
