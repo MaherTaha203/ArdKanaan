@@ -65,16 +65,18 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
         </div>
       </div>
 
-      <div className="mt-16 grid grid-cols-2 gap-10">
-        <Signature label="أرض كنعان" brand />
-        <Signature label={isReceipt ? 'توقيع الدافع' : 'توقيع المستلِم'} />
-      </div>
-
-      {isReceipt ? (
-        <div className="mt-10 flex justify-start">
-          <SiteQr />
+      <div className="mt-16 flex flex-col items-end">
+        <div className="w-[46%] text-center">
+          <div className={`mb-2 border-t ${HAIR}`} />
+          <span className="text-[12px] font-bold text-[#1d4ed8]">توقيع أرض كنعان</span>
         </div>
-      ) : null}
+
+        {isReceipt ? (
+          <div className="mt-3 flex w-[46%] flex-col items-center">
+            <SiteQr />
+          </div>
+        ) : null}
+      </div>
     </PrintPreview>
   )
 }
@@ -84,15 +86,6 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-4 py-2 text-[14px]">
       <span className={MUTED}>{label}</span>
       <span className={`font-semibold ${INK}`}>{value}</span>
-    </div>
-  )
-}
-
-function Signature({ label, brand = false }: { label: string; brand?: boolean }) {
-  return (
-    <div className="text-center">
-      <div className={`mb-2 border-t ${HAIR}`} />
-      <span className={brand ? 'text-[12px] font-bold text-[#1d4ed8]' : `text-[12px] ${MUTED}`}>{label}</span>
     </div>
   )
 }
