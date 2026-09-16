@@ -36,10 +36,7 @@ function normalizePaymentVoucher(row: PaymentVoucherRow): PaymentVoucherLine {
 
 async function fetchPaymentVouchers() {
   const supabase = getSupabaseBrowserClient()
-
-  if (!supabase) {
-    throw new Error('عميل قاعدة البيانات غير مهيأ.')
-  }
+  if (!supabase) throw new Error('عميل قاعدة البيانات غير مهيأ.')
 
   const { data, error } = await supabase
     .from('payment_vouchers')
@@ -47,14 +44,11 @@ async function fetchPaymentVouchers() {
     .order('voucher_date', { ascending: true })
     .order('voucher_number', { ascending: true })
 
-  if (error) {
-    throw error
-  }
-
+  if (error) throw error
   return (data ?? []).map((row) => normalizePaymentVoucher(row as PaymentVoucherRow))
 }
 
-export const useMoneyOutStore = create<MoneyOutStore>((set) => ({
+export const useMoneyOutStore = create<MoneyOutStore>((set, get) => ({
   currentView: 'payment-voucher',
   vouchers: [],
   isSaving: false,
@@ -62,42 +56,36 @@ export const useMoneyOutStore = create<MoneyOutStore>((set) => ({
   clearError: () => set({ error: null }),
   goToPaymentVoucher: () => set({ currentView: 'payment-voucher' }),
   savePaymentVoucher: async (values) => {
-    const supabase = getSupabaseBrowserClient()
+    if (get().isSaving) {
+      set({ error: 'جارٍ حفظ سند الصرف بالفعل.' })
+      return false
+    }
 
+    const supabase = getSupabaseBrowserClient()
     if (!supabase) {
       set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.' })
       return false
     }
 
     set({ isSaving: true, error: null })
+    const idempotencyKey = crypto.randomUUID()
 
     try {
-      const { error: voucherError } = await supabase
-        .from('payment_vouchers')
-        .insert({
+      const { error: voucherError } = await supabase.rpc('post_payment_voucher', {
+        payload: {
           voucher_date: values.paymentDate,
           expense_type: values.expenseType.trim(),
           amount: values.amount,
           notes: values.notes.trim(),
-        })
-        .select('id, voucher_number, voucher_date, expense_type, amount, notes')
-        .single()
-
-      if (voucherError) {
-        throw voucherError
-      }
+          idempotency_key: idempotencyKey,
+        },
+      })
+      if (voucherError) throw voucherError
 
       const vouchers = await fetchPaymentVouchers()
-
-      set({
-        vouchers,
-        currentView: 'expense-record',
-        isSaving: false,
-      })
-
+      set({ vouchers, currentView: 'expense-record', isSaving: false })
       return true
     } catch (error) {
-      // Never surface a raw/technical error to the operator; log it and show a safe message.
       console.error('savePaymentVoucher failed', error)
       set({ isSaving: false, error: 'تعذّر حفظ سند الصرف. تحقّق من البيانات وحاول مرّة أخرى.' })
       return false

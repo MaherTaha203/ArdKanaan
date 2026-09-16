@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - claude/ard-kanaan-phase-0-6rymjv
+      - fix/finance-receipt-enrollment-only
   pull_request:
     branches:
       - claude/ard-kanaan-phase-0-6rymjv

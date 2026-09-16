@@ -11,7 +11,7 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const NOT_CONFIGURED = 'الاتصال بقاعدة البيانات غير مهيأ بعد.'
 
- type CourseAdminStore = {
+type CourseAdminStore = {
   isBusy: boolean
   error: string | null
   clearError: () => void
@@ -90,32 +90,21 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
         return false
       }
 
-      // Enrollment identity is (student, course). The course price is copied once into
-      // the enrollment and becomes the immutable financial snapshot. A course rename or
-      // another course with the same display name must never change this identity.
-      const { data: existing, error: lookupError } = await supabase
-        .from('enrollments')
-        .select('id, course_id')
-        .eq('student_id', values.studentId)
-      if (lookupError) throw lookupError
-      const alreadyEnrolled = (existing ?? []).some((row) => row.course_id === courseId)
-      if (alreadyEnrolled) {
-        set({ isBusy: false, error: 'هذا الطالب مسجّل في هذه الدورة بالفعل.' })
-        return false
-      }
-
-      const { error: insertError } = await supabase.from('enrollments').insert({
-        student_id: values.studentId,
-        course_id: courseId,
-        course_name: course.name,
-        course_value: course.baseFee,
+      const { error } = await supabase.rpc('create_enrollment', {
+        payload: {
+          student_id: values.studentId,
+          course_id: courseId,
+        },
       })
-      if (insertError) throw insertError
+      if (error) throw error
+
       set({ isBusy: false })
       return true
     } catch (error) {
       console.error('registerStudent failed', error)
-      const isDuplicate = (error as { code?: string }).code === '23505'
+      const code = (error as { code?: string; message?: string }).code ?? ''
+      const message = (error as { message?: string }).message ?? ''
+      const isDuplicate = code === '23505' || message.includes('ENROLLMENT_ALREADY_EXISTS')
       set({
         isBusy: false,
         error: isDuplicate ? 'هذا الطالب مسجّل في هذه الدورة بالفعل.' : 'تعذّر تسجيل الطالب في الدورة.',

@@ -17,8 +17,8 @@ type AddFeeInput = {
 type FeeObligationStore = {
   isSaving: boolean
   error: string | null
-  addFeeObligations: (input: AddFeeInput) => Promise<boolean>
   clearError: () => void
+  addFeeObligations: (input: AddFeeInput) => Promise<boolean>
 }
 
 export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
@@ -32,8 +32,8 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
       return false
     }
     const uniqueStudentIds = [...new Set(input.studentIds.filter(Boolean))]
-    if (uniqueStudentIds.length === 0 || !input.description.trim() || !Number.isInteger(input.amount) || input.amount <= 0) {
-      set({ error: 'تحقّق من الطلاب ووصف الرسم وقيمته.' })
+    if (!input.courseId || uniqueStudentIds.length === 0 || !input.description.trim() || !Number.isInteger(input.amount) || input.amount <= 0) {
+      set({ error: 'تحقّق من الدورة والطلاب ووصف الرسم وقيمته.' })
       return false
     }
     if (
@@ -47,17 +47,16 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
 
     set({ isSaving: true, error: null })
     try {
-      const rows = uniqueStudentIds.map((studentId) => ({
-        student_id: studentId,
-        course_id: input.courseId,
-        course_name: input.courseName.trim(),
-        description: input.description.trim(),
-        amount: input.amount,
-        fee_category: input.feeCategory,
-        external_share: input.externalShare,
-      }))
-
-      const { error } = await supabase.from('fee_obligations').insert(rows)
+      const { error } = await supabase.rpc('create_fee_obligations', {
+        payload: {
+          course_id: input.courseId,
+          student_ids: uniqueStudentIds,
+          description: input.description.trim(),
+          amount: input.amount,
+          fee_category: input.feeCategory,
+          external_share: input.externalShare,
+        },
+      })
       if (error) throw error
 
       await useWorkspaceStore.getState().load()
@@ -65,7 +64,7 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
       return true
     } catch (error) {
       console.error('addFeeObligations failed', error)
-      set({ isSaving: false, error: 'تعذّر إضافة الرسوم. تحقّق من البيانات وحاول مرّة أخرى.' })
+      set({ isSaving: false, error: 'تعذّر إضافة الرسوم. تأكد من أن كل طالب مرتبط بالدورة ثم حاول مرة أخرى.' })
       return false
     }
   },

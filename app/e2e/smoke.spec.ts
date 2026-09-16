@@ -68,7 +68,7 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   expect(handle.paymentInserts[0]).toMatchObject({ expense_type: 'كهرباء', amount: 250 })
   await expect(page.getByText('معاينة الطباعة — سند صرف')).toBeVisible()
   await expect(page.getByText('P-901').first()).toBeVisible()
-  await expect(page.getByText('كهرباء')).toBeVisible()
+  await expect(page.getByText('كهرباء', { exact: true })).toBeVisible()
 })
 
 test('cancels a voucher without deleting it and moves it to cancelled history', async ({ page }) => {
