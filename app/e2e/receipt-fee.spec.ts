@@ -27,7 +27,7 @@ test('course page can assign a fee obligation to selected students', async ({ pa
   await sheet.getByRole('button', { name: 'سارة أحمد' }).click()
   await sheet.getByRole('button', { name: /إضافة الرسم إلى 1 طالب/ }).click()
   await expect.poll(() => handle.feeObligationInserts.length).toBe(1)
-  expect(handle.feeObligationInserts[0][0][0]).toMatchObject({ student_id: 's-1', course_id: 'c-1', description: 'رسوم تخريج', amount: 50, fee_category: 'external', external_share: 50 })
+  expect(handle.feeObligationInserts[0][0]).toMatchObject({ student_id: 's-1', course_id: 'c-1', description: 'رسوم تخريج', amount: 50, fee_category: 'external', external_share: 50 })
   expect(handle.receiptInserts.length).toBe(0)
   expect(handle.paymentInserts.length).toBe(0)
 })
