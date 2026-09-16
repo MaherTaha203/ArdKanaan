@@ -7,7 +7,7 @@ const feeDistributionMigration = readFileSync(
   'utf8',
 )
 const operationMigration = readFileSync(
-  new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.url),
+  new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.metaUrl),
   'utf8',
 )
 const receiptIntegrityMigration = readFileSync(
@@ -20,6 +20,10 @@ const receiptMigration = readFileSync(
 )
 const idempotencyFingerprintMigration = readFileSync(
   new URL('../../supabase/migrations/20260916124000_receipt_idempotency_payload_fingerprint.sql', import.meta.url),
+  'utf8',
+)
+const restoreMigration = readFileSync(
+  new URL('../../supabase/migrations/20260916125000_restore_financial_identity_hardening.sql', import.meta.url),
   'utf8',
 )
 const enrollmentMigration = readFileSync(
@@ -93,5 +97,15 @@ describe('Financial operation hardening', () => {
     expect(enrollmentMigration).toContain('before insert or update on public.enrollments')
     expect(enrollmentMigration).toContain("raise exception 'ENROLLMENT_FINANCIAL_SNAPSHOT_MISMATCH'")
     expect(enrollmentMigration).toContain("raise exception 'ENROLLMENT_DELETE_FORBIDDEN'")
+  })
+
+  it('validates restore financial identity before destructive writes', () => {
+    expect(restoreMigration).toContain("raise exception 'ENROLLMENT_FINANCIAL_SNAPSHOT_MISMATCH'")
+    expect(restoreMigration).toContain("raise exception 'FEE_OBLIGATION_ENROLLMENT_MISMATCH'")
+    expect(restoreMigration).toContain("raise exception 'RECEIPT_ALLOCATION_STUDENT_MISMATCH'")
+    expect(restoreMigration).toContain("raise exception 'RESTORE_RECEIPT_ALLOCATION_TOTAL_MISMATCH'")
+    expect(restoreMigration).toContain("raise exception 'ALLOCATION_REQUIRED_FOR_MODERN_RECEIPT'")
+    expect(restoreMigration).toContain('insert into public.enrollments')
+    expect(restoreMigration).not.toContain('on conflict (student_id, course_name) do nothing')
   })
 })
