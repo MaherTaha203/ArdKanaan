@@ -14,6 +14,10 @@ const receiptMigration = readFileSync(
   new URL('../../supabase/migrations/20260916111000_receipt_posting_idempotency_and_split.sql', import.meta.url),
   'utf8',
 )
+const receiptFirewall = readFileSync(
+  new URL('../../supabase/migrations/20260916100000_receipt_posting_integrity_hardening.sql', import.meta.url),
+  'utf8',
+)
 
 describe('Receipt fee distribution migration contract', () => {
   it('keeps the fee snapshot columns and category constraints', () => {
@@ -29,12 +33,12 @@ describe('Receipt fee distribution migration contract', () => {
   })
 
   it('conserves the split per category', () => {
-    expect(operationMigration).toContain('receipt_vouchers_fee_distribution_valid')
-    expect(operationMigration).toContain("when fee_category is null then external_share = 0")
-    expect(operationMigration).toContain("when fee_category = 'institute' then external_share = 0")
-    expect(operationMigration).toContain("when fee_category = 'external' then external_share = amount_received")
-    expect(operationMigration).toContain("when fee_category = 'shared' then external_share > 0 and external_share < amount_received")
-    expect(operationMigration).toContain("when fee_category = 'mixed' then external_share >= 0 and external_share <= amount_received")
+    expect(receiptFirewall).toContain('receipt_vouchers_fee_distribution_valid')
+    expect(receiptFirewall).toContain("when fee_category is null then external_share = 0")
+    expect(receiptFirewall).toContain("when fee_category = 'institute' then external_share = 0")
+    expect(receiptFirewall).toContain("when fee_category = 'external' then external_share = amount_received")
+    expect(receiptFirewall).toContain("when fee_category = 'shared' then external_share > 0 and external_share < amount_received")
+    expect(receiptFirewall).toContain("when fee_category = 'mixed' then external_share >= 0 and external_share <= amount_received")
   })
 
   it('keeps fee payments separate from course balances', () => {
