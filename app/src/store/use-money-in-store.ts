@@ -76,7 +76,7 @@ async function fetchStatementLines(studentId: string) {
   return (data ?? []).map((row) => normalizeStatementLine(row as StudentStatementRow))
 }
 
-export const useMoneyInStore = create<MoneyInStore>((set) => ({
+export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
   currentView: 'receipt-voucher',
   statementLines: [],
   activeStudent: null,
@@ -85,6 +85,11 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
   clearError: () => set({ error: null }),
   goToReceiptVoucher: () => set({ currentView: 'receipt-voucher' }),
   saveReceiptVoucher: async (values) => {
+    if (get().isSaving) {
+      set({ error: 'جارٍ حفظ سند القبض بالفعل.' })
+      return false
+    }
+
     const supabase = getSupabaseBrowserClient()
     if (!supabase) {
       set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.' })
@@ -109,6 +114,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
     }
 
     set({ isSaving: true, error: null })
+    const idempotencyKey = crypto.randomUUID()
 
     try {
       const { data: pickedRows, error: pickedError } = await supabase
@@ -139,6 +145,7 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
           amount_received: values.amountReceived,
           payer_name: values.payerName.trim(),
           notes: values.notes.trim(),
+          idempotency_key: idempotencyKey,
           allocations,
         },
       })
