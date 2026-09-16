@@ -62,8 +62,10 @@ $$;
 revoke all on function public.enforce_financial_firewall() from public, anon, authenticated;
 
 -- Mixed receipts are valid: a single receipt may contain course allocations,
--- institute fees, external fees, or shared fees. external_share is simply the
--- portion of this receipt held for others. The split must always conserve cash.
+-- institute fees, external fees, or shared fees. external_share is the
+-- portion of this receipt held for others. A course + institute-only fee can
+-- legitimately have external_share = 0; external-share conservation is checked
+-- by the allocation-level split in the final posting RPC.
 alter table public.receipt_vouchers
   drop constraint if exists receipt_vouchers_fee_distribution_valid;
 
@@ -74,15 +76,14 @@ alter table public.receipt_vouchers
       when fee_category = 'institute' then external_share = 0
       when fee_category = 'external' then external_share = amount_received
       when fee_category = 'shared' then external_share > 0 and external_share < amount_received
-      when fee_category = 'mixed' then external_share > 0 and external_share < amount_received
+      when fee_category = 'mixed' then external_share >= 0 and external_share <= amount_received
       else false
     end
   );
 
 -- Re-posting function: fee obligations may now be paid partially and repeatedly.
--- The third-party share is allocated proportionally to the amount actually paid,
--- rounded to 2 decimals; the institute share is the remainder, so every receipt
--- remains exactly conserved.
+-- The final authoritative implementation is replaced by the later idempotency
+-- migration; this definition remains here for migration-order safety.
 create or replace function public.post_receipt_with_allocations(payload jsonb)
 returns jsonb
 language plpgsql
@@ -232,9 +233,6 @@ begin
   if v_external > p_amount then raise exception 'INVALID_EXTERNAL_SHARE'; end if;
   if v_fee_category = 'external' and v_external <> p_amount then
     raise exception 'EXTERNAL_SHARE_MISMATCH';
-  end if;
-  if v_fee_category in ('shared', 'mixed') and v_external <= 0 then
-    raise exception 'INVALID_EXTERNAL_SHARE';
   end if;
   if v_summary_value = 0 then v_summary_value := p_amount; end if;
 
