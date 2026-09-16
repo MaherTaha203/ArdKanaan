@@ -10,6 +10,10 @@ const cleanupMigration = readFileSync(
   new URL('../../supabase/migrations/20260916115000_financial_ledger_append_only_cleanup.sql', import.meta.url),
   'utf8',
 )
+const hardLockMigration = readFileSync(
+  new URL('../../supabase/migrations/20260916123000_financial_ledger_hard_lock.sql', import.meta.url),
+  'utf8',
+)
 
 describe('Financial ledger', () => {
   it('creates an append-only ledger with source identity', () => {
@@ -26,6 +30,11 @@ describe('Financial ledger', () => {
     expect(cleanupMigration).toContain("'reversal'")
     expect(cleanupMigration).toContain('reversal_of')
     expect(cleanupMigration).not.toContain('set reversed_at =')
+  })
+
+  it('enforces append-only behavior at the database boundary', () => {
+    expect(hardLockMigration).toContain('before update or delete on public.financial_movement_ledger')
+    expect(hardLockMigration).toContain("raise exception 'FINANCIAL_LEDGER_APPEND_ONLY'")
   })
 
   it('keeps the application-facing movements view stable', () => {
