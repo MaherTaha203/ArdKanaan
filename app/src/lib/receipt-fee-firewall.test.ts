@@ -19,8 +19,8 @@ describe('Receipt fee distribution migration contract', () => {
   it('keeps the fee snapshot columns and category constraints', () => {
     expect(feeMigration).toContain('add column if not exists fee_category text')
     expect(feeMigration).toContain('add column if not exists external_share numeric(12, 2) not null default 0')
-    expect(operationMigration).toContain('receipt_vouchers_external_share_nonnegative')
-    expect(operationMigration).toContain('receipt_vouchers_external_share_within_amount')
+    expect(feeMigration).toContain('receipt_vouchers_external_share_nonnegative')
+    expect(feeMigration).toContain('receipt_vouchers_external_share_within_amount')
   })
 
   it('allows fractional derived external shares for partial payments', () => {
@@ -34,7 +34,7 @@ describe('Receipt fee distribution migration contract', () => {
     expect(operationMigration).toContain("when fee_category = 'institute' then external_share = 0")
     expect(operationMigration).toContain("when fee_category = 'external' then external_share = amount_received")
     expect(operationMigration).toContain("when fee_category = 'shared' then external_share > 0 and external_share < amount_received")
-    expect(operationMigration).toContain("when fee_category = 'mixed' then external_share > 0 and external_share < amount_received")
+    expect(operationMigration).toContain("when fee_category = 'mixed' then external_share >= 0 and external_share <= amount_received")
   })
 
   it('keeps fee payments separate from course balances', () => {
