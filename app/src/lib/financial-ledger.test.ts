@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL('../../supabase/migrations/20260916114000_financial_ledger.sql', import.meta.url),
   'utf8',
 )
+const cleanupMigration = readFileSync(
+  new URL('../../supabase/migrations/20260916115000_financial_ledger_append_only_cleanup.sql', import.meta.url),
+  'utf8',
+)
 
 describe('Financial ledger', () => {
   it('creates an append-only ledger with source identity', () => {
@@ -17,19 +21,19 @@ describe('Financial ledger', () => {
   })
 
   it('records reversals instead of deleting financial history', () => {
-    expect(migration).toContain('record_receipt_cancellation_ledger')
-    expect(migration).toContain('record_payment_cancellation_ledger')
-    expect(migration).toContain("entry_kind, amount, external_share, voucher_number")
-    expect(migration).toContain("'reversal'")
-    expect(migration).toContain('reversal_of')
+    expect(cleanupMigration).toContain('record_receipt_cancellation_ledger')
+    expect(cleanupMigration).toContain('record_payment_cancellation_ledger')
+    expect(cleanupMigration).toContain("'reversal'")
+    expect(cleanupMigration).toContain('reversal_of')
+    expect(cleanupMigration).not.toContain('set reversed_at =')
   })
 
   it('keeps the application-facing movements view stable', () => {
-    expect(migration).toContain('create view public.financial_movements')
-    expect(migration).toContain("where l.entry_kind = 'original'")
-    expect(migration).toContain('and l.reversed_at is null')
-    expect(migration).toContain('l.source_id as id')
-    expect(migration).toContain('l.source_type::text as movement_type')
+    expect(cleanupMigration).toContain('create view public.financial_movements')
+    expect(cleanupMigration).toContain("where l.entry_kind = 'original'")
+    expect(cleanupMigration).toContain("r.entry_kind = 'reversal'")
+    expect(cleanupMigration).toContain('l.source_id as id')
+    expect(cleanupMigration).toContain('l.source_type::text as movement_type')
   })
 
   it('backfills existing receipts and payments', () => {
