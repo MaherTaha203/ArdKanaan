@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
+const feeDistributionMigration = readFileSync(
+  new URL('../../supabase/migrations/20260915093000_receipt_fee_distribution.sql', import.meta.url),
+  'utf8',
+)
 const operationMigration = readFileSync(
   new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.url),
   'utf8',
@@ -21,14 +25,14 @@ const enrollmentMigration = readFileSync(
 
 describe('Financial operation hardening', () => {
   it('allows fractional derived external shares on receipts', () => {
-    expect(receiptIntegrityMigration).toContain('drop constraint if exists receipt_vouchers_external_share_whole_shekel')
-    expect(receiptIntegrityMigration).toContain('add column if not exists external_share numeric(12,2) not null default 0')
+    expect(feeDistributionMigration).toContain('add column if not exists external_share numeric(12, 2) not null default 0')
+    expect(operationMigration).toContain('drop constraint if exists receipt_vouchers_external_share_whole_shekel')
   })
 
   it('stores the external split at allocation level', () => {
-    expect(receiptIntegrityMigration).toContain('receipt_allocations_external_share_nonnegative')
-    expect(receiptIntegrityMigration).toContain('receipt_allocations_external_share_within_amount')
-    expect(receiptIntegrityMigration).toContain('receipt_allocations_external_share_course_zero')
+    expect(operationMigration).toContain('receipt_allocations_external_share_nonnegative')
+    expect(operationMigration).toContain('receipt_allocations_external_share_within_amount')
+    expect(operationMigration).toContain('receipt_allocations_external_share_course_zero')
   })
 
   it('freezes fee obligations and requires cancellation instead of editing', () => {
@@ -45,8 +49,8 @@ describe('Financial operation hardening', () => {
   })
 
   it('makes receipt posting idempotent', () => {
-    expect(receiptIntegrityMigration).toContain('add column if not exists idempotency_key uuid')
-    expect(receiptIntegrityMigration).toContain('receipt_vouchers_idempotency_key_uidx')
+    expect(operationMigration).toContain('add column if not exists idempotency_key uuid')
+    expect(operationMigration).toContain('receipt_vouchers_idempotency_key_uidx')
     expect(receiptMigration).toContain("raise exception 'IDEMPOTENCY_KEY_REUSE_MISMATCH'")
     expect(receiptMigration).toContain("'idempotent_replay', true")
   })
