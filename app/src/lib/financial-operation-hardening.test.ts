@@ -7,7 +7,7 @@ const feeDistributionMigration = readFileSync(
   'utf8',
 )
 const operationMigration = readFileSync(
-  new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.metaUrl),
+  new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.url),
   'utf8',
 )
 const receiptIntegrityMigration = readFileSync(
