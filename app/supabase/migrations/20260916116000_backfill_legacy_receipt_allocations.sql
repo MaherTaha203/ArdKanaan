@@ -7,7 +7,6 @@ begin;
 with candidates as (
   select
     rv.id as receipt_id,
-    rv.student_id,
     rv.amount_received,
     e.id as enrollment_id,
     e.course_value,
@@ -37,6 +36,6 @@ insert into public.receipt_allocations
   (receipt_voucher_id, allocation_type, enrollment_id, fee_obligation_id, amount)
 select receipt_id, 'course', enrollment_id, null, amount_received
 from safe_rows
-on conflict (receipt_voucher_id, allocation_type) do nothing;
+on conflict do nothing;
 
 commit;
