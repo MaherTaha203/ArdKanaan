@@ -28,7 +28,7 @@ describe('Receipt fee distribution migration contract', () => {
   })
 
   it('allows fractional derived external shares for partial payments', () => {
-    expect(operationMigration).toContain('drop constraint if exists receipt_vouchers_external_share_whole_shekel')
+    expect(receiptFirewall).toContain('drop constraint if exists receipt_vouchers_external_share_whole_shekel')
     expect(receiptMigration).toContain('round(v_amount * v_fee_external / v_fee_total, 2)')
   })
 
