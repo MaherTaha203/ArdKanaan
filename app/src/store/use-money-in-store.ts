@@ -2,7 +2,6 @@ import { create } from 'zustand'
 
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { useWorkspaceStore } from '@/store/use-workspace-store'
 import type { Student, StudentStatementLine } from '@/types/domain'
 
 type MoneyInStore = {
