@@ -136,6 +136,43 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, { id: receiptId, voucher_number: 900 + handle.receiptInserts.length, amount_received: amount })
     }
 
+    if (table?.startsWith('rpc/create_fee_obligations') && method === 'POST') {
+      const body = safeJson(request.postData()) as { payload?: Record<string, unknown> }
+      const payload = body.payload ?? {}
+      const studentIds = Array.isArray(payload.student_ids) ? [...new Set(payload.student_ids.map(String))] : []
+      const createdRows = studentIds.map((studentId, index) => {
+        const enrollment = enrollments.find((item) => item.student_id === studentId && item.course_id === payload.course_id)
+        return {
+          id: `fee-${feeObligations.length + index + 1}`,
+          student_id: studentId,
+          enrollment_id: enrollment?.id ?? null,
+          course_id: payload.course_id ?? null,
+          course_name: enrollment?.course_name ?? String(payload.course_name ?? ''),
+          description: String(payload.description ?? ''),
+          amount: Number(payload.amount ?? 0),
+          fee_category: payload.fee_category,
+          external_share: Number(payload.external_share ?? 0),
+          cancelled_at: null,
+          cancel_reason: null,
+          created_at: new Date().toISOString(),
+        } as Record<string, unknown>
+      })
+      handle.feeObligationInserts.push(createdRows)
+      feeObligations.push(...createdRows as MockFeeObligation[])
+      return json(route, { created: createdRows.length })
+    }
+
+    if (table?.startsWith('rpc/post_payment_voucher') && method === 'POST') {
+      const body = safeJson(request.postData()) as { payload?: Record<string, unknown> }
+      const payload = body.payload ?? {}
+      const id = `payment-${handle.paymentInserts.length + 1}`
+      const voucherNumber = 901 + handle.paymentInserts.length
+      const payment = { ...payload, id, voucher_number: voucherNumber }
+      handle.paymentInserts.push(payment)
+      activeMovements.push({ id, movement_type: 'payment', voucher_number: voucherNumber, voucher_date: String(payload.voucher_date ?? '2026-08-31'), amount: Number(payload.amount ?? 0), party_name: null, context: String(payload.expense_type ?? 'مصروف') })
+      return json(route, { id, voucher_number: voucherNumber, amount: Number(payload.amount ?? 0), idempotent_replay: false })
+    }
+
     if (method === 'HEAD') {
       if (['students', 'courses', 'enrollments', 'receipt_vouchers', 'payment_vouchers', 'fee_obligations'].includes(table ?? '')) {
         const counts: Record<string, number> = { students: students.length, courses: courses.length, enrollments: enrollments.length, receipt_vouchers: handle.receiptInserts.length, payment_vouchers: handle.paymentInserts.length, fee_obligations: feeObligations.length }
@@ -167,7 +204,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         }
         return arr(lines)
       }
-      if (table === 'payment_vouchers') return arr(handle.paymentInserts.map((payment) => ({ id: 'new-payment', voucher_number: 901, voucher_date: '2026-08-31', expense_type: String(payment.expense_type ?? 'مصروف'), amount: Number(payment.amount ?? 0), notes: String(payment.notes ?? '') })))
+      if (table === 'payment_vouchers') return arr(handle.paymentInserts.map((payment) => ({ id: String(payment.id ?? 'new-payment'), voucher_number: Number(payment.voucher_number ?? 901), voucher_date: String(payment.voucher_date ?? '2026-08-31'), expense_type: String(payment.expense_type ?? 'مصروف'), amount: Number(payment.amount ?? 0), notes: String(payment.notes ?? '') })))
       if (table === 'financial_movements') return arr(activeMovements)
       if (table === 'cancelled_vouchers') return arr(cancelledVouchers)
       if (table === 'audit_log') return arr(handle.auditLog)
