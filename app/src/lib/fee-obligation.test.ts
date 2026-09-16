@@ -6,27 +6,22 @@ const migration = readFileSync(
   new URL('../../supabase/migrations/20260915120000_fee_obligations_receipt_allocations.sql', import.meta.url),
   'utf8',
 )
-
 const hardening = readFileSync(
   new URL('../../supabase/migrations/20260915123000_fee_statement_restore_hardening.sql', import.meta.url),
   'utf8',
 )
-
 const strictReceipt = readFileSync(
   new URL('../../supabase/migrations/20260915124500_enforce_fee_obligation_receipts.sql', import.meta.url),
   'utf8',
 )
-
 const finalReceipt = readFileSync(
   new URL('../../supabase/migrations/20260916111000_receipt_posting_idempotency_and_split.sql', import.meta.url),
   'utf8',
 )
-
 const receiptFirewall = readFileSync(
   new URL('../../supabase/migrations/20260916100000_receipt_posting_integrity_hardening.sql', import.meta.url),
   'utf8',
 )
-
 const finalFeeLifecycle = readFileSync(
   new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.url),
   'utf8',
