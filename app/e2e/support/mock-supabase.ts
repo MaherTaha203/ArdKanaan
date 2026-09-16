@@ -158,8 +158,23 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         } as Record<string, unknown>
       })
       handle.feeObligationInserts.push(createdRows)
-      feeObligations.push(...createdRows as MockFeeObligation[])
+      feeObligations.push(...createdRows as unknown as MockFeeObligation[])
       return json(route, { created: createdRows.length })
+    }
+
+    if (table?.startsWith('rpc/create_enrollment') && method === 'POST') {
+      const body = safeJson(request.postData()) as { payload?: Record<string, unknown> }
+      const payload = body.payload ?? {}
+      const course = courses.find((item) => item.id === payload.course_id)
+      const enrollment = {
+        id: `enrollment-${enrollments.length + 1}`,
+        student_id: String(payload.student_id ?? ''),
+        course_id: String(payload.course_id ?? ''),
+        course_name: course?.name ?? '',
+        course_value: Number(course?.base_fee ?? 0),
+      }
+      enrollments.push(enrollment)
+      return json(route, enrollment)
     }
 
     if (table?.startsWith('rpc/post_payment_voucher') && method === 'POST') {
