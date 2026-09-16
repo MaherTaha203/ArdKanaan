@@ -14,6 +14,10 @@ const hardLockMigration = readFileSync(
   new URL('../../supabase/migrations/20260916123000_financial_ledger_hard_lock.sql', import.meta.url),
   'utf8',
 )
+const restoreConsistencyMigration = readFileSync(
+  new URL('../../supabase/migrations/20260916131000_restore_ledger_consistency.sql', import.meta.url),
+  'utf8',
+)
 
 describe('Financial ledger', () => {
   it('creates an append-only ledger with source identity', () => {
@@ -35,6 +39,14 @@ describe('Financial ledger', () => {
   it('enforces append-only behavior at the database boundary', () => {
     expect(hardLockMigration).toContain('before update or delete on public.financial_movement_ledger')
     expect(hardLockMigration).toContain("raise exception 'FINANCIAL_LEDGER_APPEND_ONLY'")
+  })
+
+  it('keeps restore as the only controlled ledger replacement path', () => {
+    expect(restoreConsistencyMigration).toContain("current_setting('app.restoring', true) = 'on'")
+    expect(restoreConsistencyMigration).toContain('purge_receipt_ledger_on_restore')
+    expect(restoreConsistencyMigration).toContain('purge_payment_ledger_on_restore')
+    expect(restoreConsistencyMigration).toContain('before delete on public.receipt_vouchers')
+    expect(restoreConsistencyMigration).toContain('before delete on public.payment_vouchers')
   })
 
   it('keeps the application-facing movements view stable', () => {
