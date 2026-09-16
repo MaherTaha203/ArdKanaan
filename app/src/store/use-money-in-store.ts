@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
-import { classifyNameMatches, findNameMatchIds } from '@/lib/student-identity'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import type { Student, StudentStatementLine } from '@/types/domain'
@@ -93,119 +92,58 @@ export const useMoneyInStore = create<MoneyInStore>((set) => ({
       return false
     }
 
+    const pickedStudentId = values.studentId.trim()
+    if (!pickedStudentId) {
+      set({ error: 'اختر الطالب من قائمة الطلاب قبل إصدار سند القبض.' })
+      return false
+    }
+
+    if (values.allocations.length === 0) {
+      set({ error: 'اختر الدورة أو الرسم المستحق الذي سيتم تحصيله قبل حفظ سند القبض.' })
+      return false
+    }
+
+    const allocationSum = values.allocations.reduce((sum, item) => sum + item.amount, 0)
+    if (allocationSum !== values.amountReceived) {
+      set({ error: 'مجموع بنود التحصيل لا يساوي المبلغ المقبوض.' })
+      return false
+    }
+
     set({ isSaving: true, error: null })
 
     try {
-      const typedStudentName = values.studentName.trim()
-      const pickedStudentId = values.studentId.trim()
-      let activeStudent: Student | null = null
+      const { data: pickedRows, error: pickedError } = await supabase
+        .from('students')
+        .select(STUDENT_COLUMNS)
+        .eq('id', pickedStudentId)
+        .limit(1)
+      if (pickedError) throw pickedError
 
-      if (pickedStudentId) {
-        const { data: pickedRows, error: pickedError } = await supabase
-          .from('students')
-          .select(STUDENT_COLUMNS)
-          .eq('id', pickedStudentId)
-          .limit(1)
-        if (pickedError) throw pickedError
-        activeStudent = pickedRows?.[0] ? normalizeStudent(pickedRows[0] as StudentRow) : null
-      }
-
+      const activeStudent = pickedRows?.[0] ? normalizeStudent(pickedRows[0] as StudentRow) : null
       if (!activeStudent) {
-        const roster = useWorkspaceStore.getState().students
-        const resolution = classifyNameMatches(findNameMatchIds(roster, typedStudentName))
-        if (resolution.kind === 'ambiguous') {
-          set({ isSaving: false, error: 'يوجد أكثر من طالب بهذا الاسم. اختر الطالب المقصود من قائمة البحث قبل الحفظ.' })
-          return false
-        }
-        if (resolution.kind === 'existing') activeStudent = roster.find((student) => student.id === resolution.id) ?? null
+        set({ isSaving: false, error: 'الطالب المحدد غير موجود. أعد اختيار الطالب ثم حاول مرة أخرى.' })
+        return false
       }
 
-      if (!activeStudent) {
-        const idNumber = values.studentIdNumber.trim()
-        const phone = values.studentPhone.trim()
-        const { data: studentRow, error: studentError } = await supabase
-          .from('students')
-          .insert({ name: typedStudentName, id_number: idNumber || null, phone: phone || null, notes: null })
-          .select(STUDENT_COLUMNS)
-          .single()
-        if (studentError) throw studentError
-        activeStudent = normalizeStudent(studentRow as StudentRow)
-      }
+      const allocations = values.allocations.map((allocation) => ({
+        type: allocation.type,
+        enrollment_id: allocation.enrollmentId ?? null,
+        fee_obligation_id: allocation.feeObligationId ?? null,
+        amount: allocation.amount,
+      }))
 
-      if (!activeStudent) throw new Error('تعذّر تحديد الطالب المطلوب للسند.')
-
-      const hasAllocations = values.allocations.length > 0
-      if (hasAllocations || values.entryType === 'fee') {
-        const allocations = values.allocations.map((allocation) => ({
-          type: allocation.type,
-          enrollment_id: allocation.enrollmentId ?? null,
-          fee_obligation_id: allocation.feeObligationId ?? null,
-          amount: allocation.amount,
-        }))
-
-        // A fee must always be tied to a real obligation created from the course.
-        // Do not manufacture a fee obligation at payment time.
-        if (values.entryType === 'fee' && allocations.length === 0) {
-          set({ isSaving: false, error: 'اختر الرسم المستحق قبل حفظ سند القبض.' })
-          return false
-        }
-
-        const allocationSum = allocations.reduce((sum, item) => sum + item.amount, 0)
-        if (allocationSum !== values.amountReceived) {
-          set({ isSaving: false, error: 'مجموع بنود التحصيل لا يساوي المبلغ المقبوض.' })
-          return false
-        }
-
-        const { error: postError } = await supabase.rpc('post_receipt_with_allocations', {
-          payload: {
-            student_id: activeStudent.id,
-            student_name: activeStudent.name,
-            voucher_date: values.paymentDate,
-            amount_received: values.amountReceived,
-            payer_name: values.payerName.trim(),
-            notes: values.notes.trim(),
-            allocations,
-          },
-        })
-        if (postError) throw postError
-      } else {
-        const courseName = values.courseName.trim()
-        const enteredCourseValue = values.courseValue ?? 0
-        const { data: existingEnrollment, error: enrollmentLookupError } = await supabase
-          .from('enrollments')
-          .select('course_value')
-          .eq('student_id', activeStudent.id)
-          .eq('course_name', courseName)
-          .limit(1)
-        if (enrollmentLookupError) throw enrollmentLookupError
-
-        let courseValue = enteredCourseValue
-        if (existingEnrollment?.[0]) {
-          courseValue = Number(existingEnrollment[0].course_value)
-        } else {
-          const { error: enrollmentInsertError } = await supabase
-            .from('enrollments')
-            .insert({ student_id: activeStudent.id, course_name: courseName, course_value: enteredCourseValue })
-          if (enrollmentInsertError) throw enrollmentInsertError
-        }
-
-        const { error: voucherError } = await supabase
-          .from('receipt_vouchers')
-          .insert({
-            voucher_date: values.paymentDate,
-            student_id: activeStudent.id,
-            student_name_snapshot: activeStudent.name,
-            course_name: courseName,
-            course_value: courseValue,
-            amount_received: values.amountReceived,
-            payer_name: values.payerName.trim(),
-            notes: values.notes.trim(),
-            fee_category: null,
-            external_share: 0,
-            allocation_mode: false,
-          })
-        if (voucherError) throw voucherError
-      }
+      const { error: postError } = await supabase.rpc('post_receipt_with_allocations', {
+        payload: {
+          student_id: activeStudent.id,
+          student_name: activeStudent.name,
+          voucher_date: values.paymentDate,
+          amount_received: values.amountReceived,
+          payer_name: values.payerName.trim(),
+          notes: values.notes.trim(),
+          allocations,
+        },
+      })
+      if (postError) throw postError
 
       const statementLines = await fetchStatementLines(activeStudent.id)
       set({ activeStudent, statementLines, currentView: 'student-statement', isSaving: false })
