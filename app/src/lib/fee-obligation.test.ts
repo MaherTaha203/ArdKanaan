@@ -22,6 +22,11 @@ const finalReceipt = readFileSync(
   'utf8',
 )
 
+const receiptFirewall = readFileSync(
+  new URL('../../supabase/migrations/20260916100000_receipt_posting_integrity_hardening.sql', import.meta.url),
+  'utf8',
+)
+
 const finalFeeLifecycle = readFileSync(
   new URL('../../supabase/migrations/20260916110000_financial_operation_hardening.sql', import.meta.url),
   'utf8',
@@ -55,7 +60,7 @@ describe('student fee architecture contracts', () => {
 
   it('requires fee receipts to use allocation mode', () => {
     expect(strictReceipt).toContain('fee_category is null or allocation_mode = true')
-    expect(finalFeeLifecycle).toContain("raise exception 'RECEIPT_POSTING_RPC_REQUIRED'")
+    expect(receiptFirewall).toContain("raise exception 'RECEIPT_POSTING_RPC_REQUIRED'")
   })
 
   it('freezes the fee obligation financial identity after creation', () => {
