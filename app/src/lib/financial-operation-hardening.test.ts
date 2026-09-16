@@ -24,6 +24,10 @@ const enrollmentMigration = readFileSync(
 )
 
 describe('Financial operation hardening', () => {
+  it('requires receipt posting through the authoritative RPC', () => {
+    expect(receiptIntegrityMigration).toContain("raise exception 'RECEIPT_POSTING_RPC_REQUIRED'")
+  })
+
   it('allows fractional derived external shares on receipts', () => {
     expect(feeDistributionMigration).toContain('add column if not exists external_share numeric(12, 2) not null default 0')
     expect(operationMigration).toContain('drop constraint if exists receipt_vouchers_external_share_whole_shekel')
