@@ -18,6 +18,10 @@ const receiptMigration = readFileSync(
   new URL('../../supabase/migrations/20260916111000_receipt_posting_idempotency_and_split.sql', import.meta.url),
   'utf8',
 )
+const idempotencyFingerprintMigration = readFileSync(
+  new URL('../../supabase/migrations/20260916124000_receipt_idempotency_payload_fingerprint.sql', import.meta.url),
+  'utf8',
+)
 const enrollmentMigration = readFileSync(
   new URL('../../supabase/migrations/20260916112000_enrollment_identity_insert_delete_hardening.sql', import.meta.url),
   'utf8',
@@ -57,6 +61,14 @@ describe('Financial operation hardening', () => {
     expect(operationMigration).toContain('receipt_vouchers_idempotency_key_uidx')
     expect(receiptMigration).toContain("raise exception 'IDEMPOTENCY_KEY_REUSE_MISMATCH'")
     expect(receiptMigration).toContain("'idempotent_replay', true")
+  })
+
+  it('binds idempotency to the complete financial payload', () => {
+    expect(idempotencyFingerprintMigration).toContain('idempotency_payload_hash text')
+    expect(idempotencyFingerprintMigration).toContain("raise exception 'IDEMPOTENCY_KEY_REUSE_MISMATCH'")
+    expect(idempotencyFingerprintMigration).toContain("'allocations'")
+    expect(idempotencyFingerprintMigration).toContain("'payer_name'")
+    expect(idempotencyFingerprintMigration).toContain('md5(')
   })
 
   it('prevents duplicate allocation targets in one receipt', () => {
