@@ -4,7 +4,7 @@ import { create } from 'zustand'
 // Authentication now lives in use-auth-store (real Supabase Auth), and Postgres
 // RLS is the security boundary; this store no longer models a "session".
 
-export type ShellRoute = 'home' | 'students' | 'courses' | 'report' | 'activity' | 'settings'
+export type ShellRoute = 'home' | 'students' | 'courses' | 'report' | 'activity' | 'settings' | 'archive-preview'
 export type StudentView = 'directory' | 'statement'
 export type CourseView = 'directory' | 'detail'
 export type SettingsView = 'system' | 'activity' | 'backup'

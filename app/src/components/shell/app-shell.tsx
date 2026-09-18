@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 
-import { ArrowDownLeft, ArrowUpRight, BookOpen, ChevronDown, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
+import { Archive, ArrowDownLeft, ArrowUpRight, BookOpen, ChevronDown, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
 
 import { useApplyRootSettings, useIdleLogout } from '@/hooks/use-app-preferences'
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
@@ -18,6 +18,7 @@ import { StudentsWorkspace } from '@/features/students/students-workspace'
 import { FinancialReportWorkspace } from '@/features/financial-report/financial-report-workspace'
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { BackupWorkspace } from '@/features/settings/backup-workspace'
+import { ArchivePreviewWorkspace } from '@/features/archive-preview/archive-preview-workspace'
 import { useAuthStore } from '@/store/use-auth-store'
 import { useShellStore, type CourseView, type ReportView, type SettingsView, type ShellRoute, type StudentView } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -57,6 +58,8 @@ function CurrentView({ route, studentView, courseView, settingsView }: { route: 
       if (settingsView === 'backup') return <BackupWorkspace />
       if (settingsView === 'activity') return <ActivityWorkspace />
       return <SettingsWorkspace />
+    case 'archive-preview':
+      return <ArchivePreviewWorkspace />
   }
 }
 
@@ -116,6 +119,7 @@ export function AppShell() {
             items={SETTINGS_MENU}
             onPick={navigateSettings}
           />
+          <NavLink label="معاينة الأرشفة" icon={Archive} active={route === 'archive-preview'} onClick={() => navigate('archive-preview')} />
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
