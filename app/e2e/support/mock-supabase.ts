@@ -6,6 +6,11 @@ export type MockStudent = {
   id_number: string | null
   phone: string | null
   notes: string | null
+  // Lifecycle (ADR-0076) — optional so existing fixtures stay valid; when absent
+  // the app defaults status to 'active'.
+  status?: 'active' | 'completed' | 'archived'
+  archived_at?: string | null
+  archive_reason?: string | null
 }
 
 export type MockEnrollment = {
@@ -186,6 +191,20 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       handle.paymentInserts.push(payment)
       activeMovements.push({ id, movement_type: 'payment', voucher_number: voucherNumber, voucher_date: String(payload.voucher_date ?? '2026-08-31'), amount: Number(payload.amount ?? 0), party_name: null, context: String(payload.expense_type ?? 'مصروف') })
       return json(route, { id, voucher_number: voucherNumber, amount: Number(payload.amount ?? 0), idempotent_replay: false })
+    }
+
+    if (table?.startsWith('rpc/archive_student') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_student_id?: string; p_reason?: string | null }
+      const target = students.find((item) => item.id === payload.p_student_id)
+      if (target) { target.status = 'archived'; target.archived_at = new Date().toISOString(); target.archive_reason = payload.p_reason ?? null }
+      return json(route, target ?? {})
+    }
+
+    if (table?.startsWith('rpc/unarchive_student') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_student_id?: string }
+      const target = students.find((item) => item.id === payload.p_student_id)
+      if (target) { target.status = 'active'; target.archived_at = null; target.archive_reason = null }
+      return json(route, target ?? {})
     }
 
     if (method === 'HEAD') {
