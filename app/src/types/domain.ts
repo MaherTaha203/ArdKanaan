@@ -54,12 +54,16 @@ export type Enrollment = {
 
 export type FeeCategory = 'institute' | 'external' | 'shared'
 
+// A financial obligation is anchored on the STUDENT (ADR-0077). Course and
+// enrollment are optional context: a fee may belong to a course (and to an
+// enrollment when the student has one) or stand entirely alone (exam, certificate,
+// other). `courseName` is a display snapshot, never the obligation's identity.
 export type FeeObligation = {
   id: string
   studentId: string
-  enrollmentId: string
-  courseId: string
-  courseName: string
+  enrollmentId: string | null
+  courseId: string | null
+  courseName: string | null
   description: string
   amount: number
   feeCategory: FeeCategory

@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.58.0 |
+| Version | 1.59.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -285,6 +285,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0074 | `docs/decisions/ADR-0074-product-work-line-authorization.md` | Product Work-Line Authorization — `app/` prototype evolved toward a usable product under the approved B+ UX direction, ahead of the documentation pipeline; NON-AUTHORITATIVE (no CP atom / no design authority), opens/advances no phase, financial firewall absolute, reconciled to CMP/CP/SC on Documentation Freeze (Owner-Decision ADR) | ACCEPTED |
 | ADR-0075 | `docs/decisions/ADR-0075-SUPERSEDE-BPLUS.md` | Retain B+ Structure, Adopt Current Visual Design — retires the historical B+ visual treatment; the current Owner-designed light visual baseline is the authoritative presentation direction; supersedes ADR-0074 only where it conflicts with the current visual design; changes no frozen constitution / financial rule / phase / freeze gate (Owner-Decision ADR) *(register row backfilled by ADR-0076)* | ACCEPTED |
 | ADR-0076 | `docs/decisions/ADR-0076-student-archive-lifecycle-authorization.md` | Student Archive Lifecycle Authorization — independent student-level `archived` state (`active`/`completed`/`archived`) with dedicated `archive_student`/`unarchive_student` RPCs, active-course eligibility, owner-only authorization, zero financial impact; records an exception to the frozen **DB-014** (DAT-002) for archiving only as a **tracked divergence** reconciled at Documentation Freeze; `completed` kept distinct; opens/advances no phase (Owner-Decision ADR) | ACCEPTED |
+| ADR-0077 | `docs/decisions/ADR-0077-student-anchored-financial-obligations.md` | Student-Anchored Financial Obligations — fee obligations independent of course enrollment (`course_id`/`enrollment_id` demoted to OPTIONAL context; standalone exam/certificate/external/other fees enabled); relaxes `create_fee_obligations` + the two fee triggers while keeping all context validation; `enrollment_id`/`course_name` made nullable; records a **tracked divergence** from the registration-anchored DAT-003/004/005 model reconciled at Documentation Freeze; financial firewall absolute (obligations immutable, non-deletable, move no cash — only a receipt does); migration created in-repo, NOT applied to Production; opens/advances no phase (Owner-Decision ADR) | ACCEPTED |
 
 ### 2.7 Phase 6 — Screen Blueprints (NOT YET OPEN)
 

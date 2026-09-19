@@ -7,6 +7,7 @@ import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
 import { StudentEditSheet } from '@/features/students/student-edit-sheet'
 import { StudentArchiveSheet } from '@/features/students/student-archive-sheet'
+import { StudentFeeSheet } from '@/features/students/student-fee-sheet'
 import { ArchivedStudentsWorkspace } from '@/features/students/archived-students-workspace'
 import { CourseFormSheet } from '@/features/courses/course-form-sheet'
 import { EnrollStudentSheet } from '@/features/courses/enroll-student-sheet'
@@ -76,6 +77,7 @@ export function AppShell() {
   const editCourseId = useShellStore((state) => state.editCourseId)
   const enrollCourseId = useShellStore((state) => state.enrollCourseId)
   const archiveStudentId = useShellStore((state) => state.archiveStudentId)
+  const feeStudentId = useShellStore((state) => state.feeStudentId)
   const receivePrefillName = useShellStore((state) => state.receivePrefillName)
   const navigate = useShellStore((state) => state.navigate)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
@@ -152,6 +154,7 @@ export function AppShell() {
       {overlay === 'course' ? <CourseFormSheet key={editCourseId ?? 'new'} /> : null}
       {overlay === 'enroll' ? <EnrollStudentSheet key={enrollCourseId ?? 'new'} /> : null}
       {overlay === 'archive' ? <StudentArchiveSheet key={archiveStudentId ?? 'none'} /> : null}
+      {overlay === 'student-fee' ? <StudentFeeSheet key={feeStudentId ?? 'none'} /> : null}
 
       <Toaster />
 
