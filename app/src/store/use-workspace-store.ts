@@ -59,6 +59,18 @@ async function loadStudents(supabase: SupabaseClient): Promise<{ data: StudentRo
   return fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to))
 }
 
+// A request can fail with 401 when the access token expires mid-session (e.g. the
+// tab slept past the proactive refresh). That is recoverable: refresh the session
+// and retry once, so a transient expiry never surfaces as a hard load error.
+function isAuthError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const record = error as { status?: unknown; code?: unknown; message?: unknown }
+  if (record.status === 401) return true
+  if (record.code === 'PGRST301' || record.code === '401') return true
+  const message = typeof record.message === 'string' ? record.message.toLowerCase() : ''
+  return message.includes('jwt') || message.includes('token is expired') || message.includes('unauthorized')
+}
+
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
   clearError: () => set({ error: null }),
@@ -66,28 +78,45 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     const supabase = getSupabaseBrowserClient()
     if (!supabase) { set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.', loaded: true, isLoading: false }); return }
     set({ isLoading: true, error: null })
-    try {
-      const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
-        loadStudents(supabase),
-        fetchAllRows<StatementRow>((from, to) => supabase.from('student_statement_lines').select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id').order('voucher_date', { ascending: true }).order('voucher_number', { ascending: true }).range(from, to)),
-        fetchAllRows<MovementRow>((from, to) => supabase.from('financial_movements').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share').order('voucher_date', { ascending: true }).order('created_at', { ascending: true }).range(from, to)),
-        fetchAllRows<CancelledRow>((from, to) => supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to)),
-      ])
-      if (studentsResult.error) throw studentsResult.error
-      if (statementResult.error) throw statementResult.error
-      if (movementsResult.error) throw movementsResult.error
-      if (cancelledResult.error) throw cancelledResult.error
-      set({ students: studentsResult.data.map(normalizeStudent), statementLines: statementResult.data.map(normalizeStatementLine), movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
 
-      const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
-        fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
-        fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value').range(from, to)),
-        fetchAllRows<FeeObligationRow>((from, to) => supabase.from('fee_obligations').select('id, student_id, enrollment_id, course_id, course_name, description, amount, fee_category, external_share, cancelled_at, cancel_reason, created_at').order('created_at', { ascending: true }).range(from, to)),
-      ])
-      if (coursesResult.error || enrollmentsResult.error || feesResult.error) console.error('optional workspace load failed', { courses: coursesResult.error, enrollments: enrollmentsResult.error, feeObligations: feesResult.error })
-      set({ courses: coursesResult.error ? [] : coursesResult.data.map(normalizeCourse), enrollments: enrollmentsResult.error ? [] : enrollmentsResult.data.map(normalizeEnrollment), feeObligations: feesResult.error ? [] : feesResult.data.map(normalizeFeeObligation), isLoading: false, loaded: true })
-    } catch (error) {
-      console.error('workspace load failed', error)
+    // One load pass. Returns 'ok' on success (state already set), 'auth' when a
+    // request failed with an expired/invalid token (recoverable), or 'error'.
+    const attempt = async (): Promise<'ok' | 'auth' | 'error'> => {
+      try {
+        const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
+          loadStudents(supabase),
+          fetchAllRows<StatementRow>((from, to) => supabase.from('student_statement_lines').select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id').order('voucher_date', { ascending: true }).order('voucher_number', { ascending: true }).range(from, to)),
+          fetchAllRows<MovementRow>((from, to) => supabase.from('financial_movements').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share').order('voucher_date', { ascending: true }).order('created_at', { ascending: true }).range(from, to)),
+          fetchAllRows<CancelledRow>((from, to) => supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to)),
+        ])
+        if (studentsResult.error) throw studentsResult.error
+        if (statementResult.error) throw statementResult.error
+        if (movementsResult.error) throw movementsResult.error
+        if (cancelledResult.error) throw cancelledResult.error
+        set({ students: studentsResult.data.map(normalizeStudent), statementLines: statementResult.data.map(normalizeStatementLine), movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
+
+        const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
+          fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
+          fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value').range(from, to)),
+          fetchAllRows<FeeObligationRow>((from, to) => supabase.from('fee_obligations').select('id, student_id, enrollment_id, course_id, course_name, description, amount, fee_category, external_share, cancelled_at, cancel_reason, created_at').order('created_at', { ascending: true }).range(from, to)),
+        ])
+        if (coursesResult.error || enrollmentsResult.error || feesResult.error) console.error('optional workspace load failed', { courses: coursesResult.error, enrollments: enrollmentsResult.error, feeObligations: feesResult.error })
+        set({ courses: coursesResult.error ? [] : coursesResult.data.map(normalizeCourse), enrollments: enrollmentsResult.error ? [] : enrollmentsResult.data.map(normalizeEnrollment), feeObligations: feesResult.error ? [] : feesResult.data.map(normalizeFeeObligation), isLoading: false, loaded: true })
+        return 'ok'
+      } catch (error) {
+        if (isAuthError(error)) return 'auth'
+        console.error('workspace load failed', error)
+        return 'error'
+      }
+    }
+
+    let outcome = await attempt()
+    if (outcome === 'auth') {
+      // Access token expired mid-session; refresh it and retry the load once.
+      try { await supabase.auth.refreshSession() } catch (error) { console.error('session refresh failed', error) }
+      outcome = await attempt()
+    }
+    if (outcome !== 'ok') {
       set({ isLoading: false, loaded: true, error: 'تعذّر تحميل بيانات المركز. تحقّق من الاتصال وحاول تحديث الصفحة.' })
     }
   },
