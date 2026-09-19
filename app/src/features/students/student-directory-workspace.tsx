@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 
-import { ChevronDown, ChevronLeft, Plus, Search, User } from 'lucide-react'
+import { Archive, ChevronDown, ChevronLeft, Plus, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudents, selectNonArchived, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
@@ -35,11 +35,14 @@ export function StudentDirectoryWorkspace() {
   const selectStudent = useShellStore((state) => state.selectStudent)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
   const openAddStudent = useShellStore((state) => state.openAddStudent)
+  const openArchive = useShellStore((state) => state.openArchive)
 
   const [query, setQuery] = useState('')
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
+  // The active roster excludes archived students (they live in the archive view).
+  const roster = useMemo(() => selectNonArchived(students), [students])
+  const aggregates = useMemo(() => aggregateStudents(roster, statementLines, enrollments, feeObligations), [roster, statementLines, enrollments, feeObligations])
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
     [aggregates],
@@ -78,6 +81,7 @@ export function StudentDirectoryWorkspace() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => navigateStudents('directory')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">دليل الطلاب</button>
         <button type="button" onClick={() => navigateStudents('statement')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">كشف الحساب</button>
+        <button type="button" onClick={() => navigateStudents('archived')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">المؤرشفون</button>
       </div>
 
       <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive">
@@ -91,7 +95,7 @@ export function StudentDirectoryWorkspace() {
             <div className="p-3"><SkeletonRows rows={8} /></div>
           ) : filtered.length > 0 ? (
             filtered.map((item) => <DirectoryRow key={item.student.id} item={item} selected={item.student.id === previewId} onSelect={() => setPreviewId(item.student.id)} />)
-          ) : students.length === 0 ? (
+          ) : roster.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-faint">لا يوجد طلاب بعد.</p>
           ) : (
             <p className="px-4 py-10 text-center text-sm text-faint">لا نتائج مطابقة.</p>
@@ -104,6 +108,10 @@ export function StudentDirectoryWorkspace() {
             if (!preview) return
             selectStudent(preview.student.id)
             navigateStudents('statement')
+          }}
+          onArchive={() => {
+            if (!preview) return
+            openArchive(preview.student.id)
           }}
         />
       </div>
@@ -137,7 +145,7 @@ function DirectoryRow({ item, selected, onSelect }: { item: StudentAggregate; se
   )
 }
 
-function StudentPreviewPanel({ item, onOpenStatement }: { item: StudentAggregate | null; onOpenStatement: () => void }) {
+function StudentPreviewPanel({ item, onOpenStatement, onArchive }: { item: StudentAggregate | null; onOpenStatement: () => void; onArchive: () => void }) {
   if (!item) {
     return <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint md:block">اختر طالبًا من القائمة لعرض ملخّص حسابه هنا.</div>
   }
@@ -156,7 +164,10 @@ function StudentPreviewPanel({ item, onOpenStatement }: { item: StudentAggregate
         <div><div className="text-[11px] font-medium text-faint">المسدَّد</div><Money value={item.paid} currency={false} className="text-lg font-semibold text-foreground" /></div>
         <div><div className="text-[11px] font-medium text-faint">الرصيد المستحق</div><Money value={item.remaining} currency={false} className={`text-lg font-semibold ${item.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`} /></div>
       </div>
-      <div className="mt-4"><Button variant="quiet" size="sm" onClick={onOpenStatement}><ChevronLeft className="size-4" />فتح الكشف الكامل</Button></div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button variant="quiet" size="sm" onClick={onOpenStatement}><ChevronLeft className="size-4" />فتح الكشف الكامل</Button>
+        {item.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={onArchive}><Archive className="size-4" />أرشفة</Button> : null}
+      </div>
     </div>
   )
 }

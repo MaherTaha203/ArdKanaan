@@ -29,10 +29,13 @@ type WorkspaceStore = {
   clearError: () => void
 }
 
-type StudentRow = { id: string; name: string; id_number: string | null; phone: string | null; notes: string | null }
+type StudentRow = { id: string; name: string; id_number: string | null; phone: string | null; notes: string | null; status?: string | null; archived_at?: string | null; archive_reason?: string | null }
 type StatementRow = { id: string; voucher_number: number; voucher_date: string; student_id: string; student_name: string; course_name: string; course_value: number | string; amount_received: number | string; remaining_balance: number | string; entry_type?: 'course' | 'fee' | null; fee_obligation_id?: string | null; enrollment_id?: string | null }
 type MovementRow = { id: string; movement_type: 'receipt' | 'payment'; voucher_number: number; voucher_date: string; amount: number | string; party_name: string | null; context: string | null; external_share?: number | string | null }
-function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes } }
+function normalizeStudentStatus(value: string | null | undefined): Student['status'] {
+  return value === 'archived' ? 'archived' : value === 'completed' ? 'completed' : 'active'
+}
+function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: normalizeStudentStatus(row.status), archivedAt: row.archived_at ?? null, archiveReason: row.archive_reason ?? null } }
 function normalizeStatementLine(row: StatementRow): StudentStatementLine { return { id: row.id, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, studentId: row.student_id, studentName: row.student_name, courseName: row.course_name, courseValue: Number(row.course_value), amountReceived: Number(row.amount_received), remainingBalance: Number(row.remaining_balance), entryType: row.entry_type ?? 'course', feeObligationId: row.fee_obligation_id ?? null, enrollmentId: row.enrollment_id ?? null } }
 function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
 type CourseRow = { id: string; name: string; base_fee: number | string | null; start_date: string | null; end_date: string | null; status: string; notes: string | null }
@@ -44,6 +47,18 @@ function normalizeFeeObligation(row: FeeObligationRow): FeeObligation { return {
 type CancelledRow = MovementRow & { cancelled_at: string; cancel_reason: string | null }
 function normalizeCancelled(row: CancelledRow): CancelledVoucher { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, cancelledAt: row.cancelled_at, cancelReason: row.cancel_reason } }
 
+type SupabaseClient = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>
+
+// Reads students with the lifecycle/archive columns, falling back to the base
+// identity columns when the archive migration has not been applied yet — so the
+// app stays backward-compatible whether or not `archived_at`/`archive_reason`
+// exist. normalizeStudent defaults status to 'active' and archive fields to null.
+async function loadStudents(supabase: SupabaseClient): Promise<{ data: StudentRow[]; error: unknown }> {
+  const full = await fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes, status, archived_at, archive_reason').order('name', { ascending: true }).range(from, to))
+  if (!full.error) return full
+  return fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to))
+}
+
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
   clearError: () => set({ error: null }),
@@ -53,7 +68,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     set({ isLoading: true, error: null })
     try {
       const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
-        fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to)),
+        loadStudents(supabase),
         fetchAllRows<StatementRow>((from, to) => supabase.from('student_statement_lines').select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id').order('voucher_date', { ascending: true }).order('voucher_number', { ascending: true }).range(from, to)),
         fetchAllRows<MovementRow>((from, to) => supabase.from('financial_movements').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share').order('voucher_date', { ascending: true }).order('created_at', { ascending: true }).range(from, to)),
         fetchAllRows<CancelledRow>((from, to) => supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to)),

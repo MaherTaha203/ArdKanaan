@@ -1,3 +1,8 @@
+// Student lifecycle (ADR-0076). `active ⇄ completed` and `active ⇄ archived` are
+// two independent transitions; `archived` is a purely administrative state that
+// hides a student from the active roster and has ZERO financial effect.
+export type StudentLifecycleStatus = 'active' | 'completed' | 'archived'
+
 export type Student = {
   id: string
   name: string
@@ -6,6 +11,10 @@ export type Student = {
   idNumber: string | null
   phone: string | null
   notes: string | null
+  // Lifecycle — administrative only, never a financial fact.
+  status: StudentLifecycleStatus
+  archivedAt: string | null
+  archiveReason: string | null
 }
 
 export type StudentStatementLine = {

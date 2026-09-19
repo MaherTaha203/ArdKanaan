@@ -14,8 +14,8 @@ const course: Course = {
 }
 
 const students: Student[] = [
-  { id: 's1', name: 'محمد أحمد', idNumber: null, phone: null, notes: null },
-  { id: 's2', name: 'زيد سالم', idNumber: null, phone: null, notes: null },
+  { id: 's1', name: 'محمد أحمد', idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null },
+  { id: 's2', name: 'زيد سالم', idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null },
 ]
 
 const enrollments: Enrollment[] = [

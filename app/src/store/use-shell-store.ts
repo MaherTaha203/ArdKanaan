@@ -5,10 +5,10 @@ import { create } from 'zustand'
 // RLS is the security boundary; this store no longer models a "session".
 
 export type ShellRoute = 'home' | 'students' | 'courses' | 'report' | 'activity' | 'settings'
-export type StudentView = 'directory' | 'statement'
+export type StudentView = 'directory' | 'statement' | 'archived'
 export type CourseView = 'directory' | 'detail'
 export type SettingsView = 'system' | 'activity' | 'backup'
-export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | null
+export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | null
 export type ReportView = 'general' | 'receipts' | 'payments'
 
 type ShellStore = {
@@ -25,6 +25,7 @@ type ShellStore = {
   editStudentId: string | null
   editCourseId: string | null
   enrollCourseId: string | null
+  archiveStudentId: string | null
   navigate: (route: ShellRoute) => void
   navigateStudents: (view: StudentView) => void
   navigateCourses: (view: CourseView) => void
@@ -41,6 +42,7 @@ type ShellStore = {
   openAddCourse: () => void
   openEditCourse: (id: string) => void
   openEnroll: (courseId: string) => void
+  openArchive: (studentId: string) => void
   closeOverlay: () => void
 }
 
@@ -51,6 +53,7 @@ const CLEARED = {
   editStudentId: null,
   editCourseId: null,
   enrollCourseId: null,
+  archiveStudentId: null,
 } as const
 
 export const useShellStore = create<ShellStore>((set) => ({
@@ -67,6 +70,7 @@ export const useShellStore = create<ShellStore>((set) => ({
   editStudentId: null,
   editCourseId: null,
   enrollCourseId: null,
+  archiveStudentId: null,
   navigate: (route) => set({ route, ...CLEARED }),
   navigateStudents: (view) => set({ route: 'students', studentView: view, ...CLEARED }),
   navigateCourses: (view) => set({ route: 'courses', courseView: view, ...CLEARED }),
@@ -83,5 +87,6 @@ export const useShellStore = create<ShellStore>((set) => ({
   openAddCourse: () => set({ ...CLEARED, overlay: 'course' }),
   openEditCourse: (id) => set({ ...CLEARED, overlay: 'course', editCourseId: id }),
   openEnroll: (courseId) => set({ ...CLEARED, overlay: 'enroll', enrollCourseId: courseId }),
+  openArchive: (studentId) => set({ ...CLEARED, overlay: 'archive', archiveStudentId: studentId }),
   closeOverlay: () => set({ ...CLEARED }),
 }))

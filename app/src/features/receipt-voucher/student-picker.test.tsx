@@ -12,7 +12,7 @@ import type { Student } from '@/types/domain'
 afterEach(cleanup)
 
 function student(id: string, name: string): Student {
-  return { id, name, idNumber: null, phone: null, notes: null }
+  return { id, name, idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null }
 }
 
 function Harness({ students }: { students: Student[] }) {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Pencil, Printer, Search } from 'lucide-react'
+import { Archive, Pencil, Printer, RotateCcw, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
@@ -39,6 +39,7 @@ export function StudentsWorkspace() {
   const selectedStudentId = useShellStore((state) => state.selectedStudentId)
   const selectStudent = useShellStore((state) => state.selectStudent)
   const openEditStudent = useShellStore((state) => state.openEditStudent)
+  const openArchive = useShellStore((state) => state.openArchive)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
 
   const [query, setQuery] = useState('')
@@ -92,6 +93,7 @@ export function StudentsWorkspace() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => navigateStudents('directory')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">دليل الطلاب</button>
         <button type="button" onClick={() => navigateStudents('statement')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">كشف الحساب</button>
+        <button type="button" onClick={() => navigateStudents('archived')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">المؤرشفون</button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[380px_minmax(0,1fr)]">
@@ -111,7 +113,10 @@ export function StudentsWorkspace() {
             <>
               <div className="mb-6 flex flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-border pb-6">
                 <div className="min-w-0">
-                  <h2 className="editorial text-2xl text-foreground">{active.student.name}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="editorial text-2xl text-foreground">{active.student.name}</h2>
+                    {active.student.status === 'archived' ? <span className="rounded-full border border-border-strong bg-highlight px-2 py-0.5 text-[11px] font-medium text-muted-foreground">مؤرشف</span> : null}
+                  </div>
                   <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px]">
                     <span><span className="text-faint">الدورات</span> <span className="figure font-semibold text-foreground">{formatNumber(active.courses)}</span></span>
                     <span><span className="text-faint">آخر حركة</span> <span className="figure font-semibold text-foreground">{active.lastActivity ? formatDate(active.lastActivity) : '—'}</span></span>
@@ -160,6 +165,8 @@ export function StudentsWorkspace() {
                 <h3 className="text-base font-bold text-foreground">كشف الحساب</h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
+                  {active.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><Archive className="size-4" />أرشفة الطالب</Button> : null}
+                  {active.student.status === 'archived' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><RotateCcw className="size-4" />إعادة التفعيل</Button> : null}
                   <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة الكشف</Button>
                 </div>
               </div>
@@ -201,6 +208,7 @@ function StudentRow({ item, active, onSelect }: { item: StudentAggregate; active
     <button type="button" onClick={onSelect} aria-current={active ? 'true' : undefined} className="flex w-full min-w-0 items-center gap-3 py-2.5 pe-3 ps-4 text-start">
       <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">{item.student.name.charAt(0)}</span>
       <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
+      {item.student.status === 'archived' ? <span className="rounded-full border border-border-strong bg-highlight px-1.5 py-0.5 text-[10px] font-medium text-faint">مؤرشف</span> : null}
       <span className="text-[11px] font-medium text-muted-foreground">{statusLabel}</span>
       {item.remaining > REMAINING_EPSILON ? <Money value={item.remaining} currency={false} className="text-xs font-semibold text-warn" /> : null}
     </button>

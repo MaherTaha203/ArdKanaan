@@ -4,7 +4,7 @@ import { aggregateStudents } from '@/lib/aggregate'
 import type { FeeObligation, Student, StudentStatementLine } from '@/types/domain'
 
 function student(id: string): Student {
-  return { id, name: 'سارة', idNumber: null, phone: null, notes: null }
+  return { id, name: 'سارة', idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null }
 }
 
 function fee(partial: Partial<FeeObligation>): FeeObligation {

@@ -6,6 +6,8 @@ import { useApplyRootSettings, useIdleLogout } from '@/hooks/use-app-preferences
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
 import { PaymentSheet } from '@/features/payment-voucher/payment-sheet'
 import { StudentEditSheet } from '@/features/students/student-edit-sheet'
+import { StudentArchiveSheet } from '@/features/students/student-archive-sheet'
+import { ArchivedStudentsWorkspace } from '@/features/students/archived-students-workspace'
 import { CourseFormSheet } from '@/features/courses/course-form-sheet'
 import { EnrollStudentSheet } from '@/features/courses/enroll-student-sheet'
 import { ActivityWorkspace } from '@/features/activity/activity-workspace'
@@ -33,6 +35,7 @@ const REPORT_MENU: MenuItem<ReportView>[] = [
 const STUDENT_MENU: MenuItem<StudentView>[] = [
   { value: 'directory', label: 'دليل الطلاب' },
   { value: 'statement', label: 'كشف الحساب' },
+  { value: 'archived', label: 'المؤرشفون' },
 ]
 
 const SETTINGS_MENU: MenuItem<SettingsView>[] = [
@@ -46,6 +49,7 @@ function CurrentView({ route, studentView, courseView, settingsView }: { route: 
     case 'home':
       return <GlanceWorkspace />
     case 'students':
+      if (studentView === 'archived') return <ArchivedStudentsWorkspace />
       return studentView === 'directory' ? <StudentDirectoryWorkspace /> : <StudentsWorkspace />
     case 'courses':
       return courseView === 'detail' ? <CourseDetailWorkspace /> : <CoursesWorkspace />
@@ -71,6 +75,7 @@ export function AppShell() {
   const editStudentId = useShellStore((state) => state.editStudentId)
   const editCourseId = useShellStore((state) => state.editCourseId)
   const enrollCourseId = useShellStore((state) => state.enrollCourseId)
+  const archiveStudentId = useShellStore((state) => state.archiveStudentId)
   const receivePrefillName = useShellStore((state) => state.receivePrefillName)
   const navigate = useShellStore((state) => state.navigate)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
@@ -146,6 +151,7 @@ export function AppShell() {
       {overlay === 'student' ? <StudentEditSheet key={editStudentId ?? 'new'} /> : null}
       {overlay === 'course' ? <CourseFormSheet key={editCourseId ?? 'new'} /> : null}
       {overlay === 'enroll' ? <EnrollStudentSheet key={enrollCourseId ?? 'new'} /> : null}
+      {overlay === 'archive' ? <StudentArchiveSheet key={archiveStudentId ?? 'none'} /> : null}
 
       <Toaster />
 

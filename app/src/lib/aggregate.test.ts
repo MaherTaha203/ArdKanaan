@@ -17,7 +17,7 @@ function enrollment(partial: Partial<Enrollment> & Pick<Enrollment, 'id' | 'stud
 }
 
 function student(id: string, name: string): Student {
-  return { id, name, idNumber: null, phone: null, notes: null }
+  return { id, name, idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null }
 }
 
 // A statement line mirrors the DB view: remainingBalance is the running
