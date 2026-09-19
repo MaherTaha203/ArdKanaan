@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Archive, Pencil, Printer, RotateCcw, Search } from 'lucide-react'
+import { Archive, Pencil, Plus, Printer, RotateCcw, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { RouteHeader } from '@/components/shell/route-header'
@@ -40,6 +40,7 @@ export function StudentsWorkspace() {
   const selectStudent = useShellStore((state) => state.selectStudent)
   const openEditStudent = useShellStore((state) => state.openEditStudent)
   const openArchive = useShellStore((state) => state.openArchive)
+  const openStudentFee = useShellStore((state) => state.openStudentFee)
   const navigateStudents = useShellStore((state) => state.navigateStudents)
 
   const [query, setQuery] = useState('')
@@ -151,7 +152,7 @@ export function StudentsWorkspace() {
                   <div className="border-y border-border">
                     {activeFees.map(({ fee, paid, remaining }) => (
                       <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-border px-2.5 py-3.5 last:border-b-0">
-                        <div className="min-w-0 flex-1"><div className="text-sm font-medium text-foreground">{fee.description}</div><div className="mt-1 text-[11.5px] text-muted-foreground">{fee.courseName} · {fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</div></div>
+                        <div className="min-w-0 flex-1"><div className="text-sm font-medium text-foreground">{fee.description}</div><div className="mt-1 text-[11.5px] text-muted-foreground">{fee.courseName ?? 'بدون دورة'} · {fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</div></div>
                         <span className="figure text-sm">{formatNumber(fee.amount)}</span>
                         <span className="figure text-sm text-gold">{formatNumber(paid)}</span>
                         <span className={`figure text-sm font-semibold ${remaining > REMAINING_EPSILON ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(remaining)}</span>
@@ -164,6 +165,7 @@ export function StudentsWorkspace() {
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-base font-bold text-foreground">كشف الحساب</h3>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="quiet" size="sm" onClick={() => openStudentFee(active.student.id)}><Plus className="size-4" />إضافة رسم</Button>
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
                   {active.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><Archive className="size-4" />أرشفة الطالب</Button> : null}
                   {active.student.status === 'archived' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><RotateCcw className="size-4" />إعادة التفعيل</Button> : null}

@@ -8,7 +8,7 @@ export type ShellRoute = 'home' | 'students' | 'courses' | 'report' | 'activity'
 export type StudentView = 'directory' | 'statement' | 'archived'
 export type CourseView = 'directory' | 'detail'
 export type SettingsView = 'system' | 'activity' | 'backup'
-export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | null
+export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | 'student-fee' | null
 export type ReportView = 'general' | 'receipts' | 'payments'
 
 type ShellStore = {
@@ -26,6 +26,7 @@ type ShellStore = {
   editCourseId: string | null
   enrollCourseId: string | null
   archiveStudentId: string | null
+  feeStudentId: string | null
   navigate: (route: ShellRoute) => void
   navigateStudents: (view: StudentView) => void
   navigateCourses: (view: CourseView) => void
@@ -33,7 +34,7 @@ type ShellStore = {
   navigateReport: (view: ReportView) => void
   selectStudent: (studentId: string) => void
   selectCourse: (courseId: string) => void
-  openOverlay: (overlay: Exclude<ShellOverlay, null | 'student' | 'course' | 'enroll'>) => void
+  openOverlay: (overlay: Exclude<ShellOverlay, null | 'student' | 'course' | 'enroll' | 'student-fee'>) => void
   openReceiveFor: (studentName: string) => void
   openEditReceipt: (id: string) => void
   openEditPayment: (id: string) => void
@@ -43,6 +44,7 @@ type ShellStore = {
   openEditCourse: (id: string) => void
   openEnroll: (courseId: string) => void
   openArchive: (studentId: string) => void
+  openStudentFee: (studentId: string) => void
   closeOverlay: () => void
 }
 
@@ -54,6 +56,7 @@ const CLEARED = {
   editCourseId: null,
   enrollCourseId: null,
   archiveStudentId: null,
+  feeStudentId: null,
 } as const
 
 export const useShellStore = create<ShellStore>((set) => ({
@@ -71,6 +74,7 @@ export const useShellStore = create<ShellStore>((set) => ({
   editCourseId: null,
   enrollCourseId: null,
   archiveStudentId: null,
+  feeStudentId: null,
   navigate: (route) => set({ route, ...CLEARED }),
   navigateStudents: (view) => set({ route: 'students', studentView: view, ...CLEARED }),
   navigateCourses: (view) => set({ route: 'courses', courseView: view, ...CLEARED }),
@@ -88,5 +92,6 @@ export const useShellStore = create<ShellStore>((set) => ({
   openEditCourse: (id) => set({ ...CLEARED, overlay: 'course', editCourseId: id }),
   openEnroll: (courseId) => set({ ...CLEARED, overlay: 'enroll', enrollCourseId: courseId }),
   openArchive: (studentId) => set({ ...CLEARED, overlay: 'archive', archiveStudentId: studentId }),
+  openStudentFee: (studentId) => set({ ...CLEARED, overlay: 'student-fee', feeStudentId: studentId }),
   closeOverlay: () => set({ ...CLEARED }),
 }))

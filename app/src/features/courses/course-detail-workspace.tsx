@@ -41,7 +41,7 @@ export function CourseDetailWorkspace() {
   )
 
   const courseFees = useMemo(
-    () => (course ? feeObligations.filter((fee) => fee.courseId === course.id || fee.courseName === course.name) : []),
+    () => (course ? feeObligations.filter((fee) => fee.courseId === course.id) : []),
     [course, feeObligations],
   )
 

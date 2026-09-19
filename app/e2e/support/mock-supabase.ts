@@ -152,7 +152,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
           student_id: studentId,
           enrollment_id: enrollment?.id ?? null,
           course_id: payload.course_id ?? null,
-          course_name: enrollment?.course_name ?? String(payload.course_name ?? ''),
+          course_name: enrollment?.course_name ?? courses.find((item) => item.id === payload.course_id)?.name ?? null,
           description: String(payload.description ?? ''),
           amount: Number(payload.amount ?? 0),
           fee_category: payload.fee_category,
