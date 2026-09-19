@@ -41,7 +41,9 @@ type StudentStatementRow = {
 }
 
 function normalizeStudent(row: StudentRow): Student {
-  return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes }
+  // The receipt-flow picker deals with identity only, not the lifecycle; the
+  // lifecycle fields are defaulted so the shared Student shape is satisfied.
+  return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: 'active', archivedAt: null, archiveReason: null }
 }
 
 function normalizeStatementLine(row: StudentStatementRow): StudentStatementLine {

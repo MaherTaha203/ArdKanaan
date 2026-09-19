@@ -1,4 +1,4 @@
-import type { Enrollment, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type { Course, Enrollment, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
 
 export type FinancialTotals = {
   totalIn: number
@@ -169,6 +169,30 @@ export function attentionList(aggregates: StudentAggregate[]): StudentAggregate[
 
 export function statementFor(lines: StudentStatementLine[], studentId: string): StudentStatementLine[] {
   return chronological(lines.filter((line) => line.studentId === studentId))
+}
+
+// --- Student lifecycle helpers (ADR-0076) -------------------------------------
+// Archiving is administrative only and has no financial effect; these are pure
+// selectors over the already-loaded lifecycle status, never a financial rule.
+
+export function isArchivedStudent(student: Student): boolean {
+  return student.status === 'archived'
+}
+
+// The active roster: everyone except archived students (active + completed).
+export function selectNonArchived(students: Student[]): Student[] {
+  return students.filter((student) => student.status !== 'archived')
+}
+
+export function selectArchived(students: Student[]): Student[] {
+  return students.filter((student) => student.status === 'archived')
+}
+
+// Archive eligibility (UI mirror of the archive_student RPC guard): a student
+// cannot be archived while enrolled in any course whose status is 'active'.
+export function hasActiveCourse(studentId: string, enrollments: Enrollment[], courses: Course[]): boolean {
+  const activeCourseIds = new Set(courses.filter((course) => course.status === 'active').map((course) => course.id))
+  return enrollments.some((enrollment) => enrollment.studentId === studentId && activeCourseIds.has(enrollment.courseId))
 }
 
 export function movementsNewestFirst(movements: FinancialMovement[]): FinancialMovement[] {

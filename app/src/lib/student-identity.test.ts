@@ -4,7 +4,7 @@ import { classifyNameMatches, countNameMatches } from '@/lib/student-identity'
 import type { Student } from '@/types/domain'
 
 function student(id: string, name: string): Student {
-  return { id, name, idNumber: null, phone: null, notes: null }
+  return { id, name, idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null }
 }
 
 describe('classifyNameMatches', () => {

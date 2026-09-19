@@ -40,7 +40,7 @@ function makeClient(respond: Respond, rpcRespond?: () => { data: unknown; error:
   }
 }
 
-function student(id: string, name: string): Student { return { id, name, idNumber: null, phone: null, notes: null } }
+function student(id: string, name: string): Student { return { id, name, idNumber: null, phone: null, notes: null, status: 'active', archivedAt: null, archiveReason: null } }
 function seedRoster(students: Student[]) { useWorkspaceStore.setState({ students }) }
 
 function formValues(overrides: Partial<ReceiptVoucherFormValues> = {}): ReceiptVoucherFormValues {
