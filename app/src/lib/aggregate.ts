@@ -1,4 +1,4 @@
-import type { Course, Enrollment, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type { Course, Enrollment, FeeCategory, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
 
 export type FinancialTotals = {
   totalIn: number
@@ -118,11 +118,52 @@ export function studentCourseBreakdown(
   return result.sort((a, b) => a.courseName.localeCompare(b.courseName, 'ar') || (a.enrollmentId ?? '').localeCompare(b.enrollmentId ?? ''))
 }
 
-function feeRemaining(fee: FeeObligation, lines: StudentStatementLine[]) {
-  const paid = lines
+function feePaid(fee: FeeObligation, lines: StudentStatementLine[]): number {
+  return lines
     .filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id)
     .reduce((sum, line) => sum + line.amountReceived, 0)
-  return Math.max(0, fee.amount - paid)
+}
+
+function feeRemaining(fee: FeeObligation, lines: StudentStatementLine[]) {
+  return Math.max(0, fee.amount - feePaid(fee, lines))
+}
+
+// A single fee obligation flattened for display (statement, print): the course is
+// optional context (ADR-0077), so `courseName` may be null ("بدون دورة").
+export type StatementFee = {
+  id: string
+  description: string
+  courseName: string | null
+  feeCategory: FeeCategory
+  amount: number
+  paid: number
+  remaining: number
+}
+
+// Everything the student currently owes: course dues (from enrolments/receipts)
+// plus every open/closed fee obligation. This is the read model behind both the
+// on-screen "الرسوم" section and the printed statement's dues detail — it reads
+// already-loaded data and creates no financial fact.
+export type StudentDues = {
+  courseDues: StudentCourseBreakdown[]
+  fees: StatementFee[]
+}
+
+export function studentDues(
+  studentId: string,
+  lines: StudentStatementLine[],
+  enrollments: Enrollment[],
+  feeObligations: FeeObligation[],
+): StudentDues {
+  const courseDues = studentCourseBreakdown(studentId, lines, enrollments)
+  const fees = feeObligations
+    .filter((fee) => fee.studentId === studentId && !fee.cancelledAt)
+    .map((fee) => {
+      const paid = feePaid(fee, lines)
+      return { id: fee.id, description: fee.description, courseName: fee.courseName, feeCategory: fee.feeCategory, amount: fee.amount, paid, remaining: Math.max(0, fee.amount - paid) }
+    })
+    .sort((a, b) => b.remaining - a.remaining)
+  return { courseDues, fees }
 }
 
 export function aggregateStudents(

@@ -198,7 +198,7 @@ export function StudentsWorkspace() {
         </section>
       </div>
 
-      {printing && active ? <StudentStatementPrint studentName={active.student.name} paid={active.paid} remaining={active.remaining} courses={active.courses} lines={activeLines} onClose={() => setPrinting(false)} /> : null}
+      {printing && active ? <StudentStatementPrint studentName={active.student.name} paid={active.paid} remaining={active.remaining} courses={active.courses} lines={activeLines} courseDues={activeBreakdown} fees={activeFees.map(({ fee, paid, remaining }) => ({ id: fee.id, description: fee.description, courseName: fee.courseName, feeCategory: fee.feeCategory, amount: fee.amount, paid, remaining }))} onClose={() => setPrinting(false)} /> : null}
     </div>
   )
 }

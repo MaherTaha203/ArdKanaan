@@ -10,7 +10,7 @@ import { CancelVoucherDialog } from '@/features/financial-report/cancel-voucher-
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, financialTotals, paymentCount, receiptCount, statementFor } from '@/lib/aggregate'
+import { aggregateStudents, financialTotals, paymentCount, receiptCount, statementFor, studentDues } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
 import type { FinancialMovement } from '@/types/domain'
@@ -42,6 +42,7 @@ export function FinancialReportWorkspace() {
   const movements = useWorkspaceStore((state) => state.movements)
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const enrollments = useWorkspaceStore((state) => state.enrollments)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
@@ -61,8 +62,9 @@ export function FinancialReportWorkspace() {
   const [accountName, setAccountName] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-  const studentStatements = useMemo(() => aggregateStudents(students, statementLines, [], feeObligations), [students, statementLines, feeObligations])
+  const studentStatements = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
   const printStudent = useMemo(() => printStudentId ? studentStatements.find((item) => item.student.id === printStudentId) ?? null : null, [studentStatements, printStudentId])
+  const printStudentDues = useMemo(() => printStudentId ? studentDues(printStudentId, statementLines, enrollments, feeObligations) : { courseDues: [], fees: [] }, [printStudentId, statementLines, enrollments, feeObligations])
   const start = fromDate || periodStartIso(period)
   const scoped = useMemo(() => movements.filter((movement) => {
     const fromOk = !start || movement.voucherDate >= start
@@ -88,7 +90,7 @@ export function FinancialReportWorkspace() {
       {isLoading || !loaded ? <SkeletonRows rows={8} /> : <section className="border-y border-border"><div className="overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-sm"><thead><tr className="text-[11px] text-faint"><th className="border-b border-border px-4 py-3 text-start">التاريخ</th><th className="border-b border-border px-4 py-3 text-start">رقم السند</th><th className="border-b border-border px-4 py-3 text-start">البيان</th><th className="border-b border-border px-4 py-3 text-end">المبلغ</th><th className="border-b border-border px-4 py-3 text-start">إجراء</th></tr></thead><tbody>{viewMovements.map((movement) => <tr key={`${movement.movementType}-${movement.id}`}><td className="figure border-b border-border px-4 py-3">{formatDate(movement.voucherDate)}</td><td className="figure border-b border-border px-4 py-3">{voucherRef(movement.movementType, movement.voucherNumber)}</td><td className="border-b border-border px-4 py-3 text-muted-foreground">{partyAndContext(movement)}</td><td className={`figure border-b border-border px-4 py-3 text-end font-semibold ${movement.movementType === 'receipt' ? 'text-gold' : 'text-clay'}`}>{formatNumber(movement.amount)}</td><td className="border-b border-border px-4 py-3"><div className="flex flex-wrap gap-2"><Button variant="quiet" size="sm" onClick={() => setPreviewId(movement.id)}>معاينة</Button>{movement.movementType === 'receipt' ? <Button variant="quiet" size="sm" onClick={() => openEditReceipt(movement.id)}><Pencil className="size-4" />تعديل</Button> : <Button variant="quiet" size="sm" onClick={() => openEditPayment(movement.id)}><Pencil className="size-4" />تعديل</Button>}<Button variant="quiet" size="sm" aria-label={`إبطال سند ${movement.movementType === 'receipt' ? 'القبض' : 'الصرف'} رقم ${voucherRef(movement.movementType, movement.voucherNumber)}`} onClick={() => setCancelTarget(movement)}><Ban className="size-4" />إبطال</Button></div></td></tr>)}{viewMovements.length === 0 ? <tr><td colSpan={5} className="px-4 py-12 text-center text-sm text-faint">لا توجد حركات في هذه الفترة.</td></tr> : null}</tbody></table></div></section>}
       {previewMovement ? <VoucherPrint movement={previewMovement} onClose={() => setPreviewId(null)} /> : null}
       {printing ? <FinancialReportPrint view={view} title={printTitle} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={scoped} externalHeld={viewExternalHeld} instituteRevenue={view === 'receipts' ? viewTotal - viewExternalHeld : 0} onClose={() => setPrinting(false)} /> : null}
-      {printStudent ? <StudentStatementPrint studentName={printStudent.student.name} paid={printStudent.paid} remaining={printStudent.remaining} courses={printStudent.courses} lines={statementFor(statementLines, printStudent.student.id)} onClose={() => setPrintStudentId(null)} /> : null}
+      {printStudent ? <StudentStatementPrint studentName={printStudent.student.name} paid={printStudent.paid} remaining={printStudent.remaining} courses={printStudent.courses} lines={statementFor(statementLines, printStudent.student.id)} courseDues={printStudentDues.courseDues} fees={printStudentDues.fees} onClose={() => setPrintStudentId(null)} /> : null}
       {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); setPreviewId(null); await reload() }} /> : null}
     </div>
   )
