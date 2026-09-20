@@ -9,7 +9,7 @@ export type StudentView = 'directory' | 'statement' | 'archived'
 export type CourseView = 'directory' | 'detail'
 export type SettingsView = 'system' | 'activity' | 'backup'
 export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | 'student-fee' | null
-export type ReportView = 'general' | 'receipts' | 'payments'
+export type ReportView = 'general' | 'receipts' | 'payments' | 'external'
 
 type ShellStore = {
   route: ShellRoute

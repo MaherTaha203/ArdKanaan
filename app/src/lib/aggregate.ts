@@ -34,6 +34,59 @@ export function financialTotals(movements: FinancialMovement[]): FinancialTotals
   return { totalIn, totalOut, net: totalIn - totalOut, externalHeld, instituteRevenue: totalIn - externalHeld }
 }
 
+// One line of the external-parties statement (كشف الجهات الخارجية): every receipt
+// that carries a share for an external party — whether fully external or split with
+// the institute (feeCategory 'shared'). `externalShare` is the portion held on behalf
+// of the external party; `instituteShare` is the remainder that belongs to the
+// institute on that same receipt. A pure display selector over already-loaded
+// movements — it records no cash box and creates no financial fact.
+export type ExternalPartyLine = {
+  id: string
+  voucherNumber: number
+  voucherDate: string
+  party: string
+  context: string
+  amount: number
+  externalShare: number
+  instituteShare: number
+}
+
+export type ExternalPartyStatement = {
+  lines: ExternalPartyLine[]
+  totalAmount: number
+  totalExternal: number
+  totalInstitute: number
+}
+
+export function externalPartyStatement(movements: FinancialMovement[]): ExternalPartyStatement {
+  const lines: ExternalPartyLine[] = []
+  let totalAmount = 0
+  let totalExternal = 0
+  let totalInstitute = 0
+
+  for (const movement of movements) {
+    const externalShare = movement.externalShare ?? 0
+    if (movement.movementType !== 'receipt' || externalShare <= 0) continue
+    const instituteShare = Math.max(0, movement.amount - externalShare)
+    lines.push({
+      id: movement.id,
+      voucherNumber: movement.voucherNumber,
+      voucherDate: movement.voucherDate,
+      party: movement.partyName ?? '—',
+      context: movement.context ?? '',
+      amount: movement.amount,
+      externalShare,
+      instituteShare,
+    })
+    totalAmount += movement.amount
+    totalExternal += externalShare
+    totalInstitute += instituteShare
+  }
+
+  lines.sort((a, b) => (a.voucherDate < b.voucherDate ? -1 : a.voucherDate > b.voucherDate ? 1 : a.voucherNumber - b.voucherNumber))
+  return { lines, totalAmount, totalExternal, totalInstitute }
+}
+
 function chronological(lines: StudentStatementLine[]) {
   return lines.slice().sort((a, b) => {
     if (a.voucherDate < b.voucherDate) return -1
