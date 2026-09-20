@@ -128,42 +128,80 @@ function feeRemaining(fee: FeeObligation, lines: StudentStatementLine[]) {
   return Math.max(0, fee.amount - feePaid(fee, lines))
 }
 
-// A single fee obligation flattened for display (statement, print): the course is
-// optional context (ADR-0077), so `courseName` may be null ("بدون دورة").
-export type StatementFee = {
+function beneficiaryLabel(category: FeeCategory): string {
+  return category === 'institute' ? 'للمعهد' : category === 'external' ? 'لجهة خارجية' : 'مشترك'
+}
+const dayOf = (value?: string | null): string => (value ? value.slice(0, 10) : '')
+
+// One line of the running account statement (كشف حساب جاري): a debit (an obligation
+// placed on the student — a course fee or a fee obligation, dated when incurred) or
+// a credit (a receipt/payment, dated by the voucher), with the running balance =
+// Σ debit − Σ credit up to and including this line. A pure read model over
+// already-loaded data — it creates no financial fact.
+export type LedgerEntry = {
   id: string
-  description: string
-  courseName: string | null
-  feeCategory: FeeCategory
-  amount: number
-  paid: number
-  remaining: number
+  date: string
+  kind: 'debit' | 'credit'
+  label: string
+  meta: string
+  debit: number
+  credit: number
+  balance: number
+  voucherNumber?: number
 }
 
-// Everything the student currently owes: course dues (from enrolments/receipts)
-// plus every open/closed fee obligation. This is the read model behind both the
-// on-screen "الرسوم" section and the printed statement's dues detail — it reads
-// already-loaded data and creates no financial fact.
-export type StudentDues = {
-  courseDues: StudentCourseBreakdown[]
-  fees: StatementFee[]
+export type StudentLedger = {
+  entries: LedgerEntry[]
+  totalDebit: number
+  totalCredit: number
+  balance: number
 }
 
-export function studentDues(
+export function studentLedger(
   studentId: string,
   lines: StudentStatementLine[],
   enrollments: Enrollment[],
   feeObligations: FeeObligation[],
-): StudentDues {
-  const courseDues = studentCourseBreakdown(studentId, lines, enrollments)
-  const fees = feeObligations
-    .filter((fee) => fee.studentId === studentId && !fee.cancelledAt)
-    .map((fee) => {
-      const paid = feePaid(fee, lines)
-      return { id: fee.id, description: fee.description, courseName: fee.courseName, feeCategory: fee.feeCategory, amount: fee.amount, paid, remaining: Math.max(0, fee.amount - paid) }
-    })
-    .sort((a, b) => b.remaining - a.remaining)
-  return { courseDues, fees }
+): StudentLedger {
+  const studentLines = lines.filter((line) => line.studentId === studentId)
+  const enrollmentsById = new Map(enrollments.filter((enrollment) => enrollment.studentId === studentId).map((enrollment) => [enrollment.id, enrollment]))
+
+  type Raw = LedgerEntry & { sort: string }
+  const raw: Raw[] = []
+
+  // Course dues (debits): one per course, dated by the enrolment (else the earliest
+  // payment on it). Uses the authoritative breakdown so the total reconciles.
+  for (const course of studentCourseBreakdown(studentId, studentLines, enrollments)) {
+    const enrollment = course.enrollmentId ? enrollmentsById.get(course.enrollmentId) : undefined
+    const earliestPayment = studentLines
+      .filter((line) => (line.entryType ?? 'course') === 'course' && (course.enrollmentId ? line.enrollmentId === course.enrollmentId : line.courseName === course.courseName))
+      .reduce<string>((min, line) => (!min || line.voucherDate < min ? line.voucherDate : min), '')
+    const date = dayOf(enrollment?.createdAt) || earliestPayment || ''
+    raw.push({ id: `d-course-${course.enrollmentId ?? course.courseName}`, date, kind: 'debit', label: course.courseName, meta: 'دورة', debit: course.fee, credit: 0, balance: 0, sort: `${date}#0#0` })
+  }
+
+  // Fee dues (debits).
+  for (const fee of feeObligations) {
+    if (fee.studentId !== studentId || fee.cancelledAt) continue
+    const date = dayOf(fee.createdAt)
+    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.description, meta: `${fee.courseName ?? 'بدون دورة'} · ${beneficiaryLabel(fee.feeCategory)}`, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
+  }
+
+  // Payments (credits): one per receipt allocation line.
+  for (const line of studentLines) {
+    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: 'سند قبض', meta: line.entryType === 'fee' ? `رسم · ${line.courseName}` : line.courseName, debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
+  }
+
+  raw.sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : a.id < b.id ? -1 : 1))
+
+  let balance = 0
+  const entries: LedgerEntry[] = raw.map((row) => {
+    balance += row.debit - row.credit
+    return { id: row.id, date: row.date, kind: row.kind, label: row.label, meta: row.meta, debit: row.debit, credit: row.credit, balance, voucherNumber: row.voucherNumber }
+  })
+  const totalDebit = raw.reduce((sum, row) => sum + row.debit, 0)
+  const totalCredit = raw.reduce((sum, row) => sum + row.credit, 0)
+  return { entries, totalDebit, totalCredit, balance: totalDebit - totalCredit }
 }
 
 export function aggregateStudents(
