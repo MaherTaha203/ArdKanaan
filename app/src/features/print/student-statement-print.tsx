@@ -91,12 +91,6 @@ export function StudentStatementPrint({ studentName, courses, entries, totalDebi
         ) : null}
       </table>
 
-      <div className={`mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px] ${MUTED}`}>
-        <span>مدين (عليه): التزام على الطالب — رسوم أو دورة.</span>
-        <span>دائن (له): سند قبض.</span>
-        <span>الرصيد الجاري = إجمالي المدين − إجمالي الدائن حتى ذلك السطر.</span>
-      </div>
-
       <div className="mt-10 flex justify-start">
         <SiteQr />
       </div>
