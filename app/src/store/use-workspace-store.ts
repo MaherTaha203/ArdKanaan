@@ -40,8 +40,8 @@ function normalizeStatementLine(row: StatementRow): StudentStatementLine { retur
 function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
 type CourseRow = { id: string; name: string; base_fee: number | string | null; start_date: string | null; end_date: string | null; status: string; notes: string | null }
 function normalizeCourse(row: CourseRow): Course { return { id: row.id, name: row.name, baseFee: row.base_fee === null ? null : Number(row.base_fee), startDate: row.start_date, endDate: row.end_date, status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus, notes: row.notes ?? '' } }
-type EnrollmentRow = { id: string; student_id: string; course_id: string; course_name: string; course_value: number | string }
-function normalizeEnrollment(row: EnrollmentRow): Enrollment { return { id: row.id, studentId: row.student_id, courseId: row.course_id, courseName: row.course_name, courseValue: Number(row.course_value) } }
+type EnrollmentRow = { id: string; student_id: string; course_id: string; course_name: string; course_value: number | string; created_at?: string | null }
+function normalizeEnrollment(row: EnrollmentRow): Enrollment { return { id: row.id, studentId: row.student_id, courseId: row.course_id, courseName: row.course_name, courseValue: Number(row.course_value), createdAt: row.created_at ?? undefined } }
 type FeeObligationRow = { id: string; student_id: string; enrollment_id: string | null; course_id: string | null; course_name: string | null; description: string; amount: number | string; fee_category: FeeCategory; external_share: number | string; cancelled_at: string | null; cancel_reason: string | null; created_at: string }
 function normalizeFeeObligation(row: FeeObligationRow): FeeObligation { return { id: row.id, studentId: row.student_id, enrollmentId: row.enrollment_id, courseId: row.course_id, courseName: row.course_name, description: row.description, amount: Number(row.amount), feeCategory: row.fee_category, externalShare: Number(row.external_share), cancelledAt: row.cancelled_at, cancelReason: row.cancel_reason, createdAt: row.created_at } }
 type CancelledRow = MovementRow & { cancelled_at: string; cancel_reason: string | null }
@@ -97,7 +97,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
 
         const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
           fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
-          fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value').range(from, to)),
+          fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value, created_at').range(from, to)),
           fetchAllRows<FeeObligationRow>((from, to) => supabase.from('fee_obligations').select('id, student_id, enrollment_id, course_id, course_name, description, amount, fee_category, external_share, cancelled_at, cancel_reason, created_at').order('created_at', { ascending: true }).range(from, to)),
         ])
         if (coursesResult.error || enrollmentsResult.error || feesResult.error) console.error('optional workspace load failed', { courses: coursesResult.error, enrollments: enrollmentsResult.error, feeObligations: feesResult.error })

@@ -50,6 +50,10 @@ export type Enrollment = {
   courseId: string
   courseName: string
   courseValue: number
+  // Enrolment moment — the date the course fee was incurred; used to place the
+  // course due chronologically in the running statement. Optional so fixtures and
+  // legacy rows without it still typecheck.
+  createdAt?: string
 }
 
 export type FeeCategory = 'institute' | 'external' | 'shared'

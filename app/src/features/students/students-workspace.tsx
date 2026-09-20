@@ -8,9 +8,8 @@ import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, statementFor, studentCourseBreakdown, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudents, statementFor, studentLedger, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
-import { voucherRef } from '@/lib/voucher'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -72,18 +71,7 @@ export function StudentsWorkspace() {
 
   const activeId = selectedStudentId ?? filtered[0]?.student.id ?? sorted[0]?.student.id ?? null
   const active = useMemo(() => aggregates.find((item) => item.student.id === activeId) ?? null, [aggregates, activeId])
-  const activeLines = useMemo(() => (activeId ? statementFor(statementLines, activeId) : []), [statementLines, activeId])
-  const activeBreakdown = useMemo(() => (activeId ? studentCourseBreakdown(activeId, statementLines, enrollments) : []), [activeId, statementLines, enrollments])
-  const activeFees = useMemo(() => {
-    if (!activeId) return []
-    return feeObligations
-      .filter((fee) => fee.studentId === activeId && !fee.cancelledAt)
-      .map((fee) => {
-        const paid = activeLines.filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id).reduce((sum, line) => sum + line.amountReceived, 0)
-        return { fee, paid, remaining: Math.max(0, fee.amount - paid) }
-      })
-      .sort((a, b) => b.remaining - a.remaining)
-  }, [activeId, feeObligations, activeLines])
+  const activeLedger = useMemo(() => (activeId ? studentLedger(activeId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }), [activeId, statementLines, enrollments, feeObligations])
 
   return (
     <div className="detail-workspace">
@@ -128,42 +116,8 @@ export function StudentsWorkspace() {
                 <div className="flex gap-8"><RecordFigure label="المسدَّد" value={active.paid} tone="ink" /><RecordFigure label="الرصيد المستحق" value={active.remaining} tone="warn" /></div>
               </div>
 
-              {activeBreakdown.length > 0 ? (
-                <div className="mb-6">
-                  <h3 className="mb-3 text-base font-bold text-foreground">الدورات المسجّل بها</h3>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {activeBreakdown.map((course) => (
-                      <div key={course.courseName} className="rounded-xl border border-border bg-panel px-4 py-3">
-                        <div className="text-sm font-semibold text-foreground">{course.courseName}</div>
-                        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px]">
-                          <span><span className="text-faint">الرسوم</span> <span className="figure font-semibold text-foreground">{formatNumber(course.fee)}</span></span>
-                          <span><span className="text-faint">المدفوع</span> <span className="figure font-semibold text-gold">{formatNumber(course.paid)}</span></span>
-                          <span><span className="text-faint">المتبقّي</span> <span className={`figure font-semibold ${course.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(course.remaining)}</span></span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              {activeFees.length > 0 ? (
-                <div className="mb-6">
-                  <h3 className="mb-3 text-base font-bold text-foreground">الرسوم</h3>
-                  <div className="border-y border-border">
-                    {activeFees.map(({ fee, paid, remaining }) => (
-                      <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-border px-2.5 py-3.5 last:border-b-0">
-                        <div className="min-w-0 flex-1"><div className="text-sm font-medium text-foreground">{fee.description}</div><div className="mt-1 text-[11.5px] text-muted-foreground">{fee.courseName ?? 'بدون دورة'} · {fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</div></div>
-                        <span className="figure text-sm">{formatNumber(fee.amount)}</span>
-                        <span className="figure text-sm text-gold">{formatNumber(paid)}</span>
-                        <span className={`figure text-sm font-semibold ${remaining > REMAINING_EPSILON ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(remaining)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-base font-bold text-foreground">كشف الحساب</h3>
+                <h3 className="text-base font-bold text-foreground">كشف الحساب الجاري</h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="quiet" size="sm" onClick={() => openStudentFee(active.student.id)}><Plus className="size-4" />إضافة رسم</Button>
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
@@ -177,20 +131,18 @@ export function StudentsWorkspace() {
                 <table className="border-collapse text-sm">
                   <thead><tr className="text-[11.5px] tracking-wide text-faint">
                     <th className="border-b border-border px-2.5 py-3 text-start font-semibold">التاريخ</th>
-                    <th className="border-b border-border px-2.5 py-3 text-start font-semibold">رقم السند</th>
                     <th className="border-b border-border px-2.5 py-3 text-start font-semibold">البيان</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">القيمة</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">المسدَّد</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد المستحق</th>
+                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">مدين (عليه)</th>
+                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">دائن (له)</th>
+                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد الجاري</th>
                   </tr></thead>
-                  <tbody>{activeLines.length > 0 ? activeLines.map((line) => <tr key={line.id}>
-                    <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5">{formatDate(line.voucherDate)}</td>
-                    <td className="figure border-b border-border px-2.5 py-3.5 text-muted-foreground">{voucherRef('receipt', line.voucherNumber)}</td>
-                    <td className="border-b border-border px-2.5 py-3.5 text-muted-foreground">{line.entryType === 'fee' ? `رسم · ${line.courseName}` : line.courseName}</td>
-                    <td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(line.courseValue)}</td>
-                    <td className="figure border-b border-border px-2.5 py-3.5 text-end font-medium">{formatNumber(line.amountReceived)}</td>
-                    <td className={`figure border-b border-border px-2.5 py-3.5 text-end font-bold ${line.remainingBalance > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`}>{formatNumber(line.remainingBalance)}</td>
-                  </tr>) : <tr><td colSpan={6} className="px-2.5 py-10 text-center text-sm text-faint">لا توجد حركات.</td></tr>}</tbody>
+                  <tbody>{activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
+                    <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
+                    <td className="border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
+                    <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
+                    <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.credit > 0 ? 'font-semibold text-gold' : 'text-faint'}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
+                    <td className="figure border-b border-border px-2.5 py-3.5 text-end font-bold text-foreground">{formatNumber(entry.balance)}</td>
+                  </tr>) : <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">لا توجد حركات.</td></tr>}</tbody>
                 </table>
               </div>
             </>
@@ -198,7 +150,7 @@ export function StudentsWorkspace() {
         </section>
       </div>
 
-      {printing && active ? <StudentStatementPrint studentName={active.student.name} paid={active.paid} remaining={active.remaining} courses={active.courses} lines={activeLines} courseDues={activeBreakdown} fees={activeFees.map(({ fee, paid, remaining }) => ({ id: fee.id, description: fee.description, courseName: fee.courseName, feeCategory: fee.feeCategory, amount: fee.amount, paid, remaining }))} onClose={() => setPrinting(false)} /> : null}
+      {printing && active ? <StudentStatementPrint studentName={active.student.name} courses={active.courses} entries={activeLedger.entries} totalDebit={activeLedger.totalDebit} totalCredit={activeLedger.totalCredit} balance={activeLedger.balance} onClose={() => setPrinting(false)} /> : null}
     </div>
   )
 }
