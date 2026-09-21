@@ -56,11 +56,11 @@ describe('financialTotals', () => {
       movement({ id: 'b', movementType: 'receipt', amount: 100 }),
       movement({ id: 'c', movementType: 'payment', amount: 120 }),
     ]
-    expect(financialTotals(movements)).toEqual({ totalIn: 500, totalOut: 120, net: 380, externalHeld: 0, instituteRevenue: 500 })
+    expect(financialTotals(movements)).toEqual({ totalIn: 500, totalOut: 120, net: 380, externalHeld: 0, instituteRevenue: 500, centerNet: 380 })
   })
 
   it('is all zero for no movements', () => {
-    expect(financialTotals([])).toEqual({ totalIn: 0, totalOut: 0, net: 0, externalHeld: 0, instituteRevenue: 0 })
+    expect(financialTotals([])).toEqual({ totalIn: 0, totalOut: 0, net: 0, externalHeld: 0, instituteRevenue: 0, centerNet: 0 })
   })
 
   it('recognises only the institute share of a shared fee as revenue', () => {

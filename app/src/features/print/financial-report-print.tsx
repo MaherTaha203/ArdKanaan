@@ -76,11 +76,23 @@ export function FinancialReportPrint({
       {view === 'general' ? (
         // Opening and closing balances are not repeated here — they live in the
         // ledger below (the opening-balance row and the final running balance).
-        <div className="grid grid-cols-3 gap-4 border-y border-[#e2e8f0] py-5">
-          <SummaryCell label="إجمالي المقبوضات" value={totalIn} color="text-[#059669]" />
-          <SummaryCell label="إجمالي المدفوعات" value={totalOut} color="text-[#dc2626]" />
-          <SummaryCell label="صافي التدفق النقدي" value={net} />
-        </div>
+        // When an external share exists, the center's own receipts are shown net
+        // of it so the held-for-others amount is never read as center revenue;
+        // the cash-flow ledger below stays gross (actual cash movements).
+        externalHeld > 0 ? (
+          <div className="grid grid-cols-4 gap-4 border-y border-[#e2e8f0] py-5">
+            <SummaryCell label="مقبوضات المركز" value={instituteRevenue} color="text-[#059669]" />
+            <SummaryCell label="لصالح جهات خارجية" value={externalHeld} />
+            <SummaryCell label="إجمالي المدفوعات" value={totalOut} color="text-[#dc2626]" />
+            <SummaryCell label="صافي التدفق النقدي" value={net} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4 border-y border-[#e2e8f0] py-5">
+            <SummaryCell label="إجمالي المقبوضات" value={totalIn} color="text-[#059669]" />
+            <SummaryCell label="إجمالي المدفوعات" value={totalOut} color="text-[#dc2626]" />
+            <SummaryCell label="صافي التدفق النقدي" value={net} />
+          </div>
+        )
       ) : showSplit ? (
         <div className="grid grid-cols-4 gap-4 border-y border-[#e2e8f0] py-5">
           <SummaryCell label="إجمالي المقبوضات" value={totalIn} color="text-[#059669]" />
