@@ -44,16 +44,12 @@ describe('financialTotals — center funds vs external share', () => {
     expect(t.externalHeld).toBe(0)
   })
 
-  it('an external share larger than the receipt is handled safely (finite, never NaN)', () => {
-    // The database rejects external_share > amount (fee_obligations CHECK
-    // external_share <= amount, and post_receipt_with_allocations raises
-    // INVALID_EXTERNAL_SHARE), so the read model is only ever fed valid rows.
-    // Even if such a row leaked, the split stays a finite number and never throws.
-    const t = financialTotals([receipt(100, 140)])
-    expect(Number.isFinite(t.centerNet)).toBe(true)
-    expect(Number.isFinite(t.instituteRevenue)).toBe(true)
-    expect(t.externalHeld).toBe(140)
-  })
+  // Note: the "external > receipt" rejection is a DATABASE guarantee, not a
+  // read-model one, so it is proven at the real layer — not asserted here with a
+  // Number.isFinite() proxy. See app/supabase/tests/external_share_layers.sh:
+  // creating a fee with amount 100 / external 120 raises INVALID_FEE_PAYLOAD and
+  // writes no row (fee_obligations CHECK external_share <= amount, and
+  // post_receipt_with_allocations raises INVALID_EXTERNAL_SHARE if v_external > amount).
 })
 
 // --- Isolation / non-reversal proof ------------------------------------------
