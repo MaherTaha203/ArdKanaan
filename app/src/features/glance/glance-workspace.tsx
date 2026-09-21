@@ -70,10 +70,11 @@ export function GlanceWorkspace() {
         <section aria-label="الرصيد النقديّ للمركز" className="rounded-2xl border border-border bg-panel px-6 py-6">
           <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ الحالي</div>
           {!loaded ? <Skeleton className="mt-3 h-11 w-48" /> : <>
-            <Money value={totals.net} className={`mt-2 block text-[40px] font-semibold leading-none ${totals.net < 0 ? 'text-clay' : 'text-foreground'}`} currencyClassName="text-[0.34em]" />
+            <Money value={totals.centerNet} className={`mt-2 block text-[40px] font-semibold leading-none ${totals.centerNet < 0 ? 'text-clay' : 'text-foreground'}`} currencyClassName="text-[0.34em]" />
             <div className="mt-5 flex flex-wrap gap-x-8 gap-y-1 text-[13px] text-muted-foreground">
-              <span>المقبوضات <Money value={totals.totalIn} currency={false} className="font-semibold text-gold" /></span>
+              <span>المقبوضات <Money value={totals.instituteRevenue} currency={false} className="font-semibold text-gold" /></span>
               <span>المدفوعات <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" /></span>
+              {totals.externalHeld > 0 ? <span>لصالح جهات خارجية <Money value={totals.externalHeld} currency={false} className="font-semibold text-foreground" /></span> : null}
             </div>
           </>}
         </section>

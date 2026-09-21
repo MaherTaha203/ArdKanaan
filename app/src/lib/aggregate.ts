@@ -6,6 +6,12 @@ export type FinancialTotals = {
   net: number
   externalHeld: number
   instituteRevenue: number
+  // The center's own money, net of what was collected on behalf of external
+  // parties: centerNet = net − externalHeld = (instituteRevenue − totalOut).
+  // `totalIn`/`net` stay the gross physical cash figures; the external share is
+  // held for others, so it is never counted as the center's balance. This is a
+  // pure read-model split — it changes no voucher, allocation, or student figure.
+  centerNet: number
 }
 
 export type StudentAggregate = {
@@ -31,7 +37,8 @@ export function financialTotals(movements: FinancialMovement[]): FinancialTotals
     }
   }
 
-  return { totalIn, totalOut, net: totalIn - totalOut, externalHeld, instituteRevenue: totalIn - externalHeld }
+  const net = totalIn - totalOut
+  return { totalIn, totalOut, net, externalHeld, instituteRevenue: totalIn - externalHeld, centerNet: net - externalHeld }
 }
 
 // One line of the external-parties statement (كشف الجهات الخارجية): every receipt
