@@ -181,6 +181,73 @@ select:focus-visible {
   animation: none;
 }
 
+/* Full-screen page windows layered over the home base (UI/navigation only). Each
+   stays mounted while open; only visibility toggles, so its state survives being
+   minimized. It slides up when shown and slides down + fades when minimized. */
+.app-window {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: opacity 0.26s ease, transform 0.26s ease, visibility 0s linear 0.26s;
+}
+.app-window.is-active {
+  z-index: 20;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+  transition: none;
+  animation: winEnter 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes winEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.dock-in {
+  animation: dockIn 0.2s ease-out;
+}
+@keyframes dockIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-window,
+  .app-window.is-active {
+    transition-duration: 0s;
+    animation: none;
+  }
+  .dock-in {
+    animation: none;
+  }
+}
+:root[data-motion='off'] .app-window,
+:root[data-motion='off'] .app-window.is-active {
+  transition-duration: 0s;
+  animation: none;
+}
+:root[data-motion='off'] .dock-in {
+  animation: none;
+}
+
 /* Compact table density: the "كثافة الجداول" setting sets data-density="compact".
    Scoped to the routed view so print sheets (portaled to <body>) keep their own
    generous spacing. !important is deliberate — it must beat the inline utility

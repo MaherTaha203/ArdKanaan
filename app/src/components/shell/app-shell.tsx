@@ -22,8 +22,11 @@ import { FinancialReportWorkspace } from '@/features/financial-report/financial-
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { BackupWorkspace } from '@/features/settings/backup-workspace'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useShellStore, type CourseView, type ReportView, type SettingsView, type ShellRoute, type StudentView } from '@/store/use-shell-store'
+import { useShellStore, type CourseView, type ReportView, type SettingsView, type StudentView } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
+import { WindowFrame } from '@/components/shell/window-frame'
+import { WindowDock } from '@/components/shell/window-dock'
+import { WINDOW_META, type WindowRoute } from '@/components/shell/window-registry'
 
 type MenuItem<T> = { value: T; label: string }
 
@@ -31,6 +34,7 @@ const REPORT_MENU: MenuItem<ReportView>[] = [
   { value: 'general', label: 'كشف الحساب العام' },
   { value: 'receipts', label: 'تقرير المقبوضات' },
   { value: 'payments', label: 'تقرير المدفوعات' },
+  { value: 'external', label: 'الجهات الخارجية' },
 ]
 
 const STUDENT_MENU: MenuItem<StudentView>[] = [
@@ -45,10 +49,14 @@ const SETTINGS_MENU: MenuItem<SettingsView>[] = [
   { value: 'activity', label: 'سجل التدقيق' },
 ]
 
-function CurrentView({ route, studentView, courseView, settingsView }: { route: ShellRoute; studentView: StudentView; courseView: CourseView; settingsView: SettingsView }) {
+// The page shown inside a window. Mirrors the old single-view switch, minus 'home'
+// (home is the permanent base layer). Reads sub-view state from the store exactly
+// as before — the workspaces are unchanged.
+function RouteView({ route }: { route: WindowRoute }) {
+  const studentView = useShellStore((state) => state.studentView)
+  const courseView = useShellStore((state) => state.courseView)
+  const settingsView = useShellStore((state) => state.settingsView)
   switch (route) {
-    case 'home':
-      return <GlanceWorkspace />
     case 'students':
       if (studentView === 'archived') return <ArchivedStudentsWorkspace />
       return studentView === 'directory' ? <StudentDirectoryWorkspace /> : <StudentsWorkspace />
@@ -65,12 +73,31 @@ function CurrentView({ route, studentView, courseView, settingsView }: { route: 
   }
 }
 
+// Keyed by the active sub-view so switching sub-views remounts the page (matching
+// the previous behaviour + entrance fade); minimizing/restoring keeps the same key,
+// so the window stays mounted and its state survives.
+function subviewKey(route: WindowRoute, studentView: StudentView, courseView: CourseView, settingsView: SettingsView, reportView: ReportView): string {
+  switch (route) {
+    case 'students':
+      return `students:${studentView}`
+    case 'courses':
+      return `courses:${courseView}`
+    case 'settings':
+      return `settings:${settingsView}`
+    case 'report':
+      return `report:${reportView}`
+    default:
+      return route
+  }
+}
+
 export function AppShell() {
   const route = useShellStore((state) => state.route)
   const studentView = useShellStore((state) => state.studentView)
   const courseView = useShellStore((state) => state.courseView)
   const settingsView = useShellStore((state) => state.settingsView)
   const reportView = useShellStore((state) => state.reportView)
+  const openWindows = useShellStore((state) => state.openWindows)
   const overlay = useShellStore((state) => state.overlay)
   const editVoucherId = useShellStore((state) => state.editVoucherId)
   const editStudentId = useShellStore((state) => state.editStudentId)
@@ -84,6 +111,8 @@ export function AppShell() {
   const navigateCourses = useShellStore((state) => state.navigateCourses)
   const navigateSettings = useShellStore((state) => state.navigateSettings)
   const navigateReport = useShellStore((state) => state.navigateReport)
+  const minimizeActive = useShellStore((state) => state.minimizeActive)
+  const closeWindow = useShellStore((state) => state.closeWindow)
   const openOverlay = useShellStore((state) => state.openOverlay)
   const signOut = useAuthStore((state) => state.signOut)
   const load = useWorkspaceStore((state) => state.load)
@@ -97,32 +126,18 @@ export function AppShell() {
   }, [loaded, load])
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-20 flex flex-none items-center gap-2 border-b border-border bg-panel/95 px-4 py-3 md:gap-4 md:px-8">
+    <div className="flex h-screen flex-col bg-background">
+      <header className="sticky top-0 z-40 flex flex-none items-center gap-2 border-b border-white/10 bg-[#0f172a] px-4 py-2.5 text-white shadow-[0_10px_28px_-20px_rgba(15,23,42,0.9)] md:gap-4 md:px-8">
         <button type="button" onClick={() => navigate('home')} className="flex items-baseline gap-2">
-          <span className="editorial text-[19px] text-foreground">أرض كنعان</span>
+          <span className="editorial text-[19px] text-white">أرض كنعان</span>
         </button>
 
         <nav aria-label="التنقل" className="ms-6 hidden items-center gap-1 md:flex">
           <NavLink label="الرئيسية" icon={Home} active={route === 'home'} onClick={() => navigate('home')} />
-          <GroupNav
-            label="الطلاب"
-            icon={Users}
-            active={route === 'students'}
-            value={studentView}
-            items={STUDENT_MENU}
-            onPick={navigateStudents}
-          />
+          <GroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
           <NavLink label="الدورات" icon={BookOpen} active={route === 'courses'} onClick={() => navigateCourses('directory')} />
           <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} />
-          <GroupNav
-            label="إعدادات"
-            icon={Settings}
-            active={route === 'settings' || route === 'activity'}
-            value={settingsView}
-            items={SETTINGS_MENU}
-            onPick={navigateSettings}
-          />
+          <GroupNav label="إعدادات" icon={Settings} active={route === 'settings' || route === 'activity'} value={settingsView} items={SETTINGS_MENU} onPick={navigateSettings} />
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
@@ -130,23 +145,42 @@ export function AppShell() {
             <ArrowDownLeft className="size-4" />
             سند قبض
           </button>
-          <button type="button" onClick={() => openOverlay('expense')} className="hidden items-center gap-2 rounded-full border border-border-strong px-4 py-2 text-[13px] font-semibold text-muted-foreground sm:inline-flex">
+          <button type="button" onClick={() => openOverlay('expense')} className="hidden items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-[13px] font-semibold text-white/90 hover:bg-white/10 sm:inline-flex">
             <ArrowUpRight className="size-4" />
             سند صرف
           </button>
-          <button type="button" onClick={() => void signOut()} aria-label="خروج" className="rounded-full p-2 text-muted-foreground">
+          <button type="button" onClick={() => void signOut()} aria-label="خروج" className="rounded-full p-2 text-white/80 hover:text-white">
             <LogOut className="size-[18px]" />
           </button>
         </div>
       </header>
 
-      <main className="flex-1 overflow-x-clip">
-        <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-8 md:px-8 md:pb-14 md:pt-10">
-          <div key={`${route}:${studentView}:${courseView}:${settingsView}:${reportView}`} className="route-fade">
-            <CurrentView route={route} studentView={studentView} courseView={courseView} settingsView={settingsView} />
+      <main className="relative flex-1 overflow-hidden">
+        {/* Home — the base layer, shown when no window is on top. A full-screen window
+            fully covers it, so it is only rendered when it is the active view (home
+            carries no user input to preserve; the windows are what stay mounted). */}
+        {route === 'home' ? (
+          <div className="absolute inset-0 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-8 md:px-8 md:pb-12 md:pt-10">
+              <GlanceWorkspace />
+            </div>
           </div>
-        </div>
+        ) : null}
+
+        {/* Open pages — each a full-screen window over home, kept mounted so its
+            state survives minimizing. Only the active route is visible. */}
+        {(openWindows as WindowRoute[]).map((r) => (
+          <WindowFrame key={r} title={WINDOW_META[r].title} icon={WINDOW_META[r].icon} active={route === r} onMinimize={minimizeActive} onClose={() => closeWindow(r)}>
+            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">
+              <div key={subviewKey(r, studentView, courseView, settingsView, reportView)} className="route-fade">
+                <RouteView route={r} />
+              </div>
+            </div>
+          </WindowFrame>
+        ))}
       </main>
+
+      <WindowDock />
 
       {overlay === 'receive' ? <ReceiptSheet key={editVoucherId ?? receivePrefillName ?? 'new'} /> : null}
       {overlay === 'expense' ? <PaymentSheet key={editVoucherId ?? 'new'} /> : null}
@@ -173,7 +207,7 @@ export function AppShell() {
 
 function NavLink({ label, icon: Icon, active, onClick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium ${active ? 'bg-olive-weak text-olive' : 'text-muted-foreground'}`}>
+    <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
       <Icon className="size-4" />
       {label}
     </button>
@@ -193,7 +227,7 @@ function GroupNav<T extends string>({ label, icon: Icon, active, value, items, o
   }, [open])
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium ${active ? 'bg-olive-weak text-olive' : 'text-muted-foreground'}`}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
         <Icon className="size-4" />
         {label}
         <ChevronDown className="size-4" />
