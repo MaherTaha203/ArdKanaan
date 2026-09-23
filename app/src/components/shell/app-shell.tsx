@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
 
-import { ArrowDownLeft, ArrowUpRight, BookOpen, ChevronDown, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
+import { ArrowDownToLine, ArrowUpFromLine, BookOpen, ChevronDown, FileText, Home, LogOut, SlidersHorizontal, Users } from 'lucide-react'
 
 import { useApplyRootSettings, useIdleLogout } from '@/hooks/use-app-preferences'
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
@@ -139,16 +139,16 @@ export function AppShell() {
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
           <button type="button" onClick={() => openOverlay('receive')} className="hidden items-center gap-2 rounded-full bg-olive px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-olive-ink sm:inline-flex">
-            <ArrowDownLeft className="size-4" />
+            <ArrowDownToLine className="size-4" />
             سند قبض
           </button>
           <button type="button" onClick={() => openOverlay('expense')} className="hidden items-center gap-2 rounded-full border border-white/25 px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex">
-            <ArrowUpRight className="size-4" />
+            <ArrowUpFromLine className="size-4" />
             سند صرف
           </button>
           <GroupNav
             label="النظام"
-            icon={Settings}
+            icon={SlidersHorizontal}
             active={route === 'settings' || route === 'activity'}
             value={settingsView}
             items={SETTINGS_MENU}
@@ -209,8 +209,8 @@ export function AppShell() {
         <MobileGroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
         <MobileNavButton active={route === 'courses'} icon={BookOpen} label="الدورات" onClick={() => navigateCourses('directory')} />
         <MobileGroupNav label="التقرير" icon={FileText} active={route === 'report'} value={reportView} items={REPORT_MENU} onPick={navigateReport} />
-        <MobileNavButton icon={ArrowDownLeft} label="قبض" accent onClick={() => openOverlay('receive')} />
-        <MobileNavButton icon={ArrowUpRight} label="صرف" onClick={() => openOverlay('expense')} />
+        <MobileNavButton icon={ArrowDownToLine} label="قبض" accent onClick={() => openOverlay('receive')} />
+        <MobileNavButton icon={ArrowUpFromLine} label="صرف" onClick={() => openOverlay('expense')} />
       </nav>
     </div>
   )
