@@ -181,9 +181,10 @@ select:focus-visible {
   animation: none;
 }
 
-/* Full-screen page windows layered over the home base (UI/navigation only). Each
-   stays mounted while open; only visibility toggles, so its state survives being
-   minimized. It slides up when shown and slides down + fades when minimized. */
+/* Tabbed workspace panels (UI/navigation only). Each open page is a panel that fills
+   the content area and stays mounted while its tab is open; only visibility toggles,
+   so switching tabs preserves the page's state (filters, scroll, inputs, selections).
+   The active panel fades in softly — a calm panel swap, not a floating window. */
 .app-window {
   position: absolute;
   inset: 0;
@@ -193,59 +194,25 @@ select:focus-visible {
   z-index: 10;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(16px);
   pointer-events: none;
-  transition: opacity 0.26s ease, transform 0.26s ease, visibility 0s linear 0.26s;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
 }
 .app-window.is-active {
   z-index: 20;
   opacity: 1;
   visibility: visible;
-  transform: none;
   pointer-events: auto;
-  transition: none;
-  animation: winEnter 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-@keyframes winEnter {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.dock-in {
-  animation: dockIn 0.2s ease-out;
-}
-@keyframes dockIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  transition: opacity 0.18s ease;
 }
 @media (prefers-reduced-motion: reduce) {
   .app-window,
   .app-window.is-active {
     transition-duration: 0s;
-    animation: none;
-  }
-  .dock-in {
-    animation: none;
   }
 }
 :root[data-motion='off'] .app-window,
 :root[data-motion='off'] .app-window.is-active {
   transition-duration: 0s;
-  animation: none;
-}
-:root[data-motion='off'] .dock-in {
-  animation: none;
 }
 
 /* Compact table density: the "كثافة الجداول" setting sets data-density="compact".

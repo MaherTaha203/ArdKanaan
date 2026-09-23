@@ -68,25 +68,29 @@ export function StudentDirectoryWorkspace() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <RouteHeader eyebrow="الطلاب" title="دليل الطلاب" />
-        <Button variant="default" onClick={openAddStudent}>
-          <Plus className="size-4" />
-          إضافة طالب
-        </Button>
-      </div>
+      <RouteHeader
+        eyebrow="الطلاب"
+        title="دليل الطلاب"
+        actions={
+          <>
+            <div className="flex w-64 max-w-full items-center gap-2 rounded-xl border border-border-strong bg-panel px-3 py-2 shadow-sm focus-within:border-olive">
+              <Search aria-hidden className="size-4 flex-none text-faint" />
+              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+            </div>
+            <Button variant="default" onClick={openAddStudent}>
+              <Plus className="size-4" />
+              إضافة طالب
+            </Button>
+          </>
+        }
+      />
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => navigateStudents('directory')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">دليل الطلاب</button>
         <button type="button" onClick={() => navigateStudents('statement')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">كشف الحساب</button>
         <button type="button" onClick={() => navigateStudents('archived')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">المؤرشفون</button>
-      </div>
-
-      <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive">
-        <Search aria-hidden className="size-4 flex-none text-faint" />
-        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
       </div>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">

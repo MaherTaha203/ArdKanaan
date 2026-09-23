@@ -25,7 +25,7 @@ import { useAuthStore } from '@/store/use-auth-store'
 import { useShellStore, type CourseView, type ReportView, type SettingsView, type StudentView } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import { WindowFrame } from '@/components/shell/window-frame'
-import { WindowDock } from '@/components/shell/window-dock'
+import { TabStrip } from '@/components/shell/tab-strip'
 import { WINDOW_META, type WindowRoute } from '@/components/shell/window-registry'
 
 type MenuItem<T> = { value: T; label: string }
@@ -111,8 +111,6 @@ export function AppShell() {
   const navigateCourses = useShellStore((state) => state.navigateCourses)
   const navigateSettings = useShellStore((state) => state.navigateSettings)
   const navigateReport = useShellStore((state) => state.navigateReport)
-  const minimizeActive = useShellStore((state) => state.minimizeActive)
-  const closeWindow = useShellStore((state) => state.closeWindow)
   const openOverlay = useShellStore((state) => state.openOverlay)
   const signOut = useAuthStore((state) => state.signOut)
   const load = useWorkspaceStore((state) => state.load)
@@ -155,23 +153,25 @@ export function AppShell() {
         </div>
       </header>
 
+      <TabStrip />
+
       <main className="relative flex-1 overflow-hidden">
-        {/* Home — the base layer, shown when no window is on top. A full-screen window
-            fully covers it, so it is only rendered when it is the active view (home
-            carries no user input to preserve; the windows are what stay mounted). */}
+        {/* Home — the first tab, always available. It is shown when it is the active
+            tab; home carries no user input to preserve, so it mounts when active while
+            the other pages are the ones kept mounted for their state. */}
         {route === 'home' ? (
-          <div className="absolute inset-0 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-8 md:px-8 md:pb-12 md:pt-10">
+          <section id="panel-home" role="tabpanel" aria-labelledby="tab-home" className="absolute inset-0 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
               <GlanceWorkspace />
             </div>
-          </div>
+          </section>
         ) : null}
 
-        {/* Open pages — each a full-screen window over home, kept mounted so its
-            state survives minimizing. Only the active route is visible. */}
+        {/* Open pages — each a chrome-free panel filling the content area, kept mounted
+            so its state survives while another tab is active. Only the active one shows. */}
         {(openWindows as WindowRoute[]).map((r) => (
-          <WindowFrame key={r} title={WINDOW_META[r].title} icon={WINDOW_META[r].icon} active={route === r} onMinimize={minimizeActive} onClose={() => closeWindow(r)}>
-            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">
+          <WindowFrame key={r} active={route === r} label={WINDOW_META[r].title} panelId={`panel-${r}`} labelledBy={`tab-${r}`}>
+            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
               <div key={subviewKey(r, studentView, courseView, settingsView, reportView)} className="route-fade">
                 <RouteView route={r} />
               </div>
@@ -179,8 +179,6 @@ export function AppShell() {
           </WindowFrame>
         ))}
       </main>
-
-      <WindowDock />
 
       {overlay === 'receive' ? <ReceiptSheet key={editVoucherId ?? receivePrefillName ?? 'new'} /> : null}
       {overlay === 'expense' ? <PaymentSheet key={editVoucherId ?? 'new'} /> : null}

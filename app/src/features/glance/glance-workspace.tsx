@@ -58,16 +58,16 @@ export function GlanceWorkspace() {
   }, [attention, statementLines, enrollments, feeObligations])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
       <header>
-        <h1 className="editorial text-[clamp(1.6rem,3vw,2.1rem)] text-foreground">مرحبًا بك في أرض كنعان</h1>
+        <h1 className="editorial text-[clamp(1.35rem,2.4vw,1.75rem)] text-foreground">مرحبًا بك في أرض كنعان</h1>
         <p className="mt-1 text-sm text-muted-foreground">متابعة سريعة لحركة المركز الماليّ</p>
       </header>
 
       <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]">
-        <section aria-label="الرصيد النقديّ للمركز" className="rounded-2xl border border-border bg-panel px-6 py-6">
+        <section aria-label="الرصيد النقديّ للمركز" className="rounded-2xl border border-border bg-panel px-6 py-5">
           <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ الحالي</div>
           {!loaded ? <Skeleton className="mt-3 h-11 w-48" /> : <>
             <Money value={totals.centerNet} className={`mt-2 block text-[40px] font-semibold leading-none ${totals.centerNet < 0 ? 'text-clay' : 'text-foreground'}`} currencyClassName="text-[0.34em]" />
@@ -78,7 +78,7 @@ export function GlanceWorkspace() {
             </div>
           </>}
         </section>
-        <section aria-label="تاريخ اليوم" className="rounded-2xl border border-border bg-panel px-6 py-6">
+        <section aria-label="تاريخ اليوم" className="rounded-2xl border border-border bg-panel px-6 py-5">
           <div className="text-[13px] font-medium text-muted-foreground">التاريخ اليوم</div>
           <div className="figure mt-2 text-2xl font-semibold text-foreground">{todayLong()}</div>
         </section>

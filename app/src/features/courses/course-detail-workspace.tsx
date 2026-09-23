@@ -61,7 +61,7 @@ export function CourseDetailWorkspace() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <ConfigNotice />
         <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
@@ -70,7 +70,7 @@ export function CourseDetailWorkspace() {
           الدورات
         </button>
 
-        <header className="rounded-2xl border border-border bg-panel px-6 py-5">
+        <header className="rounded-2xl border border-border bg-panel px-5 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <h1 className="editorial text-[clamp(1.4rem,3vw,1.9rem)] text-foreground">{course.name}</h1>
