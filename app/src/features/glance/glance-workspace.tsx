@@ -63,7 +63,6 @@ export function GlanceWorkspace() {
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
       <header>
         <h1 className="editorial text-[clamp(1.35rem,2.4vw,1.75rem)] text-foreground">مرحبًا بك في أرض كنعان</h1>
-        <p className="mt-1 text-sm text-muted-foreground">متابعة سريعة لحركة المركز الماليّ</p>
       </header>
 
       <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]">

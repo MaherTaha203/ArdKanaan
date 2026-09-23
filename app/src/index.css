@@ -97,12 +97,19 @@ a {
   color: inherit;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
+/* Keep the form-control reset in the base layer (like Tailwind's own preflight),
+   so text-color utilities (text-white, text-olive, …) on buttons/inputs still win.
+   Unlayered, this rule overrode every text-* utility on form controls — which made
+   an active nav pill (bg-white + text-olive) inherit the dark header's white and
+   render white-on-white. Elements with no color utility still inherit as before. */
+@layer base {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
 }
 
 #root {
