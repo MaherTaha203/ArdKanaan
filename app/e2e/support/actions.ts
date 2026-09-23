@@ -7,7 +7,7 @@ export async function login(page: Page): Promise<void> {
   await page.getByPlaceholder('name@example.com').fill('owner@example.com')
   await page.locator('input[type="password"]').fill('secret123')
   await page.getByRole('button', { name: 'دخول' }).click()
-  await expect(page.getByRole('button', { name: 'خروج' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'النظام', exact: true })).toBeVisible()
 }
 
 // Opens the receipt (سند قبض) sheet from the top bar and waits for the dialog.

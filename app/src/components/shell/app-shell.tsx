@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentType } from 'react'
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
 
 import { ArrowDownLeft, ArrowUpRight, BookOpen, ChevronDown, FileText, Home, LogOut, Settings, Users } from 'lucide-react'
 
@@ -135,21 +135,35 @@ export function AppShell() {
           <GroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
           <NavLink label="الدورات" icon={BookOpen} active={route === 'courses'} onClick={() => navigateCourses('directory')} />
           <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} />
-          <GroupNav label="إعدادات" icon={Settings} active={route === 'settings' || route === 'activity'} value={settingsView} items={SETTINGS_MENU} onPick={navigateSettings} />
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
-          <button type="button" onClick={() => openOverlay('receive')} className="hidden items-center gap-2 rounded-full bg-olive px-4 py-2 text-[13px] font-semibold text-white shadow-sm sm:inline-flex">
+          <button type="button" onClick={() => openOverlay('receive')} className="hidden items-center gap-2 rounded-full bg-olive px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-olive-ink sm:inline-flex">
             <ArrowDownLeft className="size-4" />
             سند قبض
           </button>
-          <button type="button" onClick={() => openOverlay('expense')} className="hidden items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-[13px] font-semibold text-white/90 hover:bg-white/10 sm:inline-flex">
+          <button type="button" onClick={() => openOverlay('expense')} className="hidden items-center gap-2 rounded-full border border-white/25 px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex">
             <ArrowUpRight className="size-4" />
             سند صرف
           </button>
-          <button type="button" onClick={() => void signOut()} aria-label="خروج" className="rounded-full p-2 text-white/80 hover:text-white">
-            <LogOut className="size-[18px]" />
-          </button>
+          <GroupNav
+            label="النظام"
+            icon={Settings}
+            active={route === 'settings' || route === 'activity'}
+            value={settingsView}
+            items={SETTINGS_MENU}
+            onPick={navigateSettings}
+            menuAlign="end"
+            footer={(close) => (
+              <>
+                <div className="my-1 h-px bg-border" />
+                <button type="button" role="menuitem" onClick={() => { close(); void signOut() }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-semibold text-clay hover:bg-clay-weak">
+                  <LogOut className="size-4" />
+                  تسجيل الخروج
+                </button>
+              </>
+            )}
+          />
         </div>
       </header>
 
@@ -195,7 +209,6 @@ export function AppShell() {
         <MobileGroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
         <MobileNavButton active={route === 'courses'} icon={BookOpen} label="الدورات" onClick={() => navigateCourses('directory')} />
         <MobileGroupNav label="التقرير" icon={FileText} active={route === 'report'} value={reportView} items={REPORT_MENU} onPick={navigateReport} />
-        <MobileGroupNav label="إعدادات" icon={Settings} active={route === 'settings' || route === 'activity'} value={settingsView} items={SETTINGS_MENU} onPick={navigateSettings} />
         <MobileNavButton icon={ArrowDownLeft} label="قبض" accent onClick={() => openOverlay('receive')} />
         <MobileNavButton icon={ArrowUpRight} label="صرف" onClick={() => openOverlay('expense')} />
       </nav>
@@ -205,14 +218,14 @@ export function AppShell() {
 
 function NavLink({ label, icon: Icon, active, onClick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
+    <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
       <Icon className="size-4" />
       {label}
     </button>
   )
 }
 
-function GroupNav<T extends string>({ label, icon: Icon, active, value, items, onPick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; value: T; items: MenuItem<T>[]; onPick: (value: T) => void }) {
+function GroupNav<T extends string>({ label, icon: Icon, active, value, items, onPick, footer, menuAlign = 'start' }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; value: T; items: MenuItem<T>[]; onPick: (value: T) => void; footer?: (close: () => void) => ReactNode; menuAlign?: 'start' | 'end' }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -225,13 +238,14 @@ function GroupNav<T extends string>({ label, icon: Icon, active, value, items, o
   }, [open])
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
         <Icon className="size-4" />
         {label}
         <ChevronDown className="size-4" />
       </button>
-      {open ? <div role="menu" className="menu-in absolute start-0 z-30 mt-1 w-48 overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg">
-        {items.map((item) => <button key={item.value} type="button" role="menuitemradio" aria-checked={active && value === item.value} onClick={() => { onPick(item.value); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${active && value === item.value ? 'font-semibold text-olive' : 'text-muted-foreground'}`}>{item.label}</button>)}
+      {open ? <div role="menu" className={`menu-in absolute z-30 mt-1 w-48 overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg ${menuAlign === 'end' ? 'end-0' : 'start-0'}`}>
+        {items.map((item) => <button key={item.value} type="button" role="menuitemradio" aria-checked={active && value === item.value} onClick={() => { onPick(item.value); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${active && value === item.value ? 'font-semibold text-olive' : 'text-muted-foreground'} hover:bg-highlight`}>{item.label}</button>)}
+        {footer ? footer(() => setOpen(false)) : null}
       </div> : null}
     </div>
   )

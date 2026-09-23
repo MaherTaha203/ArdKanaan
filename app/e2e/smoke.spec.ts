@@ -22,7 +22,7 @@ test('shows the seeded student on the student directory', async ({ page }) => {
 test('opens the activity log as a read-only workspace', async ({ page }) => {
   await installSupabaseMocks(page)
   await login(page)
-  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('button', { name: 'النظام', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'سجل التدقيق' }).click()
   await expect(page.getByRole('heading', { name: 'سجل التدقيق' })).toBeVisible()
   await expect(page.getByRole('textbox', { name: 'البحث في سجل النشاط' })).toBeVisible()
@@ -88,7 +88,7 @@ test('cancels a voucher without deleting it and moves it to cancelled history', 
   expect(handle.activeMovements.some((movement) => movement.id === 'r-1')).toBe(false)
   expect(handle.cancelledVouchers).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'r-1', voucher_number: 912, cancel_reason: 'إدخال تجريبي خاطئ' })]))
   await expect(page.getByRole('button', { name: /إبطال سند القبض رقم R-912/ })).toHaveCount(0)
-  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('button', { name: 'النظام', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'سجل التدقيق' }).click()
   await expect(page.getByText('لا توجد سجلات مطابقة.')).not.toBeVisible()
 })
@@ -110,7 +110,7 @@ test('keeps financial reports separated by report type and period', async ({ pag
 test('persists center settings and reflects reset to defaults', async ({ page }) => {
   await installSupabaseMocks(page)
   await login(page)
-  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('button', { name: 'النظام', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
   const centerName = page.locator('input').first()
@@ -118,7 +118,7 @@ test('persists center settings and reflects reset to defaults', async ({ page })
   await centerName.fill('مركز أرض كنعان التجريبي')
   await centerName.blur()
   await page.reload()
-  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('button', { name: 'النظام', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
   await expect(page.locator('input').first()).toHaveValue('مركز أرض كنعان التجريبي')
@@ -147,7 +147,7 @@ test('adds a student through the real student form path', async ({ page }) => {
 test('restores a validated backup through the real settings path', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
   await login(page)
-  await page.getByRole('button', { name: 'إعدادات', exact: true }).click()
+  await page.getByRole('button', { name: 'النظام', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true }).click()
   await page.getByRole('button', { name: 'فتح صفحة النسخ الاحتياطي' }).click()
   await expect(page.getByRole('heading', { name: 'النسخ الاحتياطي والاستعادة' })).toBeVisible()
@@ -182,4 +182,16 @@ test('handles password recovery and returns to the authenticated shell after pas
   await expect.poll(() => handle.passwordUpdates.length).toBe(1)
   expect(handle.passwordUpdates[0]).toBe(testPassword)
   await expect(page.getByRole('button', { name: 'الرئيسية' })).toBeVisible()
+})
+
+test('the النظام menu groups settings and a logout entry', async ({ page }) => {
+  await installSupabaseMocks(page)
+  await login(page)
+  // The top-bar system menu (where the logout button used to sit) holds the
+  // settings sub-views plus a logout entry as its last item.
+  await page.getByRole('button', { name: 'النظام', exact: true }).click()
+  await expect(page.getByRole('menuitemradio', { name: 'الإعدادات', exact: true })).toBeVisible()
+  await expect(page.getByRole('menuitemradio', { name: 'النسخ الاحتياطي' })).toBeVisible()
+  await expect(page.getByRole('menuitemradio', { name: 'سجل التدقيق' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'تسجيل الخروج' })).toBeVisible()
 })
