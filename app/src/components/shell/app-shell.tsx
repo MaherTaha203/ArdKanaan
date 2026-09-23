@@ -134,7 +134,7 @@ export function AppShell() {
           <NavLink label="الرئيسية" icon={Home} active={route === 'home'} onClick={() => navigate('home')} />
           <GroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
           <NavLink label="الدورات" icon={BookOpen} active={route === 'courses'} onClick={() => navigateCourses('directory')} />
-          <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} />
+          <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} onNewVoucher={openOverlay} />
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
@@ -243,8 +243,30 @@ function GroupNav<T extends string>({ label, icon: Icon, active, value, items, o
   )
 }
 
-function ReportNav({ active, reportView, onPick }: { active: boolean; reportView: ReportView; onPick: (view: ReportView) => void }) {
-  return <GroupNav label="التقارير المالية" icon={FileText} active={active} value={reportView} items={REPORT_MENU} onPick={onPick} />
+function ReportNav({ active, reportView, onPick, onNewVoucher }: { active: boolean; reportView: ReportView; onPick: (view: ReportView) => void; onNewVoucher: (kind: 'receive' | 'expense') => void }) {
+  return (
+    <GroupNav
+      label="التقارير المالية"
+      icon={FileText}
+      active={active}
+      value={reportView}
+      items={REPORT_MENU}
+      onPick={onPick}
+      footer={(close) => (
+        <>
+          <div className="my-1 h-px bg-border" />
+          <button type="button" role="menuitem" onClick={() => { close(); onNewVoucher('receive') }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-medium text-foreground hover:bg-highlight">
+            <ArrowDownToLine className="size-4 text-olive" />
+            سند قبض
+          </button>
+          <button type="button" role="menuitem" onClick={() => { close(); onNewVoucher('expense') }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-medium text-foreground hover:bg-highlight">
+            <ArrowUpFromLine className="size-4 text-clay" />
+            سند صرف
+          </button>
+        </>
+      )}
+    />
+  )
 }
 
 function MobileGroupNav<T extends string>({ label, icon: Icon, active, value, items, onPick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; value: T; items: MenuItem<T>[]; onPick: (value: T) => void }) {

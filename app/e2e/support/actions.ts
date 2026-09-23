@@ -10,23 +10,17 @@ export async function login(page: Page): Promise<void> {
   await expect(page.getByRole('button', { name: 'النظام', exact: true })).toBeVisible()
 }
 
-// Opens the financial reports page (vouchers are created from its header now).
-export async function gotoReports(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
-  await page.getByRole('menuitemradio', { name: 'كشف الحساب العام' }).click()
-  await expect(page.getByRole('heading', { name: 'كشف الحساب العام' })).toBeVisible()
-}
-
-// Opens the receipt (سند قبض) sheet from the reports header and waits for the dialog.
+// Opens the receipt (سند قبض) sheet from the التقارير المالية dropdown (where the
+// voucher entries now live) and waits for the dialog.
 export async function openReceiptSheet(page: Page): Promise<void> {
-  await gotoReports(page)
-  await page.getByRole('button', { name: 'سند قبض', exact: true }).first().click()
+  await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'سند قبض' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
 }
 
-// Opens the payment (سند صرف) sheet from the reports header and waits for the dialog.
+// Opens the payment (سند صرف) sheet from the التقارير المالية dropdown and waits.
 export async function openPaymentSheet(page: Page): Promise<void> {
-  await gotoReports(page)
-  await page.getByRole('button', { name: 'سند صرف', exact: true }).first().click()
+  await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'سند صرف' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
 }
