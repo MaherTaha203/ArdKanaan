@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { login } from './support/actions'
+import { login, openReceiptSheet } from './support/actions'
 import { installSupabaseMocks } from './support/mock-supabase'
 
 test('course page can assign a fee obligation to selected students', async ({ page }) => {
@@ -46,7 +46,7 @@ test('one receipt can cover course dues and multiple fee obligations', async ({ 
     ],
   })
   await login(page)
-  await page.getByRole('button', { name: 'سند قبض', exact: true }).first().click()
+  await openReceiptSheet(page)
   const dialog = page.getByRole('dialog', { name: 'سند قبض' })
   await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
   await page.getByRole('option', { name: /سارة أحمد/ }).click()

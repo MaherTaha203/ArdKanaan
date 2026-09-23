@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
 
-import { login } from './support/actions'
+import { login, openPaymentSheet, openReceiptSheet } from './support/actions'
 import { installSupabaseMocks } from './support/mock-supabase'
 
 test('signs in and lands on the workspace shell', async ({ page }) => {
   await installSupabaseMocks(page, { students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }] })
   await login(page)
   await expect(page.getByRole('button', { name: 'الرئيسية' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'سند قبض', exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'التقارير المالية', exact: true })).toBeVisible()
 })
 
 test('shows the seeded student on the student directory', async ({ page }) => {
@@ -38,7 +38,7 @@ test('creates a receipt, reaches the student statement, then opens its print pre
     enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
   })
   await login(page)
-  await page.getByRole('button', { name: 'سند قبض', exact: true }).first().click()
+  await openReceiptSheet(page)
   const dialog = page.getByRole('dialog', { name: 'سند قبض' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
@@ -58,7 +58,7 @@ test('creates a receipt, reaches the student statement, then opens its print pre
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
   await login(page)
-  await page.getByRole('button', { name: 'سند صرف', exact: true }).first().click()
+  await openPaymentSheet(page)
   const dialog = page.getByRole('dialog', { name: 'سند صرف' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('textbox', { name: 'بند المصروف' }).fill('كهرباء')

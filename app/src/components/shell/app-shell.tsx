@@ -138,14 +138,6 @@ export function AppShell() {
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
-          <button type="button" onClick={() => openOverlay('receive')} className="hidden items-center gap-2 rounded-full bg-olive px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-olive-ink sm:inline-flex">
-            <ArrowDownToLine className="size-4" />
-            سند قبض
-          </button>
-          <button type="button" onClick={() => openOverlay('expense')} className="hidden items-center gap-2 rounded-full border border-white/25 px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex">
-            <ArrowUpFromLine className="size-4" />
-            سند صرف
-          </button>
           <GroupNav
             label="النظام"
             icon={SlidersHorizontal}
@@ -185,7 +177,7 @@ export function AppShell() {
             so its state survives while another tab is active. Only the active one shows. */}
         {(openWindows as WindowRoute[]).map((r) => (
           <WindowFrame key={r} active={route === r} label={WINDOW_META[r].title} panelId={`panel-${r}`} labelledBy={`tab-${r}`}>
-            <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
+            <div className={`mx-auto w-full px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6 ${r === 'report' ? 'max-w-[1760px]' : 'max-w-[1440px]'}`}>
               <div key={subviewKey(r, studentView, courseView, settingsView, reportView)} className="route-fade">
                 <RouteView route={r} />
               </div>
