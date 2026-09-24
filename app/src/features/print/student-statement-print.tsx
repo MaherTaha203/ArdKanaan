@@ -51,8 +51,7 @@ export function StudentStatementPrint({ studentName, courses, entries, totalDebi
         </div>
       </div>
 
-      <h3 className={`mt-6 mb-2 text-[13px] font-bold ${INK}`}>الحركة بالتتابع الزمني</h3>
-      <table className="w-full border-collapse text-[12.5px]">
+      <table className="mt-6 w-full border-collapse text-[12.5px]">
         <thead>
           <tr className={`text-[10.5px] ${MUTED}`}>
             <th className={`border-b ${HEAD} px-2 py-2 text-start font-semibold`}>التاريخ</th>
