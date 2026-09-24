@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { Archive, Pencil, Plus, Printer, RotateCcw, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { RouteHeader } from '@/components/shell/route-header'
+import { StudentTabs } from '@/features/students/student-tabs'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
@@ -75,15 +75,12 @@ export function StudentsWorkspace() {
 
   return (
     <div className="detail-workspace">
-      <RouteHeader eyebrow="الطلاب" title="كشف الحساب" />
+      <header className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">كشف الحساب</h1>
+        <StudentTabs active="statement" onPick={navigateStudents} />
+      </header>
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
-
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => navigateStudents('directory')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">دليل الطلاب</button>
-        <button type="button" onClick={() => navigateStudents('statement')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">كشف الحساب</button>
-        <button type="button" onClick={() => navigateStudents('archived')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">المؤرشفون</button>
-      </div>
 
       <div className="grid gap-6 md:grid-cols-[380px_minmax(0,1fr)]">
         <div>

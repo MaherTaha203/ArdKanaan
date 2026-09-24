@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { Archive, ChevronDown, ChevronLeft, Plus, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { RouteHeader } from '@/components/shell/route-header'
+import { StudentTabs } from '@/features/students/student-tabs'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
@@ -68,30 +68,24 @@ export function StudentDirectoryWorkspace() {
 
   return (
     <div>
-      <RouteHeader
-        eyebrow="الطلاب"
-        title="دليل الطلاب"
-        actions={
-          <>
-            <div className="flex w-64 max-w-full items-center gap-2 rounded-xl border border-border-strong bg-panel px-3 py-2 shadow-sm focus-within:border-olive">
-              <Search aria-hidden className="size-4 flex-none text-faint" />
-              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
-            </div>
-            <Button variant="default" onClick={openAddStudent}>
-              <Plus className="size-4" />
-              إضافة طالب
-            </Button>
-          </>
-        }
-      />
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">دليل الطلاب</h1>
+          <StudentTabs active="directory" onPick={navigateStudents} />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
+            <Search aria-hidden className="size-4 flex-none text-faint" />
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+          </label>
+          <Button variant="default" onClick={openAddStudent}>
+            <Plus className="size-4" />
+            إضافة طالب
+          </Button>
+        </div>
+      </header>
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
-
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => navigateStudents('directory')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">دليل الطلاب</button>
-        <button type="button" onClick={() => navigateStudents('statement')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">كشف الحساب</button>
-        <button type="button" onClick={() => navigateStudents('archived')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">المؤرشفون</button>
-      </div>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
         <div className="border-t border-border-strong">
