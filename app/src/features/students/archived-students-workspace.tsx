@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { ChevronLeft, RotateCcw, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { StudentTabs } from '@/features/students/student-tabs'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
@@ -25,7 +24,6 @@ export function ArchivedStudentsWorkspace() {
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
   const selectStudent = useShellStore((state) => state.selectStudent)
-  const navigateStudents = useShellStore((state) => state.navigateStudents)
   const openArchive = useShellStore((state) => state.openArchive)
 
   const [query, setQuery] = useState('')
@@ -54,10 +52,7 @@ export function ArchivedStudentsWorkspace() {
   return (
     <div>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">الطلاب المؤرشفون</h1>
-          <StudentTabs active="archived" onPick={navigateStudents} />
-        </div>
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">الطلاب المؤرشفون</h1>
         <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
           <Search aria-hidden className="size-4 flex-none text-faint" />
           <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث في الطلاب المؤرشفين" placeholder="بحث بالاسم" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
@@ -74,7 +69,7 @@ export function ArchivedStudentsWorkspace() {
             <ArchivedRow
               key={item.student.id}
               item={item}
-              onOpenStatement={() => { selectStudent(item.student.id); navigateStudents('statement') }}
+              onOpenStatement={() => selectStudent(item.student.id)}
               onReactivate={() => openArchive(item.student.id)}
             />
           ))

@@ -21,11 +21,6 @@ type Period = 'all' | 'today' | 'week' | 'month'
 const PERIODS: { id: Period; label: string }[] = [
   { id: 'all', label: 'الكل' }, { id: 'today', label: 'اليوم' }, { id: 'week', label: 'هذا الأسبوع' }, { id: 'month', label: 'هذا الشهر' },
 ]
-const REPORT_VIEWS: { id: ReportView; label: string }[] = [
-  { id: 'general', label: 'كشف الحساب العام' }, { id: 'receipts', label: 'تقرير المقبوضات' }, { id: 'payments', label: 'تقرير المدفوعات' }, { id: 'external', label: 'الجهات الخارجية' },
-]
-// Short labels for the inline report-type segmented control (the full name stays the page title).
-const REPORT_SHORT: Record<ReportView, string> = { general: 'عام', receipts: 'مقبوضات', payments: 'مدفوعات', external: 'خارجية' }
 function partyAndContext(movement: FinancialMovement) {
   const party = movement.movementType === 'receipt' ? movement.partyName ?? '—' : 'المركز'
   return movement.context ? `${party} · ${movement.context}` : party
@@ -39,7 +34,7 @@ function periodStartIso(period: Period, today = new Date()): string | null {
   const start = new Date(year, month, today.getDate() - daysSinceSaturday)
   return `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
 }
-export function FinancialReportWorkspace() {
+export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const movements = useWorkspaceStore((state) => state.movements)
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
@@ -50,8 +45,6 @@ export function FinancialReportWorkspace() {
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
-  const view = useShellStore((state) => state.reportView)
-  const navigateReport = useShellStore((state) => state.navigateReport)
   const openEditReceipt = useShellStore((state) => state.openEditReceipt)
   const openEditPayment = useShellStore((state) => state.openEditPayment)
   const defaultReportPeriod = useSettingsStore((state) => state.settings.defaultReportPeriod)
@@ -110,12 +103,7 @@ export function FinancialReportWorkspace() {
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">{printTitle}</h1>
-          <div className="inline-flex flex-wrap gap-1 rounded-xl bg-highlight p-1">
-            {REPORT_VIEWS.map((item) => <button key={item.id} type="button" onClick={() => navigateReport(item.id)} aria-pressed={view === item.id} className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors ${view === item.id ? 'bg-panel text-olive shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{REPORT_SHORT[item.id]}</button>)}
-          </div>
-        </div>
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">{printTitle}</h1>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="quiet" onClick={() => setPrinting(true)} disabled={!loaded || viewMovements.length === 0 || view === 'external'}><Printer className="size-4" />طباعة</Button>
           <Button variant="outline" onClick={() => void reload()} disabled={isLoading}><RotateCw className="size-4" />{isLoading ? 'جارٍ التحديث…' : 'تحديث'}</Button>

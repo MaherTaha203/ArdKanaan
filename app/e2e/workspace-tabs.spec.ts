@@ -22,7 +22,7 @@ test('opens pages as tabs, prevents duplicates, switches, closes, and keeps home
   // Open the students page → a students tab appears and becomes active.
   await page.getByRole('button', { name: 'الطلاب', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'دليل الطلاب' }).click()
-  await expect(page.getByRole('tab', { name: 'الطلاب' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('tab', { name: 'دليل الطلاب' })).toHaveAttribute('aria-selected', 'true')
   await expect(page.getByRole('tab', { name: 'الرئيسية' })).toHaveAttribute('aria-selected', 'false')
 
   // Open a second page → a courses tab; now three tabs are open.
@@ -33,9 +33,9 @@ test('opens pages as tabs, prevents duplicates, switches, closes, and keeps home
   // Re-opening students does NOT create a second tab — it re-focuses the existing one.
   await page.getByRole('button', { name: 'الطلاب', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'دليل الطلاب' }).click()
-  await expect(page.getByRole('tab', { name: 'الطلاب' })).toHaveCount(1)
+  await expect(page.getByRole('tab', { name: 'دليل الطلاب' })).toHaveCount(1)
   await expect(tablist.getByRole('tab')).toHaveCount(3)
-  await expect(page.getByRole('tab', { name: 'الطلاب' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('tab', { name: 'دليل الطلاب' })).toHaveAttribute('aria-selected', 'true')
 
   // The home tab is always reachable and never disappears.
   await page.getByRole('tab', { name: 'الرئيسية' }).click()
@@ -62,6 +62,6 @@ test('keeps a page mounted with its state when switching tabs', async ({ page })
   // Move to another tab, then back — the typed value survives (the page stayed mounted).
   await page.getByRole('button', { name: 'الدورات', exact: true }).click()
   await expect(page.getByRole('tab', { name: 'الدورات' })).toHaveAttribute('aria-selected', 'true')
-  await page.getByRole('tab', { name: 'الطلاب' }).click()
+  await page.getByRole('tab', { name: 'دليل الطلاب' }).click()
   await expect(page.getByRole('searchbox', { name: 'البحث عن طالب' })).toHaveValue('سارة')
 })

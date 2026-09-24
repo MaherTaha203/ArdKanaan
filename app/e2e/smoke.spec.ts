@@ -152,7 +152,9 @@ test('restores a validated backup through the real settings path', async ({ page
   await page.getByRole('button', { name: 'فتح صفحة النسخ الاحتياطي' }).click()
   await expect(page.getByRole('heading', { name: 'النسخ الاحتياطي والاستعادة' })).toBeVisible()
   const backup = JSON.stringify({ app: 'ard-kanaan', version: 1, exported_at: '2026-08-31T00:00:00.000Z', students: [{ id: 'restored-1', name: 'طالب مستعاد', id_number: null, phone: null, notes: 'من النسخة' }], courses: [], enrollments: [], receipt_vouchers: [], payment_vouchers: [] })
-  const fileInput = page.locator('input[type="file"]')
+  // The settings tab stays mounted beside the backup tab (each is its own tab now), and
+  // both carry a file input — scope to the active backup panel.
+  const fileInput = page.getByRole('tabpanel', { name: 'النسخ الاحتياطي' }).locator('input[type="file"]')
   await fileInput.setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(backup) })
   const dialog = page.getByRole('dialog', { name: 'تأكيد الاستعادة' })
   await expect(dialog).toBeVisible()

@@ -22,82 +22,73 @@ import { FinancialReportWorkspace } from '@/features/financial-report/financial-
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { BackupWorkspace } from '@/features/settings/backup-workspace'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useShellStore, type CourseView, type ReportView, type SettingsView, type StudentView } from '@/store/use-shell-store'
+import { useShellStore, pageSection, type PageKey, type ReportView } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import { WindowFrame } from '@/components/shell/window-frame'
 import { TabStrip } from '@/components/shell/tab-strip'
-import { WINDOW_META, type WindowRoute } from '@/components/shell/window-registry'
+import { PAGE_META, tabDomId } from '@/components/shell/page-registry'
 
-type MenuItem<T> = { value: T; label: string }
+// Each menu item opens its own named tab, so a menu is a list of PageKeys — navigation
+// happens only from these menus (and the tab strip), never from links inside a page.
+type MenuItem = { key: PageKey; label: string }
 
-const REPORT_MENU: MenuItem<ReportView>[] = [
-  { value: 'general', label: 'كشف الحساب العام' },
-  { value: 'receipts', label: 'تقرير المقبوضات' },
-  { value: 'payments', label: 'تقرير المدفوعات' },
-  { value: 'external', label: 'الجهات الخارجية' },
+const STUDENT_MENU: MenuItem[] = [
+  { key: 'students:directory', label: 'دليل الطلاب' },
+  { key: 'students:statement', label: 'كشف الحساب' },
+  { key: 'students:archived', label: 'المؤرشفون' },
 ]
 
-const STUDENT_MENU: MenuItem<StudentView>[] = [
-  { value: 'directory', label: 'دليل الطلاب' },
-  { value: 'statement', label: 'كشف الحساب' },
-  { value: 'archived', label: 'المؤرشفون' },
+const REPORT_MENU: MenuItem[] = [
+  { key: 'report:general', label: 'كشف الحساب العام' },
+  { key: 'report:receipts', label: 'تقرير المقبوضات' },
+  { key: 'report:payments', label: 'تقرير المدفوعات' },
+  { key: 'report:external', label: 'الجهات الخارجية' },
 ]
 
-const SETTINGS_MENU: MenuItem<SettingsView>[] = [
-  { value: 'system', label: 'الإعدادات' },
-  { value: 'backup', label: 'النسخ الاحتياطي' },
-  { value: 'activity', label: 'سجل التدقيق' },
+const SETTINGS_MENU: MenuItem[] = [
+  { key: 'settings:system', label: 'الإعدادات' },
+  { key: 'settings:backup', label: 'النسخ الاحتياطي' },
+  { key: 'settings:activity', label: 'سجل التدقيق' },
 ]
 
-// The page shown inside a window. Mirrors the old single-view switch, minus 'home'
-// (home is the permanent base layer). Reads sub-view state from the store exactly
-// as before — the workspaces are unchanged.
-function RouteView({ route }: { route: WindowRoute }) {
-  const studentView = useShellStore((state) => state.studentView)
-  const courseView = useShellStore((state) => state.courseView)
-  const settingsView = useShellStore((state) => state.settingsView)
-  switch (route) {
-    case 'students':
-      if (studentView === 'archived') return <ArchivedStudentsWorkspace />
-      return studentView === 'directory' ? <StudentDirectoryWorkspace /> : <StudentsWorkspace />
-    case 'courses':
-      return courseView === 'detail' ? <CourseDetailWorkspace /> : <CoursesWorkspace />
-    case 'report':
-      return <FinancialReportWorkspace />
-    case 'activity':
-      return <ActivityWorkspace />
-    case 'settings':
-      if (settingsView === 'backup') return <BackupWorkspace />
-      if (settingsView === 'activity') return <ActivityWorkspace />
-      return <SettingsWorkspace />
-  }
+// The report view a report PageKey renders (e.g. 'report:receipts' → 'receipts').
+function reportViewOf(key: PageKey): ReportView {
+  return key.slice('report:'.length) as ReportView
 }
 
-// Keyed by the active sub-view so switching sub-views remounts the page (matching
-// the previous behaviour + entrance fade); minimizing/restoring keeps the same key,
-// so the window stays mounted and its state survives.
-function subviewKey(route: WindowRoute, studentView: StudentView, courseView: CourseView, settingsView: SettingsView, reportView: ReportView): string {
-  switch (route) {
-    case 'students':
-      return `students:${studentView}`
-    case 'courses':
-      return `courses:${courseView}`
-    case 'settings':
-      return `settings:${settingsView}`
-    case 'report':
-      return `report:${reportView}`
-    default:
-      return route
+// The page shown inside a tab panel. One PageKey → one page; report views pass their
+// view as a prop. The workspaces themselves are unchanged.
+function PageView({ pageKey }: { pageKey: PageKey }) {
+  switch (pageKey) {
+    case 'home':
+      return <GlanceWorkspace />
+    case 'students:directory':
+      return <StudentDirectoryWorkspace />
+    case 'students:statement':
+      return <StudentsWorkspace />
+    case 'students:archived':
+      return <ArchivedStudentsWorkspace />
+    case 'courses:directory':
+      return <CoursesWorkspace />
+    case 'courses:detail':
+      return <CourseDetailWorkspace />
+    case 'report:general':
+    case 'report:receipts':
+    case 'report:payments':
+    case 'report:external':
+      return <FinancialReportWorkspace view={reportViewOf(pageKey)} />
+    case 'settings:system':
+      return <SettingsWorkspace />
+    case 'settings:backup':
+      return <BackupWorkspace />
+    case 'settings:activity':
+      return <ActivityWorkspace />
   }
 }
 
 export function AppShell() {
-  const route = useShellStore((state) => state.route)
-  const studentView = useShellStore((state) => state.studentView)
-  const courseView = useShellStore((state) => state.courseView)
-  const settingsView = useShellStore((state) => state.settingsView)
-  const reportView = useShellStore((state) => state.reportView)
-  const openWindows = useShellStore((state) => state.openWindows)
+  const activeTab = useShellStore((state) => state.activeTab)
+  const openTabs = useShellStore((state) => state.openTabs)
   const overlay = useShellStore((state) => state.overlay)
   const editVoucherId = useShellStore((state) => state.editVoucherId)
   const editStudentId = useShellStore((state) => state.editStudentId)
@@ -106,15 +97,13 @@ export function AppShell() {
   const archiveStudentId = useShellStore((state) => state.archiveStudentId)
   const feeStudentId = useShellStore((state) => state.feeStudentId)
   const receivePrefillName = useShellStore((state) => state.receivePrefillName)
-  const navigate = useShellStore((state) => state.navigate)
-  const navigateStudents = useShellStore((state) => state.navigateStudents)
-  const navigateCourses = useShellStore((state) => state.navigateCourses)
-  const navigateSettings = useShellStore((state) => state.navigateSettings)
-  const navigateReport = useShellStore((state) => state.navigateReport)
+  const openTab = useShellStore((state) => state.openTab)
   const openOverlay = useShellStore((state) => state.openOverlay)
   const signOut = useAuthStore((state) => state.signOut)
   const load = useWorkspaceStore((state) => state.load)
   const loaded = useWorkspaceStore((state) => state.loaded)
+
+  const section = pageSection(activeTab)
 
   useApplyRootSettings()
   useIdleLogout(signOut)
@@ -126,25 +115,24 @@ export function AppShell() {
   return (
     <div className="flex h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 flex flex-none items-center gap-2 border-b border-white/10 bg-[#0f172a] px-4 py-2.5 text-white shadow-[0_10px_28px_-20px_rgba(15,23,42,0.9)] md:gap-4 md:px-8">
-        <button type="button" onClick={() => navigate('home')} className="flex items-baseline gap-2">
+        <button type="button" onClick={() => openTab('home')} className="flex items-baseline gap-2">
           <span className="editorial text-[19px] text-white">أرض كنعان</span>
         </button>
 
         <nav aria-label="التنقل" className="ms-6 hidden items-center gap-1 md:flex">
-          <NavLink label="الرئيسية" icon={Home} active={route === 'home'} onClick={() => navigate('home')} />
-          <GroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
-          <NavLink label="الدورات" icon={BookOpen} active={route === 'courses'} onClick={() => navigateCourses('directory')} />
-          <ReportNav active={route === 'report'} reportView={reportView} onPick={navigateReport} onNewVoucher={openOverlay} />
+          <NavLink label="الرئيسية" icon={Home} active={activeTab === 'home'} onClick={() => openTab('home')} />
+          <GroupNav label="الطلاب" icon={Users} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
+          <NavLink label="الدورات" icon={BookOpen} active={section === 'courses'} onClick={() => openTab('courses:directory')} />
+          <ReportNav activeKey={activeTab} onPick={openTab} onNewVoucher={openOverlay} />
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
           <GroupNav
             label="النظام"
             icon={SlidersHorizontal}
-            active={route === 'settings' || route === 'activity'}
-            value={settingsView}
+            activeKey={activeTab}
             items={SETTINGS_MENU}
-            onPick={navigateSettings}
+            onPick={openTab}
             menuAlign="end"
             footer={(close) => (
               <>
@@ -162,10 +150,10 @@ export function AppShell() {
       <TabStrip />
 
       <main className="relative flex-1 overflow-hidden">
-        {/* Home — the first tab, always available. It is shown when it is the active
-            tab; home carries no user input to preserve, so it mounts when active while
-            the other pages are the ones kept mounted for their state. */}
-        {route === 'home' ? (
+        {/* Home — the permanent first tab. It carries no user input to preserve, so it
+            mounts only while it is the active tab; the other pages are the ones kept
+            mounted for their state. */}
+        {activeTab === 'home' ? (
           <section id="panel-home" role="tabpanel" aria-labelledby="tab-home" className="absolute inset-0 overflow-y-auto">
             <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
               <GlanceWorkspace />
@@ -175,15 +163,18 @@ export function AppShell() {
 
         {/* Open pages — each a chrome-free panel filling the content area, kept mounted
             so its state survives while another tab is active. Only the active one shows. */}
-        {(openWindows as WindowRoute[]).map((r) => (
-          <WindowFrame key={r} active={route === r} label={WINDOW_META[r].title} panelId={`panel-${r}`} labelledBy={`tab-${r}`}>
-            <div className={`mx-auto w-full px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6 ${r === 'report' ? 'max-w-[1760px]' : 'max-w-[1440px]'}`}>
-              <div key={subviewKey(r, studentView, courseView, settingsView, reportView)} className="route-fade">
-                <RouteView route={r} />
+        {openTabs.filter((key) => key !== 'home').map((key) => {
+          const domId = tabDomId(key)
+          return (
+            <WindowFrame key={key} active={activeTab === key} label={PAGE_META[key].title} panelId={`panel-${domId}`} labelledBy={`tab-${domId}`}>
+              <div className={`mx-auto w-full px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6 ${key.startsWith('report:') ? 'max-w-[1760px]' : 'max-w-[1440px]'}`}>
+                <div className="route-fade">
+                  <PageView pageKey={key} />
+                </div>
               </div>
-            </div>
-          </WindowFrame>
-        ))}
+            </WindowFrame>
+          )
+        })}
       </main>
 
       {overlay === 'receive' ? <ReceiptSheet key={editVoucherId ?? receivePrefillName ?? 'new'} /> : null}
@@ -197,10 +188,10 @@ export function AppShell() {
       <Toaster />
 
       <nav aria-label="التنقل" className="fixed inset-x-0 bottom-0 z-20 flex flex-none items-stretch justify-around border-t border-border bg-panel/95 px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] md:hidden">
-        <MobileNavButton active={route === 'home'} icon={Home} label="الرئيسية" onClick={() => navigate('home')} />
-        <MobileGroupNav label="الطلاب" icon={Users} active={route === 'students'} value={studentView} items={STUDENT_MENU} onPick={navigateStudents} />
-        <MobileNavButton active={route === 'courses'} icon={BookOpen} label="الدورات" onClick={() => navigateCourses('directory')} />
-        <MobileGroupNav label="التقرير" icon={FileText} active={route === 'report'} value={reportView} items={REPORT_MENU} onPick={navigateReport} />
+        <MobileNavButton active={activeTab === 'home'} icon={Home} label="الرئيسية" onClick={() => openTab('home')} />
+        <MobileGroupNav label="الطلاب" icon={Users} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
+        <MobileNavButton active={section === 'courses'} icon={BookOpen} label="الدورات" onClick={() => openTab('courses:directory')} />
+        <MobileGroupNav label="التقرير" icon={FileText} activeKey={activeTab} items={REPORT_MENU} onPick={openTab} />
         <MobileNavButton icon={ArrowDownToLine} label="قبض" accent onClick={() => openOverlay('receive')} />
         <MobileNavButton icon={ArrowUpFromLine} label="صرف" onClick={() => openOverlay('expense')} />
       </nav>
@@ -217,9 +208,10 @@ function NavLink({ label, icon: Icon, active, onClick }: { label: string; icon: 
   )
 }
 
-function GroupNav<T extends string>({ label, icon: Icon, active, value, items, onPick, footer, menuAlign = 'start' }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; value: T; items: MenuItem<T>[]; onPick: (value: T) => void; footer?: (close: () => void) => ReactNode; menuAlign?: 'start' | 'end' }) {
+function GroupNav({ label, icon: Icon, activeKey, items, onPick, footer, menuAlign = 'start' }: { label: string; icon: ComponentType<{ className?: string }>; activeKey: PageKey; items: MenuItem[]; onPick: (key: PageKey) => void; footer?: (close: () => void) => ReactNode; menuAlign?: 'start' | 'end' }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const sectionActive = items.some((item) => item.key === activeKey)
   useEffect(() => {
     if (!open) return
     const onDoc = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false) }
@@ -230,26 +222,25 @@ function GroupNav<T extends string>({ label, icon: Icon, active, value, items, o
   }, [open])
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={sectionActive ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${sectionActive ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
         <Icon className="size-4" />
         {label}
         <ChevronDown className="size-4" />
       </button>
       {open ? <div role="menu" className={`menu-in absolute z-30 mt-1 w-48 overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg ${menuAlign === 'end' ? 'end-0' : 'start-0'}`}>
-        {items.map((item) => <button key={item.value} type="button" role="menuitemradio" aria-checked={active && value === item.value} onClick={() => { onPick(item.value); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${active && value === item.value ? 'font-semibold text-olive' : 'text-muted-foreground'} hover:bg-highlight`}>{item.label}</button>)}
+        {items.map((item) => <button key={item.key} type="button" role="menuitemradio" aria-checked={activeKey === item.key} onClick={() => { onPick(item.key); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${activeKey === item.key ? 'font-semibold text-olive' : 'text-muted-foreground'} hover:bg-highlight`}>{item.label}</button>)}
         {footer ? footer(() => setOpen(false)) : null}
       </div> : null}
     </div>
   )
 }
 
-function ReportNav({ active, reportView, onPick, onNewVoucher }: { active: boolean; reportView: ReportView; onPick: (view: ReportView) => void; onNewVoucher: (kind: 'receive' | 'expense') => void }) {
+function ReportNav({ activeKey, onPick, onNewVoucher }: { activeKey: PageKey; onPick: (key: PageKey) => void; onNewVoucher: (kind: 'receive' | 'expense') => void }) {
   return (
     <GroupNav
       label="التقارير المالية"
       icon={FileText}
-      active={active}
-      value={reportView}
+      activeKey={activeKey}
       items={REPORT_MENU}
       onPick={onPick}
       footer={(close) => (
@@ -269,9 +260,10 @@ function ReportNav({ active, reportView, onPick, onNewVoucher }: { active: boole
   )
 }
 
-function MobileGroupNav<T extends string>({ label, icon: Icon, active, value, items, onPick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; value: T; items: MenuItem<T>[]; onPick: (value: T) => void }) {
+function MobileGroupNav({ label, icon: Icon, activeKey, items, onPick }: { label: string; icon: ComponentType<{ className?: string }>; activeKey: PageKey; items: MenuItem[]; onPick: (key: PageKey) => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const sectionActive = items.some((item) => item.key === activeKey)
   useEffect(() => {
     if (!open) return
     const onDoc = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false) }
@@ -285,10 +277,10 @@ function MobileGroupNav<T extends string>({ label, icon: Icon, active, value, it
       {/* Menu is centred on-screen above the bar and width-clamped to the viewport,
           so a group button near the screen edge never has its menu clipped. */}
       {open ? <div role="menu" className="menu-fade fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+72px)] z-40 mx-auto w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg">
-        {items.map((item) => <button key={item.value} type="button" role="menuitemradio" aria-checked={active && value === item.value} onClick={() => { onPick(item.value); setOpen(false) }} className={`flex w-full px-4 py-3 text-start text-sm ${active && value === item.value ? 'font-semibold text-olive' : 'text-foreground'}`}>{item.label}</button>)}
+        {items.map((item) => <button key={item.key} type="button" role="menuitemradio" aria-checked={activeKey === item.key} onClick={() => { onPick(item.key); setOpen(false) }} className={`flex w-full px-4 py-3 text-start text-sm ${activeKey === item.key ? 'font-semibold text-olive' : 'text-foreground'}`}>{item.label}</button>)}
       </div> : null}
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium ${active ? 'text-olive' : 'text-muted-foreground'}`}>
-        <span className={`grid size-8 place-items-center rounded-full ${active ? 'bg-olive-weak' : ''}`}><Icon className="size-[18px]" /></span>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium ${sectionActive ? 'text-olive' : 'text-muted-foreground'}`}>
+        <span className={`grid size-8 place-items-center rounded-full ${sectionActive ? 'bg-olive-weak' : ''}`}><Icon className="size-[18px]" /></span>
         {label}
       </button>
     </div>

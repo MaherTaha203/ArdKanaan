@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { Archive, Pencil, Plus, Printer, RotateCcw, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { StudentTabs } from '@/features/students/student-tabs'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
@@ -40,7 +39,6 @@ export function StudentsWorkspace() {
   const openEditStudent = useShellStore((state) => state.openEditStudent)
   const openArchive = useShellStore((state) => state.openArchive)
   const openStudentFee = useShellStore((state) => state.openStudentFee)
-  const navigateStudents = useShellStore((state) => state.navigateStudents)
 
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
@@ -77,7 +75,6 @@ export function StudentsWorkspace() {
     <div className="detail-workspace">
       <header className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">كشف الحساب</h1>
-        <StudentTabs active="statement" onPick={navigateStudents} />
       </header>
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />

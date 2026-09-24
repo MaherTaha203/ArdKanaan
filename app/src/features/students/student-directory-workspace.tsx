@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { Archive, ChevronDown, ChevronLeft, Plus, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { StudentTabs } from '@/features/students/student-tabs'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
@@ -33,7 +32,6 @@ export function StudentDirectoryWorkspace() {
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
   const selectStudent = useShellStore((state) => state.selectStudent)
-  const navigateStudents = useShellStore((state) => state.navigateStudents)
   const openAddStudent = useShellStore((state) => state.openAddStudent)
   const openArchive = useShellStore((state) => state.openArchive)
 
@@ -69,10 +67,7 @@ export function StudentDirectoryWorkspace() {
   return (
     <div>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">دليل الطلاب</h1>
-          <StudentTabs active="directory" onPick={navigateStudents} />
-        </div>
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">دليل الطلاب</h1>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
             <Search aria-hidden className="size-4 flex-none text-faint" />
@@ -105,7 +100,6 @@ export function StudentDirectoryWorkspace() {
           onOpenStatement={() => {
             if (!preview) return
             selectStudent(preview.student.id)
-            navigateStudents('statement')
           }}
           onArchive={() => {
             if (!preview) return
