@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Archive, ChevronDown, ChevronLeft, Plus, Search, User } from 'lucide-react'
+import { Archive, ChevronDown, ChevronLeft, Search, User, UserPlus } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -74,7 +74,7 @@ export function StudentDirectoryWorkspace() {
             <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
           </label>
           <Button variant="default" onClick={openAddStudent}>
-            <Plus className="size-4" />
+            <UserPlus className="size-4" />
             إضافة طالب
           </Button>
         </div>

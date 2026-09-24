@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { ChevronLeft, RotateCcw, Search, User } from 'lucide-react'
+import { ArchiveRestore, ChevronLeft, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -104,7 +104,7 @@ function ArchivedRow({ item, onOpenStatement, onReactivate }: { item: StudentAgg
       ) : null}
       <div className="flex items-center gap-1.5">
         <Button variant="quiet" size="sm" onClick={onOpenStatement}><ChevronLeft className="size-4" />الكشف</Button>
-        <Button variant="quiet" size="sm" onClick={onReactivate}><RotateCcw className="size-4" />إعادة التفعيل</Button>
+        <Button variant="quiet" size="sm" onClick={onReactivate}><ArchiveRestore className="size-4" />إعادة التفعيل</Button>
       </div>
     </div>
   )

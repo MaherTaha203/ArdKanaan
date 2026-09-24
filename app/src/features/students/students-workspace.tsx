@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Archive, Pencil, Plus, Printer, RotateCcw, Search } from 'lucide-react'
+import { Archive, ArchiveRestore, Pencil, Plus, Printer, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
@@ -116,7 +116,7 @@ export function StudentsWorkspace() {
                   <Button variant="quiet" size="sm" onClick={() => openStudentFee(active.student.id)}><Plus className="size-4" />إضافة رسم</Button>
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
                   {active.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><Archive className="size-4" />أرشفة الطالب</Button> : null}
-                  {active.student.status === 'archived' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><RotateCcw className="size-4" />إعادة التفعيل</Button> : null}
+                  {active.student.status === 'archived' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><ArchiveRestore className="size-4" />إعادة التفعيل</Button> : null}
                   <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة الكشف</Button>
                 </div>
               </div>

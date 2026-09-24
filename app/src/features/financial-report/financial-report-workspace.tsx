@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Ban, Pencil, Printer, RotateCw, Search } from 'lucide-react'
+import { Ban, Pencil, Printer, RefreshCw, Search } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { FinancialReportPrint } from '@/features/print/financial-report-print'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
@@ -107,7 +107,7 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
         <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">{printTitle}</h1>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="quiet" onClick={() => setPrinting(true)} disabled={!loaded || viewMovements.length === 0 || view === 'external'}><Printer className="size-4" />طباعة</Button>
-          <Button variant="outline" onClick={() => void reload()} disabled={isLoading}><RotateCw className="size-4" />{isLoading ? 'جارٍ التحديث…' : 'تحديث'}</Button>
+          <Button variant="outline" onClick={() => void reload()} disabled={isLoading}><RefreshCw className="size-4" />{isLoading ? 'جارٍ التحديث…' : 'تحديث'}</Button>
         </div>
       </header>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-xl border border-border bg-highlight/60 px-3 py-2.5">

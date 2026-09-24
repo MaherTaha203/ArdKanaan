@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
 
-import { ArrowDownToLine, ArrowUpFromLine, BookOpen, ChevronDown, FileText, Home, LogOut, SlidersHorizontal, Users } from 'lucide-react'
+import { BookOpen, ChevronDown, GraduationCap, HandCoins, Home, Landmark, SlidersHorizontal, Wallet } from 'lucide-react'
 
 import { useApplyRootSettings, useIdleLogout } from '@/hooks/use-app-preferences'
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
@@ -121,7 +121,7 @@ export function AppShell() {
 
         <nav aria-label="التنقل" className="ms-6 hidden items-center gap-1 md:flex">
           <NavLink label="الرئيسية" icon={Home} active={activeTab === 'home'} onClick={() => openTab('home')} />
-          <GroupNav label="الطلاب" icon={Users} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
+          <GroupNav label="الطلاب" icon={GraduationCap} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
           <NavLink label="الدورات" icon={BookOpen} active={section === 'courses'} onClick={() => openTab('courses:directory')} />
           <ReportNav activeKey={activeTab} onPick={openTab} onNewVoucher={openOverlay} />
         </nav>
@@ -138,7 +138,6 @@ export function AppShell() {
               <>
                 <div className="my-1 h-px bg-border" />
                 <button type="button" role="menuitem" onClick={() => { close(); void signOut() }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-semibold text-clay hover:bg-clay-weak">
-                  <LogOut className="size-4" />
                   تسجيل الخروج
                 </button>
               </>
@@ -189,11 +188,11 @@ export function AppShell() {
 
       <nav aria-label="التنقل" className="fixed inset-x-0 bottom-0 z-20 flex flex-none items-stretch justify-around border-t border-border bg-panel/95 px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] md:hidden">
         <MobileNavButton active={activeTab === 'home'} icon={Home} label="الرئيسية" onClick={() => openTab('home')} />
-        <MobileGroupNav label="الطلاب" icon={Users} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
+        <MobileGroupNav label="الطلاب" icon={GraduationCap} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
         <MobileNavButton active={section === 'courses'} icon={BookOpen} label="الدورات" onClick={() => openTab('courses:directory')} />
-        <MobileGroupNav label="التقرير" icon={FileText} activeKey={activeTab} items={REPORT_MENU} onPick={openTab} />
-        <MobileNavButton icon={ArrowDownToLine} label="قبض" accent onClick={() => openOverlay('receive')} />
-        <MobileNavButton icon={ArrowUpFromLine} label="صرف" onClick={() => openOverlay('expense')} />
+        <MobileGroupNav label="التقرير" icon={Landmark} activeKey={activeTab} items={REPORT_MENU} onPick={openTab} />
+        <MobileNavButton icon={HandCoins} label="قبض" accent onClick={() => openOverlay('receive')} />
+        <MobileNavButton icon={Wallet} label="صرف" onClick={() => openOverlay('expense')} />
       </nav>
     </div>
   )
@@ -246,7 +245,7 @@ function ReportNav({ activeKey, onPick, onNewVoucher }: { activeKey: PageKey; on
   return (
     <GroupNav
       label="التقارير المالية"
-      icon={FileText}
+      icon={Landmark}
       activeKey={activeKey}
       items={REPORT_MENU}
       onPick={onPick}
@@ -254,11 +253,11 @@ function ReportNav({ activeKey, onPick, onNewVoucher }: { activeKey: PageKey; on
         <>
           <div className="my-1 h-px bg-border" />
           <button type="button" role="menuitem" onClick={() => { close(); onNewVoucher('receive') }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-medium text-foreground hover:bg-highlight">
-            <ArrowDownToLine className="size-4 text-olive" />
+            <HandCoins className="size-4 text-olive" />
             سند قبض
           </button>
           <button type="button" role="menuitem" onClick={() => { close(); onNewVoucher('expense') }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-medium text-foreground hover:bg-highlight">
-            <ArrowUpFromLine className="size-4 text-clay" />
+            <Wallet className="size-4 text-clay" />
             سند صرف
           </button>
         </>

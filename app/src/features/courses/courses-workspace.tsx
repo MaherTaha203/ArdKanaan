@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Plus, Search } from 'lucide-react'
+import { BookPlus, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -56,7 +56,7 @@ export function CoursesWorkspace() {
             />
           </label>
           <Button variant="default" onClick={openAddCourse}>
-            <Plus className="size-4" />
+            <BookPlus className="size-4" />
             إضافة دورة
           </Button>
         </div>
@@ -98,7 +98,7 @@ export function CoursesWorkspace() {
           <div className="flex flex-col items-center gap-4 px-5 py-12 text-center">
             <p className="text-sm text-faint">لا توجد دورات حاليًّا</p>
             <Button variant="default" onClick={openAddCourse}>
-              <Plus className="size-4" />
+              <BookPlus className="size-4" />
               إضافة دورة
             </Button>
           </div>
