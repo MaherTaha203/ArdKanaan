@@ -9,6 +9,7 @@ import { CancelVoucherDialog } from '@/features/financial-report/cancel-voucher-
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
+import { SmartDateInput } from '@/components/ui/smart-date-input'
 import { aggregateStudents, externalPartyStatement, financialTotals, paymentCount, receiptCount, studentLedger } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
@@ -119,9 +120,9 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
         </label>
         <div className="flex items-center gap-2">
           <span className="text-[12px] font-medium text-muted-foreground">من</span>
-          <input type="date" aria-label="من تاريخ" className="rounded-lg border border-border-strong bg-panel px-3 py-2 text-sm" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+          <SmartDateInput aria-label="من تاريخ" placeholder="أي تاريخ" className="h-10 w-36" value={fromDate} max={toDate || undefined} onChange={setFromDate} />
           <span className="text-[12px] font-medium text-muted-foreground">إلى</span>
-          <input type="date" aria-label="إلى تاريخ" className="rounded-lg border border-border-strong bg-panel px-3 py-2 text-sm" value={toDate} onChange={(event) => setToDate(event.target.value)} />
+          <SmartDateInput aria-label="إلى تاريخ" placeholder="أي تاريخ" className="h-10 w-36" value={toDate} onChange={setToDate} />
         </div>
         <div className="flex flex-wrap items-center gap-2 md:ms-auto">
           {summaryChips.map((chip) => <div key={chip.label} className="inline-flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5"><span className="text-[11px] text-faint">{chip.label}</span><Money value={chip.value} currency={false} className={`figure text-[15px] font-bold ${chip.tone ?? 'text-foreground'}`} /></div>)}
