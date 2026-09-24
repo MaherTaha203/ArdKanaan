@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Plus } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -37,29 +37,32 @@ export function CoursesWorkspace() {
   }, [courses, enrollments, students, statementLines, query])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="editorial text-[clamp(1.6rem,3vw,2.1rem)] text-foreground">الدورات</h1>
-        <Button variant="default" onClick={openAddCourse}>
-          <Plus className="size-4" />
-          إضافة دورة
-        </Button>
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">الدورات</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
+            <Search aria-hidden className="size-4 flex-none text-faint" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label="البحث عن دورة"
+              placeholder="ابحث عن دورة بالاسم"
+              className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
+            />
+          </label>
+          <Button variant="default" onClick={openAddCourse}>
+            <Plus className="size-4" />
+            إضافة دورة
+          </Button>
+        </div>
       </header>
 
       <div className="rounded-2xl border border-border bg-panel">
-        <div className="border-b border-border px-4 py-3">
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            aria-label="البحث عن دورة"
-            placeholder="ابحث عن دورة بالاسم"
-            className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
-          />
-        </div>
 
         {!loaded ? (
           <div className="p-4">
