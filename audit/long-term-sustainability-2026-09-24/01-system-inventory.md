@@ -1,57 +1,75 @@
-# 01 — System Inventory, Architecture & Baseline
+# 01 — System Inventory & Data-Lifecycle Map
 
-**Phases 0–1.** Read-only. Commit `bd01683`, branch `claude/21st-magic-mcp-verify-nn04qc`
-(clean; only `audit/` untracked before this run).
+**Read-only.** Commit `b6016a0`. Confirms the component map and traces the day-to-day data
+lifecycle (students, courses/enrollments, financial obligations) that must survive years.
 
-## Baseline (Phase 0)
+## Component map (condensed)
 
-| Item | Value |
-|---|---|
-| Repo | `github.com/MaherTaha203/ArdKanaan` (renamed from `MaherTaha203/-`) |
-| Layout | `docs/` (governance + constitutions + ADRs), `app/` (Vite SPA), `vem/`, `audit/` |
-| Node / npm | v22.22.2 / 10.9.7 |
-| Default branch | `claude/ard-kanaan-phase-0-6rymjv` |
-| Secrets on disk | `.env.production` committed but holds only the **public** `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (documented public; RLS is the boundary). No service-role key. No secrets printed in this audit. |
-| Governance | Frozen constitutions (PC/BC/UX/DAT/DOM), frozen GOV-\*, **77 ADRs**, explicit financial-firewall lineage. |
+- **UI:** `components/shell/` (app-shell, tab-strip, page-registry), `features/*`
+  (students, courses, financial-report, glance, receipt-voucher, payment-voucher, settings,
+  activity, auth), print components.
+- **State (Zustand, 15 stores):** `use-workspace-store` (the single read cache — loads all
+  rows), command stores (`use-money-in/out-store`, `use-voucher-admin-store`,
+  `use-course-admin-store`, `use-student-admin-store`, `use-student-archive-store`,
+  `use-fee-obligation-store`), plus auth/settings/backup/shell.
+- **Domain logic:** `lib/aggregate.ts` (all balances/statements), `statement-rows.ts`,
+  `courses.ts`, `voucher.ts`, `fetch-all.ts` (pagination), `backup.ts`, `activity-log.ts`.
+- **DB:** 53 migrations; 11 base tables; 4 invoker views; owner-gated SECURITY DEFINER RPCs;
+  firewall/immutability/append-only triggers.
+- **Write path:** form → command store → `supabase.rpc(...)` → Postgres (RLS + firewall) →
+  on success `useWorkspaceStore.load()` re-fetches **all** rows.
+- **Read path:** `useWorkspaceStore` raw rows → pure selectors in `lib/aggregate.ts` → render.
 
-## Inventory (Phase 1)
+## Data lifecycle (Section III) — evidence
 
-**Stack:** React 19.2, `@supabase/supabase-js` 2.112, zustand 5, react-hook-form 7.84 + zod
-3.25, tailwind 4.3, lucide-react 1.28, react-to-print 3.3; Vite 8, TypeScript ~6.0, Vitest
-4.1, Playwright 1.62, ESLint 10 + typescript-eslint 8.
+### A. Students
+- **Create/identity:** `use-student-admin-store` → insert; identity disambiguation exists
+  (`lib/student-identity.ts` + e2e `student-identity`) so duplicate names force selection at
+  receipt time. No DB `UNIQUE` on name (by design — real duplicates exist); `id_number`
+  optional. **Sustainability:** identity is resolved at point-of-use, not by a unique key →
+  correct for real-world duplicates, but relies on the operator picking the right person.
+- **Reactivation without duplication:** archive/complete/reactivate flip `students.status`
+  (`archive_student`/`unarchive_student`/`complete_student`/`reactivate_student` RPCs) — they
+  **mutate status in place**, never create a new student row → **no duplication on
+  reactivation** (confirmed: `20260919120000`, `20260916116500`). History (receipts, ledger,
+  statement lines) is keyed by `student_id` and is untouched by status changes → **prior debts
+  and payments are retained**. ⚠️ `complete_student`/`reactivate_student` lack the `is_owner()`
+  guard (SEC-001 — see `07`).
+- **Edit/archive risk:** receipts store an immutable `student_name_snapshot`
+  (`enforce_receipt_student_snapshot` trigger), so renaming a student does **not** rewrite
+  historical vouchers — good for historical integrity.
 
-**App (`app/src`, 137 files):** shell/nav (`components/shell/`: app-shell, tab-strip,
-page-registry, window-frame, action-sheet), UI primitives (`components/ui/`), print
-(`components/print` + `features/print`), feature workspaces (`features/`: activity, auth,
-courses, financial-report, glance, payment-voucher, receipt-voucher, settings, students),
-15 Zustand stores (`store/`), domain logic (`lib/`: aggregate, statement-rows, courses,
-voucher, backup, activity-log, fetch-all, format, …), `types/domain.ts`, hooks.
+### B. Courses & enrollments
+- **New course:** `use-course-admin-store` → insert `courses` (name UNIQUE, base_fee nullable).
+- **Reactivate a course:** `courses.status` flips active/ended in place (no new row).
+- **Same program, new course vs same course:** modelled at the **enrollment** level.
+  `enrollments` has a **partial-then-full unique** on `(student_id, course_id)` (DB-005 drift)
+  → a student cannot be enrolled twice in the **same course**, but **can** enroll in a
+  **different** course (incl. a new run of the same program, which is a distinct `courses`
+  row). This matches the requirement.
+- **Overlap risk:** `studentCourseBreakdown` resolves by `enrollmentId` first, `courseName`
+  only as a fallback for legacy rows → **two courses with the same NAME are the divergence
+  point** (CODE-002/FIN-002). As new runs reuse a program name, this legacy-name path is the
+  main historical-accuracy risk to watch (`04`).
+- **History:** enrollments + their statement lines persist; `course_value` is snapshotted on
+  the enrollment (immutable) so later price changes don't rewrite old dues.
 
-**Database:** 53 SQL migrations (`app/supabase/migrations/`, 2026-08-29 → 2026-09-19) +
-`config.toml` (PG 17). 11 base tables, 4 invoker views, RPCs, triggers.
+### C. Financial obligations
+- **Creation/link:** `create_fee_obligations` RPC links a fee to a student (and optionally a
+  course/enrollment; standalone allowed since `20260919130000`, **repo-only**). Amount +
+  category + external_share validated server-side; immutable after create.
+- **Paid/remaining:** derived on read — fee paid = Σ statement lines with
+  `entryType='fee' & feeObligationId=fee.id`; remaining = `max(0, amount − paid)`
+  (`aggregate.ts:181-189`). Course dues likewise derived from `course_value` − allocations.
+- **Re-enroll/adjust/cancel/reactivate/refund:** cancellation is **append-only**
+  (`cancel_fee_obligation` sets `cancelled_at`, blocked if any allocation is paid); vouchers
+  cancel via a **reversal** ledger row, never a delete or edit of the original. **No refund
+  entity** in the implemented schema (the frozen constitution has one; not built — DB-008).
+- **Old records don't change on new activity:** enforced by immutability triggers + snapshots
+  + append-only ledger → a new registration or a new course **cannot rewrite** prior dues,
+  payments, or balances. This is the strongest long-term-integrity property of the system.
 
-**Tests / CI:** 40 unit `*.test.ts(x)`, 8 e2e spec files (25 tests) + support mocks.
-`.github/workflows/ci.yml`: `quality` (tsc, typecheck:test, lint, unit, build) + `e2e`
-(playwright). **Triggers only on 2 branches** (default + a deleted branch) + PRs to default.
-
-## Architecture & data flow (the sustainability-critical shape)
-
-```
-UI event → useShellStore (nav/overlay)
-form (react-hook-form + zod) → COMMAND store → supabase.rpc(post_*/create_*/cancel_*)
-                                              → Postgres (RLS + firewall triggers = SOURCE OF TRUTH)
-                                    on success → useWorkspaceStore.load() (fetch-all, paginated)
-render ← pure READ-MODELS (lib/aggregate.ts) ← raw rows held in the workspace store
-```
-
-**Key sustainability fact:** the app is a **thin client that loads all rows and computes
-every balance/total/statement in the browser** (`lib/aggregate.ts`), trusting stored
-snapshot columns (`remaining_balance`, `course_value`, `external_share`). Server RPCs own
-the *write* path; the *read/report* path is client-computed. This single design choice
-drives the scalability ceiling (report 07), the source-of-truth findings (report 03), and
-the "no server aggregate to disagree" strength (no screen/DB divergence). **Read/write
-separation is otherwise clean**, financial fields are immutable after posting, and there are
-**no circular imports** (verified in report 05).
-
-**Largest files:** `aggregate.ts` 351, `smart-date-input.tsx` 305, `app-shell.tsx` 302 —
-all well under the 800-line cap → good long-term readability.
+**Net:** the lifecycle is built for longevity — reactivation reuses rows, history is
+immutable and snapshotted, balances are derived. The residual lifecycle risks are the
+**same-course-name legacy path** (accuracy) and the **lifecycle-RPC guard gap** (access) —
+both carried into the findings register.
