@@ -184,12 +184,14 @@ export function SmartDateInput({ value, onChange, max, className, ...inputProps 
   const headings = weekdayLabels()
 
   return (
-    <div ref={anchorRef} className="relative">
+    // An LTR island: the date reads left-to-right, but its value is aligned to the field
+    // start (the right, matching every other field in the RTL form) with the controls on
+    // the opposite end — so nothing overlaps and the fields line up.
+    <div ref={anchorRef} dir="ltr" className="relative">
       <Input
         ref={inputRef}
         inputMode="numeric"
-        className={`figure ${buffer ? 'pe-[4.5rem]' : 'pe-10'} ${className ?? ''}`}
-        dir="ltr"
+        className={`figure text-right ${buffer ? 'ps-[4.75rem]' : 'ps-11'} ${className ?? ''}`}
         placeholder={formatDate(today)}
         value={buffer}
         // Select the whole value on focus so typing replaces it instead of appending.
@@ -207,7 +209,18 @@ export function SmartDateInput({ value, onChange, max, className, ...inputProps 
         }}
         {...inputProps}
       />
-      <div className="absolute inset-y-0 end-0 flex items-center">
+      <div className="absolute inset-y-0 start-0 flex items-center">
+        <button
+          type="button"
+          aria-label={open ? 'إغلاق التقويم' : 'فتح التقويم'}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => (open ? setOpen(false) : openCalendar())}
+          className="grid h-full w-10 place-items-center rounded-s-xl text-muted-foreground hover:text-olive"
+        >
+          <CalendarDays className="size-[18px]" />
+        </button>
         {buffer ? (
           <button
             type="button"
@@ -220,17 +233,6 @@ export function SmartDateInput({ value, onChange, max, className, ...inputProps 
             <X className="size-4" />
           </button>
         ) : null}
-        <button
-          type="button"
-          aria-label={open ? 'إغلاق التقويم' : 'فتح التقويم'}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => (open ? setOpen(false) : openCalendar())}
-          className="grid h-full w-10 place-items-center rounded-e-xl text-muted-foreground hover:text-olive"
-        >
-          <CalendarDays className="size-[18px]" />
-        </button>
       </div>
 
       {open

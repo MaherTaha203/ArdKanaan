@@ -120,9 +120,9 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
         </label>
         <div className="flex items-center gap-2">
           <span className="text-[12px] font-medium text-muted-foreground">من</span>
-          <SmartDateInput aria-label="من تاريخ" placeholder="أي تاريخ" className="h-10 w-36" value={fromDate} max={toDate || undefined} onChange={setFromDate} />
+          <SmartDateInput aria-label="من تاريخ" placeholder="أي تاريخ" className="h-10 w-44" value={fromDate} max={toDate || undefined} onChange={setFromDate} />
           <span className="text-[12px] font-medium text-muted-foreground">إلى</span>
-          <SmartDateInput aria-label="إلى تاريخ" placeholder="أي تاريخ" className="h-10 w-36" value={toDate} onChange={setToDate} />
+          <SmartDateInput aria-label="إلى تاريخ" placeholder="أي تاريخ" className="h-10 w-44" value={toDate} onChange={setToDate} />
         </div>
         <div className="flex flex-wrap items-center gap-2 md:ms-auto">
           {summaryChips.map((chip) => <div key={chip.label} className="inline-flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5"><span className="text-[11px] text-faint">{chip.label}</span><Money value={chip.value} currency={false} className={`figure text-[15px] font-bold ${chip.tone ?? 'text-foreground'}`} /></div>)}
