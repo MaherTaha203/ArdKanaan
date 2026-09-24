@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
 import { addDays, addMonths, monthMatrix, weekdayLabels } from '@/lib/calendar'
@@ -83,6 +83,15 @@ export function SmartDateInput({ value, onChange, max, className, ...inputProps 
   function moveFocus(iso: string) {
     setFocusIso(iso)
     setView(iso)
+  }
+
+  // Empty the field in one action (the operator asked for an easy clear).
+  function clearValue() {
+    setBuffer('')
+    onChange('')
+    setLastValue('')
+    setOpen(false)
+    inputRef.current?.focus()
   }
 
   // Position the popover under (or above) the field, in fixed coordinates so it is never
@@ -179,10 +188,12 @@ export function SmartDateInput({ value, onChange, max, className, ...inputProps 
       <Input
         ref={inputRef}
         inputMode="numeric"
-        className={`figure pe-10 ${className ?? ''}`}
+        className={`figure ${buffer ? 'pe-[4.5rem]' : 'pe-10'} ${className ?? ''}`}
         dir="ltr"
         placeholder={formatDate(today)}
         value={buffer}
+        // Select the whole value on focus so typing replaces it instead of appending.
+        onFocus={(event) => event.currentTarget.select()}
         onChange={(event) => setBuffer(event.target.value)}
         onBlur={commit}
         onKeyDown={(event) => {
@@ -196,16 +207,31 @@ export function SmartDateInput({ value, onChange, max, className, ...inputProps 
         }}
         {...inputProps}
       />
-      <button
-        type="button"
-        aria-label={open ? 'إغلاق التقويم' : 'فتح التقويم'}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        onClick={() => (open ? setOpen(false) : openCalendar())}
-        className="absolute inset-y-0 end-0 grid w-10 place-items-center rounded-e-xl text-muted-foreground hover:text-olive"
-      >
-        <CalendarDays className="size-[18px]" />
-      </button>
+      <div className="absolute inset-y-0 end-0 flex items-center">
+        {buffer ? (
+          <button
+            type="button"
+            aria-label="مسح التاريخ"
+            // Keep input focus (don't let the commit-on-blur re-fill the value).
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={clearValue}
+            className="grid size-8 place-items-center rounded-lg text-faint hover:text-clay"
+          >
+            <X className="size-4" />
+          </button>
+        ) : null}
+        <button
+          type="button"
+          aria-label={open ? 'إغلاق التقويم' : 'فتح التقويم'}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => (open ? setOpen(false) : openCalendar())}
+          className="grid h-full w-10 place-items-center rounded-e-xl text-muted-foreground hover:text-olive"
+        >
+          <CalendarDays className="size-[18px]" />
+        </button>
+      </div>
 
       {open
         ? createPortal(

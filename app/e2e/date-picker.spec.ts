@@ -30,6 +30,20 @@ test('picks a date from the calendar popover on a voucher sheet', async ({ page 
   await expect(dialog.getByRole('textbox', { name: 'تاريخ الدفع' })).toHaveValue(expected)
 })
 
+test('clears the date field in one click', async ({ page }) => {
+  await installSupabaseMocks(page)
+  await login(page)
+  await openPaymentSheet(page)
+
+  const dialog = page.getByRole('dialog', { name: 'سند صرف' })
+  const field = dialog.getByRole('textbox', { name: 'تاريخ الدفع' })
+
+  // The field defaults to today; the clear button empties it in one action.
+  await expect(field).not.toHaveValue('')
+  await dialog.getByRole('button', { name: 'مسح التاريخ' }).click()
+  await expect(field).toHaveValue('')
+})
+
 test('typed quick entry still resolves a full date', async ({ page }) => {
   await installSupabaseMocks(page)
   await login(page)

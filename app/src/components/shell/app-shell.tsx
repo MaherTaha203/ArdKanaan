@@ -222,15 +222,22 @@ function GroupNav({ label, icon: Icon, activeKey, items, onPick, footer, menuAli
   }, [open])
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={sectionActive ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${sectionActive ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={sectionActive ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${sectionActive ? 'bg-white text-olive' : open ? 'bg-white/15 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
         <Icon className="size-4" />
         {label}
-        <ChevronDown className="size-4" />
+        <ChevronDown className={`size-4 transition-transform ${open ? '-rotate-180' : ''}`} />
       </button>
-      {open ? <div role="menu" className={`menu-in absolute z-30 mt-1 w-48 overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg ${menuAlign === 'end' ? 'end-0' : 'start-0'}`}>
-        {items.map((item) => <button key={item.key} type="button" role="menuitemradio" aria-checked={activeKey === item.key} onClick={() => { onPick(item.key); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${activeKey === item.key ? 'font-semibold text-olive' : 'text-muted-foreground'} hover:bg-highlight`}>{item.label}</button>)}
-        {footer ? footer(() => setOpen(false)) : null}
-      </div> : null}
+      {/* The menu drops flush from its button with a small caret bridging the gap, so it
+          reads as one connected surface rather than a detached card. */}
+      {open ? (
+        <div className={`menu-in absolute z-30 mt-1.5 w-52 ${menuAlign === 'end' ? 'end-0' : 'start-0'}`}>
+          <span aria-hidden className={`absolute -top-1.5 size-3 rotate-45 border-l border-t border-border-strong bg-panel ${menuAlign === 'end' ? 'end-6' : 'start-6'}`} />
+          <div role="menu" className="relative overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-[0_20px_44px_-18px_rgba(15,23,42,0.45)]">
+            {items.map((item) => <button key={item.key} type="button" role="menuitemradio" aria-checked={activeKey === item.key} onClick={() => { onPick(item.key); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${activeKey === item.key ? 'font-semibold text-olive' : 'text-muted-foreground'} hover:bg-highlight`}>{item.label}</button>)}
+            {footer ? footer(() => setOpen(false)) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
