@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
 
-import { Ban, Pencil, Printer, RotateCw } from 'lucide-react'
+import { Ban, Pencil, Printer, RotateCw, Search } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { RouteHeader } from '@/components/shell/route-header'
 import { FinancialReportPrint } from '@/features/print/financial-report-print'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { VoucherPrint } from '@/features/print/voucher-print'
@@ -25,6 +24,8 @@ const PERIODS: { id: Period; label: string }[] = [
 const REPORT_VIEWS: { id: ReportView; label: string }[] = [
   { id: 'general', label: 'كشف الحساب العام' }, { id: 'receipts', label: 'تقرير المقبوضات' }, { id: 'payments', label: 'تقرير المدفوعات' }, { id: 'external', label: 'الجهات الخارجية' },
 ]
+// Short labels for the inline report-type segmented control (the full name stays the page title).
+const REPORT_SHORT: Record<ReportView, string> = { general: 'عام', receipts: 'مقبوضات', payments: 'مدفوعات', external: 'خارجية' }
 function partyAndContext(movement: FinancialMovement) {
   const party = movement.movementType === 'receipt' ? movement.partyName ?? '—' : 'المركز'
   return movement.context ? `${party} · ${movement.context}` : party
@@ -80,18 +81,64 @@ export function FinancialReportWorkspace() {
   const externalStatement = useMemo(() => externalPartyStatement(viewMovements), [viewMovements])
   const printTitle = view === 'receipts' ? 'تقرير المقبوضات' : view === 'payments' ? 'تقرير المدفوعات' : view === 'external' ? 'كشف الجهات الخارجية' : 'كشف الحساب العام'
   const previewMovement = useMemo(() => previewId ? viewMovements.find((movement) => movement.id === previewId) ?? null : null, [previewId, viewMovements])
+  // The same figures the old summary band showed — now rendered as compact chips in the
+  // toolbar. Pure display; every value below is unchanged.
+  const summaryChips: { label: string; value: number; tone?: string }[] =
+    view === 'external'
+      ? [
+          { label: 'لصالح الجهات الخارجية', value: externalStatement.totalExternal },
+          { label: 'إجمالي المحصَّل', value: externalStatement.totalAmount },
+          { label: 'حصة المركز', value: externalStatement.totalInstitute },
+        ]
+      : view === 'receipts'
+        ? [
+            { label: 'إجمالي المقبوضات', value: viewTotal, tone: 'text-gold' },
+            ...(viewExternalHeld > 0
+              ? [{ label: 'إيراد المعهد', value: viewTotal - viewExternalHeld }, { label: 'لصالح جهة خارجية', value: viewExternalHeld }]
+              : []),
+          ]
+        : view === 'payments'
+          ? [{ label: 'إجمالي المدفوعات', value: totals.totalOut, tone: 'text-clay' }]
+          : [
+              { label: 'صافي الحركة', value: totals.net },
+              ...(totals.externalHeld > 0
+                ? [{ label: 'مقبوضات المركز', value: totals.instituteRevenue }, { label: 'لصالح جهات خارجية', value: totals.externalHeld }]
+                : []),
+            ]
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
-      <RouteHeader eyebrow="التقارير المالية" title={printTitle} actions={<><Button variant="quiet" onClick={() => setPrinting(true)} disabled={!loaded || viewMovements.length === 0 || view === 'external'}><Printer className="size-4" />طباعة</Button><Button variant="outline" onClick={() => void reload()} disabled={isLoading}><RotateCw className="size-4" />{isLoading ? 'جارٍ التحديث…' : 'تحديث'}</Button></>} />
-      <nav className="flex flex-wrap gap-2" aria-label="نوع التقرير">{REPORT_VIEWS.map((item) => <button key={item.id} type="button" onClick={() => navigateReport(item.id)} aria-current={view === item.id ? 'page' : undefined} className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${view === item.id ? 'bg-olive-weak text-olive' : 'text-muted-foreground'}`}>{item.label}</button>)}</nav>
-      <section className="border-y border-border py-4"><div className="flex flex-wrap gap-2">{PERIODS.map((item) => <button key={item.id} type="button" onClick={() => setPeriod(item.id)} aria-pressed={period === item.id} className={`rounded-full px-3 py-1.5 text-xs font-medium ${period === item.id ? 'bg-olive-weak text-olive' : 'text-muted-foreground'}`}>{item.label}</button>)}</div><div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3"><label className="min-w-[220px] flex-1 text-[13px] font-medium text-muted-foreground">الحساب<input className="mt-1.5 block w-full rounded-xl border border-border-strong bg-panel px-4 py-2.5 text-[15px]" value={accountName} onChange={(event) => setAccountName(event.target.value)} /></label><div className="flex items-end gap-3"><label className="text-[13px] font-medium text-muted-foreground">من<input type="date" className="mt-1.5 block rounded-xl border border-border-strong bg-panel px-4 py-2.5 text-[15px]" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></label><label className="text-[13px] font-medium text-muted-foreground">إلى<input type="date" className="mt-1.5 block rounded-xl border border-border-strong bg-panel px-4 py-2.5 text-[15px]" value={toDate} onChange={(event) => setToDate(event.target.value)} /></label></div></div></section>
-      {view === 'external' ? (
-        <section className="border-y border-border py-4"><div className="text-sm text-muted-foreground">لصالح الجهات الخارجية</div><Money value={externalStatement.totalExternal} currency={false} className="mt-2 text-3xl font-semibold" /><div className="mt-4 flex gap-8"><div><div className="text-[11px] text-faint">إجمالي المحصَّل</div><Money value={externalStatement.totalAmount} currency={false} className="text-xl font-semibold" /></div><div><div className="text-[11px] text-faint">حصة المركز</div><Money value={externalStatement.totalInstitute} currency={false} className="text-xl font-semibold" /></div></div></section>
-      ) : (
-        <section className="border-y border-border py-4"><div className="text-sm text-muted-foreground">{view === 'receipts' ? 'إجمالي المقبوضات' : view === 'payments' ? 'إجمالي المدفوعات' : 'صافي الحركة'}</div><Money value={view === 'receipts' ? viewTotal : view === 'payments' ? totals.totalOut : totals.net} currency={false} className="mt-2 text-3xl font-semibold" />{view === 'receipts' && viewExternalHeld > 0 ? <div className="mt-4 flex gap-8"><div><div className="text-[11px] text-faint">إيراد المعهد</div><Money value={viewTotal - viewExternalHeld} currency={false} className="text-xl font-semibold" /></div><div><div className="text-[11px] text-faint">لصالح جهة خارجية</div><Money value={viewExternalHeld} currency={false} className="text-xl font-semibold" /></div></div> : null}{view === 'general' && totals.externalHeld > 0 ? <div className="mt-4 flex gap-8"><div><div className="text-[11px] text-faint">مقبوضات المركز</div><Money value={totals.instituteRevenue} currency={false} className="text-xl font-semibold" /></div><div><div className="text-[11px] text-faint">لصالح جهات خارجية</div><Money value={totals.externalHeld} currency={false} className="text-xl font-semibold" /></div></div> : null}</section>
-      )}
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">{printTitle}</h1>
+          <div className="inline-flex flex-wrap gap-1 rounded-xl bg-highlight p-1">
+            {REPORT_VIEWS.map((item) => <button key={item.id} type="button" onClick={() => navigateReport(item.id)} aria-pressed={view === item.id} className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors ${view === item.id ? 'bg-panel text-olive shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{REPORT_SHORT[item.id]}</button>)}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="quiet" onClick={() => setPrinting(true)} disabled={!loaded || viewMovements.length === 0 || view === 'external'}><Printer className="size-4" />طباعة</Button>
+          <Button variant="outline" onClick={() => void reload()} disabled={isLoading}><RotateCw className="size-4" />{isLoading ? 'جارٍ التحديث…' : 'تحديث'}</Button>
+        </div>
+      </header>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-xl border border-border bg-highlight/60 px-3 py-2.5">
+        <div className="inline-flex flex-wrap gap-1 rounded-lg bg-panel p-1">
+          {PERIODS.map((item) => <button key={item.id} type="button" onClick={() => setPeriod(item.id)} aria-pressed={period === item.id} className={`rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${period === item.id ? 'bg-brand-weak text-olive' : 'text-muted-foreground hover:text-foreground'}`}>{item.label}</button>)}
+        </div>
+        <label className="flex min-w-[170px] flex-1 items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
+          <Search aria-hidden className="size-4 flex-none text-faint" />
+          <input value={accountName} onChange={(event) => setAccountName(event.target.value)} aria-label="بحث الحساب" placeholder="بحث الحساب…" className="w-full bg-transparent text-sm outline-none placeholder:text-faint" />
+        </label>
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] font-medium text-muted-foreground">من</span>
+          <input type="date" aria-label="من تاريخ" className="rounded-lg border border-border-strong bg-panel px-3 py-2 text-sm" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+          <span className="text-[12px] font-medium text-muted-foreground">إلى</span>
+          <input type="date" aria-label="إلى تاريخ" className="rounded-lg border border-border-strong bg-panel px-3 py-2 text-sm" value={toDate} onChange={(event) => setToDate(event.target.value)} />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 md:ms-auto">
+          {summaryChips.map((chip) => <div key={chip.label} className="inline-flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5"><span className="text-[11px] text-faint">{chip.label}</span><Money value={chip.value} currency={false} className={`figure text-[15px] font-bold ${chip.tone ?? 'text-foreground'}`} /></div>)}
+        </div>
+      </div>
       {isLoading || !loaded ? <SkeletonRows rows={8} /> : view === 'external' ? <section className="border-y border-border"><div className="overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-sm"><thead><tr className="text-[11px] text-faint"><th className="border-b border-border px-4 py-3 text-start">التاريخ</th><th className="border-b border-border px-4 py-3 text-start">رقم السند</th><th className="border-b border-border px-4 py-3 text-start">البيان</th><th className="border-b border-border px-4 py-3 text-end">إجمالي المقبوض</th><th className="border-b border-border px-4 py-3 text-end">حصة المركز</th><th className="border-b border-border px-4 py-3 text-end">لصالح الجهة الخارجية</th></tr></thead><tbody>{externalStatement.lines.map((line) => <tr key={line.id}><td className="figure border-b border-border px-4 py-3">{formatDate(line.voucherDate)}</td><td className="figure border-b border-border px-4 py-3">{voucherRef('receipt', line.voucherNumber)}</td><td className="border-b border-border px-4 py-3 text-muted-foreground">{line.context ? `${line.party} · ${line.context}` : line.party}</td><td className="figure border-b border-border px-4 py-3 text-end font-semibold">{formatNumber(line.amount)}</td><td className="figure border-b border-border px-4 py-3 text-end">{formatNumber(line.instituteShare)}</td><td className="figure border-b border-border px-4 py-3 text-end font-semibold text-gold">{formatNumber(line.externalShare)}</td></tr>)}{externalStatement.lines.length === 0 ? <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-faint">لا توجد مبالغ لجهات خارجية في هذه الفترة.</td></tr> : null}</tbody>{externalStatement.lines.length > 0 ? <tfoot><tr className="font-semibold"><td className="border-t border-border-strong px-4 py-3" colSpan={3}>الإجمالي</td><td className="figure border-t border-border-strong px-4 py-3 text-end">{formatNumber(externalStatement.totalAmount)}</td><td className="figure border-t border-border-strong px-4 py-3 text-end">{formatNumber(externalStatement.totalInstitute)}</td><td className="figure border-t border-border-strong px-4 py-3 text-end text-gold">{formatNumber(externalStatement.totalExternal)}</td></tr></tfoot> : null}</table></div></section> : <section className="border-y border-border"><div className="overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-sm"><thead><tr className="text-[11px] text-faint"><th className="border-b border-border px-4 py-3 text-start">التاريخ</th><th className="border-b border-border px-4 py-3 text-start">رقم السند</th><th className="border-b border-border px-4 py-3 text-start">البيان</th><th className="border-b border-border px-4 py-3 text-end">المبلغ</th><th className="border-b border-border px-4 py-3 text-start">إجراء</th></tr></thead><tbody>{viewMovements.map((movement) => <tr key={`${movement.movementType}-${movement.id}`}><td className="figure border-b border-border px-4 py-3">{formatDate(movement.voucherDate)}</td><td className="figure border-b border-border px-4 py-3">{voucherRef(movement.movementType, movement.voucherNumber)}</td><td className="border-b border-border px-4 py-3 text-muted-foreground">{partyAndContext(movement)}</td><td className={`figure border-b border-border px-4 py-3 text-end font-semibold ${movement.movementType === 'receipt' ? 'text-gold' : 'text-clay'}`}>{formatNumber(movement.amount)}</td><td className="border-b border-border px-4 py-3"><div className="flex flex-wrap gap-2"><Button variant="quiet" size="sm" onClick={() => setPreviewId(movement.id)}>معاينة</Button>{movement.movementType === 'receipt' ? <Button variant="quiet" size="sm" onClick={() => openEditReceipt(movement.id)}><Pencil className="size-4" />تعديل</Button> : <Button variant="quiet" size="sm" onClick={() => openEditPayment(movement.id)}><Pencil className="size-4" />تعديل</Button>}<Button variant="quiet" size="sm" aria-label={`إبطال سند ${movement.movementType === 'receipt' ? 'القبض' : 'الصرف'} رقم ${voucherRef(movement.movementType, movement.voucherNumber)}`} onClick={() => setCancelTarget(movement)}><Ban className="size-4" />إبطال</Button></div></td></tr>)}{viewMovements.length === 0 ? <tr><td colSpan={5} className="px-4 py-12 text-center text-sm text-faint">لا توجد حركات في هذه الفترة.</td></tr> : null}</tbody></table></div></section>}
       {previewMovement ? <VoucherPrint movement={previewMovement} onClose={() => setPreviewId(null)} /> : null}
       {printing ? <FinancialReportPrint view={view} title={printTitle} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={scoped} externalHeld={totals.externalHeld} instituteRevenue={totals.instituteRevenue} onClose={() => setPrinting(false)} /> : null}
