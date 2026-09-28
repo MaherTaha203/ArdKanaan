@@ -8,7 +8,7 @@ export type ShellRoute = 'home' | 'students' | 'courses' | 'report' | 'activity'
 export type StudentView = 'directory' | 'statement' | 'archived'
 export type CourseView = 'directory' | 'detail'
 export type SettingsView = 'system' | 'activity' | 'backup'
-export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | 'student-fee' | null
+export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | 'student-fee' | 'edit-fee' | null
 export type ReportView = 'general' | 'receipts' | 'payments' | 'external'
 
 type ShellStore = {
@@ -27,6 +27,7 @@ type ShellStore = {
   enrollCourseId: string | null
   archiveStudentId: string | null
   feeStudentId: string | null
+  editFeeEnrollmentId: string | null
   navigate: (route: ShellRoute) => void
   navigateStudents: (view: StudentView) => void
   navigateCourses: (view: CourseView) => void
@@ -45,6 +46,7 @@ type ShellStore = {
   openEnroll: (courseId: string) => void
   openArchive: (studentId: string) => void
   openStudentFee: (studentId: string) => void
+  openEditFee: (enrollmentId: string) => void
   closeOverlay: () => void
 }
 
@@ -57,6 +59,7 @@ const CLEARED = {
   enrollCourseId: null,
   archiveStudentId: null,
   feeStudentId: null,
+  editFeeEnrollmentId: null,
 } as const
 
 export const useShellStore = create<ShellStore>((set) => ({
@@ -75,6 +78,7 @@ export const useShellStore = create<ShellStore>((set) => ({
   enrollCourseId: null,
   archiveStudentId: null,
   feeStudentId: null,
+  editFeeEnrollmentId: null,
   navigate: (route) => set({ route, ...CLEARED }),
   navigateStudents: (view) => set({ route: 'students', studentView: view, ...CLEARED }),
   navigateCourses: (view) => set({ route: 'courses', courseView: view, ...CLEARED }),
@@ -93,5 +97,6 @@ export const useShellStore = create<ShellStore>((set) => ({
   openEnroll: (courseId) => set({ ...CLEARED, overlay: 'enroll', enrollCourseId: courseId }),
   openArchive: (studentId) => set({ ...CLEARED, overlay: 'archive', archiveStudentId: studentId }),
   openStudentFee: (studentId) => set({ ...CLEARED, overlay: 'student-fee', feeStudentId: studentId }),
+  openEditFee: (enrollmentId) => set({ ...CLEARED, overlay: 'edit-fee', editFeeEnrollmentId: enrollmentId }),
   closeOverlay: () => set({ ...CLEARED }),
 }))

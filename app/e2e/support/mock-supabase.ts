@@ -207,6 +207,31 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, target ?? {})
     }
 
+    // ADR-0078 — owner adjusts one enrollment's total fee (course_value). Mirrors
+    // the RPC's contract for the browser flow: floor the new fee at the collected
+    // total (course allocations on non-cancelled receipts) and reject below it.
+    if (table?.startsWith('rpc/update_enrollment_fee') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_enrollment_id?: string; p_amount?: number; p_reason?: string }
+      const target = enrollments.find((item) => item.id === payload.p_enrollment_id)
+      if (!target) return json(route, { message: 'ENROLLMENT_NOT_FOUND' }, 400)
+      const reason = String(payload.p_reason ?? '').trim()
+      if (reason === '') return json(route, { message: 'FEE_ADJUSTMENT_REASON_REQUIRED' }, 400)
+      const amount = Number(payload.p_amount ?? Number.NaN)
+      if (!Number.isFinite(amount) || amount < 0 || amount !== Math.trunc(amount)) return json(route, { message: 'INVALID_FEE_AMOUNT' }, 400)
+      if (amount > 100000000) return json(route, { message: 'FEE_AMOUNT_TOO_LARGE' }, 400)
+      const collected = handle.receiptAllocations
+        .filter((allocation) => String(allocation.enrollment_id ?? '') === String(target.id))
+        .reduce((sum, allocation) => sum + Number(allocation.amount ?? 0), 0)
+      if (amount < collected) return json(route, { message: 'FEE_BELOW_COLLECTED' }, 400)
+      const oldFee = target.course_value
+      const changed = amount !== oldFee
+      if (changed) {
+        target.course_value = amount
+        handle.auditLog.unshift({ id: `audit-${handle.auditLog.length + 1}`, entity: 'enrollment', entity_id: target.id, action: 'fee_adjustment', label: 'تعديل رسوم التسجيل', changed_by: 'u-1', actor_email: 'owner@example.com', changed_at: new Date().toISOString(), source: 'enrollment', description: reason, metadata: { enrollment_id: target.id, student_id: target.student_id, old_amount: oldFee, new_amount: amount, paid: collected } })
+      }
+      return json(route, { enrollment_id: target.id, fee: amount, paid: collected, remaining: amount - collected, old_fee: oldFee, changed, audit_id: changed ? 'audit-x' : null })
+    }
+
     if (method === 'HEAD') {
       if (['students', 'courses', 'enrollments', 'receipt_vouchers', 'payment_vouchers', 'fee_obligations'].includes(table ?? '')) {
         const counts: Record<string, number> = { students: students.length, courses: courses.length, enrollments: enrollments.length, receipt_vouchers: handle.receiptInserts.length, payment_vouchers: handle.paymentInserts.length, fee_obligations: feeObligations.length }
