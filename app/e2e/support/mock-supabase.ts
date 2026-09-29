@@ -48,6 +48,12 @@ export type MockMovement = {
 
 export type MockCancelledVoucher = MockMovement & { cancelled_at: string; cancel_reason: string | null }
 
+export type MockReceiptVoucher = {
+  id: string
+  cancelled_at: string | null
+  cancel_reason?: string | null
+}
+
 export type MockOptions = {
   students?: MockStudent[]
   courses?: Array<{ id: string; name: string; base_fee: number | null; start_date: string | null; end_date: string | null; status: 'active' | 'ended'; notes: string | null }>
@@ -55,6 +61,8 @@ export type MockOptions = {
   feeObligations?: MockFeeObligation[]
   financialMovements?: MockMovement[]
   cancelledVouchers?: MockCancelledVoucher[]
+  receiptVouchers?: MockReceiptVoucher[]
+  receiptAllocations?: Array<Record<string, unknown>>
 }
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }
@@ -86,8 +94,10 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
   const feeObligations = options.feeObligations ?? []
   const activeMovements = [...(options.financialMovements ?? [])]
   const cancelledVouchers = [...(options.cancelledVouchers ?? [])]
+  const initialReceiptVouchers = [...(options.receiptVouchers ?? [])]
   const handle: MockHandle = {
-    receiptInserts: [], paymentInserts: [], feeObligationInserts: [], receiptAllocations: [], studentInserts: [], studentUpdates: [],
+
+    receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], studentUpdates: [],
     cancellations: [], activeMovements, cancelledVouchers, auditLog: [], restoreCalls: [], passwordResets: [], passwordUpdates: [],
   }
 
@@ -219,8 +229,14 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       const amount = Number(payload.p_amount ?? Number.NaN)
       if (!Number.isFinite(amount) || amount < 0 || amount !== Math.trunc(amount)) return json(route, { message: 'INVALID_FEE_AMOUNT' }, 400)
       if (amount > 100000000) return json(route, { message: 'FEE_AMOUNT_TOO_LARGE' }, 400)
+      const activeReceiptIds = new Set(
+        handle.receiptInserts
+          .filter((receipt) => !receipt.cancelled_at)
+          .map((receipt) => String(receipt.id ?? '')),
+      )
       const collected = handle.receiptAllocations
         .filter((allocation) => String(allocation.enrollment_id ?? '') === String(target.id))
+        .filter((allocation) => activeReceiptIds.has(String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '')))
         .reduce((sum, allocation) => sum + Number(allocation.amount ?? 0), 0)
       if (amount < collected) return json(route, { message: 'FEE_BELOW_COLLECTED' }, 400)
       const oldFee = target.course_value
@@ -297,6 +313,11 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         const reason = String(payload.cancel_reason ?? '')
         const cancelledAt = String(payload.cancelled_at ?? '')
         if (cancelledAt) {
+          const receipt = handle.receiptInserts.find((item) => String(item.id ?? '') === id)
+          if (receipt) {
+            receipt.cancelled_at = cancelledAt
+            receipt.cancel_reason = reason || null
+          }
           const index = activeMovements.findIndex((movement) => movement.id === id)
           if (index >= 0) {
             const [movement] = activeMovements.splice(index, 1)
