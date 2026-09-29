@@ -125,6 +125,7 @@ export const useShellStore = create<ShellStore>((set) => ({
   enrollCourseId: null,
   archiveStudentId: null,
   feeStudentId: null,
+  editFeeEnrollmentId: null,
   openTab: (key) => set((state) => ({ ...withTab(state.openTabs, key), ...CLEARED })),
   focusTab: (key) => set((state) => ({ ...withTab(state.openTabs, key), ...CLEARED })),
   closeTab: (key) =>
