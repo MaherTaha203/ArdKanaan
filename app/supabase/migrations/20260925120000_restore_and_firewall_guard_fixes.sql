@@ -41,6 +41,7 @@ declare
   v_allocation_count int;
   v_external_sum numeric;
   v_receipt_external numeric;
+  v_active_cancelled boolean;
 begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
   if payload is null or jsonb_typeof(payload) <> 'object'
@@ -155,7 +156,7 @@ begin
 
   -- Validate fee allocations set-wise. This avoids rescanning the complete
   -- allocation and receipt arrays once per allocation.
-  for e in
+  for v_fee, v_sum, v_external_sum, v_active_cancelled in
     select q.fee,
            q.active_total,
            q.active_external,
@@ -166,10 +167,10 @@ begin
                filter (where rv.value->>'cancelled_at' is null), 0) as active_total,
              coalesce(sum(coalesce((a.value->>'external_share')::numeric, 0))
                filter (where rv.value->>'cancelled_at' is null), 0) as active_external,
-             bool_or(
+             coalesce(bool_or(
                f.value->>'cancelled_at' is not null
                and rv.value->>'cancelled_at' is null
-             ) as has_active_cancelled_fee
+             ), false) as has_active_cancelled_fee
       from jsonb_array_elements(fee_obligations) f
       left join jsonb_array_elements(receipt_allocations) a
         on (a.value->>'fee_obligation_id')::uuid = (f.value->>'id')::uuid
@@ -181,12 +182,12 @@ begin
        or q.active_external > 0
        or q.has_active_cancelled_fee
   loop
-    if e.has_active_cancelled_fee then
+    if v_active_cancelled then
       raise exception 'ACTIVE_ALLOCATION_TO_CANCELLED_FEE';
     end if;
 
-    if e.active_total > (e.fee->>'amount')::numeric
-       or e.active_external > coalesce((e.fee->>'external_share')::numeric, 0) then
+    if v_sum > (v_fee->>'amount')::numeric
+       or v_external_sum > coalesce((v_fee->>'external_share')::numeric, 0) then
       raise exception 'FEE_ALLOCATION_TOTAL_MISMATCH';
     end if;
   end loop;
