@@ -42,6 +42,7 @@ declare
   v_external_sum numeric;
   v_receipt_external numeric;
   v_active_cancelled boolean;
+  v_fee_json jsonb;
 begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
   if payload is null or jsonb_typeof(payload) <> 'object'
@@ -156,7 +157,7 @@ begin
 
   -- Validate fee allocations set-wise. This avoids rescanning the complete
   -- allocation and receipt arrays once per allocation.
-  for v_fee, v_sum, v_external_sum, v_active_cancelled in
+  for v_fee_json, v_sum, v_external_sum, v_active_cancelled in
     select q.fee,
            q.active_total,
            q.active_external,
@@ -186,8 +187,8 @@ begin
       raise exception 'ACTIVE_ALLOCATION_TO_CANCELLED_FEE';
     end if;
 
-    if v_sum > (v_fee->>'amount')::numeric
-       or v_external_sum > coalesce((v_fee->>'external_share')::numeric, 0) then
+    if v_sum > (v_fee_json->>'amount')::numeric
+       or v_external_sum > coalesce((v_fee_json->>'external_share')::numeric, 0) then
       raise exception 'FEE_ALLOCATION_TOTAL_MISMATCH';
     end if;
   end loop;
