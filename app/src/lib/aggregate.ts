@@ -182,17 +182,23 @@ export function studentCourseBreakdown(
 // implementation filtered every student's statement lines once per fee, which
 // repeated work O(fees × lines). This index makes fee lookups constant-time after
 // one pass over the lines, while preserving the exact fee-entry and ID matching.
+function feePaymentKey(studentId: string, feeObligationId: string): string {
+  return `${studentId}:${feeObligationId}`
+}
+
 function feePaymentsByObligation(lines: StudentStatementLine[]): Map<string, number> {
   const totals = new Map<string, number>()
   for (const line of lines) {
     if (line.entryType !== 'fee' || !line.feeObligationId) continue
-    totals.set(line.feeObligationId, (totals.get(line.feeObligationId) ?? 0) + line.amountReceived)
+    const key = feePaymentKey(line.studentId, line.feeObligationId)
+    totals.set(key, (totals.get(key) ?? 0) + line.amountReceived)
   }
   return totals
 }
 
 function feeRemaining(fee: FeeObligation, paidByFee: Map<string, number>) {
-  return Math.max(0, fee.amount - (paidByFee.get(fee.id) ?? 0))
+  const paid = paidByFee.get(feePaymentKey(fee.studentId, fee.id)) ?? 0
+  return Math.max(0, fee.amount - paid)
 }
 
 function beneficiaryLabel(category: FeeCategory): string {
