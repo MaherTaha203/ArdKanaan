@@ -146,22 +146,70 @@ begin
       if v_fee is null or v_enrollment is not null then raise exception 'INVALID_FEE_ALLOCATION_BACKUP'; end if;
       if not exists (select 1 from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee and v_fee_external <= coalesce((x->>'external_share')::numeric, 0)) then raise exception 'FEE_ALLOCATION_EXTERNAL_SHARE_MISMATCH'; end if;
       select (x->>'student_id')::uuid into v_student from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee;
-      select coalesce(sum((a->>'amount')::numeric), 0), coalesce(sum(coalesce((a->>'external_share')::numeric, 0)), 0)
+      -- Active collections are computed only from allocations whose parent
+      -- receipt is not cancelled. Cancelled receipts remain in the backup as
+      -- immutable history and are validated per receipt below.
+      select coalesce(sum((a->>'amount')::numeric), 0),
+             coalesce(sum(coalesce((a->>'external_share')::numeric, 0)), 0)
         into v_sum, v_external_sum
       from jsonb_array_elements(receipt_allocations) a
-      where (a->>'fee_obligation_id')::uuid = v_fee;
+      join jsonb_array_elements(payload->'receipt_vouchers') rv
+        on (rv->>'id')::uuid = (a->>'receipt_voucher_id')::uuid
+      where (a->>'fee_obligation_id')::uuid = v_fee
+        and rv->>'cancelled_at' is null;
       if not exists (
         select 1 from jsonb_array_elements(fee_obligations) x
         where (x->>'id')::uuid = v_fee
           and v_sum <= (x->>'amount')::numeric
           and v_external_sum <= coalesce((x->>'external_share')::numeric, 0)
+          and not (
+            exists (
+              select 1 from jsonb_array_elements(receipt_allocations) ax
+              join jsonb_array_elements(payload->'receipt_vouchers') ar
+                on (ar->>'id')::uuid = (ax->>'receipt_voucher_id')::uuid
+              where (ax->>'fee_obligation_id')::uuid = v_fee
+                and ar->>'cancelled_at' is null
+            )
+            and x->>'cancelled_at' is not null
+          )
       ) then
+        -- Distinguish an active allocation against a cancelled obligation
+        -- from an amount/share overrun to make corrupt backups diagnosable.
+        if exists (
+          select 1 from jsonb_array_elements(fee_obligations) x
+          join jsonb_array_elements(receipt_allocations) ax
+            on (ax->>'fee_obligation_id')::uuid = (x->>'id')::uuid
+          join jsonb_array_elements(payload->'receipt_vouchers') ar
+            on (ar->>'id')::uuid = (ax->>'receipt_voucher_id')::uuid
+          where (x->>'id')::uuid = v_fee
+            and x->>'cancelled_at' is not null
+            and ar->>'cancelled_at' is null
+        ) then
+          raise exception 'ACTIVE_ALLOCATION_TO_CANCELLED_FEE';
+        end if;
         raise exception 'FEE_ALLOCATION_TOTAL_MISMATCH';
       end if;
       if v_student is null then raise exception 'ALLOCATION_FEE_NOT_FOUND'; end if;
     end if;
     if not exists (select 1 from jsonb_array_elements(payload->'receipt_vouchers') rv where (rv->>'id')::uuid = v_receipt and (rv->>'student_id')::uuid = v_student) then
       raise exception 'RECEIPT_ALLOCATION_STUDENT_MISMATCH';
+    end if;
+  end loop;
+
+  -- Course allocations must not exceed the enrollment's course value.
+  -- Cancelled receipts are historical and do not count as active collections.
+  for e in select value from jsonb_array_elements(enrollments) loop
+    v_enrollment := (e->>'id')::uuid;
+    select coalesce(sum((a->>'amount')::numeric), 0)
+      into v_sum
+    from jsonb_array_elements(receipt_allocations) a
+    join jsonb_array_elements(payload->'receipt_vouchers') rv
+      on (rv->>'id')::uuid = (a->>'receipt_voucher_id')::uuid
+    where a->>'allocation_type' = 'course'
+      and (a->>'enrollment_id')::uuid = v_enrollment
+      and rv->>'cancelled_at' is null;
+    if v_sum > (e->>'course_value')::numeric then
+      raise exception 'COURSE_ALLOCATION_TOTAL_MISMATCH';
     end if;
   end loop;
 
