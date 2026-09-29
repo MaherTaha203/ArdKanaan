@@ -74,3 +74,49 @@ test('the confirm action stays disabled until a valid amount and reason are ente
   await dialog.getByLabel('الرسوم الجديدة').fill('250')
   await expect(confirm).toBeEnabled()
 })
+
+test('the collected floor blocks lowering below an active receipt allocation', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    courses: [COURSE],
+    students: [STUDENT],
+    enrollments: [{ ...ENROLLMENT }],
+    receiptVouchers: [{ id: 'r-1', cancelled_at: null }],
+    receiptAllocations: [{ id: 'a-1', receipt_voucher_id: 'r-1', enrollment_id: 'e-1', amount: 100 }],
+  })
+
+  await login(page)
+  await openCourseDetail(page)
+  const row = page.getByRole('row', { name: /سارة أحمد/ })
+  await row.getByRole('button', { name: 'تعديل الرسوم' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'تعديل رسوم التسجيل' })
+  await dialog.getByLabel('الرسوم الجديدة').fill('250')
+  await dialog.getByLabel('سبب التعديل').fill('تصحيح بعد التحصيل')
+  await dialog.getByRole('button', { name: /تأكيد تعديل الرسوم/ }).click()
+
+  await expect(page.getByText('تم تعديل رسوم التسجيل')).toBeVisible()
+  await expect(page.getByRole('row', { name: /سارة أحمد/ })).toContainText('250')
+})
+
+test('a cancelled receipt allocation is excluded from the collected floor', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    courses: [COURSE],
+    students: [STUDENT],
+    enrollments: [{ ...ENROLLMENT }],
+    receiptVouchers: [{ id: 'r-cancelled', cancelled_at: '2026-09-28T10:00:00Z', cancel_reason: 'خطأ إدخال' }],
+    receiptAllocations: [{ id: 'a-cancelled', receipt_voucher_id: 'r-cancelled', enrollment_id: 'e-1', amount: 100 }],
+  })
+
+  await login(page)
+  await openCourseDetail(page)
+  const row = page.getByRole('row', { name: /سارة أحمد/ })
+  await row.getByRole('button', { name: 'تعديل الرسوم' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'تعديل رسوم التسجيل' })
+  await dialog.getByLabel('الرسوم الجديدة').fill('80')
+  await dialog.getByLabel('سبب التعديل').fill('تعديل بعد إبطال السند')
+  await dialog.getByRole('button', { name: /تأكيد تعديل الرسوم/ }).click()
+
+  await expect(page.getByText('تم تعديل رسوم التسجيل')).toBeVisible()
+  await expect(page.getByRole('row', { name: /سارة أحمد/ })).toContainText('80')
+})
