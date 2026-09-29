@@ -146,6 +146,18 @@ begin
       if v_fee is null or v_enrollment is not null then raise exception 'INVALID_FEE_ALLOCATION_BACKUP'; end if;
       if not exists (select 1 from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee and v_fee_external <= coalesce((x->>'external_share')::numeric, 0)) then raise exception 'FEE_ALLOCATION_EXTERNAL_SHARE_MISMATCH'; end if;
       select (x->>'student_id')::uuid into v_student from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee;
+      select coalesce(sum((a->>'amount')::numeric), 0), coalesce(sum(coalesce((a->>'external_share')::numeric, 0)), 0)
+        into v_sum, v_external_sum
+      from jsonb_array_elements(receipt_allocations) a
+      where (a->>'fee_obligation_id')::uuid = v_fee;
+      if not exists (
+        select 1 from jsonb_array_elements(fee_obligations) x
+        where (x->>'id')::uuid = v_fee
+          and v_sum <= (x->>'amount')::numeric
+          and v_external_sum <= coalesce((x->>'external_share')::numeric, 0)
+      ) then
+        raise exception 'FEE_ALLOCATION_TOTAL_MISMATCH';
+      end if;
       if v_student is null then raise exception 'ALLOCATION_FEE_NOT_FOUND'; end if;
     end if;
     if not exists (select 1 from jsonb_array_elements(payload->'receipt_vouchers') rv where (rv->>'id')::uuid = v_receipt and (rv->>'student_id')::uuid = v_student) then
