@@ -1,4 +1,4 @@
--- Corrective migration: fix restore + direct-insert firewall guards (F1/F2/F3).
+-- Corrective migration: fix restore + direct-insert firewall guards (F1/F2/F3) and restore invariants (F4-F6).
 -- Presentation/safety hardening only. No financial formula, ledger, student-statement,
 -- voucher, or allocation semantics are changed. Idempotent (create or replace).
 -- F1: restore_center_data reused PL/pgSQL var `e` as the jsonb_array_elements(...) alias,
@@ -9,6 +9,9 @@
 --     present AND a JSON array, rejected before any destructive statement.
 -- F3: direct-insert firewalls used current_setting(...,true) <> 'on' (NULL when the GUC is
 --     unset -> never raised). Now `is distinct from 'on'` so an unset/wrong GUC is rejected.
+-- F4: restore accepts valid student-only/course-only fee obligations.
+-- F5: restore preserves complete student lifecycle metadata.
+-- F6: restore reconciles receipt-level and allocation-level external_share splits.
 
 CREATE OR REPLACE FUNCTION public.restore_center_data(payload jsonb, force boolean DEFAULT false)
  RETURNS jsonb
@@ -36,6 +39,8 @@ declare
   v_fee_total numeric;
   v_fee_external numeric;
   v_allocation_count int;
+  v_external_sum numeric;
+  v_receipt_external numeric;
 begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
   if payload is null or jsonb_typeof(payload) <> 'object'
@@ -86,18 +91,33 @@ begin
     v_student := nullif(e->>'student_id', '')::uuid;
     v_course := nullif(e->>'course_id', '')::uuid;
     v_enrollment := nullif(e->>'enrollment_id', '')::uuid;
-    if v_student is null or v_course is null or v_enrollment is null or (e->>'amount')::numeric is null then
+    if v_student is null or (e->>'amount')::numeric is null then
       raise exception 'INVALID_FEE_BACKUP';
     end if;
-    if not exists (
-      select 1 from jsonb_array_elements(enrollments) x
-      where (x->>'id')::uuid = v_enrollment
-        and (x->>'student_id')::uuid = v_student
-        and (x->>'course_id')::uuid = v_course
-        and x->>'course_name' = e->>'course_name'
-    ) then
-      raise exception 'FEE_OBLIGATION_ENROLLMENT_MISMATCH';
+
+    -- Fee obligations are student-anchored; course/enrollment context is optional.
+    if v_enrollment is not null then
+      if not exists (
+        select 1 from jsonb_array_elements(enrollments) x
+        where (x->>'id')::uuid = v_enrollment
+          and (x->>'student_id')::uuid = v_student
+          and (v_course is null or (x->>'course_id')::uuid = v_course)
+          and ((e->>'course_name') is null or x->>'course_name' = e->>'course_name')
+      ) then
+        raise exception 'FEE_OBLIGATION_ENROLLMENT_MISMATCH';
+      end if;
+    elsif v_course is not null then
+      if not exists (
+        select 1 from jsonb_array_elements(courses) x
+        where (x->>'id')::uuid = v_course
+          and ((e->>'course_name') is null or x->>'name' = e->>'course_name')
+      ) then
+        raise exception 'FEE_OBLIGATION_COURSE_MISMATCH';
+      end if;
+    elsif nullif(e->>'course_name', '') is not null then
+      raise exception 'INVALID_FEE_BACKUP';
     end if;
+
     v_fee_total := (e->>'amount')::numeric;
     v_fee_external := coalesce((e->>'external_share')::numeric, 0);
     if v_fee_total <= 0 or v_fee_external < 0 or v_fee_external > v_fee_total then raise exception 'INVALID_FEE_BACKUP'; end if;
@@ -115,14 +135,16 @@ begin
     v_enrollment := nullif(e->>'enrollment_id', '')::uuid;
     v_fee := nullif(e->>'fee_obligation_id', '')::uuid;
     v_amount := (e->>'amount')::numeric;
-    if v_receipt is null or v_amount is null or v_amount <= 0 then raise exception 'INVALID_RECEIPT_ALLOCATION_BACKUP'; end if;
+    v_fee_external := coalesce((e->>'external_share')::numeric, 0);
+    if v_receipt is null or v_amount is null or v_amount <= 0 or v_fee_external < 0 or v_fee_external > v_amount then raise exception 'INVALID_RECEIPT_ALLOCATION_BACKUP'; end if;
     if e->>'allocation_type' not in ('course','fee') then raise exception 'INVALID_RECEIPT_ALLOCATION_BACKUP'; end if;
     if e->>'allocation_type' = 'course' then
-      if v_enrollment is null or v_fee is not null then raise exception 'INVALID_COURSE_ALLOCATION_BACKUP'; end if;
+      if v_enrollment is null or v_fee is not null or v_fee_external <> 0 then raise exception 'INVALID_COURSE_ALLOCATION_BACKUP'; end if;
       select (x->>'student_id')::uuid into v_student from jsonb_array_elements(enrollments) x where (x->>'id')::uuid = v_enrollment;
       if v_student is null then raise exception 'ALLOCATION_ENROLLMENT_NOT_FOUND'; end if;
     else
       if v_fee is null or v_enrollment is not null then raise exception 'INVALID_FEE_ALLOCATION_BACKUP'; end if;
+      if not exists (select 1 from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee and v_fee_external <= coalesce((x->>'external_share')::numeric, 0)) then raise exception 'FEE_ALLOCATION_EXTERNAL_SHARE_MISMATCH'; end if;
       select (x->>'student_id')::uuid into v_student from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee;
       if v_student is null then raise exception 'ALLOCATION_FEE_NOT_FOUND'; end if;
     end if;
@@ -134,13 +156,22 @@ begin
   for e in select value from jsonb_array_elements(payload->'receipt_vouchers') loop
     v_receipt := (e->>'id')::uuid;
     v_amount := (e->>'amount_received')::numeric;
-    select coalesce(sum((a->>'amount')::numeric), 0), count(*) into v_sum, v_allocation_count
+    v_receipt_external := coalesce((e->>'external_share')::numeric, 0);
+    if v_amount is null or v_amount < 0 or v_receipt_external < 0 or v_receipt_external > v_amount then
+      raise exception 'INVALID_RECEIPT_BACKUP';
+    end if;
+    select coalesce(sum((a->>'amount')::numeric), 0),
+           coalesce(sum(coalesce((a->>'external_share')::numeric, 0)), 0),
+           count(*)
+      into v_sum, v_external_sum, v_allocation_count
     from jsonb_array_elements(receipt_allocations) a
     where (a->>'receipt_voucher_id')::uuid = v_receipt;
     if v_allocation_count = 0 then
-      -- Legacy receipts are retained without invented allocations.
+      -- Legacy receipts are retained without invented allocations; their
+      -- receipt-level external split must therefore be zero.
       if coalesce((e->>'allocation_mode')::boolean, false) then raise exception 'ALLOCATION_REQUIRED_FOR_MODERN_RECEIPT'; end if;
-    elsif v_sum <> v_amount then
+      if v_receipt_external <> 0 then raise exception 'RESTORE_RECEIPT_EXTERNAL_SHARE_MISMATCH'; end if;
+    elsif v_sum <> v_amount or v_external_sum <> v_receipt_external then
       raise exception 'RESTORE_RECEIPT_ALLOCATION_TOTAL_MISMATCH';
     end if;
   end loop;
@@ -159,8 +190,16 @@ begin
   select coalesce((src->>'id')::uuid, gen_random_uuid()), src->>'name', nullif(src->>'base_fee', '')::numeric, nullif(src->>'start_date', '')::date, nullif(src->>'end_date', '')::date, coalesce(nullif(src->>'status', ''), 'active'), coalesce(src->>'notes', ''), coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), coalesce((src->>'updated_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(courses) src;
   get diagnostics c_out = row_count;
 
-  insert into public.students (id, name, id_number, phone, notes, created_at, updated_at)
-  select (src->>'id')::uuid, src->>'name', src->>'id_number', src->>'phone', src->>'notes', coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), coalesce((src->>'updated_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(payload->'students') src;
+  insert into public.students (id, name, id_number, phone, notes, status, completed_at, completion_reason, archived_at, archive_reason, created_at, updated_at)
+  select (src->>'id')::uuid, src->>'name', src->>'id_number', src->>'phone', src->>'notes',
+         coalesce(nullif(src->>'status', ''), 'active'),
+         (src->>'completed_at')::timestamptz,
+         src->>'completion_reason',
+         (src->>'archived_at')::timestamptz,
+         src->>'archive_reason',
+         coalesce((src->>'created_at')::timestamptz, timezone('utc', now())),
+         coalesce((src->>'updated_at')::timestamptz, timezone('utc', now()))
+  from jsonb_array_elements(payload->'students') src;
   get diagnostics s_out = row_count;
 
   insert into public.enrollments (id, student_id, course_id, course_name, course_value, created_at, updated_at)
