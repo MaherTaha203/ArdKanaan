@@ -41,6 +41,8 @@ declare
   v_allocation_count int;
   v_external_sum numeric;
   v_receipt_external numeric;
+  v_active_cancelled boolean;
+  v_fee_json jsonb;
 begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
   if payload is null or jsonb_typeof(payload) <> 'object'
@@ -146,22 +148,65 @@ begin
       if v_fee is null or v_enrollment is not null then raise exception 'INVALID_FEE_ALLOCATION_BACKUP'; end if;
       if not exists (select 1 from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee and v_fee_external <= coalesce((x->>'external_share')::numeric, 0)) then raise exception 'FEE_ALLOCATION_EXTERNAL_SHARE_MISMATCH'; end if;
       select (x->>'student_id')::uuid into v_student from jsonb_array_elements(fee_obligations) x where (x->>'id')::uuid = v_fee;
-      select coalesce(sum((a->>'amount')::numeric), 0), coalesce(sum(coalesce((a->>'external_share')::numeric, 0)), 0)
-        into v_sum, v_external_sum
-      from jsonb_array_elements(receipt_allocations) a
-      where (a->>'fee_obligation_id')::uuid = v_fee;
-      if not exists (
-        select 1 from jsonb_array_elements(fee_obligations) x
-        where (x->>'id')::uuid = v_fee
-          and v_sum <= (x->>'amount')::numeric
-          and v_external_sum <= coalesce((x->>'external_share')::numeric, 0)
-      ) then
-        raise exception 'FEE_ALLOCATION_TOTAL_MISMATCH';
-      end if;
       if v_student is null then raise exception 'ALLOCATION_FEE_NOT_FOUND'; end if;
     end if;
     if not exists (select 1 from jsonb_array_elements(payload->'receipt_vouchers') rv where (rv->>'id')::uuid = v_receipt and (rv->>'student_id')::uuid = v_student) then
       raise exception 'RECEIPT_ALLOCATION_STUDENT_MISMATCH';
+    end if;
+  end loop;
+
+  -- Validate fee allocations set-wise. This avoids rescanning the complete
+  -- allocation and receipt arrays once per allocation.
+  for v_fee_json, v_sum, v_external_sum, v_active_cancelled in
+    select q.fee,
+           q.active_total,
+           q.active_external,
+           q.has_active_cancelled_fee
+    from (
+      select f.value as fee,
+             coalesce(sum((a.value->>'amount')::numeric)
+               filter (where rv.value->>'cancelled_at' is null), 0) as active_total,
+             coalesce(sum(coalesce((a.value->>'external_share')::numeric, 0))
+               filter (where rv.value->>'cancelled_at' is null), 0) as active_external,
+             coalesce(bool_or(
+               f.value->>'cancelled_at' is not null
+               and rv.value->>'cancelled_at' is null
+             ), false) as has_active_cancelled_fee
+      from jsonb_array_elements(fee_obligations) f
+      left join jsonb_array_elements(receipt_allocations) a
+        on (a.value->>'fee_obligation_id')::uuid = (f.value->>'id')::uuid
+      left join jsonb_array_elements(payload->'receipt_vouchers') rv
+        on (rv.value->>'id')::uuid = (a.value->>'receipt_voucher_id')::uuid
+      group by f.value
+    ) q
+    where q.active_total > 0
+       or q.active_external > 0
+       or q.has_active_cancelled_fee
+  loop
+    if v_active_cancelled then
+      raise exception 'ACTIVE_ALLOCATION_TO_CANCELLED_FEE';
+    end if;
+
+    if v_sum > (v_fee_json->>'amount')::numeric
+       or v_external_sum > coalesce((v_fee_json->>'external_share')::numeric, 0) then
+      raise exception 'FEE_ALLOCATION_TOTAL_MISMATCH';
+    end if;
+  end loop;
+
+  -- Course allocations must not exceed the enrollment's course value.
+  -- Cancelled receipts are historical and do not count as active collections.
+  for e in select value from jsonb_array_elements(enrollments) loop
+    v_enrollment := (e->>'id')::uuid;
+    select coalesce(sum((a->>'amount')::numeric), 0)
+      into v_sum
+    from jsonb_array_elements(receipt_allocations) a
+    join jsonb_array_elements(payload->'receipt_vouchers') rv
+      on (rv->>'id')::uuid = (a->>'receipt_voucher_id')::uuid
+    where a->>'allocation_type' = 'course'
+      and (a->>'enrollment_id')::uuid = v_enrollment
+      and rv->>'cancelled_at' is null;
+    if v_sum > (e->>'course_value')::numeric then
+      raise exception 'COURSE_ALLOCATION_TOTAL_MISMATCH';
     end if;
   end loop;
 
