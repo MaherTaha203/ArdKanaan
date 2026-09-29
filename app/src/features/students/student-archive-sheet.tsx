@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
 
-import { Archive, RotateCcw, TriangleAlert } from 'lucide-react'
+import { Archive, ArchiveRestore, TriangleAlert } from 'lucide-react'
 
 import { ActionSheet } from '@/components/shell/action-sheet'
 import { Button } from '@/components/ui/button'
@@ -87,7 +87,7 @@ export function StudentArchiveSheet() {
         {error ? <div role="alert" className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{error}</div> : null}
         <p className="text-sm text-muted-foreground">إعادة «{student.name}» إلى قائمة الطلاب النشطين. لا يؤثّر ذلك على أي بيان ماليّ.</p>
         <Button type="button" size="lg" variant="default" className="mt-5 w-full" disabled={isBusy} onClick={onReactivate}>
-          <RotateCcw className="size-4" />
+          <ArchiveRestore className="size-4" />
           {isBusy ? 'جارٍ التنفيذ…' : 'إعادة التفعيل'}
         </Button>
       </ActionSheet>

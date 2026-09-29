@@ -2,7 +2,6 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { ChevronDown, RefreshCw } from 'lucide-react'
 
-import { RouteHeader } from '@/components/shell/route-header'
 import { Input } from '@/components/ui/input'
 import { fetchAllRows } from '@/lib/fetch-all'
 import { formatTimestamp } from '@/lib/format'
@@ -128,16 +127,15 @@ export function ActivityWorkspace() {
 
   return (
     <div>
-      <RouteHeader eyebrow="التدقيق" title="سجل التدقيق" />
-
-      <section className="w-full">
-        <div className="mb-5 flex flex-col gap-3 border-y border-border py-4 lg:flex-row lg:items-center">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">سجل التدقيق</h1>
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="بحث في المستخدم أو البيان أو الجهاز أو المكان…"
             aria-label="البحث في سجل النشاط"
-            className="lg:max-w-[420px]"
+            className="w-full sm:w-64 lg:w-80"
           />
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>المصدر</span>
@@ -165,6 +163,9 @@ export function ActivityWorkspace() {
             تحديث السجل
           </button>
         </div>
+      </header>
+
+      <section className="w-full">
 
         {error ? (
           <p role="alert" className="border-y border-border py-4 text-sm text-destructive">

@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 
-import { ChevronLeft, RotateCcw, Search, User } from 'lucide-react'
+import { ArchiveRestore, ChevronLeft, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
-import { RouteHeader } from '@/components/shell/route-header'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
@@ -25,7 +24,6 @@ export function ArchivedStudentsWorkspace() {
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
   const selectStudent = useShellStore((state) => state.selectStudent)
-  const navigateStudents = useShellStore((state) => state.navigateStudents)
   const openArchive = useShellStore((state) => state.openArchive)
 
   const [query, setQuery] = useState('')
@@ -53,20 +51,15 @@ export function ArchivedStudentsWorkspace() {
 
   return (
     <div>
-      <RouteHeader eyebrow="الطلاب" title="الطلاب المؤرشفون" />
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">الطلاب المؤرشفون</h1>
+        <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
+          <Search aria-hidden className="size-4 flex-none text-faint" />
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث في الطلاب المؤرشفين" placeholder="بحث بالاسم" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+        </label>
+      </header>
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
-
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => navigateStudents('directory')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">دليل الطلاب</button>
-        <button type="button" onClick={() => navigateStudents('statement')} className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground">كشف الحساب</button>
-        <button type="button" onClick={() => navigateStudents('archived')} aria-current="page" className="rounded-full bg-olive-weak px-3.5 py-1.5 text-sm font-medium text-olive">المؤرشفون</button>
-      </div>
-
-      <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive">
-        <Search aria-hidden className="size-4 flex-none text-faint" />
-        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث في الطلاب المؤرشفين" placeholder="بحث بالاسم" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
-      </div>
 
       <div className="border-t border-border-strong">
         {!loaded ? (
@@ -76,7 +69,7 @@ export function ArchivedStudentsWorkspace() {
             <ArchivedRow
               key={item.student.id}
               item={item}
-              onOpenStatement={() => { selectStudent(item.student.id); navigateStudents('statement') }}
+              onOpenStatement={() => selectStudent(item.student.id)}
               onReactivate={() => openArchive(item.student.id)}
             />
           ))
@@ -111,7 +104,7 @@ function ArchivedRow({ item, onOpenStatement, onReactivate }: { item: StudentAgg
       ) : null}
       <div className="flex items-center gap-1.5">
         <Button variant="quiet" size="sm" onClick={onOpenStatement}><ChevronLeft className="size-4" />الكشف</Button>
-        <Button variant="quiet" size="sm" onClick={onReactivate}><RotateCcw className="size-4" />إعادة التفعيل</Button>
+        <Button variant="quiet" size="sm" onClick={onReactivate}><ArchiveRestore className="size-4" />إعادة التفعيل</Button>
       </div>
     </div>
   )

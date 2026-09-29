@@ -26,11 +26,14 @@ test('archived students are excluded from the directory and listed in the archiv
   await expect(page.getByRole('button', { name: /سارة النشطة/ })).toBeVisible()
   await expect(page.getByText('خالد المؤرشف')).toHaveCount(0)
 
-  // Archive view (المؤرشفون) lists the archived student.
+  // Archive view (المؤرشفون) lists the archived student. Each sub-view is now its own
+  // tab, so the directory tab stays mounted alongside — scope the archive assertions to
+  // the active archive panel rather than the whole page.
   await openStudents(page, 'المؤرشفون')
-  await expect(page.getByRole('heading', { name: 'الطلاب المؤرشفون' })).toBeVisible()
-  await expect(page.getByText('خالد المؤرشف')).toBeVisible()
-  await expect(page.getByText('سارة النشطة')).toHaveCount(0)
+  const archivePanel = page.getByRole('tabpanel', { name: 'الطلاب المؤرشفون' })
+  await expect(archivePanel.getByRole('heading', { name: 'الطلاب المؤرشفون' })).toBeVisible()
+  await expect(archivePanel.getByText('خالد المؤرشف')).toBeVisible()
+  await expect(archivePanel.getByText('سارة النشطة')).toHaveCount(0)
 })
 
 test('archiving an eligible student moves them out of the roster into the archive view', async ({ page }) => {
