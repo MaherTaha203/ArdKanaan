@@ -60,3 +60,21 @@ describe('fee obligations in student aggregates', () => {
     expect(aggregate.remaining).toBe(0)
   })
 })
+
+  it('sums multiple fee receipt allocations by obligation without cross-counting course lines', () => {
+    const lines = [
+      line({ id: 'fee-a', amountReceived: 12 }),
+      line({ id: 'fee-b', amountReceived: 18, voucherNumber: 2 }),
+      line({ id: 'course-line', entryType: 'course', amountReceived: 100, feeObligationId: 'f-1' }),
+      line({ id: 'other-fee', amountReceived: 500, feeObligationId: 'unrelated-fee' }),
+    ]
+    const [aggregate] = aggregateStudents([student('s-1')], lines, [], [fee({ amount: 50 })])
+    expect(aggregate.paid).toBe(630)
+    expect(aggregate.remaining).toBe(20)
+  })
+
+  it('does not apply another student’s fee payment to this student’s obligation', () => {
+    const lines = [line({ studentId: 's-2', amountReceived: 50 })]
+    const [aggregate] = aggregateStudents([student('s-1')], lines, [], [fee({ amount: 50 })])
+    expect(aggregate.remaining).toBe(50)
+  })
