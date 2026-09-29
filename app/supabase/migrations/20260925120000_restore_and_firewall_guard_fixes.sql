@@ -155,33 +155,30 @@ begin
     end if;
   end loop;
 
-  -- Validate fee allocations set-wise. This avoids rescanning the complete
-  -- allocation and receipt arrays once per allocation.
+  -- Validate fee allocations set-wise. Aggregate allocations once per fee
+  -- instead of joining the complete allocation array once per fee obligation.
   for v_fee_json, v_sum, v_external_sum, v_active_cancelled in
-    select q.fee,
-           q.active_total,
-           q.active_external,
-           q.has_active_cancelled_fee
-    from (
-      select f.value as fee,
-             coalesce(sum((a.value->>'amount')::numeric)
-               filter (where rv.value->>'cancelled_at' is null), 0) as active_total,
-             coalesce(sum(coalesce((a.value->>'external_share')::numeric, 0))
-               filter (where rv.value->>'cancelled_at' is null), 0) as active_external,
-             coalesce(bool_or(
-               f.value->>'cancelled_at' is not null
-               and rv.value->>'cancelled_at' is null
-             ), false) as has_active_cancelled_fee
-      from jsonb_array_elements(fee_obligations) f
-      left join jsonb_array_elements(receipt_allocations) a
-        on (a.value->>'fee_obligation_id')::uuid = (f.value->>'id')::uuid
-      left join jsonb_array_elements(payload->'receipt_vouchers') rv
+    select f.value,
+           coalesce(q.active_total, 0),
+           coalesce(q.active_external, 0),
+           (f.value->>'cancelled_at' is not null and coalesce(q.active_count, 0) > 0)
+    from jsonb_array_elements(fee_obligations) f
+    left join (
+      select
+        (a.value->>'fee_obligation_id')::uuid as fee_id,
+        sum((a.value->>'amount')::numeric)
+          filter (where rv.value->>'cancelled_at' is null) as active_total,
+        sum(coalesce((a.value->>'external_share')::numeric, 0))
+          filter (where rv.value->>'cancelled_at' is null) as active_external,
+        count(*) filter (where rv.value->>'cancelled_at' is null) as active_count
+      from jsonb_array_elements(receipt_allocations) a
+      join jsonb_array_elements(payload->'receipt_vouchers') rv
         on (rv.value->>'id')::uuid = (a.value->>'receipt_voucher_id')::uuid
-      group by f.value
-    ) q
-    where q.active_total > 0
-       or q.active_external > 0
-       or q.has_active_cancelled_fee
+      where (a.value->>'fee_obligation_id') is not null
+      group by (a.value->>'fee_obligation_id')::uuid
+    ) q on q.fee_id = (f.value->>'id')::uuid
+    where coalesce(q.active_count, 0) > 0
+       or (f.value->>'cancelled_at' is not null and coalesce(q.active_count, 0) > 0)
   loop
     if v_active_cancelled then
       raise exception 'ACTIVE_ALLOCATION_TO_CANCELLED_FEE';
@@ -194,20 +191,26 @@ begin
   end loop;
 
   -- Course allocations must not exceed the enrollment's course value.
-  -- Cancelled receipts are historical and do not count as active collections.
-  for e in select value from jsonb_array_elements(enrollments) loop
-    v_enrollment := (e->>'id')::uuid;
-    select coalesce(sum((a->>'amount')::numeric), 0)
-      into v_sum
-    from jsonb_array_elements(receipt_allocations) a
-    join jsonb_array_elements(payload->'receipt_vouchers') rv
-      on (rv->>'id')::uuid = (a->>'receipt_voucher_id')::uuid
-    where a->>'allocation_type' = 'course'
-      and (a->>'enrollment_id')::uuid = v_enrollment
-      and rv->>'cancelled_at' is null;
-    if v_sum > (e->>'course_value')::numeric then
-      raise exception 'COURSE_ALLOCATION_TOTAL_MISMATCH';
-    end if;
+  -- Aggregate active course allocations once per enrollment; cancelled receipts
+  -- remain historical and do not count toward the active ceiling.
+  for e, v_sum in
+    select e.value, coalesce(q.active_total, 0)
+    from jsonb_array_elements(enrollments) e
+    left join (
+      select
+        (a.value->>'enrollment_id')::uuid as enrollment_id,
+        sum((a.value->>'amount')::numeric) as active_total
+      from jsonb_array_elements(receipt_allocations) a
+      join jsonb_array_elements(payload->'receipt_vouchers') rv
+        on (rv.value->>'id')::uuid = (a.value->>'receipt_voucher_id')::uuid
+      where a.value->>'allocation_type' = 'course'
+        and (a.value->>'enrollment_id') is not null
+        and rv.value->>'cancelled_at' is null
+      group by (a.value->>'enrollment_id')::uuid
+    ) q on q.enrollment_id = (e.value->>'id')::uuid
+    where coalesce(q.active_total, 0) > (e.value->>'course_value')::numeric
+  loop
+    raise exception 'COURSE_ALLOCATION_TOTAL_MISMATCH';
   end loop;
 
   for e in select value from jsonb_array_elements(payload->'receipt_vouchers') loop
