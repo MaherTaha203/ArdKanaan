@@ -178,14 +178,21 @@ export function studentCourseBreakdown(
   return result.sort((a, b) => a.courseName.localeCompare(b.courseName, 'ar') || (a.enrollmentId ?? '').localeCompare(b.enrollmentId ?? ''))
 }
 
-function feePaid(fee: FeeObligation, lines: StudentStatementLine[]): number {
-  return lines
-    .filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id)
-    .reduce((sum, line) => sum + line.amountReceived, 0)
+// Build fee-payment totals once for the entire statement dataset. The previous
+// implementation filtered every student's statement lines once per fee, which
+// repeated work O(fees × lines). This index makes fee lookups constant-time after
+// one pass over the lines, while preserving the exact fee-entry and ID matching.
+function feePaymentsByObligation(lines: StudentStatementLine[]): Map<string, number> {
+  const totals = new Map<string, number>()
+  for (const line of lines) {
+    if (line.entryType !== 'fee' || !line.feeObligationId) continue
+    totals.set(line.feeObligationId, (totals.get(line.feeObligationId) ?? 0) + line.amountReceived)
+  }
+  return totals
 }
 
-function feeRemaining(fee: FeeObligation, lines: StudentStatementLine[]) {
-  return Math.max(0, fee.amount - feePaid(fee, lines))
+function feeRemaining(fee: FeeObligation, paidByFee: Map<string, number>) {
+  return Math.max(0, fee.amount - (paidByFee.get(fee.id) ?? 0))
 }
 
 function beneficiaryLabel(category: FeeCategory): string {
@@ -273,6 +280,7 @@ export function aggregateStudents(
   const linesByStudent = groupByStudent(lines)
   const enrollmentsByStudent = groupByStudent(enrollments)
   const feesByStudent = groupByStudent(feeObligations.filter((fee) => !fee.cancelledAt))
+  const paidByFee = feePaymentsByObligation(lines)
 
   return students.map((student) => {
     const studentLines = chronological(linesByStudent.get(student.id) ?? [])
@@ -289,7 +297,7 @@ export function aggregateStudents(
 
     let remaining = 0
     for (const course of breakdown) remaining += Math.max(0, course.remaining)
-    for (const fee of feeRows) remaining += feeRemaining(fee, studentLines)
+    for (const fee of feeRows) remaining += feeRemaining(fee, paidByFee)
 
     return {
       student,
