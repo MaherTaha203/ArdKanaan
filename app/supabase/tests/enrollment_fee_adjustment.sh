@@ -320,8 +320,10 @@ for H_ITER in 1 2 3 4 5; do
     fi
   fi
 
-  # Clean only this dedicated probe data before the next iteration.
-  run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c "delete from public.receipt_allocations where enrollment_id='$E5'; delete from public.receipt_vouchers where student_id='$S5'; update public.enrollments set course_value=300 where id='$E5';"" >/dev/null 2>&1 || true
+  # Clean only this dedicated probe data before the next iteration. Replication
+  # mode is used here solely because the harness is resetting disposable test data;
+  # production business rules are still exercised by both racing RPCs above.
+  run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c "set session_replication_role=replica; delete from public.receipt_allocations where enrollment_id='$E5'; delete from public.receipt_vouchers where student_id='$S5'; update public.enrollments set course_value=300 where id='$E5'; set session_replication_role=origin;"" >/dev/null 2>&1 || true
 done
 
 eq "H E5 final fee restored to 300" "$(runFP "select course_value::int from public.enrollments where id='$E5'")" "300"
