@@ -47,10 +47,12 @@ S1='00000000-0000-0000-0000-0000000a0001'
 S2='00000000-0000-0000-0000-0000000a0002'
 S3='00000000-0000-0000-0000-0000000a0003'
 S4='00000000-0000-0000-0000-0000000a0004'
+S5='00000000-0000-0000-0000-0000000a0005'
 E1='00000000-0000-0000-0000-0000000e0001'   # S1 @ C1, fee 300  (main)
 E2='00000000-0000-0000-0000-0000000e0002'   # S2 @ C1, fee 300  (isolation, same course)
 E3='00000000-0000-0000-0000-0000000e0003'   # S3 @ C2, fee 500  (cross-course)
 E4='00000000-0000-0000-0000-0000000e0004'   # S4 @ C1, fee 300  (full-payment no-op)
+E5='00000000-0000-0000-0000-0000000e0005'   # S5 @ C1, fee 300  (concurrency probe)
 
 if [ -n "$PG_RUNAS" ]; then run() { su "$PG_RUNAS" -c "$1"; }; else run() { bash -c "$1"; }; fi
 PU="${PG_RUNAS:-$USER}"
@@ -119,7 +121,7 @@ echo "   all migrations applied."
 # authenticated needs execute on the RPCs it is meant to call (mirrors Supabase grants).
 run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c \"grant select on public.enrollments, public.receipt_vouchers, public.receipt_allocations to authenticated;\"" >/dev/null 2>&1
 
-echo "== seed: 4 students + 2 courses + 4 enrollments (fees = base) =="
+echo "== seed: 5 students + 2 courses + 5 enrollments (fees = base) =="
 cat > "$BASE/seed.sql" <<SQL
 set session_replication_role = replica;
 insert into public.courses (id, name, base_fee, status) values
@@ -129,12 +131,14 @@ insert into public.students (id, name, status) values
   ('$S1','طالب أ','active'),
   ('$S2','طالب ب','active'),
   ('$S3','طالب ج','active'),
-  ('$S4','طالب د','active');
+  ('$S4','طالب د','active'),
+  ('$S5','طالب هـ','active');
 insert into public.enrollments (id, student_id, course_id, course_name, course_value) values
   ('$E1','$S1','$C1','دورة الرياضيات',300),
   ('$E2','$S2','$C1','دورة الرياضيات',300),
   ('$E3','$S3','$C2','دورة الفيزياء',500),
-  ('$E4','$S4','$C1','دورة الرياضيات',300);
+  ('$E4','$S4','$C1','دورة الرياضيات',300),
+  ('$E5','$S5','$C1','دورة الرياضيات',300);
 set session_replication_role = origin;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/seed.sql"
@@ -265,25 +269,63 @@ eq "audit O-change row present (old 275, new 250, reason, actor)" \
   "$(runFP "select count(*)::int from public.audit_log where entity='enrollment' and action='fee_adjustment' and (metadata->>'enrollment_id')::uuid='$E1' and (metadata->>'old_amount')::numeric=275 and (metadata->>'new_amount')::numeric=250 and description='إعادة الضبط للتسوية' and changed_by='$OWNER'")" "1"
 
 echo
-echo "== H: RPC serialises on the enrollment advisory-lock key =="
-# Background holds the SAME advisory-lock key for ~3s; a concurrent owner RPC must block.
-cat > "$BASE/hold.sql" <<SQL
-begin;
-select pg_advisory_xact_lock(hashtextextended('enrollment:$E1', 0));
-select pg_sleep(3);
-commit;
+echo "== H: actual concurrent receipt-posting vs fee-adjustment race =="
+# Dedicated E5 starts at fee=300 with collected=0. Two REAL RPCs race:
+#   fee RPC tries 300→50
+#   receipt RPC tries to collect 100
+# They share the same enrollment advisory-lock key. Exactly one operation may
+# succeed; the other must reject against the state established by the winner.
+eq "H E5 starts at fee 300" "$(runFP "select course_value::int from public.enrollments where id='$E5'")" "300"
+eq "H E5 starts with collected 0" "$(runFP "select coalesce(sum(ra.amount),0)::int from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.enrollment_id='$E5' and rv.cancelled_at is null")" "0"
+
+cat > "$BASE/h_fee.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.update_enrollment_fee('$E5', 50, 'اختبار سباق الرسوم');
 SQL
-[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/hold.sql"
-run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/hold.sql" >/dev/null 2>&1 &
-HOLD_PID=$!
-sleep 1   # let the background session acquire the lock
-T0=$(date +%s%N)
-fee "$E1" 260 "اختبار التزامن"; RC=$?
-T1=$(date +%s%N)
-wait $HOLD_PID 2>/dev/null
-ELAPSED_MS=$(( (T1 - T0) / 1000000 ))
-expect_ok "$RC" "H concurrent RPC eventually succeeds" fee
-if [ "$ELAPSED_MS" -ge 1500 ]; then pass "H RPC blocked on the shared lock (${ELAPSED_MS}ms ≥ 1500ms)"; else fail "H RPC did NOT block (only ${ELAPSED_MS}ms) — advisory lock not shared"; fi
+cat > "$BASE/h_receipt.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_receipt_with_allocations('{"student_id":"$S5","student_name":"طالب هـ","voucher_date":"2026-02-01","amount_received":100,"payer_name":"طالب هـ","notes":"","idempotency_key":"55555555-0000-0000-0000-000000000055","allocations":[{"type":"course","enrollment_id":"$E5","amount":100}]}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/h_fee.sql" "$BASE/h_receipt.sql"
+
+for H_ITER in 1 2 3 4 5; do
+  # The winner is determined by actual lock acquisition; both calls below are
+  # real production RPCs, not synthetic lock probes.
+  rm -f "$BASE/h_fee.out" "$BASE/h_receipt.out"
+  run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -qtA -d $DB -f $BASE/h_fee.sql" >"$BASE/h_fee.out" 2>&1 &
+  HF_PID=$!
+  run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -qtA -d $DB -f $BASE/h_receipt.sql" >"$BASE/h_receipt.out" 2>&1 &
+  HR_PID=$!
+  wait "$HF_PID"; HF_RC=$?
+  wait "$HR_PID"; HR_RC=$?
+
+  H_SUCC=0
+  [ "$HF_RC" -eq 0 ] && H_SUCC=$((H_SUCC + 1))
+  [ "$HR_RC" -eq 0 ] && H_SUCC=$((H_SUCC + 1))
+  if [ "$H_SUCC" -ne 1 ]; then
+    fail "H iteration $H_ITER: expected exactly one RPC to succeed (fee_rc=$HF_RC receipt_rc=$HR_RC)"
+    sed 's/^/       fee: /' "$BASE/h_fee.out"
+    sed 's/^/       receipt: /' "$BASE/h_receipt.out"
+  else
+    H_FEE=$(runFP "select course_value::int from public.enrollments where id='$E5'")
+    H_PAID=$(runFP "select coalesce(sum(ra.amount),0)::int from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.enrollment_id='$E5' and rv.cancelled_at is null")
+    if [ "$H_FEE" = "50" ] && [ "$H_PAID" = "0" ] && [ "$HF_RC" -eq 0 ]; then
+      pass "H iteration $H_ITER: fee won; receipt rejected, final fee=50 collected=0"
+    elif [ "$H_FEE" = "300" ] && [ "$H_PAID" = "100" ] && [ "$HR_RC" -eq 0 ]; then
+      pass "H iteration $H_ITER: receipt won; fee rejected, final fee=300 collected=100"
+    else
+      fail "H iteration $H_ITER: unexpected final state fee=$H_FEE collected=$H_PAID"
+      sed 's/^/       fee: /' "$BASE/h_fee.out"
+      sed 's/^/       receipt: /' "$BASE/h_receipt.out"
+    fi
+  fi
+
+  # Clean only this dedicated probe data before the next iteration.
+  run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c "delete from public.receipt_allocations where enrollment_id='$E5'; delete from public.receipt_vouchers where student_id='$S5'; update public.enrollments set course_value=300 where id='$E5';"" >/dev/null 2>&1 || true
+done
+
+eq "H E5 final fee restored to 300" "$(runFP "select course_value::int from public.enrollments where id='$E5'")" "300"
+eq "H E5 final collected restored to 0" "$(runFP "select coalesce(sum(ra.amount),0)::int from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.enrollment_id='$E5' and rv.cancelled_at is null")" "0"
 
 echo
 echo "== P: firewall regression (identity + snapshot + non-RPC course_value) =="
