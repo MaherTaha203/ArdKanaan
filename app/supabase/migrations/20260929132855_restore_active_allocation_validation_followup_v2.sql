@@ -1,0 +1,4 @@
+-- Historical migration marker.
+-- This version was already applied to Production during the corrective restore-validation iteration.
+-- The final set-based implementation is canonicalized in 20260929140000_restore_active_allocation_validation_setwise.sql.
+-- No-op by design: preserves migration-history alignment without re-running an intermediate definition.
