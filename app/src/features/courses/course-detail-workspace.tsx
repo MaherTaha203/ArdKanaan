@@ -17,6 +17,7 @@ export function CourseDetailWorkspace() {
   const navigateCourses = useShellStore((state) => state.navigateCourses)
   const openEnroll = useShellStore((state) => state.openEnroll)
   const openEditCourse = useShellStore((state) => state.openEditCourse)
+  const openEditFee = useShellStore((state) => state.openEditFee)
   const selectStudent = useShellStore((state) => state.selectStudent)
 
   const courses = useWorkspaceStore((state) => state.courses)
@@ -139,6 +140,7 @@ export function CourseDetailWorkspace() {
                     <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المدفوع</th>
                     <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المتبقّي</th>
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الحالة</th>
+                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold"><span className="sr-only">إجراءات</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -160,6 +162,9 @@ export function CourseDetailWorkspace() {
                         <span className="text-[12px] font-medium text-muted-foreground">
                           {entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
                         </span>
+                      </td>
+                      <td className="border-b border-border px-4 py-2.5 text-end">
+                        <Button variant="quiet" size="sm" onClick={() => openEditFee(entry.enrollment.id)}>تعديل الرسوم</Button>
                       </td>
                     </tr>
                   ))}

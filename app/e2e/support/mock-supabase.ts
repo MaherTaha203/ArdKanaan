@@ -48,6 +48,12 @@ export type MockMovement = {
 
 export type MockCancelledVoucher = MockMovement & { cancelled_at: string; cancel_reason: string | null }
 
+export type MockReceiptVoucher = {
+  id: string
+  cancelled_at: string | null
+  cancel_reason?: string | null
+}
+
 export type MockOptions = {
   students?: MockStudent[]
   courses?: Array<{ id: string; name: string; base_fee: number | null; start_date: string | null; end_date: string | null; status: 'active' | 'ended'; notes: string | null }>
@@ -55,6 +61,8 @@ export type MockOptions = {
   feeObligations?: MockFeeObligation[]
   financialMovements?: MockMovement[]
   cancelledVouchers?: MockCancelledVoucher[]
+  receiptVouchers?: MockReceiptVoucher[]
+  receiptAllocations?: Array<Record<string, unknown>>
 }
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }
@@ -86,8 +94,10 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
   const feeObligations = options.feeObligations ?? []
   const activeMovements = [...(options.financialMovements ?? [])]
   const cancelledVouchers = [...(options.cancelledVouchers ?? [])]
+  const initialReceiptVouchers = [...(options.receiptVouchers ?? [])]
   const handle: MockHandle = {
-    receiptInserts: [], paymentInserts: [], feeObligationInserts: [], receiptAllocations: [], studentInserts: [], studentUpdates: [],
+
+    receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], studentUpdates: [],
     cancellations: [], activeMovements, cancelledVouchers, auditLog: [], restoreCalls: [], passwordResets: [], passwordUpdates: [],
   }
 
@@ -207,6 +217,37 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, target ?? {})
     }
 
+    // ADR-0078 — owner adjusts one enrollment's total fee (course_value). Mirrors
+    // the RPC's contract for the browser flow: floor the new fee at the collected
+    // total (course allocations on non-cancelled receipts) and reject below it.
+    if (table?.startsWith('rpc/update_enrollment_fee') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_enrollment_id?: string; p_amount?: number; p_reason?: string }
+      const target = enrollments.find((item) => item.id === payload.p_enrollment_id)
+      if (!target) return json(route, { message: 'ENROLLMENT_NOT_FOUND' }, 400)
+      const reason = String(payload.p_reason ?? '').trim()
+      if (reason === '') return json(route, { message: 'FEE_ADJUSTMENT_REASON_REQUIRED' }, 400)
+      const amount = Number(payload.p_amount ?? Number.NaN)
+      if (!Number.isFinite(amount) || amount < 0 || amount !== Math.trunc(amount)) return json(route, { message: 'INVALID_FEE_AMOUNT' }, 400)
+      if (amount > 100000000) return json(route, { message: 'FEE_AMOUNT_TOO_LARGE' }, 400)
+      const activeReceiptIds = new Set(
+        handle.receiptInserts
+          .filter((receipt) => !receipt.cancelled_at)
+          .map((receipt) => String(receipt.id ?? '')),
+      )
+      const collected = handle.receiptAllocations
+        .filter((allocation) => String(allocation.enrollment_id ?? '') === String(target.id))
+        .filter((allocation) => activeReceiptIds.has(String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '')))
+        .reduce((sum, allocation) => sum + Number(allocation.amount ?? 0), 0)
+      if (amount < collected) return json(route, { message: 'FEE_BELOW_COLLECTED' }, 400)
+      const oldFee = target.course_value
+      const changed = amount !== oldFee
+      if (changed) {
+        target.course_value = amount
+        handle.auditLog.unshift({ id: `audit-${handle.auditLog.length + 1}`, entity: 'enrollment', entity_id: target.id, action: 'fee_adjustment', label: 'تعديل رسوم التسجيل', changed_by: 'u-1', actor_email: 'owner@example.com', changed_at: new Date().toISOString(), source: 'enrollment', description: reason, metadata: { enrollment_id: target.id, student_id: target.student_id, old_amount: oldFee, new_amount: amount, paid: collected } })
+      }
+      return json(route, { enrollment_id: target.id, fee: amount, paid: collected, remaining: amount - collected, old_fee: oldFee, changed, audit_id: changed ? 'audit-x' : null })
+    }
+
     if (method === 'HEAD') {
       if (['students', 'courses', 'enrollments', 'receipt_vouchers', 'payment_vouchers', 'fee_obligations'].includes(table ?? '')) {
         const counts: Record<string, number> = { students: students.length, courses: courses.length, enrollments: enrollments.length, receipt_vouchers: handle.receiptInserts.length, payment_vouchers: handle.paymentInserts.length, fee_obligations: feeObligations.length }
@@ -272,6 +313,11 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         const reason = String(payload.cancel_reason ?? '')
         const cancelledAt = String(payload.cancelled_at ?? '')
         if (cancelledAt) {
+          const receipt = handle.receiptInserts.find((item) => String(item.id ?? '') === id)
+          if (receipt) {
+            receipt.cancelled_at = cancelledAt
+            receipt.cancel_reason = reason || null
+          }
           const index = activeMovements.findIndex((movement) => movement.id === id)
           if (index >= 0) {
             const [movement] = activeMovements.splice(index, 1)
