@@ -112,10 +112,12 @@ the Owner orders it. The runtime feature is identical under either route.
     as authoritative text (with the Phase-4 / business-constitution eight-gate re-run under GOV-013) is **deferred** to a
     separate Owner-ordered governance task (Route B).
 
-11. **Production remains READ-ONLY.** The migration (`app/supabase/migrations/20260928HHMMSS_owner_edit_enrollment_fee.sql`)
-    is created **in the repository only**; it is **not** applied to Production, and no Production schema, RLS, trigger,
-    function, data, or setting is changed and nothing is deployed without a further explicit Owner order. Verification runs
-    only on a **disposable local** Postgres/Supabase harness with **synthetic** data.
+11. **Production application is now recorded as completed under explicit Owner authorization.** The repository migration
+    `app/supabase/migrations/20260928120000_owner_edit_enrollment_fee.sql` was applied to the Production project on
+    **2026-09-29**. Production migration history records it as `version=20260929092343`, `name=20260928120000_owner_edit_enrollment_fee`.
+    The implementation was then verified against Production with read-only integrity/permission checks and a transaction-rolled-back
+    RPC test; the rollback test changed no Production data. The migration's application and the subsequent Production verification
+    are now part of the evidence record for this ADR.
 
 12. **Owner-Decision ADR.** This records an Owner decision under GOV-010, not contested design; the GOV-013 Multi-Agent
     Review Panel is **not** invoked for Route A (ADR-0074 / 0076 / 0077 precedent). It **opens and advances no phase.**
