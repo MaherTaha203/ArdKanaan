@@ -100,10 +100,10 @@ fi
 eq "fee volume" "$(runFP "select count(*) from public.fee_obligations where description='Growth fee'")" "20000"
 
 echo "== CONCURRENCY C1: 10 receipts race on the SAME fee (50 total capacity) =="
-echo "   race fixture: student=$STUDENT name=$STUDENT_NAME fee=$FEE"
 FEE=$(runFP "select id from public.fee_obligations where description='Growth fee' order by id limit 1")
 STUDENT=$(runFP "select student_id from public.fee_obligations where id='$FEE'")
 STUDENT_NAME=$(runFP "select name from public.students where id='$STUDENT'")
+echo "   race fixture: student=$STUDENT name=$STUDENT_NAME fee=$FEE"
 mkdir -p "$BASE/race_receipts"
 [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/race_receipts"
 for i in $(seq 1 10); do
