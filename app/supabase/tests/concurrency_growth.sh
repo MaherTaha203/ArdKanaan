@@ -124,6 +124,10 @@ for i in $(seq 1 10); do
   if [ "$rc" = "0" ]; then successes=$((successes+1)); else failures=$((failures+1)); fi
 done
 echo "   receipt race wall time: ${elapsed_ms} ms; successes=$successes failures=$failures"
+if [ "$failures" -gt 0 ]; then
+  echo "   first concurrent receipt errors:"
+  for i in 1 2 3; do echo "--- receipt $i ---"; sed -n "1,12p" "$BASE/race_receipts/$i.out" 2>/dev/null || true; done
+fi
 eq "receipt race total outcomes" "$((successes+failures))" "10"
 eq "receipt race settled amount" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEE'")" "50"
 eq "receipt race cannot exceed fee" "$(runFP "select case when coalesce(sum(amount),0) <= 50 then 1 else 0 end from public.receipt_allocations where fee_obligation_id='$FEE'")" "1"
