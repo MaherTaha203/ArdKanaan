@@ -77,8 +77,8 @@ set session_replication_role = origin;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/seed.sql"
 run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/seed.sql" || exit 1
-eq "student volume" "$(runFP "select count(*) from public.students where name like 'Growth Student %'")" "20000"
-eq "enrollment volume" "$(runFP "select count(*) from public.enrollments where course_name like 'Growth Course %'")" "20000"
+eq "student volume" "$(runFP "select count(*) from public.students where name like 'Growth Student %'")" "100000"
+eq "enrollment volume" "$(runFP "select count(*) from public.enrollments where course_name like 'Growth Course %'")" "100000"
 
 echo "== create 20000 fee obligations through actual RPC =="
 cat > "$BASE/fees.sql" <<SQL
