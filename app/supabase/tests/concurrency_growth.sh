@@ -175,14 +175,139 @@ for i in $(seq 1 10); do [ "$(cat "$BASE/race_distinct_payments/$i.rc")" = "0" ]
 eq "independent payment race successes" "$independent_ok" "10"
 eq "independent payment rows" "$(runFP "select count(*) from public.payment_vouchers where expense_type='concurrent-independent'")" "10"
 
-echo "== GROWTH G0: create 5000 real receipt rows through post_receipt_with_allocations ==";
-mkdir -p "$BASE/growth_receipts"
-[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/growth_receipts"
-cat > "$BASE/growth_pairs.sql" <<'SQL'
-\copy (select f.id, f.student_id, s.name from public.fee_obligations f join public.students s on s.id = f.student_id where f.description = 'Growth fee' order by f.id offset 1 limit 5000) to stdout with (format text, delimiter E'\t')
+cat > "$BASE/growth_receipts.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+set statement_timeout = '120s';
+select count(*) from public.fee_obligations where description='Growth fee';
+
+do $$
+declare
+  r record;
+  n int := 0;
+begin
+  for r in
+    select f.id as fee_id, f.student_id, s.name
+    from public.fee_obligations f
+    join public.students s on s.id=f.student_id
+    where f.description='Growth fee'
+    order by f.id
+    offset 1 limit 5000
+  loop
+    perform public.post_receipt_with_allocations(
+      jsonb_build_object(
+        'student_id', r.student_id,
+        'student_name', r.name,
+        'voucher_date', '2026-02-01',
+        'amount_received', 10,
+        'payer_name', 'Growth',
+        'notes', '',
+        'idempotency_key', ('d0000000-0000-0000-0000-' || lpad(n::text,12,'0'))::uuid,
+        'allocations', jsonb_build_array(jsonb_build_object(
+          'type','fee',
+          'fee_obligation_id',r.fee_id,
+          'amount',10
+        ))
+      )
+    );
+    n := n + 1;
+  end loop;
+  raise notice 'growth receipts created=%', n;
+end $$;
 SQL
-[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_pairs.sql"
-run "$PGBIN/psql -h $SOCK -U $PU -X -q -A -f $BASE/growth_pairs.sql" >"$BASE/growth_pairs.tsv"
-created=0
-while IFS=$'
-# Audit execution marker: concurrency/growth suite executed against PostgreSQL 17.
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_receipts.sql"
+
+echo "== GROWTH G0: create 5000 real receipt rows through actual posting RPC =="
+start=$(date +%s%N)
+if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/growth_receipts.sql" >"$BASE/growth_receipts.out" 2>&1; then
+  fail "5000 real receipt growth load"; sed 's/^/       /' "$BASE/growth_receipts.out"
+else
+  elapsed_ms=$((($(date +%s%N)-start)/1000000))
+  echo "   5000 receipt RPC load wall time: ${elapsed_ms} ms"
+  pass "5000 real receipt growth load"
+fi
+eq "growth receipt volume" "$(runFP "select count(*) from public.receipt_vouchers where payer_name='Growth'")" "5000"
+eq "growth allocation volume" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.payer_name='Growth'")" "5000"
+eq "growth receipt total" "$(runFP "select coalesce(sum(amount_received),0)::int from public.receipt_vouchers where payer_name='Growth'")" "50000"
+
+echo "== GROWTH G1: add 5000 synthetic payment rows with financial triggers =="
+cat > "$BASE/growth_payments.sql" <<SQL
+set statement_timeout = '120s';
+set local app.payment_posting = 'on';
+insert into public.payment_vouchers
+  (voucher_date, expense_type, amount, notes, idempotency_key)
+select
+  date '2026-02-01',
+  'Growth synthetic',
+  5,
+  'growth fixture',
+  ('e0000000-0000-0000-0000-' || lpad(g::text,12,'0'))::uuid
+from generate_series(1,5000) g;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_payments.sql"
+start=$(date +%s%N)
+if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/growth_payments.sql" >"$BASE/growth_payments.out" 2>&1; then
+  fail "5000 synthetic payment growth load"; sed 's/^/       /' "$BASE/growth_payments.out"
+else
+  elapsed_ms=$((($(date +%s%N)-start)/1000000))
+  echo "   5000 payment insert wall time: ${elapsed_ms} ms"
+  pass "5000 synthetic payment growth load"
+fi
+eq "growth payment volume" "$(runFP "select count(*) from public.payment_vouchers where expense_type='Growth synthetic'")" "5000"
+
+echo "== GROWTH G2: query-plan measurements at 20k students / 25k receipts / 5k payments =="
+cat > "$BASE/plan_financial.sql" <<SQL
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select id, movement_type, amount, external_share
+from public.financial_movements
+order by movement_date desc, id desc
+limit 100;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_financial.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_financial.sql" >"$BASE/plan_financial.out"
+grep -E "Seq Scan|Index Scan|Index Only Scan|Sort|Execution Time|Planning Time" "$BASE/plan_financial.out" | sed 's/^/   /'
+FIN_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_financial.out")
+echo "   financial_movements Execution Time: ${FIN_MS:-unknown} ms"
+
+STUDENT_PLAN=$(runFP "select student_id from public.fee_obligations where description='Growth fee' order by id offset 1000 limit 1")
+cat > "$BASE/plan_statement.sql" <<SQL
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select *
+from public.student_statement_lines
+where student_id = '$STUDENT_PLAN';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_statement.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_statement.sql" >"$BASE/plan_statement.out"
+grep -E "Seq Scan|Index Scan|Index Only Scan|Sort|WindowAgg|Execution Time|Planning Time" "$BASE/plan_statement.out" | sed 's/^/   /'
+STMT_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_statement.out")
+echo "   student_statement_lines Execution Time: ${STMT_MS:-unknown} ms"
+
+cat > "$BASE/plan_student_target.sql" <<SQL
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select count(*)
+from public.student_statement_lines
+where student_id = '$STUDENT_PLAN';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_student_target.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_student_target.sql" >"$BASE/plan_student_target.out"
+grep -E "Seq Scan|Index Scan|Index Only Scan|Sort|WindowAgg|Execution Time|Planning Time" "$BASE/plan_student_target.out" | sed 's/^/   /'
+TARGET_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_student_target.out")
+echo "   filtered student_statement_lines Execution Time: ${TARGET_MS:-unknown} ms"
+
+echo "== GROWTH G3: integrity checks after load =="
+eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "5300"
+eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "5011"
+eq "financial gross receipt total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "50300"
+eq "financial payment total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "5030"
+eq "no duplicate growth receipt idempotency keys" "$(runFP "select count(*) - count(distinct idempotency_key) from public.receipt_vouchers where payer_name='Growth'")" "0"
+eq "no duplicate growth payment idempotency keys" "$(runFP "select count(*) - count(distinct idempotency_key) from public.payment_vouchers where expense_type='Growth synthetic'")" "0"
+
+echo "== FINAL: concurrency + growth assertions =="
+if [ "$FAILED" = "0" ]; then
+  echo "=============== CONCURRENCY + GROWTH PASSED ==============="
+else
+  echo "=============== CONCURRENCY + GROWTH FAILED ==============="
+  exit 1
+fi
