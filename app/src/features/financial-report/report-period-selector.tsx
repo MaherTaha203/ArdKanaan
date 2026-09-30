@@ -48,12 +48,6 @@ export function ReportPeriodSelector({
     return () => document.removeEventListener('mousedown', onDown)
   }, [open])
 
-  useEffect(() => {
-    if (!open) return
-    setDraftStart(customStart)
-    setDraftEnd(customEnd)
-  }, [open, customStart, customEnd])
-
   const activeRange = value === 'custom'
     ? { start: customStart, end: customEnd }
     : reportPeriodRange(value)
@@ -74,6 +68,16 @@ export function ReportPeriodSelector({
     setDraftEnd(customEnd)
   }
 
+  function toggleOpen() {
+    setOpen((current) => {
+      if (!current) {
+        setDraftStart(customStart)
+        setDraftEnd(customEnd)
+      }
+      return !current
+    })
+  }
+
   function applyCustom() {
     if (!draftStart || !draftEnd || draftStart > draftEnd) return
     onCustomApply(draftStart, draftEnd)
@@ -87,7 +91,7 @@ export function ReportPeriodSelector({
         variant="outline"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
+        onClick={toggleOpen}
         className="h-10 w-full justify-between gap-2 px-2.5"
       >
         <span className="flex min-w-0 items-center gap-2 text-start">
