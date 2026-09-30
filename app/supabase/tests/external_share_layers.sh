@@ -435,6 +435,45 @@ eq2 "Restore cancelled payment state" "$(runFP2 "select count(*) from public.pay
 run2 "$PGBIN/pg_ctl -D $DATADIR2 -w stop" >/dev/null 2>&1
 rm -rf "$BASE2"
 
+echo "== Expansion N1: authorization boundaries + direct-insert firewall ==";
+cat > "$BASE/non_owner_payment.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000bb';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"unauthorized","amount":1,"notes":"","idempotency_key":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/non_owner_payment.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/non_owner_payment.sql" >"$BASE/non_owner_payment.out" 2>&1; then
+  fail "non-owner payment RPC was accepted"
+else
+  if grep -q "OWNER_ONLY" "$BASE/non_owner_payment.out"; then pass "non-owner payment RPC rejected"; else fail "wrong non-owner payment error"; sed 's/^/       /' "$BASE/non_owner_payment.out"; fi
+fi
+
+cat > "$BASE/non_owner_restore.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000bb';
+select public.restore_center_data('{"students":[],"courses":[],"enrollments":[],"fee_obligations":[],"receipt_vouchers":[],"receipt_allocations":[],"payment_vouchers":[]}'::jsonb, false);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/non_owner_restore.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/non_owner_restore.sql" >"$BASE/non_owner_restore.out" 2>&1; then
+  fail "non-owner restore RPC was accepted"
+else
+  if grep -q "OWNER_ONLY" "$BASE/non_owner_restore.out"; then pass "non-owner restore RPC rejected"; else fail "wrong non-owner restore error"; sed 's/^/       /' "$BASE/non_owner_restore.out"; fi
+fi
+
+cat > "$BASE/direct_payment.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select set_config('app.payment_posting','off',true);
+insert into public.payment_vouchers (voucher_date, expense_type, amount, notes, idempotency_key)
+values ('2026-02-02','direct-bypass',1,'', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/direct_payment.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/direct_payment.sql" >"$BASE/direct_payment.out" 2>&1; then
+  fail "direct payment insert bypassed financial firewall"
+else
+  if grep -q "PAYMENT_POSTING_RPC_REQUIRED" "$BASE/direct_payment.out"; then pass "direct payment insert rejected when posting GUC is not on"; else fail "wrong direct payment firewall error"; sed 's/^/       /' "$BASE/direct_payment.out"; fi
+fi
+eq "Direct payment insert created no row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'")" "0"
+
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
 rm -rf "$BASE"
 echo
