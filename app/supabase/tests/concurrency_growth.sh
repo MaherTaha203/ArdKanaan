@@ -201,7 +201,7 @@ for w in $(seq 0 4); do
 ;
 SQL
   [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/gen_$w.sql"
-  run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/gen_$w.sql" || exit 1
+  run "$PGBIN/psql -h $SOCK -U $PU -X -At -q -d $DB -f $BASE/gen_$w.sql" > "$BASE/growth_receipt_workers/worker_$w.sql" || exit 1
   [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_receipt_workers/worker_$w.sql"
 done
 start=$(date +%s%N)
