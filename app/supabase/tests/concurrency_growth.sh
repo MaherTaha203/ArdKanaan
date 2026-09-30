@@ -206,7 +206,7 @@ SQL
 done
 start=$(date +%s%N)
 for w in $(seq 0 4); do
-  (run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f '$BASE/growth_receipt_workers/worker_$w.sql' >'$BASE/growth_receipt_workers/worker_$w.out' 2>&1"; echo $? > "$BASE/growth_receipt_workers/worker_$w.rc") &
+  (run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -c \"set request.jwt.claim.sub = '$OWNER'\" -f '$BASE/growth_receipt_workers/worker_$w.sql' >'$BASE/growth_receipt_workers/worker_$w.out' 2>&1"; echo $? > "$BASE/growth_receipt_workers/worker_$w.rc") &
 done
 wait
 growth_failures=0
