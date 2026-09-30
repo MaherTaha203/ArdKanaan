@@ -102,8 +102,12 @@ test('keeps financial reports separated by report type and period', async ({ pag
   await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'تقرير المقبوضات' }).click()
   await expect(page.getByRole('heading', { name: 'تقرير المقبوضات' })).toBeVisible()
-  await page.getByRole('button', { name: 'هذا الشهر', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'هذا الشهر', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  const periodSelector = page.getByRole('button', { name: /كل الفترات/ }).first()
+  await periodSelector.click()
+  const periodDialog = page.getByRole('dialog', { name: 'اختيار فترة التقرير' })
+  await expect(periodDialog).toBeVisible()
+  await periodDialog.getByRole('button', { name: 'هذا الشهر', exact: true }).click()
+  await expect(page.getByRole('button', { name: /هذا الشهر/ }).first()).toBeVisible()
   await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'تقرير المدفوعات' }).click()
   await expect(page.getByRole('heading', { name: 'تقرير المدفوعات' })).toBeVisible()
@@ -183,7 +187,7 @@ test('restores a validated backup through the real settings path', async ({ page
   // The settings tab stays mounted beside the backup tab (each is its own tab now), and
   // both carry a file input — scope to the active backup panel.
   const fileInput = page.getByRole('tabpanel', { name: 'النسخ الاحتياطي' }).locator('input[type="file"]')
-  await fileInput.setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(backup) })
+  await fileInput.setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: new TextEncoder().encode(backup) })
   const dialog = page.getByRole('dialog', { name: 'تأكيد الاستعادة' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('textbox').fill('استعادة')
@@ -200,8 +204,8 @@ test('handles password recovery and returns to the authenticated shell after pas
   const handle = await installSupabaseMocks(page)
   const testPassword = ['S', 'trong', 'P', 'ass1', '!'].join('')
   await login(page)
-  const recoveryKey = ['access', '_token'].join('')
-  const refreshKey = ['refresh', '_token'].join('')
+  const recoveryKey = 'access' + '_token'
+  const refreshKey = 'refresh' + '_token'
   await page.goto(`/#type=recovery&${recoveryKey}=stub-access&${refreshKey}=stub-refresh`)
   await page.reload()
   await expect(page.getByRole('heading', { name: 'تعيين كلمة مرور جديدة' })).toBeVisible()
