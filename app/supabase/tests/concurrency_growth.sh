@@ -16,7 +16,7 @@ OWNER='00000000-0000-0000-0000-0000000000aa'
 FAILED=0
 if [ -n "$PG_RUNAS" ]; then run() { su "$PG_RUNAS" -c "$1"; }; else run() { bash -c "$1"; }; fi
 PU="${PG_RUNAS:-$USER}"
-runFP() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | tr -d '[:space:]'; }
+runFP() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | tr -d '[:space:]'; }\nrunText() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | sed -e '/^[[:space:]]*$/d'; }
 pass(){ echo "   PASS: $1"; }
 fail(){ echo "   FAIL: $1"; FAILED=1; }
 eq(){ if [ "$2" = "$3" ]; then pass "$1 = $2"; else fail "$1 expected $3, got $2"; fi; }
@@ -102,7 +102,7 @@ eq "fee volume" "$(runFP "select count(*) from public.fee_obligations where desc
 echo "== CONCURRENCY C1: 10 receipts race on the SAME fee (50 total capacity) =="
 FEE=$(runFP "select id from public.fee_obligations where description='Growth fee' order by id limit 1")
 STUDENT=$(runFP "select student_id from public.fee_obligations where id='$FEE'")
-STUDENT_NAME=$(runFP "select name from public.students where id='$STUDENT'")
+STUDENT_NAME=$(runText "select name from public.students where id='$STUDENT'")
 echo "   race fixture: student=$STUDENT name=$STUDENT_NAME fee=$FEE"
 mkdir -p "$BASE/race_receipts"
 [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/race_receipts"
