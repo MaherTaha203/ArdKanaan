@@ -139,6 +139,48 @@ test('opens voucher details from the general statement without row action button
   await expect(details.getByRole('button', { name: 'إبطال السند' })).toBeVisible()
 })
 
+test('supports financial report period selection, custom dates, and print period metadata', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    financialMovements: [
+      { id: 'r-old', movement_type: 'receipt', voucher_number: 901, voucher_date: '2026-08-31', amount: 100, party_name: 'قديم', context: 'اختبار' },
+      { id: 'r-new', movement_type: 'receipt', voucher_number: 902, voucher_date: '2026-09-15', amount: 200, party_name: 'حديث', context: 'اختبار' },
+    ],
+  })
+  await login(page)
+  await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'كشف الحساب العام' }).click()
+  await expect(page.getByRole('heading', { name: 'كشف الحساب العام' })).toBeVisible()
+
+  const selector = page.getByRole('button', { name: /كل الفترات/ }).first()
+  await selector.click()
+  const dialog = page.getByRole('dialog', { name: 'اختيار فترة التقرير' })
+  await expect(dialog).toBeVisible()
+
+  const selectorBox = await selector.boundingBox()
+  const dialogBox = await dialog.boundingBox()
+  expect(selectorBox).not.toBeNull()
+  expect(dialogBox).not.toBeNull()
+  expect(Math.abs((selectorBox?.width ?? 0) - (dialogBox?.width ?? 0))).toBeLessThanOrEqual(8)
+
+  for (const label of ['الكل', 'اليوم', 'أمس', 'هذا الأسبوع', 'الأسبوع الماضي', 'هذا الشهر', 'الشهر الماضي', 'آخر 7 أيام', 'آخر 30 يومًا', 'هذه السنة']) {
+    await expect(dialog.getByRole('button', { name: label, exact: true })).toBeVisible()
+  }
+
+  await dialog.getByRole('button', { name: 'مخصص', exact: true }).click()
+  await dialog.getByRole('textbox', { name: 'بداية الفترة' }).fill('01/09/2026')
+  await dialog.getByRole('textbox', { name: 'نهاية الفترة' }).fill('20/09/2026')
+  await dialog.getByRole('textbox', { name: 'نهاية الفترة' }).press('Enter')
+  await dialog.getByRole('button', { name: 'تطبيق الفترة' }).click()
+
+  await expect(page.getByRole('button', { name: /مخصص/ }).first()).toBeVisible()
+  await expect(page.getByText('حديث · اختبار')).toBeVisible()
+  await expect(page.getByText('قديم · اختبار')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'طباعة' }).click()
+  await expect(page.getByText('معاينة الطباعة — كشف الحساب العام')).toBeVisible()
+  await expect(page.getByText(/الفترة · مخصص ·/)).toBeVisible()
+})
+
 test('persists center settings and reflects reset to defaults', async ({ page }) => {
   await installSupabaseMocks(page)
   await login(page)
