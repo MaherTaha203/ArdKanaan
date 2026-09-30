@@ -175,6 +175,96 @@ for i in $(seq 1 10); do [ "$(cat "$BASE/race_distinct_payments/$i.rc")" = "0" ]
 eq "independent payment race successes" "$independent_ok" "10"
 eq "independent payment rows" "$(runFP "select count(*) from public.payment_vouchers where expense_type='concurrent-independent'")" "10"
 
+echo "== GROWTH G0: create 5000 real receipt rows through post_receipt_with_allocations ==";
+mkdir -p "$BASE/growth_receipts"
+[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/growth_receipts"
+cat > "$BASE/growth_pairs.sql" <<'SQL'
+\copy (
+  select f.id, f.student_id, s.name
+  from public.fee_obligations f
+  join public.students s on s.id = f.student_id
+  where f.description = 'Growth fee'
+  order by f.id
+  offset 1 limit 5000
+) to stdout with (format text, delimiter E'\t')
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_pairs.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -A -f $BASE/growth_pairs.sql" >"$BASE/growth_pairs.tsv"
+created=0
+batch=0
+while IFS=
+cat > "$BASE/statement_plan.sql" <<SQL
+EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.student_statement_lines WHERE student_id='$STUDENT';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/statement_plan.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/statement_plan.sql" >"$BASE/statement_plan.txt" 2>&1
+cat "$BASE/statement_plan.txt"
+if grep -q "Execution Time:" "$BASE/statement_plan.txt"; then pass "student_statement_lines filtered query executed"; else fail "student_statement_lines EXPLAIN did not complete"; fi
+
+echo "== GROWTH G2: financial movements plan at concurrent payment/receipt volume =="
+cat > "$BASE/movements_plan.sql" <<'SQL'
+EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.financial_movements WHERE movement_type='receipt';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/movements_plan.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/movements_plan.sql" >"$BASE/movements_plan.txt" 2>&1
+cat "$BASE/movements_plan.txt"
+if grep -q "Execution Time:" "$BASE/movements_plan.txt"; then pass "financial_movements query executed"; else fail "financial_movements EXPLAIN did not complete"; fi
+
+echo "== GROWTH G3: full-view aggregate execution =="
+cat > "$BASE/statement_full_plan.sql" <<'SQL'
+EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT count(*) FROM public.student_statement_lines;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/statement_full_plan.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/statement_full_plan.sql" >"$BASE/statement_full_plan.txt" 2>&1
+cat "$BASE/statement_full_plan.txt"
+if grep -q "Execution Time:" "$BASE/statement_full_plan.txt"; then pass "full student_statement_lines aggregate executed"; else fail "full student_statement_lines EXPLAIN did not complete"; fi
+if grep -q "Execution Time:" "$BASE/statement_full_plan.txt"; then pass "full student_statement_lines aggregate executed"; else fail "full student_statement_lines EXPLAIN did not complete"; fi
+
+echo "== GROWTH G4: planner statistics =="
+eq "student count final" "$(runFP "select count(*) from public.students where name like 'Growth Student %'")" "20000"
+eq "fee count final" "$(runFP "select count(*) from public.fee_obligations where description='Growth fee'")" "20000"
+eq "receipt total on raced fee" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEE'")" "50"
+
+echo
+if [ "$FAILED" = "0" ]; then
+  echo "=============== CONCURRENCY + GROWTH ASSERTIONS PASSED ==============="
+else
+  echo "=============== CONCURRENCY + GROWTH ASSERTIONS FAILED ==============="
+  exit 1
+fi
+\t' read -r fee_id student_id student_name; do
+  [ -z "$fee_id" ] && continue
+  created=$((created+1))
+  key=$(printf 'g0cccccc-0000-0000-0000-%012d' "$created")
+  cat > "$BASE/growth_receipts/$created.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_receipt_with_allocations('{"student_id":"$student_id","student_name":"$student_name","voucher_date":"2026-02-01","amount_received":50,"payer_name":"Growth","notes":"","idempotency_key":"$key","allocations":[{"type":"fee","fee_obligation_id":"$fee_id","amount":50}]}'::jsonb);
+SQL
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_receipts/$created.sql"
+  if [ $((created % 50)) -eq 0 ]; then
+    batch=$((batch+1))
+    for i in $(seq $((created-49)) $created); do
+      (run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f '$BASE/growth_receipts/$i.sql' >'$BASE/growth_receipts/$i.out' 2>&1"; echo $? > "$BASE/growth_receipts/$i.rc") &
+    done
+    wait
+  fi
+done < "$BASE/growth_pairs.tsv"
+if [ $((created % 50)) -ne 0 ]; then
+  start_last=$((created - (created % 50) + 1))
+  for i in $(seq "$start_last" "$created"); do
+    (run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f '$BASE/growth_receipts/$i.sql' >'$BASE/growth_receipts/$i.out' 2>&1"; echo $? > "$BASE/growth_receipts/$i.rc") &
+  done
+  wait
+fi
+growth_ok=0
+for i in $(seq 1 "$created"); do
+  [ "$(cat "$BASE/growth_receipts/$i.rc")" = "0" ] && growth_ok=$((growth_ok+1))
+done
+eq "growth receipt fixtures prepared" "$created" "5000"
+eq "growth receipt RPC successes" "$growth_ok" "5000"
+eq "growth receipt rows" "$(runFP "select count(*) from public.receipt_vouchers where notes='' and payer_name='Growth'")" "5000"
+eq "growth allocation rows" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.payer_name='Growth'")" "5000"
+
 echo "== GROWTH G1: statement view plan at 20000 fee rows =="
 cat > "$BASE/statement_plan.sql" <<SQL
 EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.student_statement_lines WHERE student_id='$STUDENT';
