@@ -185,7 +185,7 @@ for w in $(seq 0 4); do
     'select public.post_receipt_with_allocations(%L::jsonb);',
     jsonb_build_object(
       'student_id', f.student_id,
-      'student_name', 'Growth',
+      'student_name', (select s.name from public.students s where s.id=f.student_id),
       'voucher_date', '2026-02-01',
       'amount_received', 10,
       'payer_name', 'Growth',
@@ -197,7 +197,7 @@ for w in $(seq 0 4); do
   from public.fee_obligations f
   where f.description='Growth fee'
   order by f.id
-  offset $((offset-1)) limit 5000
+  offset $offset limit 5000
 ;
 SQL
   [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/gen_$w.sql"
