@@ -18,8 +18,9 @@
 #   (PG_RUNAS is the OS user to run the server as when the caller is root;
 #    leave it empty to run psql/initdb directly as the current user.)
 set -u
-PGBIN="${PGBIN:-/usr/lib/postgresql/17/bin}"
+PGBIN="${PGBIN:-/usr/bin}"
 PG_RUNAS="${PG_RUNAS:-}"
+USER="${USER:-postgres}"
 USER="${USER:-postgres}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MIG="$ROOT/migrations"
