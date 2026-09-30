@@ -49,7 +49,7 @@ run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/stubs.
 
 echo "== apply full migration chain =="
 for f in $(ls -1 "$MIG"/*.sql | sort); do
-  if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f "$f" >"$BASE/m.out" 2>&1; then
+  if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $f >"$BASE/m.out" 2>&1; then
     echo ">>> migration FAILED: $(basename "$f")"; cat "$BASE/m.out"; exit 1
   fi
 done
@@ -164,17 +164,17 @@ eq "independent payment race successes" "$independent_ok" "10"
 eq "independent payment rows" "$(runFP "select count(*) from public.payment_vouchers where expense_type='concurrent-independent'")" "10"
 
 echo "== GROWTH G1: statement view plan at 20000 fee rows =="
-run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c "EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.student_statement_lines WHERE student_id='$STUDENT';" > "$BASE/statement_plan.txt" 2>&1
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c \\"EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.student_statement_lines WHERE student_id=\'$STUDENT\';\\" > "$BASE/statement_plan.txt" 2>&1
 cat "$BASE/statement_plan.txt"
 if grep -q "Execution Time:" "$BASE/statement_plan.txt"; then pass "student_statement_lines filtered query executed"; else fail "student_statement_lines EXPLAIN did not complete"; fi
 
 echo "== GROWTH G2: financial movements plan at concurrent payment/receipt volume =="
-run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c "EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.financial_movements WHERE movement_type='receipt';" > "$BASE/movements_plan.txt" 2>&1
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c \\"EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT * FROM public.financial_movements WHERE movement_type=\'receipt\';\\" > "$BASE/movements_plan.txt" 2>&1
 cat "$BASE/movements_plan.txt"
 if grep -q "Execution Time:" "$BASE/movements_plan.txt"; then pass "financial_movements query executed"; else fail "financial_movements EXPLAIN did not complete"; fi
 
 echo "== GROWTH G3: full-view aggregate execution =="
-run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c "EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT count(*) FROM public.student_statement_lines;" > "$BASE/statement_full_plan.txt" 2>&1
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -c \\"EXPLAIN (ANALYZE,BUFFERS,TIMING OFF) SELECT count(*) FROM public.student_statement_lines;\\" > "$BASE/statement_full_plan.txt" 2>&1
 cat "$BASE/statement_full_plan.txt"
 if grep -q "Execution Time:" "$BASE/statement_full_plan.txt"; then pass "full student_statement_lines aggregate executed"; else fail "full student_statement_lines EXPLAIN did not complete"; fi
 
