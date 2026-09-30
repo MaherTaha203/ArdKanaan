@@ -364,16 +364,17 @@ SQL
 run "$PGBIN/createdb -h $SOCK2 -U $PU $DB2" || exit 1
 run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/roles.sql" || exit 1
 
-cat > "$BASE2/stubs.sql" <<SQL
+cat > "$BASE2/stubs.sql" <<'SQL'
 create extension if not exists pgcrypto;
 create schema if not exists auth;
 create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text, created_at timestamptz not null default now());
-create or replace function auth.uid() returns uuid language sql stable as \\\$fn\\\$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid \\\$fn\\\$;
-create or replace function auth.jwt() returns jsonb language sql stable as \\\$fn\\\$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb \\\$fn\\\$;
+create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+create or replace function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
 grant usage on schema auth to anon, authenticated, service_role;
-create or replace function public.rls_auto_enable() returns void language plpgsql as \\\$fn\\\$ begin end \\\$fn\\\$;
-insert into auth.users (id, email) values ('$OWNER', 'owner@test.local');
+create or replace function public.rls_auto_enable() returns void language plpgsql as $$ begin end $$;
+insert into auth.users (id, email) values ('OWNER_UUID', 'owner@test.local');
 SQL
+sed -i "s/OWNER_UUID/$OWNER/g" "$BASE2/stubs.sql"
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/stubs.sql"
 run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/stubs.sql" || { echo target stubs FAIL; exit 1; }
 
