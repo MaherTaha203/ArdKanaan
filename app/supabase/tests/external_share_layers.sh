@@ -157,6 +157,74 @@ eq "total external held"             "$(runFP "select coalesce(sum(external_shar
 eq "center receipts (Σ amount-ext)"  "$(runFP "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")" "160"
 
 
+echo "== Expansion P1: payment posting, idempotency, cancellation, ledger reversal ==";
+PAYKEY=99999999-0000-0000-0000-000000000009
+cat > "$BASE/payment.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"تشغيل","amount":80,"notes":"integration payment","idempotency_key":"$PAYKEY"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment.sql"
+PAY_OUT=$(run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment.sql")
+PAYID=$(runFP "select id from public.payment_vouchers where idempotency_key='$PAYKEY'")
+PAYNUM=$(runFP "select voucher_number from public.payment_vouchers where id='$PAYID'")
+eq "Payment posted exactly once" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='$PAYKEY'")" "1"
+eq "Payment amount persisted" "$(runFP "select amount::int from public.payment_vouchers where id='$PAYID'")" "80"
+eq "Payment appears in financial_movements" "$(runFP "select count(*) from public.financial_movements where id='$PAYID' and movement_type='payment' and amount=80")" "1"
+eq "Payment ledger original exists" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='original'")" "1"
+
+cat > "$BASE/payment_replay.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"تشغيل","amount":80,"notes":"retry","idempotency_key":"$PAYKEY"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_replay.sql"
+PAY_REPLAY=$(run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_replay.sql")
+if grep -q '"idempotent_replay": true' <<<"$PAY_REPLAY"; then pass "payment same-key replay"; else fail "payment same-key replay failed"; fi
+eq "Payment replay kept one row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='$PAYKEY'")" "1"
+
+cat > "$BASE/payment_mismatch.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"تشغيل","amount":81,"notes":"","idempotency_key":"$PAYKEY"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_mismatch.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_mismatch.sql" >"$BASE/payment_mismatch.out" 2>&1; then
+  fail "payment idempotency mismatch was accepted"
+else
+  if grep -q "IDEMPOTENCY_KEY_REUSE_MISMATCH" "$BASE/payment_mismatch.out"; then pass "payment idempotency mismatch rejected"; else fail "wrong payment idempotency error"; sed 's/^/       /' "$BASE/payment_mismatch.out"; fi
+fi
+eq "Payment mismatch created no second row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='$PAYKEY'")" "1"
+
+cat > "$BASE/payment_cancel.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '$OWNER';
+update public.payment_vouchers
+set cancelled_at = timezone('utc', now()), cancel_reason = 'integration-test payment cancellation'
+where id = '$PAYID';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_cancel.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_cancel.sql" >"$BASE/payment_cancel.out" 2>&1; then
+  pass "owner payment cancellation through authenticated UPDATE succeeded"
+else
+  fail "owner payment cancellation failed"; sed 's/^/       /' "$BASE/payment_cancel.out"
+fi
+eq "Cancelled payment excluded from financial_movements" "$(runFP "select count(*) from public.financial_movements where id='$PAYID'")" "0"
+eq "Payment ledger original remains append-only" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='original' and reversed_at is null")" "1"
+eq "Payment ledger reversal exists" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='reversal'")" "1"
+eq "Payment reversal points to original" "$(runFP "select count(*) from public.financial_movement_ledger r join public.financial_movement_ledger o on r.reversal_of=o.id where r.source_id='$PAYID' and r.entry_kind='reversal' and o.entry_kind='original'")" "1"
+
+cat > "$BASE/payment_cancel_again.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+update public.payment_vouchers
+set cancelled_at = timezone('utc', now()), cancel_reason = 'second cancellation'
+where id = '$PAYID';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_cancel_again.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_cancel_again.sql" >"$BASE/payment_cancel_again.out" 2>&1; then
+  fail "cancelled payment was mutable"
+else
+  if grep -q "CANCELLED_VOUCHER_IS_IMMUTABLE" "$BASE/payment_cancel_again.out"; then pass "cancelled payment is immutable"; else fail "wrong cancelled-payment mutation error"; sed 's/^/       /' "$BASE/payment_cancel_again.out"; fi
+fi
+eq "Payment has exactly one reversal" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='reversal'")" "1"
+
 echo "== Expansion 1: idempotency replay + mismatch protection ==";
 BEFORE_IDEM=$(runFP "select count(*) from public.receipt_vouchers");
 cat > "$BASE/idem_replay.sql" <<SQL
