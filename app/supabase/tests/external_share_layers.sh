@@ -397,10 +397,7 @@ run "$PGBIN/psql -h $SOCK -U $PU -X -At -d $DB -c \"select jsonb_build_object(
 
 cat > "$BASE2/restore.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
-select public.restore_center_data(
-$(cat "$BASE2/backup.json")::jsonb,
-false
-);
+select public.restore_center_data(pg_read_file('$BASE2/backup.json')::jsonb, false);
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/restore.sql"
 if run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/restore.sql" >"$BASE2/restore.out" 2>&1; then
@@ -410,7 +407,11 @@ else
 fi
 
 run2() { if [ -n "$PG_RUNAS" ]; then su "$PG_RUNAS" -c "$1"; else bash -c "$1"; fi; }
-runFP2() { run2 "$PGBIN/psql -h $SOCK2 -U $PU -X -qtA -d $DB2 -c \\\"$1\\\"" | tr -d '[:space:]'; }
+runFP2() {
+  printf '%s;\n' "$1" > "$BASE2/query.sql"
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/query.sql"
+  run2 "$PGBIN/psql -h $SOCK2 -U $PU -X -qtA -d $DB2 -f $BASE2/query.sql" | tr -d '[:space:]'
+}
 eq2() { if [ "$2" = "$3" ]; then pass "$1 = $2"; else fail "$1 expected $3, got $2"; fi; }
 
 for t in students courses enrollments fee_obligations receipt_vouchers receipt_allocations payment_vouchers; do
