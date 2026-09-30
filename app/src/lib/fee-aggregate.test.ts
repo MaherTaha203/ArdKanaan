@@ -73,8 +73,12 @@ describe('fee obligations in student aggregates', () => {
     expect(aggregate.remaining).toBe(20)
   })
 
-  it('does not apply another student’s fee payment to this student’s obligation', () => {
-    const lines = [line({ studentId: 's-2', amountReceived: 50 })]
+  it('isolates fee payments by both student and obligation id', () => {
+    const lines = [
+      line({ studentId: 's-2', amountReceived: 50 }),
+      line({ id: 's1-other-fee', studentId: 's-1', feeObligationId: 'f-2', amountReceived: 40 }),
+      line({ id: 's1-target-fee', studentId: 's-1', feeObligationId: 'f-1', amountReceived: 20 }),
+    ]
     const [aggregate] = aggregateStudents([student('s-1')], lines, [], [fee({ amount: 50 })])
-    expect(aggregate.remaining).toBe(50)
+    expect(aggregate.remaining).toBe(30)
   })
