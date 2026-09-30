@@ -76,9 +76,12 @@ test('cancels a voucher without deleting it and moves it to cancelled history', 
   await login(page)
   await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'تقرير المقبوضات' }).click()
-  const cancelButton = page.getByRole('button', { name: /إبطال سند القبض رقم R-912/ })
-  await expect(cancelButton).toBeVisible()
-  await cancelButton.click()
+  const voucherLink = page.getByRole('button', { name: 'فتح السند R-912' })
+  await expect(voucherLink).toBeVisible()
+  await voucherLink.click()
+  const details = page.getByRole('dialog', { name: 'R-912' })
+  await expect(details).toBeVisible()
+  await details.getByRole('button', { name: 'إبطال السند' }).click()
   const dialog = page.getByRole('dialog', { name: 'إبطال سند قبض' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('textbox', { name: 'سبب الإبطال' }).fill('إدخال تجريبي خاطئ')
@@ -87,7 +90,7 @@ test('cancels a voucher without deleting it and moves it to cancelled history', 
   expect(handle.cancellations[0]).toMatchObject({ table: 'receipt_vouchers', id: 'r-1', reason: 'إدخال تجريبي خاطئ' })
   expect(handle.activeMovements.some((movement) => movement.id === 'r-1')).toBe(false)
   expect(handle.cancelledVouchers).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'r-1', voucher_number: 912, cancel_reason: 'إدخال تجريبي خاطئ' })]))
-  await expect(page.getByRole('button', { name: /إبطال سند القبض رقم R-912/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'فتح السند R-912' })).toHaveCount(0)
   await page.getByRole('button', { name: 'النظام', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'سجل التدقيق' }).click()
   await expect(page.getByText('لا توجد سجلات مطابقة.')).not.toBeVisible()
@@ -105,6 +108,31 @@ test('keeps financial reports separated by report type and period', async ({ pag
   await page.getByRole('menuitemradio', { name: 'تقرير المدفوعات' }).click()
   await expect(page.getByRole('heading', { name: 'تقرير المدفوعات' })).toBeVisible()
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
+})
+
+
+test('opens voucher details from the general statement without row action buttons', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    financialMovements: [
+      { id: 'r-2', movement_type: 'receipt', voucher_number: 902, voucher_date: '2026-08-31', amount: 150, party_name: 'سيف الدين احمد بياتنة', context: 'دبكة' },
+    ],
+  })
+  await login(page)
+  await page.getByRole('button', { name: 'التقارير المالية', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'كشف الحساب العام' }).click()
+  await expect(page.getByRole('heading', { name: 'كشف الحساب العام' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'إجراء' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'فتح السند R-902' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'معاينة' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'تعديل' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /إبطال سند/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'فتح السند R-902' }).click()
+  const details = page.getByRole('dialog', { name: 'R-902' })
+  await expect(details).toBeVisible()
+  await expect(details.getByText('سيف الدين احمد بياتنة')).toBeVisible()
+  await expect(details.getByText('دبكة')).toBeVisible()
+  await expect(details.getByRole('button', { name: 'تعديل السند' })).toBeVisible()
+  await expect(details.getByRole('button', { name: 'إبطال السند' })).toBeVisible()
 })
 
 test('persists center settings and reflects reset to defaults', async ({ page }) => {
