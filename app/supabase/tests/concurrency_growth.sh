@@ -179,14 +179,7 @@ echo "== GROWTH G0: create 5000 real receipt rows through post_receipt_with_allo
 mkdir -p "$BASE/growth_receipts"
 [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/growth_receipts"
 cat > "$BASE/growth_pairs.sql" <<'SQL'
-\copy (
-  select f.id, f.student_id, s.name
-  from public.fee_obligations f
-  join public.students s on s.id = f.student_id
-  where f.description = 'Growth fee'
-  order by f.id
-  offset 1 limit 5000
-) to stdout with (format text, delimiter E'\t')
+\\copy (select f.id, f.student_id, s.name from public.fee_obligations f join public.students s on s.id = f.student_id where f.description = 'Growth fee' order by f.id offset 1 limit 5000) to stdout with (format text, delimiter E'\\t')
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_pairs.sql"
 run "$PGBIN/psql -h $SOCK -U $PU -X -q -A -f $BASE/growth_pairs.sql" >"$BASE/growth_pairs.tsv"
