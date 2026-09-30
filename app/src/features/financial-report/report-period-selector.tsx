@@ -91,8 +91,6 @@ export function ReportPeriodSelector({
         variant="outline"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={value === 'month' ? 'هذا الشهر' : undefined}
-        aria-pressed={value === 'month' ? true : undefined}
         onClick={toggleOpen}
         className="h-10 w-full justify-between gap-2 px-2.5"
       >
