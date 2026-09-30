@@ -79,6 +79,19 @@ jobs:
             postgres:17-bookworm \
             bash -lc 'PGBIN=/usr/lib/postgresql/17/bin PG_RUNAS=postgres bash app/supabase/tests/external_share_layers.sh'
 
+  db-concurrency-growth:
+    name: DB Runtime · Concurrency & Growth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run concurrency and growth harness
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -w /workspace \
+            postgres:17-bookworm \
+            bash -lc 'PGBIN=/usr/lib/postgresql/17/bin PG_RUNAS=postgres bash app/supabase/tests/concurrency_growth.sh'
+
   db-integration:
     name: DB Integration · Enrollment Fee Adjustment
     runs-on: ubuntu-latest
