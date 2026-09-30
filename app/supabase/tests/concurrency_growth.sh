@@ -88,7 +88,7 @@ select public.create_fee_obligations(
     'course_id',(select id from public.courses where name='Growth Course 1' limit 1),
     'student_ids',(select jsonb_agg(id order by id) from public.students where name like 'Growth Student %'),
     'description','Growth fee',
-    'amount',100,
+    'amount',50,
     'fee_category','institute',
     'external_share',0
   )
@@ -133,6 +133,8 @@ if [ "$failures" -gt 0 ]; then
 fi
 eq "receipt race total outcomes" "$((successes+failures))" "10"
 eq "receipt race settled amount" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEE'")" "50"
+eq "receipt race successful calls" "$successes" "5"
+eq "receipt race rejected calls" "$failures" "5"
 eq "receipt race cannot exceed fee" "$(runFP "select case when coalesce(sum(amount),0) <= 50 then 1 else 0 end from public.receipt_allocations where fee_obligation_id='$FEE'")" "1"
 eq "receipt race row count matches successful calls" "$(runFP "select count(*) from public.receipt_vouchers rv join public.receipt_allocations ra on ra.receipt_voucher_id=rv.id where ra.fee_obligation_id='$FEE'")" "$successes"
 
