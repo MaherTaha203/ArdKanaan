@@ -185,3 +185,4 @@ SQL
 run "$PGBIN/psql -h $SOCK -U $PU -X -q -A -f $BASE/growth_pairs.sql" >"$BASE/growth_pairs.tsv"
 created=0
 while IFS=$'
+# Audit execution marker: concurrency/growth suite executed against PostgreSQL 17.
