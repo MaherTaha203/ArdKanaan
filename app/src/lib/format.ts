@@ -65,5 +65,6 @@ export function formatTimestamp(value: string): { date: string; time: string } {
 }
 
 export function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  return `${String(now.getFullYear()).padStart(4, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
