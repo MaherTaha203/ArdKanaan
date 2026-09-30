@@ -16,7 +16,8 @@ OWNER='00000000-0000-0000-0000-0000000000aa'
 FAILED=0
 if [ -n "$PG_RUNAS" ]; then run() { su "$PG_RUNAS" -c "$1"; }; else run() { bash -c "$1"; }; fi
 PU="${PG_RUNAS:-$USER}"
-runFP() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | tr -d '[:space:]'; }\nrunText() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | sed -e '/^[[:space:]]*$/d'; }
+runFP() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | tr -d '[:space:]'; }
+runText() { run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -c \"$1\"" | sed -e '/^[[:space:]]*$/d'; }
 pass(){ echo "   PASS: $1"; }
 fail(){ echo "   FAIL: $1"; FAILED=1; }
 eq(){ if [ "$2" = "$3" ]; then pass "$1 = $2"; else fail "$1 expected $3, got $2"; fi; }
