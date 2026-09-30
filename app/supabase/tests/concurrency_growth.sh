@@ -175,27 +175,49 @@ for i in $(seq 1 10); do [ "$(cat "$BASE/race_distinct_payments/$i.rc")" = "0" ]
 eq "independent payment race successes" "$independent_ok" "10"
 eq "independent payment rows" "$(runFP "select count(*) from public.payment_vouchers where expense_type='concurrent-independent'")" "10"
 
-echo "== GROWTH G0: 25000 real receipt RPC transactions via pgbench =="
-cat > "$BASE/growth_receipts.pgbench" <<'SQL'
-\set n random(2,25001)
-select id as fee_id, student_id as student_id from public.fee_obligations where description='Growth fee' order by id offset :n limit 1 \gset
-select public.post_receipt_with_allocations(jsonb_build_object(
-  'student_id', (:'student_id')::uuid,
-  'student_name', 'Growth',
-  'voucher_date', '2026-02-01',
-  'amount_received', 10,
-  'payer_name', 'Growth',
-  'notes', '',
-  'idempotency_key', ('d0000000-0000-0000-0000-' || lpad(:n::text,12,'0'))::uuid,
-  'allocations', jsonb_build_array(jsonb_build_object('type','fee','fee_obligation_id',(:'fee_id')::uuid,'amount',10))
-));
+echo "== GROWTH G0: 25000 real receipt RPC transactions as independent transactions =="
+mkdir -p "$BASE/growth_receipt_workers"
+[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/growth_receipt_workers"
+for w in $(seq 0 4); do
+  offset=$((w*5000+1))
+  cat > "$BASE/gen_$w.sql" <<SQL
+\copy (
+  select format(
+    'select public.post_receipt_with_allocations(%L::jsonb);',
+    jsonb_build_object(
+      'student_id', f.student_id,
+      'student_name', 'Growth',
+      'voucher_date', '2026-02-01',
+      'amount_received', 10,
+      'payer_name', 'Growth',
+      'notes', '',
+      'idempotency_key', ('d0000000-0000-0000-0000-' || lpad((row_number() over(order by f.id) + $offset - 1)::text,12,'0'))::uuid,
+      'allocations', jsonb_build_array(jsonb_build_object('type','fee','fee_obligation_id',f.id,'amount',10))
+    )
+  )
+  from public.fee_obligations f
+  where f.description='Growth fee'
+  order by f.id
+  offset $((offset-1)) limit 5000
+) to '$BASE/growth_receipt_workers/worker_$w.sql';
 SQL
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/gen_$w.sql"
+  run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/gen_$w.sql" || exit 1
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_receipt_workers/worker_$w.sql"
+done
 start=$(date +%s%N)
-if ! run "$PGBIN/pgbench -h $SOCK -U $PU -n -c 5 -j 5 -t 5000 -f $BASE/growth_receipts.pgbench $DB" >"$BASE/growth_receipts.out" 2>&1; then
-  fail "25000 real receipt growth transactions"; sed -n '1,40p' "$BASE/growth_receipts.out"
+for w in $(seq 0 4); do
+  (run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f '$BASE/growth_receipt_workers/worker_$w.sql' >'$BASE/growth_receipt_workers/worker_$w.out' 2>&1"; echo $? > "$BASE/growth_receipt_workers/worker_$w.rc") &
+done
+wait
+growth_failures=0
+for w in $(seq 0 4); do [ "$(cat "$BASE/growth_receipt_workers/worker_$w.rc")" = "0" ] || growth_failures=$((growth_failures+1)); done
+elapsed_ms=$((($(date +%s%N)-start)/1000000))
+echo "   25000 receipt RPC transactions wall time: \${elapsed_ms} ms; worker failures=\${growth_failures}"
+if [ "$growth_failures" -gt 0 ]; then
+  for w in $(seq 0 4); do [ -s "$BASE/growth_receipt_workers/worker_$w.out" ] && { echo "--- worker $w ---"; sed -n '1,20p' "$BASE/growth_receipt_workers/worker_$w.out"; }; done
+  fail "25000 real receipt growth transactions"
 else
-  elapsed_ms=$((($(date +%s%N)-start)/1000000))
-  echo "   25000 receipt RPC transactions wall time: ${elapsed_ms} ms"
   pass "25000 real receipt growth transactions"
 fi
 
