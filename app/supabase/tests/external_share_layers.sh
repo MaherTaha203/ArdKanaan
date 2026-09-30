@@ -18,7 +18,7 @@
 #   (PG_RUNAS is the OS user to run the server as when the caller is root;
 #    leave it empty to run psql/initdb directly as the current user.)
 set -u
-PGBIN="${PGBIN:-/usr/lib/postgresql/16/bin}"
+PGBIN="${PGBIN:-/usr/lib/postgresql/17/bin}"
 PG_RUNAS="${PG_RUNAS:-}"
 USER="${USER:-postgres}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
