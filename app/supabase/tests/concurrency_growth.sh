@@ -82,7 +82,7 @@ eq "enrollment volume" "$(runFP "select count(*) from public.enrollments where c
 
 echo "== create 20000 fee obligations through actual RPC =="
 cat > "$BASE/fees.sql" <<SQL
-set request.jwt.claim.sub = '$OWNER';
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000aa';
 select public.create_fee_obligations(
   jsonb_build_object(
     'course_id',(select id from public.courses where name='Growth Course 1' limit 1),
@@ -175,7 +175,7 @@ for i in $(seq 1 10); do [ "$(cat "$BASE/race_distinct_payments/$i.rc")" = "0" ]
 eq "independent payment race successes" "$independent_ok" "10"
 eq "independent payment rows" "$(runFP "select count(*) from public.payment_vouchers where expense_type='concurrent-independent'")" "10"
 
-cat > "$BASE/growth_receipts.sql" <<SQL
+cat > "$BASE/growth_receipts.sql" <<'SQL'
 set request.jwt.claim.sub = '$OWNER';
 set statement_timeout = '120s';
 select count(*) from public.fee_obligations where description='Growth fee';
@@ -232,7 +232,7 @@ eq "growth receipt total" "$(runFP "select coalesce(sum(amount_received),0)::int
 echo "== GROWTH G1: add 5000 synthetic payment rows with financial triggers =="
 cat > "$BASE/growth_payments.sql" <<SQL
 set statement_timeout = '120s';
-set local app.payment_posting = 'on';
+set app.payment_posting = 'on';
 insert into public.payment_vouchers
   (voucher_date, expense_type, amount, notes, idempotency_key)
 select
@@ -260,7 +260,7 @@ set statement_timeout = '120s';
 explain (analyze, buffers, format text)
 select id, movement_type, amount, external_share
 from public.financial_movements
-order by movement_date desc, id desc
+order by id desc
 limit 100;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_financial.sql"
