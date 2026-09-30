@@ -103,6 +103,7 @@ echo "== CONCURRENCY C1: 10 receipts race on the SAME fee (50 total capacity) ==
 FEE=$(runFP "select id from public.fee_obligations where description='Growth fee' order by id limit 1")
 STUDENT=$(runFP "select student_id from public.fee_obligations where id='$FEE'")
 mkdir -p "$BASE/race_receipts"
+[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/race_receipts"
 for i in $(seq 1 10); do
   key=$(printf 'c1000000-0000-0000-0000-%012d' "$i")
   cat > "$BASE/race_receipts/$i.sql" <<SQL
@@ -131,6 +132,7 @@ eq "receipt race row count matches successful calls" "$(runFP "select count(*) f
 echo "== CONCURRENCY C2: 10 identical payment idempotency requests race =="
 PAYKEY='c2aaaaaa-0000-0000-0000-000000000001'
 mkdir -p "$BASE/race_payment"
+[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/race_payment"
 for i in $(seq 1 10); do
   cat > "$BASE/race_payment/$i.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
@@ -146,6 +148,7 @@ eq "same-key concurrent payment creates one row" "$(runFP "select count(*) from 
 
 echo "== CONCURRENCY C3: 10 independent payments race =="
 mkdir -p "$BASE/race_distinct_payments"
+[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/race_distinct_payments"
 for i in $(seq 1 10); do
   key=$(printf 'c3bbbbbb-0000-0000-0000-%012d' "$i")
   cat > "$BASE/race_distinct_payments/$i.sql" <<SQL
