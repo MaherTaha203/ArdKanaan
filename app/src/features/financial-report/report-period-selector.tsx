@@ -81,7 +81,7 @@ export function ReportPeriodSelector({
   }
 
   return (
-    <div ref={rootRef} className="relative w-[min(260px,32vw)] min-w-[190px]" dir="rtl">
+    <div ref={rootRef} className="relative w-[min(360px,40vw)] min-w-[250px]" dir="rtl">
       <Button
         type="button"
         variant="outline"
