@@ -159,11 +159,12 @@ eq "center receipts (Σ amount-ext)"  "$(runFP "select coalesce(sum(amount-exter
 
 echo "== Expansion 1: idempotency replay + mismatch protection ==";
 BEFORE_IDEM=$(runFP "select count(*) from public.receipt_vouchers");
-REPLAY_OUT=$(cat <<SQL | run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB"
+cat > "$BASE/idem_replay.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
-select public.post_receipt_with_allocations('{"student_id":"00000000-0000-0000-0000-0000000a0002","student_name":"طالب ب","voucher_date":"2026-02-01","amount_received":100,"payer_name":"طالب ب","notes":"","idempotency_key":"22222222-0000-0000-0000-000000000002","allocations":[{"type":"fee","fee_obligation_id":"'"$FEEB"'","amount":100}]}'::jsonb);
+select public.post_receipt_with_allocations('{"student_id":"00000000-0000-0000-0000-0000000a0002","student_name":"طالب ب","voucher_date":"2026-02-01","amount_received":100,"payer_name":"طالب ب","notes":"","idempotency_key":"22222222-0000-0000-0000-000000000002","allocations":[{"type":"fee","fee_obligation_id":"$FEEB","amount":100}]}'::jsonb);
 SQL
-);
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/idem_replay.sql"
+REPLAY_OUT=$(run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/idem_replay.sql");
 if grep -q '"idempotent_replay": true' <<<"$REPLAY_OUT"; then pass "same idempotency key replays"; else fail "same idempotency key did not replay"; fi
 eq "Idempotency replay row count unchanged" "$(runFP "select count(*) from public.receipt_vouchers")" "$BEFORE_IDEM";
 
@@ -230,7 +231,7 @@ else
   fail "owner cancellation failed"; sed 's/^/       /' "$BASE/cancel.out"
 fi
 eq "Cancelled receipt excluded from financial_movements" "$(runFP "select count(*) from public.financial_movements where id='$RVD2'")" "0"
-eq "Receipt ledger original reversed" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt' and source_id='$RVD2' and entry_kind='original' and reversed_at is not null")" "1"
+eq "Append-only original ledger remains unmodified" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt' and source_id='$RVD2' and entry_kind='original' and reversed_at is null")" "1"
 eq "Receipt ledger reversal exists" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt' and source_id='$RVD2' and entry_kind='reversal'")" "1"
 eq "Reversal points to original" "$(runFP "select count(*) from public.financial_movement_ledger r join public.financial_movement_ledger o on r.reversal_of=o.id where r.source_id='$RVD2' and r.entry_kind='reversal' and o.entry_kind='original'")" "1"
 eq "Cancelled allocation remains immutable history" "$(runFP "select count(*) from public.receipt_allocations where receipt_voucher_id='$RVD2'")" "1"
