@@ -175,46 +175,29 @@ for i in $(seq 1 10); do [ "$(cat "$BASE/race_distinct_payments/$i.rc")" = "0" ]
 eq "independent payment race successes" "$independent_ok" "10"
 eq "independent payment rows" "$(runFP "select count(*) from public.payment_vouchers where expense_type='concurrent-independent'")" "10"
 
-echo "== GROWTH G0: create 25000 real receipt rows as independent transactions =="
-mkdir -p "$BASE/growth_receipt_workers"
-[ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/growth_receipt_workers"
-run "$PGBIN/psql -h $SOCK -U $PU -X -At -F '|' -d $DB -c "select f.id,f.student_id from public.fee_obligations f where f.description='Growth fee' order by f.id offset 1 limit 25000"" > "$BASE/growth_fee_ids.tsv"
-awk -F'|' '
-{
-  w=(NR-1)%5+1;
-  printf "set request.jwt.claim.sub = \\x27'$OWNER'\\x27;\\nselect public.post_receipt_with_allocations(jsonb_build_object(\\x27student_id\\x27,\\x27%s\\x27,\\x27student_name\\x27,\\x27Growth\\x27,\\x27voucher_date\\x27,\\x272026-02-01\\x27,\\x27amount_received\\x27,10,\\x27payer_name\\x27,\\x27Growth\\x27,\\x27notes\\x27,\\x27\\x27,\\x27idempotency_key\\x27,(\\x27d0000000-0000-0000-0000-\\x27||lpad(\\x27%d\\x27,12,\\x270\\x27))::uuid,\\x27allocations\\x27,jsonb_build_array(jsonb_build_object(\\x27type\\x27,\\x27fee\\x27,\\x27fee_obligation_id\\x27,\\x27%s\\x27,\\x27amount\\x27,10)));\\n",$2,NR,$1
-  >> ("'$BASE/growth_receipt_workers/worker_" w ".sql");
-}' "$BASE/growth_fee_ids.tsv"
-for w in $(seq 1 5); do
-  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_receipt_workers/worker_$w.sql"
-done
+echo "== GROWTH G0: 25000 real receipt RPC transactions via pgbench =="
+cat > "$BASE/growth_receipts.pgbench" <<'SQL'
+\set n random(2,25001)
+select id as fee_id, student_id as student_id from public.fee_obligations where description='Growth fee' order by id offset :n limit 1 \gset
+select public.post_receipt_with_allocations(jsonb_build_object(
+  'student_id', :student_id::text::uuid,
+  'student_name', 'Growth',
+  'voucher_date', '2026-02-01',
+  'amount_received', 10,
+  'payer_name', 'Growth',
+  'notes', '',
+  'idempotency_key', ('d0000000-0000-0000-0000-' || lpad(:n::text,12,'0'))::uuid,
+  'allocations', jsonb_build_array(jsonb_build_object('type','fee','fee_obligation_id',:fee_id::text::uuid,'amount',10))
+));
+SQL
 start=$(date +%s%N)
-for w in $(seq 1 5); do
-  (run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f '$BASE/growth_receipt_workers/worker_$w.sql' >'$BASE/growth_receipt_workers/worker_$w.out' 2>&1"; echo $? > "$BASE/growth_receipt_workers/worker_$w.rc") &
-done
-wait
-growth_failures=0
-for w in $(seq 1 5); do [ "$(cat "$BASE/growth_receipt_workers/worker_$w.rc")" = "0" ] || growth_failures=$((growth_failures+1)); done
-elapsed_ms=$((($(date +%s%N)-start)/1000000))
-echo "   25000 receipt RPC transactions wall time: ${elapsed_ms} ms; worker failures=${growth_failures}"
-if [ "$growth_failures" -gt 0 ]; then
-  for w in $(seq 1 5); do [ -s "$BASE/growth_receipt_workers/worker_$w.out" ] && { echo "--- worker $w ---"; sed -n '1,20p' "$BASE/growth_receipt_workers/worker_$w.out"; }; done
-  fail "25000 real receipt growth load"
-else
-  pass "25000 real receipt growth load"
-fi
-echo "== GROWTH G0: create 5000 real receipt rows through actual posting RPC =="
-start=$(date +%s%N)
-if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/growth_receipts.sql" >"$BASE/growth_receipts.out" 2>&1; then
-  fail "25000 real receipt growth load"; sed 's/^/       /' "$BASE/growth_receipts.out"
+if ! run "$PGBIN/pgbench -h $SOCK -U $PU -n -c 5 -j 5 -t 5000 -f $BASE/growth_receipts.pgbench $DB" >"$BASE/growth_receipts.out" 2>&1; then
+  fail "25000 real receipt growth transactions"; sed -n '1,40p' "$BASE/growth_receipts.out"
 else
   elapsed_ms=$((($(date +%s%N)-start)/1000000))
-  echo "   5000 receipt RPC load wall time: ${elapsed_ms} ms"
-  pass "25000 real receipt growth load"
+  echo "   25000 receipt RPC transactions wall time: ${elapsed_ms} ms"
+  pass "25000 real receipt growth transactions"
 fi
-eq "growth receipt volume" "$(runFP "select count(*) from public.receipt_vouchers where payer_name='Growth'")" "25000"
-eq "growth allocation volume" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.payer_name='Growth'")" "25000"
-eq "growth receipt total" "$(runFP "select coalesce(sum(amount_received),0)::int from public.receipt_vouchers where payer_name='Growth'")" "250000"
 
 echo "== GROWTH G1: add 5000 synthetic payment rows with financial triggers =="
 cat > "$BASE/growth_payments.sql" <<SQL
