@@ -49,7 +49,7 @@ run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/stubs.
 
 echo "== apply full migration chain =="
 for f in $(ls -1 "$MIG"/*.sql | sort); do
-  if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $f >$BASE/m.out 2>&1; then
+  if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $f" >$BASE/m.out 2>&1; then
     echo ">>> migration FAILED: $(basename "$f")"; cat "$BASE/m.out"; exit 1
   fi
 done
