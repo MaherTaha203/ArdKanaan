@@ -353,13 +353,16 @@ LOG2=$BASE2/pg.log
 rm -rf "$BASE2"; mkdir -p "$DATADIR2" "$SOCK2"; [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE2"
 run "$PGBIN/initdb -D $DATADIR2 -U $PU --auth=trust -E UTF8" >"$BASE2/initdb.log" 2>&1 || { echo target initdb FAIL; tail "$BASE2/initdb.log"; exit 1; }
 run "$PGBIN/pg_ctl -D $DATADIR2 -l $LOG2 -o '-c unix_socket_directories=$SOCK2 -c listen_addresses=\"\"' -w start" >/dev/null || { cat "$LOG2"; exit 1; }
-run "$PGBIN/psql -h $SOCK2 -U $PU -X -q -d postgres -c \"do \\\\\\$\\\\\\$ begin
+cat > "$BASE2/roles.sql" <<'SQL'
+do $$ begin
   if not exists (select 1 from pg_roles where rolname='anon') then create role anon nologin; end if;
   if not exists (select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin; end if;
   if not exists (select 1 from pg_roles where rolname='service_role') then create role service_role nologin bypassrls; end if;
-  if not exists (select 1 from pg_roles where rolname='postgres') then create role postgres superuser login; end if;
-end \\\\\\$\\\\\\$;\"" || exit 1
+end $$;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/roles.sql"
 run "$PGBIN/createdb -h $SOCK2 -U $PU $DB2" || exit 1
+run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/roles.sql" || exit 1
 
 cat > "$BASE2/stubs.sql" <<SQL
 create extension if not exists pgcrypto;
@@ -380,7 +383,7 @@ for f in $(ls -1 "$MIG"/*.sql | sort); do
   fi
 done
 
-runFP "select jsonb_build_object(
+run "$PGBIN/psql -h $SOCK -U $PU -X -At -d $DB -c \"select jsonb_build_object(
   'students',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.students x),
   'courses',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.courses x),
   'enrollments',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.enrollments x),
@@ -388,7 +391,7 @@ runFP "select jsonb_build_object(
   'receipt_vouchers',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.receipt_vouchers x),
   'receipt_allocations',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.receipt_allocations x),
   'payment_vouchers',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.payment_vouchers x)
-)" >"$BASE2/backup.json"
+)\"" >"$BASE2/backup.json"
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/backup.json"
 
 cat > "$BASE2/restore.sql" <<SQL
