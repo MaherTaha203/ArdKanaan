@@ -101,11 +101,7 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
         </div>
       </header>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-xl border border-border bg-highlight/60 px-3 py-2.5">
-        <div className="flex items-center gap-2 rounded-lg bg-panel px-2.5 py-1.5">
-          <span className="text-[11px] font-semibold text-faint">الفترة</span>
-          <span className="text-[12px] text-muted-foreground">يُطبّق الاختيار مباشرة</span>
-        </div>
-        <label className="flex min-w-[170px] flex-1 items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
+        <label className="flex w-[min(260px,32vw)] min-w-[190px] items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
           <Search aria-hidden className="size-4 flex-none text-faint" />
           <input value={accountName} onChange={(event) => setAccountName(event.target.value)} aria-label="بحث الحساب" placeholder="بحث الحساب…" className="w-full bg-transparent text-sm outline-none placeholder:text-faint" />
         </label>
