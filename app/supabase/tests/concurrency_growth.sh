@@ -180,14 +180,14 @@ cat > "$BASE/growth_receipts.pgbench" <<'SQL'
 \set n random(2,25001)
 select id as fee_id, student_id as student_id from public.fee_obligations where description='Growth fee' order by id offset :n limit 1 \gset
 select public.post_receipt_with_allocations(jsonb_build_object(
-  'student_id', :student_id::text::uuid,
+  'student_id', (:'student_id')::uuid,
   'student_name', 'Growth',
   'voucher_date', '2026-02-01',
   'amount_received', 10,
   'payer_name', 'Growth',
   'notes', '',
   'idempotency_key', ('d0000000-0000-0000-0000-' || lpad(:n::text,12,'0'))::uuid,
-  'allocations', jsonb_build_array(jsonb_build_object('type','fee','fee_obligation_id',:fee_id::text::uuid,'amount',10))
+  'allocations', jsonb_build_array(jsonb_build_object('type','fee','fee_obligation_id',(:'fee_id')::uuid,'amount',10))
 ));
 SQL
 start=$(date +%s%N)
