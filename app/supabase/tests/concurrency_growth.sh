@@ -181,7 +181,6 @@ mkdir -p "$BASE/growth_receipt_workers"
 for w in $(seq 0 4); do
   offset=$((w*5000+1))
   cat > "$BASE/gen_$w.sql" <<SQL
-\copy (
   select format(
     'select public.post_receipt_with_allocations(%L::jsonb);',
     jsonb_build_object(
@@ -199,7 +198,7 @@ for w in $(seq 0 4); do
   where f.description='Growth fee'
   order by f.id
   offset $((offset-1)) limit 5000
-) to '$BASE/growth_receipt_workers/worker_$w.sql';
+;
 SQL
   [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/gen_$w.sql"
   run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/gen_$w.sql" || exit 1
@@ -213,7 +212,7 @@ wait
 growth_failures=0
 for w in $(seq 0 4); do [ "$(cat "$BASE/growth_receipt_workers/worker_$w.rc")" = "0" ] || growth_failures=$((growth_failures+1)); done
 elapsed_ms=$((($(date +%s%N)-start)/1000000))
-echo "   25000 receipt RPC transactions wall time: \${elapsed_ms} ms; worker failures=\${growth_failures}"
+echo "   25000 receipt RPC transactions wall time: ${elapsed_ms} ms; worker failures=${growth_failures}"
 if [ "$growth_failures" -gt 0 ]; then
   for w in $(seq 0 4); do [ -s "$BASE/growth_receipt_workers/worker_$w.out" ] && { echo "--- worker $w ---"; sed -n '1,20p' "$BASE/growth_receipt_workers/worker_$w.out"; }; done
   fail "25000 real receipt growth transactions"
