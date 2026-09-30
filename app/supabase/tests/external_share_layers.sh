@@ -344,6 +344,92 @@ eq "Atomic rollback left receipt count unchanged" "$(runFP "select count(*) from
 eq "Atomic rollback left allocation count unchanged" "$(runFP "select count(*) from public.receipt_allocations")" "$BEFORE_ATOMIC_A"
 eq "Atomic rollback left first fee unpaid" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEEAT'")" "0"
 
+echo "== Expansion R1: backup -> clean DB restore -> financial comparison ==";
+DB2=ext_restore
+BASE2=$BASE"_restore"
+DATADIR2=$BASE2/data
+SOCK2=$BASE2/sock
+LOG2=$BASE2/pg.log
+rm -rf "$BASE2"; mkdir -p "$DATADIR2" "$SOCK2"; [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE2"
+run "$PGBIN/initdb -D $DATADIR2 -U $PU --auth=trust -E UTF8" >"$BASE2/initdb.log" 2>&1 || { echo target initdb FAIL; tail "$BASE2/initdb.log"; exit 1; }
+run "$PGBIN/pg_ctl -D $DATADIR2 -l $LOG2 -o '-c unix_socket_directories=$SOCK2 -c listen_addresses=\"\"' -w start" >/dev/null || { cat "$LOG2"; exit 1; }
+run "$PGBIN/psql -h $SOCK2 -U $PU -X -q -d postgres -c \"do \\\\\\$\\\\\\$ begin
+  if not exists (select 1 from pg_roles where rolname='anon') then create role anon nologin; end if;
+  if not exists (select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin; end if;
+  if not exists (select 1 from pg_roles where rolname='service_role') then create role service_role nologin bypassrls; end if;
+  if not exists (select 1 from pg_roles where rolname='postgres') then create role postgres superuser login; end if;
+end \\\\\\$\\\\\\$;\"" || exit 1
+run "$PGBIN/createdb -h $SOCK2 -U $PU $DB2" || exit 1
+
+cat > "$BASE2/stubs.sql" <<SQL
+create extension if not exists pgcrypto;
+create schema if not exists auth;
+create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text, created_at timestamptz not null default now());
+create or replace function auth.uid() returns uuid language sql stable as \\\$fn\\\$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid \\\$fn\\\$;
+create or replace function auth.jwt() returns jsonb language sql stable as \\\$fn\\\$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb \\\$fn\\\$;
+grant usage on schema auth to anon, authenticated, service_role;
+create or replace function public.rls_auto_enable() returns void language plpgsql as \\\$fn\\\$ begin end \\\$fn\\\$;
+insert into auth.users (id, email) values ('$OWNER', 'owner@test.local');
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/stubs.sql"
+run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/stubs.sql" || { echo target stubs FAIL; exit 1; }
+
+for f in $(ls -1 "$MIG"/*.sql | sort); do
+  if ! run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $f" >"$BASE2/m.out" 2>&1; then
+    echo ">>> target migration FAILED: $(basename "$f")"; cat "$BASE2/m.out"; exit 1
+  fi
+done
+
+runFP "select jsonb_build_object(
+  'students',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.students x),
+  'courses',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.courses x),
+  'enrollments',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.enrollments x),
+  'fee_obligations',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.fee_obligations x),
+  'receipt_vouchers',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.receipt_vouchers x),
+  'receipt_allocations',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.receipt_allocations x),
+  'payment_vouchers',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.payment_vouchers x)
+)" >"$BASE2/backup.json"
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/backup.json"
+
+cat > "$BASE2/restore.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.restore_center_data(
+$(cat "$BASE2/backup.json")::jsonb,
+false
+);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/restore.sql"
+if run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/restore.sql" >"$BASE2/restore.out" 2>&1; then
+  pass "backup restored into clean PostgreSQL database"
+else
+  fail "backup restore failed"; sed 's/^/       /' "$BASE2/restore.out"
+fi
+
+run2() { if [ -n "$PG_RUNAS" ]; then su "$PG_RUNAS" -c "$1"; else bash -c "$1"; fi; }
+runFP2() { run2 "$PGBIN/psql -h $SOCK2 -U $PU -X -qtA -d $DB2 -c \\\"$1\\\"" | tr -d '[:space:]'; }
+eq2() { if [ "$2" = "$3" ]; then pass "$1 = $2"; else fail "$1 expected $3, got $2"; fi; }
+
+for t in students courses enrollments fee_obligations receipt_vouchers receipt_allocations payment_vouchers; do
+  SRC=$(runFP "select count(*) from public.$t")
+  DST=$(runFP2 "select count(*) from public.$t")
+  eq2 "Restore row count $t" "$DST" "$SRC"
+done
+
+eq2 "Restore active gross receipts" "$(runFP2 "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")"
+eq2 "Restore active external receipts" "$(runFP2 "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")" "$(runFP "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")"
+eq2 "Restore active center receipts" "$(runFP2 "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")" "$(runFP "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")"
+eq2 "Restore active payment total" "$(runFP2 "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")"
+eq2 "Restore receipt ledger rows" "$(runFP2 "select count(*) from public.financial_movement_ledger where source_type='receipt'")" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt'")"
+eq2 "Restore payment ledger rows" "$(runFP2 "select count(*) from public.financial_movement_ledger where source_type='payment'")" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment'")"
+eq2 "Restore reversal ledger rows" "$(runFP2 "select count(*) from public.financial_movement_ledger where entry_kind='reversal'")" "$(runFP "select count(*) from public.financial_movement_ledger where entry_kind='reversal'")"
+eq2 "Restore payment idempotency keys" "$(runFP2 "select count(*) from public.payment_vouchers where idempotency_key is not null")" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key is not null")"
+eq2 "Restore payment idempotency key exact value" "$(runFP2 "select count(*) from public.payment_vouchers p where p.idempotency_key='$PAYKEY'")" "$(runFP "select count(*) from public.payment_vouchers p where p.idempotency_key='$PAYKEY'")"
+eq2 "Restore cancelled receipt state" "$(runFP2 "select count(*) from public.receipt_vouchers where id='$RVD2' and cancelled_at is not null")" "1"
+eq2 "Restore cancelled payment state" "$(runFP2 "select count(*) from public.payment_vouchers where id='$PAYID' and cancelled_at is not null")" "1"
+
+run2 "$PGBIN/pg_ctl -D $DATADIR2 -w stop" >/dev/null 2>&1
+rm -rf "$BASE2"
+
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
 rm -rf "$BASE"
 echo
