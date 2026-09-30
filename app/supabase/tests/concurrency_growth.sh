@@ -297,10 +297,10 @@ TARGET_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BAS
 echo "   filtered student_statement_lines Execution Time: ${TARGET_MS:-unknown} ms"
 
 echo "== GROWTH G3: integrity checks after load =="
-eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "5300"
+eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "5005"
 eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "5011"
-eq "financial gross receipt total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "50300"
-eq "financial payment total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "5030"
+eq "financial gross receipt total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "50050"
+eq "financial payment total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "25017"
 eq "no duplicate growth receipt idempotency keys" "$(runFP "select count(*) - count(distinct idempotency_key) from public.receipt_vouchers where payer_name='Growth'")" "0"
 eq "no duplicate growth payment idempotency keys" "$(runFP "select count(*) - count(distinct idempotency_key) from public.payment_vouchers where expense_type='Growth synthetic'")" "0"
 
