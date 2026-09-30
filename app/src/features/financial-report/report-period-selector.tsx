@@ -85,7 +85,7 @@ export function ReportPeriodSelector({
   }
 
   return (
-    <div ref={rootRef} className="relative w-[min(360px,40vw)] min-w-[250px]" dir="rtl">
+    <div ref={rootRef} className="relative w-[min(360px,calc(100vw-24px))]" dir="rtl">
       <Button
         type="button"
         variant="outline"
@@ -108,7 +108,7 @@ export function ReportPeriodSelector({
         <div
           role="dialog"
           aria-label="اختيار فترة التقرير"
-          className="menu-in absolute end-0 top-[calc(100%+6px)] z-50 w-[min(360px,calc(100vw-24px))] rounded-2xl border border-border-strong bg-panel p-2.5 shadow-lg"
+          className="menu-in absolute end-0 top-[calc(100%+6px)] z-50 w-full rounded-2xl border border-border-strong bg-panel p-2.5 shadow-lg"
         >
           <div className="mb-2 px-2 py-1">
             <div className="text-sm font-bold text-foreground">{rangeText}</div>
