@@ -102,13 +102,14 @@ eq "fee volume" "$(runFP "select count(*) from public.fee_obligations where desc
 echo "== CONCURRENCY C1: 10 receipts race on the SAME fee (50 total capacity) =="
 FEE=$(runFP "select id from public.fee_obligations where description='Growth fee' order by id limit 1")
 STUDENT=$(runFP "select student_id from public.fee_obligations where id='$FEE'")
+STUDENT_NAME=$(runFP "select name from public.students where id='$STUDENT'")
 mkdir -p "$BASE/race_receipts"
 [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE/race_receipts"
 for i in $(seq 1 10); do
   key=$(printf 'c1000000-0000-0000-0000-%012d' "$i")
   cat > "$BASE/race_receipts/$i.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
-select public.post_receipt_with_allocations('{"student_id":"$STUDENT","student_name":"Race Student","voucher_date":"2026-02-01","amount_received":10,"payer_name":"Race","notes":"","idempotency_key":"$key","allocations":[{"type":"fee","fee_obligation_id":"$FEE","amount":10}]}'::jsonb);
+select public.post_receipt_with_allocations('{"student_id":"$STUDENT","student_name":"$STUDENT_NAME","voucher_date":"2026-02-01","amount_received":10,"payer_name":"Race","notes":"","idempotency_key":"$key","allocations":[{"type":"fee","fee_obligation_id":"$FEE","amount":10}]}'::jsonb);
 SQL
   [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/race_receipts/$i.sql"
 done
