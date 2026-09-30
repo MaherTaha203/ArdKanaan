@@ -137,7 +137,7 @@ export function ReportPeriodSelector({
 
             <div className="grid grid-cols-2 gap-2">
               <SmartDateInput aria-label="بداية الفترة" placeholder="من" value={draftStart} onChange={setDraftStart} className="h-9 w-full" />
-              <SmartDateInput aria-label="نهاية الفترة" placeholder="إلى" value={draftEnd} min={draftStart || undefined} onChange={setDraftEnd} className="h-9 w-full" />
+              <SmartDateInput aria-label="نهاية الفترة" placeholder="إلى" value={draftEnd} onChange={(next) => { if (!draftStart || next >= draftStart) setDraftEnd(next) }} className="h-9 w-full" />
             </div>
 
             <div className="mt-2 flex items-center justify-end gap-2">
