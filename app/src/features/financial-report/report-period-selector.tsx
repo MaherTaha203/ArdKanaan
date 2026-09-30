@@ -88,7 +88,7 @@ export function ReportPeriodSelector({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="h-10 w-full justify-between gap-3 px-3"
+        className="h-10 w-full justify-between gap-2 px-2.5"
       >
         <span className="flex min-w-0 items-center gap-2 text-start">
           <CalendarRange className="size-4 flex-none text-olive" />
@@ -107,8 +107,7 @@ export function ReportPeriodSelector({
           className="menu-in absolute end-0 top-[calc(100%+6px)] z-50 w-[min(360px,calc(100vw-24px))] rounded-2xl border border-border-strong bg-panel p-2.5 shadow-lg"
         >
           <div className="mb-2 px-2 py-1">
-            <div className="text-[11px] font-semibold text-faint">فترة التقرير</div>
-            <div className="mt-0.5 text-sm font-bold text-foreground">{rangeText}</div>
+            <div className="text-sm font-bold text-foreground">{rangeText}</div>
           </div>
 
           <div className="grid grid-cols-2 gap-1">
