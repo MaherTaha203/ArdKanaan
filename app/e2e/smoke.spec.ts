@@ -187,7 +187,7 @@ test('restores a validated backup through the real settings path', async ({ page
   // The settings tab stays mounted beside the backup tab (each is its own tab now), and
   // both carry a file input — scope to the active backup panel.
   const fileInput = page.getByRole('tabpanel', { name: 'النسخ الاحتياطي' }).locator('input[type="file"]')
-  await fileInput.setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: new TextEncoder().encode(backup) })
+  await fileInput.setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(backup) })
   const dialog = page.getByRole('dialog', { name: 'تأكيد الاستعادة' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('textbox').fill('استعادة')
