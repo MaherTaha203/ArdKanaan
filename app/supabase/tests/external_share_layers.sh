@@ -20,6 +20,7 @@
 set -u
 PGBIN="${PGBIN:-/usr/lib/postgresql/16/bin}"
 PG_RUNAS="${PG_RUNAS:-}"
+USER="${USER:-postgres}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MIG="$ROOT/migrations"
 BASE="${TMPDIR:-/tmp}/pgext_$$"
