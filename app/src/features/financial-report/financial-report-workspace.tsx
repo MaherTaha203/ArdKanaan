@@ -9,7 +9,8 @@ import { VoucherDetailsSheet } from '@/features/financial-report/voucher-details
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { SmartDateInput } from '@/components/ui/smart-date-input'
+import { ReportPeriodSelector } from '@/features/financial-report/report-period-selector'
+import { reportPeriodRange, type ReportPeriod } from '@/features/financial-report/report-period'
 import { aggregateStudents, externalPartyStatement, financialTotals, paymentCount, receiptCount, studentLedger } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
@@ -18,22 +19,9 @@ import { useSettingsStore } from '@/store/use-settings-store'
 import { useShellStore, type ReportView } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-type Period = 'all' | 'today' | 'week' | 'month'
-const PERIODS: { id: Period; label: string }[] = [
-  { id: 'all', label: 'الكل' }, { id: 'today', label: 'اليوم' }, { id: 'week', label: 'هذا الأسبوع' }, { id: 'month', label: 'هذا الشهر' },
-]
 function partyAndContext(movement: FinancialMovement) {
   const party = movement.movementType === 'receipt' ? movement.partyName ?? '—' : 'المركز'
   return movement.context ? `${party} · ${movement.context}` : party
-}
-function periodStartIso(period: Period, today = new Date()): string | null {
-  if (period === 'all') return null
-  const year = today.getFullYear(), month = today.getMonth()
-  if (period === 'today') return `${year}-${String(month + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  if (period === 'month') return `${year}-${String(month + 1).padStart(2, '0')}-01`
-  const daysSinceSaturday = (today.getDay() + 1) % 7
-  const start = new Date(year, month, today.getDate() - daysSinceSaturday)
-  return `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
 }
 export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const movements = useWorkspaceStore((state) => state.movements)
@@ -49,18 +37,20 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const openEditReceipt = useShellStore((state) => state.openEditReceipt)
   const openEditPayment = useShellStore((state) => state.openEditPayment)
   const defaultReportPeriod = useSettingsStore((state) => state.settings.defaultReportPeriod)
-  const [period, setPeriod] = useState<Period>(defaultReportPeriod)
+  const [period, setPeriod] = useState<ReportPeriod>(defaultReportPeriod)
   const [printing, setPrinting] = useState(false)
   const [cancelTarget, setCancelTarget] = useState<FinancialMovement | null>(null)
   const [detailsId, setDetailsId] = useState<string | null>(null)
   const [printStudentId, setPrintStudentId] = useState<string | null>(null)
   const [accountName, setAccountName] = useState('')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
   const studentStatements = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
   const printStudent = useMemo(() => printStudentId ? studentStatements.find((item) => item.student.id === printStudentId) ?? null : null, [studentStatements, printStudentId])
   const printStudentLedger = useMemo(() => printStudentId ? studentLedger(printStudentId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }, [printStudentId, statementLines, enrollments, feeObligations])
-  const start = fromDate || periodStartIso(period)
+  const presetRange = period === 'custom' ? { start: customStart || null, end: customEnd || null } : reportPeriodRange(period)
+  const start = presetRange.start
+  const toDate = presetRange.end
   const scoped = useMemo(() => movements.filter((movement) => {
     const fromOk = !start || movement.voucherDate >= start
     const toOk = !toDate || movement.voucherDate <= toDate
@@ -111,19 +101,21 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
         </div>
       </header>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-xl border border-border bg-highlight/60 px-3 py-2.5">
-        <div className="inline-flex flex-wrap gap-1 rounded-lg bg-panel p-1">
-          {PERIODS.map((item) => <button key={item.id} type="button" onClick={() => setPeriod(item.id)} aria-pressed={period === item.id} className={`rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${period === item.id ? 'bg-brand-weak text-olive' : 'text-muted-foreground hover:text-foreground'}`}>{item.label}</button>)}
-        </div>
-        <label className="flex min-w-[170px] flex-1 items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
+        <label className="flex w-[min(260px,32vw)] min-w-[190px] items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
           <Search aria-hidden className="size-4 flex-none text-faint" />
           <input value={accountName} onChange={(event) => setAccountName(event.target.value)} aria-label="بحث الحساب" placeholder="بحث الحساب…" className="w-full bg-transparent text-sm outline-none placeholder:text-faint" />
         </label>
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] font-medium text-muted-foreground">من</span>
-          <SmartDateInput aria-label="من تاريخ" placeholder="أي تاريخ" className="h-10 w-44" value={fromDate} max={toDate || undefined} onChange={setFromDate} />
-          <span className="text-[12px] font-medium text-muted-foreground">إلى</span>
-          <SmartDateInput aria-label="إلى تاريخ" placeholder="أي تاريخ" className="h-10 w-44" value={toDate} onChange={setToDate} />
-        </div>
+        <ReportPeriodSelector
+          value={period}
+          customStart={customStart}
+          customEnd={customEnd}
+          onPresetChange={(nextPeriod) => setPeriod(nextPeriod)}
+          onCustomApply={(nextStart, nextEnd) => {
+            setCustomStart(nextStart)
+            setCustomEnd(nextEnd)
+            setPeriod('custom')
+          }}
+        />
         <div className="flex flex-wrap items-center gap-2 md:ms-auto">
           {summaryChips.map((chip) => <div key={chip.label} className="inline-flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5"><span className="text-[11px] text-faint">{chip.label}</span><Money value={chip.value} currency={false} className={`figure text-[15px] font-bold ${chip.tone ?? 'text-foreground'}`} /></div>)}
         </div>
