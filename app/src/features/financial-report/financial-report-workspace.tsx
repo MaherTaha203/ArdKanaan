@@ -132,7 +132,7 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
       {detailsMovement ? <VoucherDetailsSheet movement={detailsMovement} onClose={() => setDetailsId(null)} onEdit={() => { setDetailsId(null); if (detailsMovement.movementType === 'receipt') openEditReceipt(detailsMovement.id); else openEditPayment(detailsMovement.id) }} onCancel={() => { setDetailsId(null); setCancelTarget(detailsMovement) }} /> : null}
       {printing ? <FinancialReportPrint view={view} title={printTitle} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={scoped} externalHeld={totals.externalHeld} instituteRevenue={totals.instituteRevenue} onClose={() => setPrinting(false)} /> : null}
       {printStudent ? <StudentStatementPrint studentName={printStudent.student.name} courses={printStudent.courses} entries={printStudentLedger.entries} totalDebit={printStudentLedger.totalDebit} totalCredit={printStudentLedger.totalCredit} balance={printStudentLedger.balance} onClose={() => setPrintStudentId(null)} /> : null}
-      {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); setPreviewId(null); await reload() }} /> : null}
+      {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); await reload() }} /> : null}
     </div>
   )
 }
