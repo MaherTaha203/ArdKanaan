@@ -66,13 +66,13 @@ from generate_series(1,10) g(i);
 insert into public.students (id,name,status)
 select ('00000000-0000-0000-0000-' || lpad(to_hex(1000000000+i),12,'0'))::uuid,
        'Growth Student '||i, 'active'
-from generate_series(1,20000) g(i);
+from generate_series(1,100000) g(i);
 insert into public.enrollments (id,student_id,course_id,course_name,course_value)
 select ('00000000-0000-0000-0000-' || lpad(to_hex(3000000000+i),12,'0'))::uuid,
        ('00000000-0000-0000-0000-' || lpad(to_hex(1000000000+i),12,'0'))::uuid,
        ('00000000-0000-0000-0000-' || lpad(to_hex(2000000000+((i-1)%10)+1),12,'0'))::uuid,
        'Growth Course '||(((i-1)%10)+1), 100
-from generate_series(1,20000) g(i);
+from generate_series(1,100000) g(i);
 set session_replication_role = origin;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/seed.sql"
@@ -98,7 +98,7 @@ SQL
 if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/fees.sql" >"$BASE/fees.out" 2>&1; then
   fail "bulk fee creation via actual RPC"; cat "$BASE/fees.out"
 fi
-eq "fee volume" "$(runFP "select count(*) from public.fee_obligations where description='Growth fee'")" "20000"
+eq "fee volume" "$(runFP "select count(*) from public.fee_obligations where description='Growth fee'")" "100000"
 
 echo "== CONCURRENCY C1: 10 receipts race on the SAME fee (50 total capacity) =="
 FEE=$(runFP "select id from public.fee_obligations where description='Growth fee' order by id limit 1")
@@ -191,7 +191,7 @@ begin
     join public.students s on s.id=f.student_id
     where f.description='Growth fee'
     order by f.id
-    offset 1 limit 5000
+    offset 1 limit 25000
   loop
     perform public.post_receipt_with_allocations(
       jsonb_build_object(
@@ -219,15 +219,15 @@ SQL
 echo "== GROWTH G0: create 5000 real receipt rows through actual posting RPC =="
 start=$(date +%s%N)
 if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/growth_receipts.sql" >"$BASE/growth_receipts.out" 2>&1; then
-  fail "5000 real receipt growth load"; sed 's/^/       /' "$BASE/growth_receipts.out"
+  fail "25000 real receipt growth load"; sed 's/^/       /' "$BASE/growth_receipts.out"
 else
   elapsed_ms=$((($(date +%s%N)-start)/1000000))
   echo "   5000 receipt RPC load wall time: ${elapsed_ms} ms"
-  pass "5000 real receipt growth load"
+  pass "25000 real receipt growth load"
 fi
-eq "growth receipt volume" "$(runFP "select count(*) from public.receipt_vouchers where payer_name='Growth'")" "5000"
-eq "growth allocation volume" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.payer_name='Growth'")" "5000"
-eq "growth receipt total" "$(runFP "select coalesce(sum(amount_received),0)::int from public.receipt_vouchers where payer_name='Growth'")" "50000"
+eq "growth receipt volume" "$(runFP "select count(*) from public.receipt_vouchers where payer_name='Growth'")" "25000"
+eq "growth allocation volume" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.payer_name='Growth'")" "25000"
+eq "growth receipt total" "$(runFP "select coalesce(sum(amount_received),0)::int from public.receipt_vouchers where payer_name='Growth'")" "250000"
 
 echo "== GROWTH G1: add 5000 synthetic payment rows with financial triggers =="
 cat > "$BASE/growth_payments.sql" <<SQL
@@ -241,7 +241,7 @@ select
   5,
   'growth fixture',
   ('e0000000-0000-0000-0000-' || lpad(g::text,12,'0'))::uuid
-from generate_series(1,5000) g;
+from generate_series(1,25000) g;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_payments.sql"
 start=$(date +%s%N)
@@ -252,9 +252,9 @@ else
   echo "   5000 payment insert wall time: ${elapsed_ms} ms"
   pass "5000 synthetic payment growth load"
 fi
-eq "growth payment volume" "$(runFP "select count(*) from public.payment_vouchers where expense_type='Growth synthetic'")" "5000"
+eq "growth payment volume" "$(runFP "select count(*) from public.payment_vouchers where expense_type='Growth synthetic'")" "25000"
 
-echo "== GROWTH G2: query-plan measurements at 20k students / 25k receipts / 5k payments =="
+echo "== GROWTH G2: query-plan measurements at 100k students / 25k receipts / 25k payments =="
 cat > "$BASE/plan_financial.sql" <<SQL
 set statement_timeout = '120s';
 explain (analyze, buffers, format text)
@@ -297,10 +297,10 @@ TARGET_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BAS
 echo "   filtered student_statement_lines Execution Time: ${TARGET_MS:-unknown} ms"
 
 echo "== GROWTH G3: integrity checks after load =="
-eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "5005"
-eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "5011"
-eq "financial gross receipt total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "50050"
-eq "financial payment total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "25017"
+eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "25005"
+eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "25011"
+eq "financial gross receipt total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "250050"
+eq "financial payment total" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "125017"
 eq "no duplicate growth receipt idempotency keys" "$(runFP "select count(*) - count(distinct idempotency_key) from public.receipt_vouchers where payer_name='Growth'")" "0"
 eq "no duplicate growth payment idempotency keys" "$(runFP "select count(*) - count(distinct idempotency_key) from public.payment_vouchers where expense_type='Growth synthetic'")" "0"
 
