@@ -166,6 +166,17 @@ echo "== Isolation: student_statement_lines exposes NO external_share =="
 eq "student_statement_lines has external_share column" \
   "$(runFP "select count(*)::int from information_schema.columns where table_name='student_statement_lines' and column_name='external_share'")" "0"
 
+echo "== Server student summary parity: no full statement rows transferred ==";
+eq "Summary A paid" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0001'")" "100"
+eq "Summary A remaining" "$(runFP "select remaining::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0001'")" "500"
+eq "Summary A courses" "$(runFP "select courses from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0001'")" "1"
+eq "Summary B paid" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0002'")" "100"
+eq "Summary B remaining" "$(runFP "select remaining::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0002'")" "500"
+eq "Summary B line_count" "$(runFP "select line_count from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0002'")" "1"
+eq "Summary C paid" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "100"
+eq "Summary C remaining" "$(runFP "select remaining::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "500"
+eq "Summary no-payment student paid" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "100"
+
 echo "== Aggregate over financial_movements (receipts only) =="
 eq "total gross in"                  "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "300"
 eq "total external held"             "$(runFP "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")" "140"
