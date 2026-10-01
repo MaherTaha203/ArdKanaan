@@ -268,6 +268,21 @@ diff as (
 select count(*) from diff")
 eq "Server summary is exactly parity with the aggregate contract" "$PARITY" "0"
 
+echo "== On-demand course financial roster: parity + authorization ==";
+eq "Course A roster row count" "$(runFP "select count(*) from public.get_course_financial_roster('00000000-0000-0000-0000-0000000c0001')")" "$(runFP "select count(*) from public.enrollments where course_id='00000000-0000-0000-0000-0000000c0001'")"
+eq "Course A paid excludes fee-only receipt" "$(runFP "select paid::int from public.get_course_financial_roster('00000000-0000-0000-0000-0000000c0001') where enrollment_id='00000000-0000-0000-0000-0000000e0001'")" "0"
+eq "Course A remaining equals enrollment fee" "$(runFP "select remaining::int from public.get_course_financial_roster('00000000-0000-0000-0000-0000000c0001') where enrollment_id='00000000-0000-0000-0000-0000000e0001'")" "500"
+eq "Course B paid excludes fee-only receipt" "$(runFP "select paid::int from public.get_course_financial_roster('00000000-0000-0000-0000-0000000c0002') where enrollment_id='00000000-0000-0000-0000-0000000e0002'")" "0"
+cat > "$BASE/course_roster_auth.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ab';
+select count(*) from public.get_course_financial_roster('00000000-0000-0000-0000-0000000c0001');
+select count(*) from public.student_financial_summary;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/course_roster_auth.sql"
+eq "Non-owner course roster returns no rows" "$(run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -f $BASE/course_roster_auth.sql" | head -n1 | tr -d '[:space:]')" "0"
+eq "Non-owner student summary returns no rows" "$(run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -f $BASE/course_roster_auth.sql" | tail -n1 | tr -d '[:space:]')" "0"
+
 echo "== Aggregate over financial_movements (receipts only) =="
 eq "total gross in"                  "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "300"
 eq "total external held"             "$(runFP "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")" "140"
