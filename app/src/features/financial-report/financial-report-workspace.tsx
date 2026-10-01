@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { Printer, RefreshCw, Search } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { FinancialReportPrint } from '@/features/print/financial-report-print'
-import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { CancelVoucherDialog } from '@/features/financial-report/cancel-voucher-dialog'
 import { VoucherDetailsSheet } from '@/features/financial-report/voucher-details-sheet'
 import { Button } from '@/components/ui/button'
@@ -25,7 +24,6 @@ function partyAndContext(movement: FinancialMovement) {
 }
 export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const movements = useWorkspaceStore((state) => state.movements)
-  const students = useWorkspaceStore((state) => state.students)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -41,9 +39,6 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const [accountName, setAccountName] = useState('')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const studentStatements = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
-  const printStudent = useMemo(() => printStudentId ? studentStatements.find((item) => item.student.id === printStudentId) ?? null : null, [studentStatements, printStudentId])
-  const printStudentLedger = useMemo(() => printStudentId ? studentLedger(printStudentId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }, [printStudentId, statementLines, enrollments, feeObligations])
   const presetRange = period === 'custom' ? { start: customStart || null, end: customEnd || null } : reportPeriodRange(period)
   const start = presetRange.start
   const toDate = presetRange.end
