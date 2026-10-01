@@ -175,7 +175,7 @@ eq "Summary B remaining" "$(runFP "select remaining::int from public.student_fin
 eq "Summary B line_count" "$(runFP "select line_count from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0002'")" "1"
 eq "Summary C paid" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "100"
 eq "Summary C remaining" "$(runFP "select remaining::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "500"
-eq "Summary no-payment student paid" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "100"
+eq "Summary C paid (repeat guard)" "$(runFP "select paid::int from public.student_financial_summary where student_id='00000000-0000-0000-0000-0000000a0003'")" "100"
 
 echo "== Aggregate over financial_movements (receipts only) =="
 eq "total gross in"                  "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "300"
