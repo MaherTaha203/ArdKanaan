@@ -37,11 +37,6 @@ export function EnrollmentFeeSheet() {
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
 
-  useEffect(() => {
-    if (!enrollment) return
-    void loadCourseFinancialRoster(enrollment.courseId).catch((error) => console.error('course roster load failed', error))
-  }, [enrollment, loadCourseFinancialRoster])
-
   const enrollment = useMemo(
     () => enrollments.find((item) => item.id === editFeeEnrollmentId) ?? null,
     [enrollments, editFeeEnrollmentId],
@@ -54,6 +49,11 @@ export function EnrollmentFeeSheet() {
     () => (enrollment ? students.find((item) => item.id === enrollment.studentId) ?? null : null),
     [students, enrollment],
   )
+
+  useEffect(() => {
+    if (!enrollment) return
+    void loadCourseFinancialRoster(enrollment.courseId).catch((error) => console.error('course roster load failed', error))
+  }, [enrollment, loadCourseFinancialRoster])
 
   // Reuse the authoritative roster derivation (voucher-sourced) for paid/remaining.
   const entry = useMemo(() => {
