@@ -68,7 +68,7 @@ export function CoursesWorkspace() {
           </div>
         ) : rows.length > 0 ? (
           <ul>
-            {rows.map(({ course, stats }) => (
+            {rows.map(({ course, studentCount }) => (
               <li key={course.id} className="border-b border-border last:border-b-0">
                 <button
                   type="button"
