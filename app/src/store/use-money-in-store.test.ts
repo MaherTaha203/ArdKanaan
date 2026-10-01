@@ -102,6 +102,7 @@ describe('saveReceiptVoucher — allocation posting', () => {
       throw new Error(`unexpected query on ${state.table}`)
     }, () => ({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null }))
     client.rpc = (name: string, args: unknown) => {
+      if (name === 'get_student_statement_lines') return Promise.resolve({ data: [], error: null })
       rpcName = name
       rpcArgs = args as RpcPayload
       return Promise.resolve({ data: { id: 'r-atomic', voucher_number: 901, amount_received: 320 }, error: null })

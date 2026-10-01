@@ -147,6 +147,21 @@ else
 fi
 eq "Reject: no fee row was created" "$(runFP "select count(*)::int from public.fee_obligations where description='رسوم مرفوضة'")" "0"
 
+echo "== Scoped student statement read path: parity with the canonical view ==";
+eq "Scoped function returns same row count for student B" \
+  "$(runFP "select count(*) from public.get_student_statement_lines('00000000-0000-0000-0000-0000000a0002')" )" \
+  "$(runFP "select count(*) from public.student_statement_lines where student_id='00000000-0000-0000-0000-0000000a0002'")"
+eq "Scoped function matches canonical statement rows for student B" \
+  "$(runFP "select md5(coalesce(string_agg(row_to_json(x)::text, '|' order by voucher_date,voucher_number,id),'')) from public.get_student_statement_lines('00000000-0000-0000-0000-0000000a0002') x")" \
+  "$(runFP "select md5(coalesce(string_agg(row_to_json(x)::text, '|' order by voucher_date,voucher_number,id),'')) from public.student_statement_lines x where student_id='00000000-0000-0000-0000-0000000a0002'")"
+cat > "$BASE/scoped_statement_auth.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ab';
+select count(*) from public.get_student_statement_lines('00000000-0000-0000-0000-0000000a0002');
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/scoped_statement_auth.sql"
+eq "Non-owner scoped statement returns no rows" "$(run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -f $BASE/scoped_statement_auth.sql" | tr -d '[:space:]')" "0"
+
 echo "== Isolation: student_statement_lines exposes NO external_share =="
 eq "student_statement_lines has external_share column" \
   "$(runFP "select count(*)::int from information_schema.columns where table_name='student_statement_lines' and column_name='external_share'")" "0"
