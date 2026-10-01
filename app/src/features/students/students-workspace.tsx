@@ -65,7 +65,7 @@ export function StudentsWorkspace() {
         const idHit = idNumber ? idNumber.replace(/\D/g, '').includes(digits) : false
         if (phoneHit || idHit) return true
       }
-      return statementFor(statementLines, item.student.id).some((line) => normalizeArabic(line.courseName).includes(term))
+      return enrollments.some((enrollment) => enrollment.studentId === item.student.id && normalizeArabic(enrollment.courseName).includes(term))
     })
   }, [sorted, query, enrollments])
 
