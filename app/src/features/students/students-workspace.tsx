@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Archive, ArchiveRestore, Pencil, Plus, Printer, Search } from 'lucide-react'
 
@@ -7,7 +7,7 @@ import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, statementFor, studentLedger, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudentsFromSummary, studentLedger, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
@@ -27,6 +27,8 @@ function statusOf(item: StudentAggregate): StudentStatus {
 export function StudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
+  const loadStudentStatement = useWorkspaceStore((state) => state.loadStudentStatement)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
@@ -43,7 +45,7 @@ export function StudentsWorkspace() {
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
+  const aggregates = useMemo(() => aggregateStudentsFromSummary(students, studentSummaries), [students, studentSummaries])
 
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
@@ -65,10 +67,15 @@ export function StudentsWorkspace() {
       }
       return statementFor(statementLines, item.student.id).some((line) => normalizeArabic(line.courseName).includes(term))
     })
-  }, [sorted, query, statementLines])
+  }, [sorted, query, enrollments])
 
   const activeId = selectedStudentId ?? filtered[0]?.student.id ?? sorted[0]?.student.id ?? null
   const active = useMemo(() => aggregates.find((item) => item.student.id === activeId) ?? null, [aggregates, activeId])
+
+  useEffect(() => {
+    if (!activeId) return
+    void loadStudentStatement(activeId).catch((error) => console.error('student statement load failed', error))
+  }, [activeId, loadStudentStatement])
   const activeLedger = useMemo(() => (activeId ? studentLedger(activeId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }), [activeId, statementLines, enrollments, feeObligations])
 
   return (
