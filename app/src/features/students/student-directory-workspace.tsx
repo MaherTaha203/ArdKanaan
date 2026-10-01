@@ -6,7 +6,7 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, selectNonArchived, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudentsFromSummary, selectNonArchived, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
@@ -24,7 +24,7 @@ function statusOf(item: StudentAggregate): StudentStatus {
 
 export function StudentDirectoryWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
@@ -40,7 +40,7 @@ export function StudentDirectoryWorkspace() {
 
   // The active roster excludes archived students (they live in the archive view).
   const roster = useMemo(() => selectNonArchived(students), [students])
-  const aggregates = useMemo(() => aggregateStudents(roster, statementLines, enrollments, feeObligations), [roster, statementLines, enrollments, feeObligations])
+  const aggregates = useMemo(() => aggregateStudentsFromSummary(roster, studentSummaries), [roster, studentSummaries])
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
     [aggregates],
