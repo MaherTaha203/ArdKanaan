@@ -71,7 +71,8 @@ async function fetchStatementLines(studentId: string) {
     .rpc('get_student_statement_lines', { p_student_id: studentId })
 
   if (error) throw error
-  return (data ?? []).map((row) => normalizeStatementLine(row as StudentStatementRow))
+  const rows = (data ?? []) as StudentStatementRow[]
+  return rows.map((row) => normalizeStatementLine(row))
 }
 
 export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
