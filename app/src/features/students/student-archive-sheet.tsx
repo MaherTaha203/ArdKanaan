@@ -41,7 +41,7 @@ export function StudentArchiveSheet() {
 
   const remaining = useMemo(() => {
     if (!student) return 0
-    return aggregateStudentsFromSummary([student], studentSummaries, enrollments, feeObligations)[0]?.remaining ?? 0
+    return aggregateStudentsFromSummary([student], studentSummaries)[0]?.remaining ?? 0
   }, [student, studentSummaries, enrollments, feeObligations])
 
   const activeCourseBlocked = useMemo(
