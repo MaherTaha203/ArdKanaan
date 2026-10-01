@@ -6,7 +6,7 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, selectArchived, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudentsFromSummary, selectArchived, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
@@ -16,7 +16,7 @@ const REMAINING_EPSILON = 0.0001
 
 export function ArchivedStudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
@@ -30,8 +30,8 @@ export function ArchivedStudentsWorkspace() {
 
   const archived = useMemo(() => selectArchived(students), [students])
   const aggregates = useMemo(
-    () => aggregateStudents(archived, statementLines, enrollments, feeObligations),
-    [archived, statementLines, enrollments, feeObligations],
+    () => aggregateStudentsFromSummary(archived, studentSummaries, enrollments, feeObligations),
+    [archived, studentSummaries, enrollments, feeObligations],
   )
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => {
