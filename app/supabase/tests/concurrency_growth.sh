@@ -220,7 +220,7 @@ else
   pass "25000 real receipt growth transactions"
 fi
 
-echo "== GROWTH G1: add 5000 synthetic payment rows with financial triggers =="
+echo "== GROWTH G1: add 25000 synthetic payment rows with financial triggers =="
 cat > "$BASE/growth_payments.sql" <<SQL
 set statement_timeout = '120s';
 set app.payment_posting = 'on';
@@ -241,7 +241,7 @@ if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/g
 else
   elapsed_ms=$((($(date +%s%N)-start)/1000000))
   echo "   5000 payment insert wall time: ${elapsed_ms} ms"
-  pass "5000 synthetic payment growth load"
+  pass "25000 synthetic payment growth load"
 fi
 eq "growth payment volume" "$(runFP "select count(*) from public.payment_vouchers where expense_type='Growth synthetic'")" "25000"
 
@@ -335,7 +335,7 @@ SQL
 run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_statement_candidate.sql" >"$BASE/plan_statement_candidate.out"
 grep -E "Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Execution Time|Planning Time" "$BASE/plan_statement_candidate.out" | sed 's/^/   /'
 CANDIDATE_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_statement_candidate.out")
-echo "   candidate early-filter student_statement_lines Execution Time: \${CANDIDATE_MS:-unknown} ms"
+echo "   candidate early-filter student_statement_lines Execution Time: ${CANDIDATE_MS:-unknown} ms"
 
 echo "== GROWTH G3: integrity checks after load =="
 eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "25005"
