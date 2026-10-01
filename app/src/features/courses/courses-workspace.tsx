@@ -17,7 +17,6 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 export function CoursesWorkspace() {
   const courses = useWorkspaceStore((state) => state.courses)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
-  const students = useWorkspaceStore((state) => state.students)
    const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
