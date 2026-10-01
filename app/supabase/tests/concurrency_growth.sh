@@ -337,6 +337,25 @@ grep -E "Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Execution Tim
 CANDIDATE_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_statement_candidate.out")
 echo "   candidate early-filter student_statement_lines Execution Time: ${CANDIDATE_MS:-unknown} ms"
 
+cat > "$BASE/plan_statement_rpc.sql" <<SQL
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select *
+from public.get_student_statement_lines('$STUDENT_PLAN'::uuid);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_statement_rpc.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_statement_rpc.sql" >"$BASE/plan_statement_rpc.out"
+grep -E "Function Scan|Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Execution Time|Planning Time" "$BASE/plan_statement_rpc.out" | sed 's/^/   /'
+RPC_STMT_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_statement_rpc.out")
+echo "   get_student_statement_lines RPC Execution Time: ${RPC_STMT_MS:-unknown} ms"
+
+eq "RPC statement row count matches canonical view" \
+  "$(runFP "select count(*) from public.get_student_statement_lines('$STUDENT_PLAN'::uuid)")" \
+  "$(runFP "select count(*) from public.student_statement_lines where student_id='$STUDENT_PLAN'")"
+eq "RPC statement rows match canonical view" \
+  "$(runFP "select md5(coalesce(string_agg(row_to_json(x)::text, '|' order by voucher_date,voucher_number,id),'')) from public.get_student_statement_lines('$STUDENT_PLAN'::uuid) x")" \
+  "$(runFP "select md5(coalesce(string_agg(row_to_json(x)::text, '|' order by voucher_date,voucher_number,id),'')) from public.student_statement_lines x where student_id='$STUDENT_PLAN'")"
+
 echo "== GROWTH G3: integrity checks after load =="
 eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "25005"
 eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "25011"
