@@ -84,3 +84,50 @@ export function courseStats(
   }
   return { studentCount: studentIds.size, totalFees, totalPaid, totalRemaining }
 }
+
+export type CourseFinancialRow = {
+  enrollmentId: string
+  studentId: string
+  courseId: string
+  courseName: string
+  courseValue: number
+  paid: number
+  remaining: number
+}
+
+export function courseRosterFromFinancialRows(
+  course: Course,
+  enrollments: Enrollment[],
+  students: Student[],
+  rows: CourseFinancialRow[],
+): CourseRosterEntry[] {
+  const byId = new Map(students.map((student) => [student.id, student]))
+  const rowByEnrollment = new Map(rows.map((row) => [row.enrollmentId, row]))
+  return courseEnrollments(course, enrollments)
+    .map((enrollment) => {
+      const row = rowByEnrollment.get(enrollment.id)
+      return {
+        enrollment,
+        student: byId.get(enrollment.studentId) ?? null,
+        fee: enrollment.courseValue,
+        paid: row?.paid ?? 0,
+        remaining: row?.remaining ?? enrollment.courseValue,
+      }
+    })
+    .sort((a, b) => (a.student?.name ?? '').localeCompare(b.student?.name ?? '', 'ar'))
+}
+
+export function courseStatsFromFinancialRows(
+  course: Course,
+  enrollments: Enrollment[],
+  students: Student[],
+  rows: CourseFinancialRow[],
+): CourseStats {
+  const roster = courseRosterFromFinancialRows(course, enrollments, students, rows)
+  return {
+    studentCount: new Set(roster.map((entry) => entry.enrollment.studentId)).size,
+    totalFees: roster.reduce((sum, entry) => sum + entry.fee, 0),
+    totalPaid: roster.reduce((sum, entry) => sum + entry.paid, 0),
+    totalRemaining: roster.reduce((sum, entry) => sum + entry.remaining, 0),
+  }
+}
