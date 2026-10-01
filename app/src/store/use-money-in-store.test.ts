@@ -65,7 +65,7 @@ function formValues(overrides: Partial<ReceiptVoucherFormValues> = {}): ReceiptV
 
 beforeEach(() => {
   useMoneyInStore.setState({ currentView: 'receipt-voucher', statementLines: [], activeStudent: null, isSaving: false, error: null })
-  useWorkspaceStore.setState({ students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null })
+  useWorkspaceStore.setState({ students: [], statementLines: [], studentSummaries: [], courseFinancialRows: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null })
 })
 
 describe('saveReceiptVoucher — financial workflow guard', () => {
