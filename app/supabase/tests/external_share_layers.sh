@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# REAL-PATH integration test for the external-share model (manual / local).
+# REAL-PATH financial integration test suite (throwaway PostgreSQL only).
 # ---------------------------------------------------------------------------
-# NOT wired into CI (no Postgres service there). Run it locally against a
-# THROWAWAY Postgres 16 — Production is never touched. It applies the FULL repo
+# Runs in CI and locally against THROWAWAY PostgreSQL. Production is never touched.
+# It applies the FULL repo
 # migration chain, then drives the ACTUAL app RPCs (create_fee_obligations +
 # post_receipt_with_allocations) and reads the ACTUAL views
 # (student_statement_lines, financial_movements) to prove, across every layer:
@@ -18,8 +18,9 @@
 #   (PG_RUNAS is the OS user to run the server as when the caller is root;
 #    leave it empty to run psql/initdb directly as the current user.)
 set -u
-PGBIN="${PGBIN:-/usr/lib/postgresql/16/bin}"
+PGBIN="${PGBIN:-/usr/bin}"
 PG_RUNAS="${PG_RUNAS:-}"
+USER="${USER:-postgres}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MIG="$ROOT/migrations"
 BASE="${TMPDIR:-/tmp}/pgext_$$"
@@ -154,6 +155,324 @@ echo "== Aggregate over financial_movements (receipts only) =="
 eq "total gross in"                  "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "300"
 eq "total external held"             "$(runFP "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")" "140"
 eq "center receipts (Σ amount-ext)"  "$(runFP "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")" "160"
+
+
+echo "== Expansion P1: payment posting, idempotency, cancellation, ledger reversal ==";
+PAYKEY=99999999-0000-0000-0000-000000000009
+cat > "$BASE/payment.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"تشغيل","amount":80,"notes":"integration payment","idempotency_key":"$PAYKEY"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment.sql"
+PAY_OUT=$(run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment.sql")
+PAYID=$(runFP "select id from public.payment_vouchers where idempotency_key='$PAYKEY'")
+PAYNUM=$(runFP "select voucher_number from public.payment_vouchers where id='$PAYID'")
+eq "Payment posted exactly once" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='$PAYKEY'")" "1"
+eq "Payment amount persisted" "$(runFP "select amount::int from public.payment_vouchers where id='$PAYID'")" "80"
+eq "Payment appears in financial_movements" "$(runFP "select count(*) from public.financial_movements where id='$PAYID' and movement_type='payment' and amount=80")" "1"
+eq "Payment ledger original exists" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='original'")" "1"
+
+cat > "$BASE/payment_replay.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"تشغيل","amount":80,"notes":"retry","idempotency_key":"$PAYKEY"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_replay.sql"
+PAY_REPLAY=$(run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_replay.sql")
+if grep -q '"idempotent_replay": true' <<<"$PAY_REPLAY"; then pass "payment same-key replay"; else fail "payment same-key replay failed"; fi
+eq "Payment replay kept one row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='$PAYKEY'")" "1"
+
+cat > "$BASE/payment_mismatch.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"تشغيل","amount":81,"notes":"","idempotency_key":"$PAYKEY"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_mismatch.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_mismatch.sql" >"$BASE/payment_mismatch.out" 2>&1; then
+  fail "payment idempotency mismatch was accepted"
+else
+  if grep -q "IDEMPOTENCY_KEY_REUSE_MISMATCH" "$BASE/payment_mismatch.out"; then pass "payment idempotency mismatch rejected"; else fail "wrong payment idempotency error"; sed 's/^/       /' "$BASE/payment_mismatch.out"; fi
+fi
+eq "Payment mismatch created no second row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='$PAYKEY'")" "1"
+
+cat > "$BASE/payment_cancel.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '$OWNER';
+update public.payment_vouchers
+set cancelled_at = timezone('utc', now()), cancel_reason = 'integration-test payment cancellation'
+where id = '$PAYID';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_cancel.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_cancel.sql" >"$BASE/payment_cancel.out" 2>&1; then
+  pass "owner payment cancellation through authenticated UPDATE succeeded"
+else
+  fail "owner payment cancellation failed"; sed 's/^/       /' "$BASE/payment_cancel.out"
+fi
+eq "Cancelled payment excluded from financial_movements" "$(runFP "select count(*) from public.financial_movements where id='$PAYID'")" "0"
+eq "Payment ledger original remains append-only" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='original' and reversed_at is null")" "1"
+eq "Payment ledger reversal exists" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='reversal'")" "1"
+eq "Payment reversal points to original" "$(runFP "select count(*) from public.financial_movement_ledger r join public.financial_movement_ledger o on r.reversal_of=o.id where r.source_id='$PAYID' and r.entry_kind='reversal' and o.entry_kind='original'")" "1"
+
+cat > "$BASE/payment_cancel_again.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+update public.payment_vouchers
+set cancelled_at = timezone('utc', now()), cancel_reason = 'second cancellation'
+where id = '$PAYID';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/payment_cancel_again.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/payment_cancel_again.sql" >"$BASE/payment_cancel_again.out" 2>&1; then
+  fail "cancelled payment was mutable"
+else
+  if grep -q "CANCELLED_VOUCHER_IS_IMMUTABLE" "$BASE/payment_cancel_again.out"; then pass "cancelled payment is immutable"; else fail "wrong cancelled-payment mutation error"; sed 's/^/       /' "$BASE/payment_cancel_again.out"; fi
+fi
+eq "Payment has exactly one reversal" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment' and source_id='$PAYID' and entry_kind='reversal'")" "1"
+
+echo "== Expansion 1: idempotency replay + mismatch protection ==";
+BEFORE_IDEM=$(runFP "select count(*) from public.receipt_vouchers");
+cat > "$BASE/idem_replay.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_receipt_with_allocations('{"student_id":"00000000-0000-0000-0000-0000000a0002","student_name":"طالب ب","voucher_date":"2026-02-01","amount_received":100,"payer_name":"طالب ب","notes":"","idempotency_key":"22222222-0000-0000-0000-000000000002","allocations":[{"type":"fee","fee_obligation_id":"$FEEB","amount":100}]}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/idem_replay.sql"
+REPLAY_OUT=$(run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/idem_replay.sql");
+if grep -q '"idempotent_replay": true' <<<"$REPLAY_OUT"; then pass "same idempotency key replays"; else fail "same idempotency key did not replay"; fi
+eq "Idempotency replay row count unchanged" "$(runFP "select count(*) from public.receipt_vouchers")" "$BEFORE_IDEM";
+
+cat > "$BASE/idem_mismatch.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_receipt_with_allocations('{"student_id":"00000000-0000-0000-0000-0000000a0002","student_name":"طالب ب","voucher_date":"2026-02-01","amount_received":99,"payer_name":"طالب ب","notes":"","idempotency_key":"22222222-0000-0000-0000-000000000002","allocations":[{"type":"fee","fee_obligation_id":"$FEEB","amount":99}]}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/idem_mismatch.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/idem_mismatch.sql" >"$BASE/idem_mismatch.out" 2>&1; then
+  fail "idempotency key reuse mismatch was accepted"
+else
+  if grep -q "IDEMPOTENCY_KEY_REUSE_MISMATCH" "$BASE/idem_mismatch.out"; then
+    pass "idempotency key reuse mismatch rejected"
+  else
+    fail "wrong error for idempotency key reuse mismatch"; sed 's/^/       /' "$BASE/idem_mismatch.out"
+  fi
+fi
+eq "Idempotency mismatch created no row" "$(runFP "select count(*) from public.receipt_vouchers where amount_received=99")" "0";
+
+echo "== Expansion 2: overpayment rejection is atomic ==";
+BEFORE_OVER=$(runFP "select count(*) from public.receipt_vouchers");
+cat > "$BASE/overpay.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_receipt_with_allocations('{"student_id":"00000000-0000-0000-0000-0000000a0003","student_name":"طالب ج","voucher_date":"2026-02-01","amount_received":1,"payer_name":"طالب ج","notes":"","idempotency_key":"44444444-0000-0000-0000-000000000004","allocations":[{"type":"fee","fee_obligation_id":"$FEEC","amount":1}]}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/overpay.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/overpay.sql" >"$BASE/overpay.out" 2>&1; then
+  fail "overpayment was accepted"
+else
+  if grep -q "FEE_ALLOCATION_EXCEEDS_REMAINING_BALANCE" "$BASE/overpay.out"; then
+    pass "overpayment rejected at remaining-balance boundary"
+  else
+    fail "wrong error for overpayment"; sed 's/^/       /' "$BASE/overpay.out"
+  fi
+fi
+eq "Overpayment created no receipt" "$(runFP "select count(*) from public.receipt_vouchers")" "$BEFORE_OVER";
+
+echo "== Expansion 3: partial fee settlement + exact external-share conservation ==";
+make_fee 00000000-0000-0000-0000-0000000c0001 00000000-0000-0000-0000-0000000a0001 "رسوم جزئية" 100 shared 40
+FEED=$(runFP "select id from public.fee_obligations where student_id='00000000-0000-0000-0000-0000000a0001' and description='رسوم جزئية'")
+post_receipt 00000000-0000-0000-0000-0000000a0001 "طالب أ" 30 55555555-0000-0000-0000-000000000005 "$FEED"
+RVD1=$(runFP "select rv.id from public.receipt_vouchers rv join public.receipt_allocations ra on ra.receipt_voucher_id=rv.id where ra.fee_obligation_id='$FEED' and rv.idempotency_key='55555555-0000-0000-0000-000000000005'")
+eq "Partial fee payment accepted" "$(runFP "select amount::int from public.receipt_allocations where receipt_voucher_id='$RVD1'")" "30"
+eq "Partial external share = 12" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVD1'")" "12"
+post_receipt 00000000-0000-0000-0000-0000000a0001 "طالب أ" 70 66666666-0000-0000-0000-000000000006 "$FEED"
+RVD2=$(runFP "select rv.id from public.receipt_vouchers rv join public.receipt_allocations ra on ra.receipt_voucher_id=rv.id where ra.fee_obligation_id='$FEED' and rv.idempotency_key='66666666-0000-0000-0000-000000000006'")
+eq "Final fee payment accepted" "$(runFP "select amount::int from public.receipt_allocations where receipt_voucher_id='$RVD2'")" "70"
+eq "Final external share = remaining 28" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVD2'")" "28"
+eq "Fee total settled exactly" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEED'")" "100"
+eq "Fee external conserved exactly" "$(runFP "select coalesce(sum(external_share),0)::int from public.receipt_allocations where fee_obligation_id='$FEED'")" "40";
+
+echo "== Expansion 4: receipt cancellation reverses ledger and restores balance ==";
+cat > "$BASE/cancel.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '$OWNER';
+update public.receipt_vouchers
+set cancelled_at = timezone('utc', now()), cancel_reason = 'integration-test cancellation'
+where id = '$RVD2';
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/cancel.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/cancel.sql" >"$BASE/cancel.out" 2>&1; then
+  pass "owner cancellation through authenticated UPDATE succeeded"
+else
+  fail "owner cancellation failed"; sed 's/^/       /' "$BASE/cancel.out"
+fi
+eq "Cancelled receipt excluded from financial_movements" "$(runFP "select count(*) from public.financial_movements where id='$RVD2'")" "0"
+eq "Append-only original ledger remains unmodified" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt' and source_id='$RVD2' and entry_kind='original' and reversed_at is null")" "1"
+eq "Receipt ledger reversal exists" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt' and source_id='$RVD2' and entry_kind='reversal'")" "1"
+eq "Reversal points to original" "$(runFP "select count(*) from public.financial_movement_ledger r join public.financial_movement_ledger o on r.reversal_of=o.id where r.source_id='$RVD2' and r.entry_kind='reversal' and o.entry_kind='original'")" "1"
+eq "Cancelled allocation remains immutable history" "$(runFP "select count(*) from public.receipt_allocations where receipt_voucher_id='$RVD2'")" "1"
+eq "Cancelled payment no longer counts toward fee balance" "$(runFP "select coalesce(sum(ra.amount),0)::int from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.fee_obligation_id='$FEED' and rv.cancelled_at is null")" "30";
+
+echo "== Expansion 5: cancelled receipt can be replaced without changing old fact ==";
+post_receipt 00000000-0000-0000-0000-0000000a0001 "طالب أ" 70 77777777-0000-0000-0000-000000000007 "$FEED"
+RVD3=$(runFP "select rv.id from public.receipt_vouchers rv where rv.idempotency_key='77777777-0000-0000-0000-000000000007'")
+eq "Replacement receipt accepted" "$(runFP "select amount_received::int from public.receipt_vouchers where id='$RVD3'")" "70"
+eq "Replacement external share = 28" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVD3'")" "28"
+eq "Active fee settlement restored to full" "$(runFP "select coalesce(sum(ra.amount),0)::int from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.fee_obligation_id='$FEED' and rv.cancelled_at is null")" "100";
+
+echo "== Expansion 6: paid fee cannot be cancelled ==";
+cat > "$BASE/cancel_paid_fee.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.cancel_fee_obligation('$FEED','must reject while paid');
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/cancel_paid_fee.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/cancel_paid_fee.sql" >"$BASE/cancel_paid_fee.out" 2>&1; then
+  fail "paid fee cancellation was accepted"
+else
+  if grep -q "PAID_FEE_REQUIRES_REVERSAL_BEFORE_CANCELLATION" "$BASE/cancel_paid_fee.out"; then pass "paid fee cancellation rejected"; else fail "wrong error for paid fee cancellation"; sed 's/^/       /' "$BASE/cancel_paid_fee.out"; fi
+fi
+eq "Paid fee remains active" "$(runFP "select count(*) from public.fee_obligations where id='$FEED' and cancelled_at is null")" "1";
+
+echo "== Expansion 7: atomic rollback on invalid second allocation ==";
+make_fee 00000000-0000-0000-0000-0000000c0002 00000000-0000-0000-0000-0000000a0002 "رسوم ذرية" 50 institute 0
+FEEAT=$(runFP "select id from public.fee_obligations where student_id='00000000-0000-0000-0000-0000000a0002' and description='رسوم ذرية'")
+BEFORE_ATOMIC_R=$(runFP "select count(*) from public.receipt_vouchers")
+BEFORE_ATOMIC_A=$(runFP "select count(*) from public.receipt_allocations")
+cat > "$BASE/atomic.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.post_receipt_with_allocations('{"student_id":"00000000-0000-0000-0000-0000000a0002","student_name":"طالب ب","voucher_date":"2026-02-01","amount_received":51,"payer_name":"طالب ب","notes":"","idempotency_key":"88888888-0000-0000-0000-000000000008","allocations":[{"type":"fee","fee_obligation_id":"$FEEAT","amount":50},{"type":"fee","fee_obligation_id":"$FEEC","amount":1}]}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/atomic.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/atomic.sql" >"$BASE/atomic.out" 2>&1; then
+  fail "atomic invalid allocation was accepted"
+else
+  if grep -Eq "FEE_ALLOCATION_EXCEEDS_REMAINING_BALANCE|FEE_OBLIGATION_NOT_FOUND" "$BASE/atomic.out"; then pass "invalid second allocation rejected"; else fail "wrong atomic rollback error"; sed 's/^/       /' "$BASE/atomic.out"; fi
+fi
+eq "Atomic rollback left receipt count unchanged" "$(runFP "select count(*) from public.receipt_vouchers")" "$BEFORE_ATOMIC_R"
+eq "Atomic rollback left allocation count unchanged" "$(runFP "select count(*) from public.receipt_allocations")" "$BEFORE_ATOMIC_A"
+eq "Atomic rollback left first fee unpaid" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEEAT'")" "0"
+
+echo "== Expansion R1: backup -> clean DB restore -> financial comparison ==";
+DB2=ext_restore
+BASE2=$BASE"_restore"
+DATADIR2=$BASE2/data
+SOCK2=$BASE2/sock
+LOG2=$BASE2/pg.log
+rm -rf "$BASE2"; mkdir -p "$DATADIR2" "$SOCK2"; [ -n "$PG_RUNAS" ] && chown -R "$PG_RUNAS" "$BASE2"
+run "$PGBIN/initdb -D $DATADIR2 -U $PU --auth=trust -E UTF8" >"$BASE2/initdb.log" 2>&1 || { echo target initdb FAIL; tail "$BASE2/initdb.log"; exit 1; }
+run "$PGBIN/pg_ctl -D $DATADIR2 -l $LOG2 -o '-c unix_socket_directories=$SOCK2 -c listen_addresses=\"\"' -w start" >/dev/null || { cat "$LOG2"; exit 1; }
+cat > "$BASE2/roles.sql" <<'SQL'
+do $$ begin
+  if not exists (select 1 from pg_roles where rolname='anon') then create role anon nologin; end if;
+  if not exists (select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin; end if;
+  if not exists (select 1 from pg_roles where rolname='service_role') then create role service_role nologin bypassrls; end if;
+end $$;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/roles.sql"
+run "$PGBIN/createdb -h $SOCK2 -U $PU $DB2" || exit 1
+run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/roles.sql" || exit 1
+
+cat > "$BASE2/stubs.sql" <<'SQL'
+create extension if not exists pgcrypto;
+create schema if not exists auth;
+create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text, created_at timestamptz not null default now());
+create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+create or replace function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
+grant usage on schema auth to anon, authenticated, service_role;
+create or replace function public.rls_auto_enable() returns void language plpgsql as $$ begin end $$;
+insert into auth.users (id, email) values ('OWNER_UUID', 'owner@test.local');
+SQL
+sed -i "s/OWNER_UUID/$OWNER/g" "$BASE2/stubs.sql"
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/stubs.sql"
+run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/stubs.sql" || { echo target stubs FAIL; exit 1; }
+
+for f in $(ls -1 "$MIG"/*.sql | sort); do
+  if ! run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $f" >"$BASE2/m.out" 2>&1; then
+    echo ">>> target migration FAILED: $(basename "$f")"; cat "$BASE2/m.out"; exit 1
+  fi
+done
+
+run "$PGBIN/psql -h $SOCK -U $PU -X -At -d $DB -c \"select jsonb_build_object(
+  'students',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.students x),
+  'courses',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.courses x),
+  'enrollments',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.enrollments x),
+  'fee_obligations',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.fee_obligations x),
+  'receipt_vouchers',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.receipt_vouchers x),
+  'receipt_allocations',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.receipt_allocations x),
+  'payment_vouchers',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'::jsonb) from public.payment_vouchers x)
+)\"" >"$BASE2/backup.json"
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/backup.json"
+
+cat > "$BASE2/restore.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select public.restore_center_data(pg_read_file('$BASE2/backup.json')::jsonb, false);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/restore.sql"
+if run "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/restore.sql" >"$BASE2/restore.out" 2>&1; then
+  pass "backup restored into clean PostgreSQL database"
+else
+  fail "backup restore failed"; sed 's/^/       /' "$BASE2/restore.out"
+fi
+
+run2() { if [ -n "$PG_RUNAS" ]; then su "$PG_RUNAS" -c "$1"; else bash -c "$1"; fi; }
+runFP2() {
+  printf '%s;\n' "$1" > "$BASE2/query.sql"
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/query.sql"
+  run2 "$PGBIN/psql -h $SOCK2 -U $PU -X -qtA -d $DB2 -f $BASE2/query.sql" | tr -d '[:space:]'
+}
+eq2() { if [ "$2" = "$3" ]; then pass "$1 = $2"; else fail "$1 expected $3, got $2"; fi; }
+
+for t in students courses enrollments fee_obligations receipt_vouchers receipt_allocations payment_vouchers; do
+  SRC=$(runFP "select count(*) from public.$t")
+  DST=$(runFP2 "select count(*) from public.$t")
+  eq2 "Restore row count $t" "$DST" "$SRC"
+done
+
+eq2 "Restore active gross receipts" "$(runFP2 "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")"
+eq2 "Restore active external receipts" "$(runFP2 "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")" "$(runFP "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")"
+eq2 "Restore active center receipts" "$(runFP2 "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")" "$(runFP "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")"
+eq2 "Restore active payment total" "$(runFP2 "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")" "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='payment'")"
+eq2 "Restore receipt ledger rows" "$(runFP2 "select count(*) from public.financial_movement_ledger where source_type='receipt'")" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='receipt'")"
+eq2 "Restore payment ledger rows" "$(runFP2 "select count(*) from public.financial_movement_ledger where source_type='payment'")" "$(runFP "select count(*) from public.financial_movement_ledger where source_type='payment'")"
+eq2 "Restore reversal ledger rows" "$(runFP2 "select count(*) from public.financial_movement_ledger where entry_kind='reversal'")" "$(runFP "select count(*) from public.financial_movement_ledger where entry_kind='reversal'")"
+eq2 "Restore payment idempotency keys" "$(runFP2 "select count(*) from public.payment_vouchers where idempotency_key is not null")" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key is not null")"
+eq2 "Restore payment idempotency key exact value" "$(runFP2 "select count(*) from public.payment_vouchers p where p.idempotency_key='$PAYKEY'")" "$(runFP "select count(*) from public.payment_vouchers p where p.idempotency_key='$PAYKEY'")"
+eq2 "Restore cancelled receipt state" "$(runFP2 "select count(*) from public.receipt_vouchers where id='$RVD2' and cancelled_at is not null")" "1"
+eq2 "Restore cancelled payment state" "$(runFP2 "select count(*) from public.payment_vouchers where id='$PAYID' and cancelled_at is not null")" "1"
+
+run2 "$PGBIN/pg_ctl -D $DATADIR2 -w stop" >/dev/null 2>&1
+rm -rf "$BASE2"
+
+echo "== Expansion N1: authorization boundaries + direct-insert firewall ==";
+cat > "$BASE/non_owner_payment.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000bb';
+select public.post_payment_voucher('{"voucher_date":"2026-02-01","expense_type":"unauthorized","amount":1,"notes":"","idempotency_key":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/non_owner_payment.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/non_owner_payment.sql" >"$BASE/non_owner_payment.out" 2>&1; then
+  fail "non-owner payment RPC was accepted"
+else
+  if grep -q "OWNER_ONLY" "$BASE/non_owner_payment.out"; then pass "non-owner payment RPC rejected"; else fail "wrong non-owner payment error"; sed 's/^/       /' "$BASE/non_owner_payment.out"; fi
+fi
+
+cat > "$BASE/non_owner_restore.sql" <<SQL
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000bb';
+select public.restore_center_data('{"students":[],"courses":[],"enrollments":[],"fee_obligations":[],"receipt_vouchers":[],"receipt_allocations":[],"payment_vouchers":[]}'::jsonb, false);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/non_owner_restore.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/non_owner_restore.sql" >"$BASE/non_owner_restore.out" 2>&1; then
+  fail "non-owner restore RPC was accepted"
+else
+  if grep -q "OWNER_ONLY" "$BASE/non_owner_restore.out"; then pass "non-owner restore RPC rejected"; else fail "wrong non-owner restore error"; sed 's/^/       /' "$BASE/non_owner_restore.out"; fi
+fi
+
+cat > "$BASE/direct_payment.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+select set_config('app.payment_posting','off',true);
+insert into public.payment_vouchers (voucher_date, expense_type, amount, notes, idempotency_key)
+values ('2026-02-02','direct-bypass',1,'', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/direct_payment.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/direct_payment.sql" >"$BASE/direct_payment.out" 2>&1; then
+  fail "direct payment insert bypassed financial firewall"
+else
+  if grep -q "PAYMENT_POSTING_RPC_REQUIRED" "$BASE/direct_payment.out"; then pass "direct payment insert rejected when posting GUC is not on"; else fail "wrong direct payment firewall error"; sed 's/^/       /' "$BASE/direct_payment.out"; fi
+fi
+eq "Direct payment insert created no row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'")" "0"
 
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
 rm -rf "$BASE"
