@@ -25,8 +25,6 @@ function statusOf(item: StudentAggregate): StudentStatus {
 export function StudentDirectoryWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
-  const enrollments = useWorkspaceStore((state) => state.enrollments)
-  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
