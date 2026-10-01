@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { ArrowRight, Plus } from 'lucide-react'
 
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { StatusBadge } from '@/features/courses/courses-workspace'
 import { FeeObligationSheet } from '@/features/courses/fee-obligation-sheet'
-import { courseRoster, courseStats } from '@/lib/courses'
+import { courseRosterFromFinancialRows, courseStatsFromFinancialRows } from '@/lib/courses'
 import { formatDate, formatNumber } from '@/lib/format'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -23,7 +23,8 @@ export function CourseDetailWorkspace() {
   const courses = useWorkspaceStore((state) => state.courses)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const courseFinancialRows = useWorkspaceStore((state) => state.courseFinancialRows)
+  const loadCourseFinancialRoster = useWorkspaceStore((state) => state.loadCourseFinancialRoster)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
@@ -32,12 +33,17 @@ export function CourseDetailWorkspace() {
 
   const course = courses.find((item) => item.id === selectedCourseId) ?? null
 
+  useEffect(() => {
+    if (!course) return
+    void loadCourseFinancialRoster(course.id).catch((error) => console.error('course roster load failed', error))
+  }, [course, loadCourseFinancialRoster])
+
   const roster = useMemo(
-    () => (course ? courseRoster(course, enrollments, students, statementLines) : []),
-    [course, enrollments, students, statementLines],
+    () => (course ? courseRosterFromFinancialRows(course, enrollments, students, courseFinancialRows.filter((row) => row.courseId === course.id)) : []),
+    [course, enrollments, students, courseFinancialRows],
   )
   const stats = useMemo(
-    () => (course ? courseStats(course, enrollments, students, statementLines) : null),
+    () => (course ? courseStatsFromFinancialRows(course, enrollments, students, courseFinancialRows.filter((row) => row.courseId === course.id)) : null),
     [course, enrollments, students, statementLines],
   )
 
