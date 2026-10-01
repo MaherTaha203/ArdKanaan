@@ -11,7 +11,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { ReportPeriodSelector } from '@/features/financial-report/report-period-selector'
 import { periodLabel, reportPeriodRange, type ReportPeriod } from '@/features/financial-report/report-period'
-import { aggregateStudents, externalPartyStatement, financialTotals, paymentCount, receiptCount, studentLedger } from '@/lib/aggregate'
+import { externalPartyStatement, financialTotals, paymentCount, receiptCount } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
 import type { FinancialMovement } from '@/types/domain'
@@ -26,9 +26,6 @@ function partyAndContext(movement: FinancialMovement) {
 export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const movements = useWorkspaceStore((state) => state.movements)
   const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
-  const enrollments = useWorkspaceStore((state) => state.enrollments)
-  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -41,7 +38,6 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const [printing, setPrinting] = useState(false)
   const [cancelTarget, setCancelTarget] = useState<FinancialMovement | null>(null)
   const [detailsId, setDetailsId] = useState<string | null>(null)
-  const [printStudentId, setPrintStudentId] = useState<string | null>(null)
   const [accountName, setAccountName] = useState('')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
