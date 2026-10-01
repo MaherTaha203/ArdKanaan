@@ -237,7 +237,7 @@ SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/growth_payments.sql"
 start=$(date +%s%N)
 if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/growth_payments.sql" >"$BASE/growth_payments.out" 2>&1; then
-  fail "5000 synthetic payment growth load"; sed 's/^/       /' "$BASE/growth_payments.out"
+  fail "25000 synthetic payment growth load"; sed 's/^/       /' "$BASE/growth_payments.out"
 else
   elapsed_ms=$((($(date +%s%N)-start)/1000000))
   echo "   5000 payment insert wall time: ${elapsed_ms} ms"
