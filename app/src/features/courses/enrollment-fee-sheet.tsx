@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import { Coins, TriangleAlert } from 'lucide-react'
 
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Money } from '@/components/ui/money'
 import { Textarea } from '@/components/ui/textarea'
 import { useToastStore } from '@/components/ui/use-toast-store'
-import { courseRoster } from '@/lib/courses'
+
 import { useEnrollmentFeeStore } from '@/store/use-enrollment-fee-store'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -25,7 +25,8 @@ export function EnrollmentFeeSheet() {
   const courses = useWorkspaceStore((state) => state.courses)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const courseFinancialRows = useWorkspaceStore((state) => state.courseFinancialRows)
+  const loadCourseFinancialRoster = useWorkspaceStore((state) => state.loadCourseFinancialRoster)
   const reloadWorkspace = useWorkspaceStore((state) => state.load)
 
   const updateFee = useEnrollmentFeeStore((state) => state.updateFee)
@@ -35,6 +36,11 @@ export function EnrollmentFeeSheet() {
 
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
+
+  useEffect(() => {
+    if (!enrollment) return
+    void loadCourseFinancialRoster(enrollment.courseId).catch((error) => console.error('course roster load failed', error))
+  }, [enrollment, loadCourseFinancialRoster])
 
   const enrollment = useMemo(
     () => enrollments.find((item) => item.id === editFeeEnrollmentId) ?? null,
@@ -52,8 +58,10 @@ export function EnrollmentFeeSheet() {
   // Reuse the authoritative roster derivation (voucher-sourced) for paid/remaining.
   const entry = useMemo(() => {
     if (!course || !enrollment) return null
-    return courseRoster(course, enrollments, students, statementLines).find((item) => item.enrollment.id === enrollment.id) ?? null
-  }, [course, enrollment, enrollments, students, statementLines])
+    const row = courseFinancialRows.find((item) => item.enrollmentId === enrollment.id)
+    if (!row) return null
+    return { enrollment, student, fee: enrollment.courseValue, paid: row.paid, remaining: row.remaining }
+  }, [course, enrollment, student, courseFinancialRows])
 
   useLayoutEffect(() => {
     clearError()
