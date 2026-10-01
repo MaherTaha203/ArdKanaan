@@ -44,7 +44,7 @@ export function CourseDetailWorkspace() {
   )
   const stats = useMemo(
     () => (course ? courseStatsFromFinancialRows(course, enrollments, students, courseFinancialRows.filter((row) => row.courseId === course.id)) : null),
-    [course, enrollments, students, statementLines],
+    [course, enrollments, students, courseFinancialRows],
   )
 
   const courseFees = useMemo(
