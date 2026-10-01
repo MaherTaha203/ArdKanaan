@@ -68,11 +68,7 @@ async function fetchStatementLines(studentId: string) {
   if (!supabase) throw new Error('عميل قاعدة البيانات غير مهيأ.')
 
   const { data, error } = await supabase
-    .from('student_statement_lines')
-    .select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id')
-    .eq('student_id', studentId)
-    .order('voucher_date', { ascending: true })
-    .order('voucher_number', { ascending: true })
+    .rpc('get_student_statement_lines', { p_student_id: studentId })
 
   if (error) throw error
   return (data ?? []).map((row) => normalizeStatementLine(row as StudentStatementRow))
