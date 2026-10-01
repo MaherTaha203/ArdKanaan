@@ -30,7 +30,7 @@ export function ArchivedStudentsWorkspace() {
 
   const archived = useMemo(() => selectArchived(students), [students])
   const aggregates = useMemo(
-    () => aggregateStudentsFromSummary(archived, studentSummaries, enrollments, feeObligations),
+    () => aggregateStudentsFromSummary(archived, studentSummaries),
     [archived, studentSummaries, enrollments, feeObligations],
   )
   const sorted = useMemo(
