@@ -4,7 +4,7 @@ create or replace view public.student_financial_summary
 with (security_invoker = true)
 as
 with active_receipts as (
-  select rv.id, rv.student_id, rv.voucher_date, rv.amount_received, rv.course_name, rv.allocation_mode
+  select rv.id, rv.student_id, rv.voucher_date, rv.amount_received, rv.course_name, rv.fee_category, rv.course_value, rv.allocation_mode
   from public.receipt_vouchers rv
   where rv.cancelled_at is null
 ),
