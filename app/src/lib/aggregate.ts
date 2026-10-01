@@ -347,6 +347,35 @@ export function aggregateStudentsFromSummaries(
   })
 }
 
+
+export type StudentFinancialSummary = {
+  studentId: string
+  paid: number
+  remaining: number
+  courses: number
+  lastActivity: string | null
+  lineCount: number
+  courseNames: string[]
+}
+
+export function aggregateStudentsFromSummary(
+  students: Student[],
+  summaries: StudentFinancialSummary[],
+): StudentAggregate[] {
+  const byStudent = new Map(summaries.map((summary) => [summary.studentId, summary]))
+  return students.map((student) => {
+    const summary = byStudent.get(student.id)
+    return {
+      student,
+      paid: summary?.paid ?? 0,
+      remaining: summary?.remaining ?? 0,
+      courses: summary?.courses ?? 0,
+      lastActivity: summary?.lastActivity ?? null,
+      lineCount: summary?.lineCount ?? 0,
+    }
+  })
+}
+
 export function attentionList(aggregates: StudentAggregate[]): StudentAggregate[] {
   return aggregates.filter((aggregate) => aggregate.remaining > 0.0001).sort((a, b) => b.remaining - a.remaining)
 }
