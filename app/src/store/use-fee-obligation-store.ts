@@ -84,7 +84,9 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
       const { error } = await supabase.rpc('create_fee_obligations', { payload })
       if (error) throw error
 
-      await useWorkspaceStore.getState().load()
+      const workspace = useWorkspaceStore.getState()
+      await workspace.load()
+      await useWorkspaceStore.getState().loadStudentStatement(uniqueStudentIds[0])
       set({ isSaving: false })
       return true
     } catch (error) {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   aggregateStudents,
+  aggregateStudentsFromSummaries,
   attentionList,
   financialTotals,
   movementsNewestFirst,
@@ -165,6 +166,42 @@ describe('aggregateStudents', () => {
     expect(breakdown.find((entry) => entry.enrollmentId === 'en-1')).toEqual({ enrollmentId: 'en-1', courseName: 'محاسبة', fee: 500, paid: 150, remaining: 350 })
     expect(breakdown.find((entry) => entry.enrollmentId === 'en-2')).toEqual({ enrollmentId: 'en-2', courseName: 'محاسبة', fee: 300, paid: 0, remaining: 300 })
     expect(aggregateStudents(students, lines, enrollments)[0].remaining).toBe(650)
+  })
+})
+
+describe('aggregateStudentsFromSummaries', () => {
+  it('maps server summaries without requiring statement lines', () => {
+    const result = aggregateStudentsFromSummaries(
+      [student('s-1', 'سارة'), student('s-2', 'ليان')],
+      [{
+        studentId: 's-1',
+        paid: 700,
+        remaining: 300,
+        courses: 2,
+        lastActivity: '2026-01-05',
+        lineCount: 3,
+        courseNames: ['أ', 'ب'],
+      }],
+    )
+
+    expect(result[0]).toMatchObject({
+      student: { id: 's-1' },
+      paid: 700,
+      remaining: 300,
+      courses: 2,
+      lastActivity: '2026-01-05',
+      lineCount: 3,
+      courseNames: ['أ', 'ب'],
+    })
+    expect(result[1]).toMatchObject({
+      student: { id: 's-2' },
+      paid: 0,
+      remaining: 0,
+      courses: 0,
+      lastActivity: null,
+      lineCount: 0,
+      courseNames: [],
+    })
   })
 })
 

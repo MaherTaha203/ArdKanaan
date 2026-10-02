@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import { fetchAllRows } from '@/lib/fetch-all'
+import type { StudentFinancialSummary } from '@/lib/aggregate'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type {
   CancelledVoucher,
@@ -17,6 +18,9 @@ import type {
 type WorkspaceStore = {
   students: Student[]
   statementLines: StudentStatementLine[]
+  statementStudentId: string | null
+  statementLoading: boolean
+  studentSummaries: StudentFinancialSummary[]
   movements: FinancialMovement[]
   cancelledVouchers: CancelledVoucher[]
   courses: Course[]
@@ -26,17 +30,20 @@ type WorkspaceStore = {
   loaded: boolean
   error: string | null
   load: () => Promise<void>
+  loadStudentStatement: (studentId: string) => Promise<void>
   clearError: () => void
 }
 
 type StudentRow = { id: string; name: string; id_number: string | null; phone: string | null; notes: string | null; status?: string | null; archived_at?: string | null; archive_reason?: string | null }
 type StatementRow = { id: string; voucher_number: number; voucher_date: string; student_id: string; student_name: string; course_name: string; course_value: number | string; amount_received: number | string; remaining_balance: number | string; entry_type?: 'course' | 'fee' | null; fee_obligation_id?: string | null; enrollment_id?: string | null }
+type StudentSummaryRow = { student_id: string; paid: number | string; remaining: number | string; courses: number; last_activity: string | null; line_count: number | string; course_names: string[] | null }
 type MovementRow = { id: string; movement_type: 'receipt' | 'payment'; voucher_number: number; voucher_date: string; amount: number | string; party_name: string | null; context: string | null; external_share?: number | string | null }
 function normalizeStudentStatus(value: string | null | undefined): Student['status'] {
   return value === 'archived' ? 'archived' : value === 'completed' ? 'completed' : 'active'
 }
 function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: normalizeStudentStatus(row.status), archivedAt: row.archived_at ?? null, archiveReason: row.archive_reason ?? null } }
 function normalizeStatementLine(row: StatementRow): StudentStatementLine { return { id: row.id, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, studentId: row.student_id, studentName: row.student_name, courseName: row.course_name, courseValue: Number(row.course_value), amountReceived: Number(row.amount_received), remainingBalance: Number(row.remaining_balance), entryType: row.entry_type ?? 'course', feeObligationId: row.fee_obligation_id ?? null, enrollmentId: row.enrollment_id ?? null } }
+function normalizeStudentSummary(row: StudentSummaryRow): StudentFinancialSummary { return { studentId: row.student_id, paid: Number(row.paid), remaining: Number(row.remaining), courses: Number(row.courses), lastActivity: row.last_activity, lineCount: Number(row.line_count), courseNames: row.course_names ?? [] } }
 function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
 type CourseRow = { id: string; name: string; base_fee: number | string | null; start_date: string | null; end_date: string | null; status: string; notes: string | null }
 function normalizeCourse(row: CourseRow): Course { return { id: row.id, name: row.name, baseFee: row.base_fee === null ? null : Number(row.base_fee), startDate: row.start_date, endDate: row.end_date, status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus, notes: row.notes ?? '' } }
@@ -48,6 +55,8 @@ type CancelledRow = MovementRow & { cancelled_at: string; cancel_reason: string 
 function normalizeCancelled(row: CancelledRow): CancelledVoucher { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, cancelledAt: row.cancelled_at, cancelReason: row.cancel_reason } }
 
 type SupabaseClient = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>
+
+let statementRequestSequence = 0
 
 // Reads students with the lifecycle/archive columns, falling back to the base
 // identity columns when the archive migration has not been applied yet — so the
@@ -71,13 +80,14 @@ function isAuthError(error: unknown): boolean {
   return message.includes('jwt') || message.includes('token is expired') || message.includes('unauthorized')
 }
 
-export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
-  students: [], statementLines: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
+export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
+  students: [], statementLines: [], statementStudentId: null, statementLoading: false, studentSummaries: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
   clearError: () => set({ error: null }),
   load: async () => {
     const supabase = getSupabaseBrowserClient()
     if (!supabase) { set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.', loaded: true, isLoading: false }); return }
-    set({ isLoading: true, error: null })
+    statementRequestSequence += 1
+    set({ isLoading: true, error: null, statementLines: [], statementStudentId: null, statementLoading: false })
 
     // One load pass. Returns 'ok' on success (state already set), 'auth' when a
     // request failed with an expired/invalid token (recoverable), or 'error'.
@@ -85,7 +95,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
       try {
         const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
           loadStudents(supabase),
-          fetchAllRows<StatementRow>((from, to) => supabase.from('student_statement_lines').select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id').order('voucher_date', { ascending: true }).order('voucher_number', { ascending: true }).range(from, to)),
+          fetchAllRows<StudentSummaryRow>((from, to) => supabase.from('student_financial_summary').select('student_id, paid, remaining, courses, last_activity, line_count, course_names').order('student_id', { ascending: true }).range(from, to)),
           fetchAllRows<MovementRow>((from, to) => supabase.from('financial_movements').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share').order('voucher_date', { ascending: true }).order('created_at', { ascending: true }).range(from, to)),
           fetchAllRows<CancelledRow>((from, to) => supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to)),
         ])
@@ -93,7 +103,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         if (statementResult.error) throw statementResult.error
         if (movementsResult.error) throw movementsResult.error
         if (cancelledResult.error) throw cancelledResult.error
-        set({ students: studentsResult.data.map(normalizeStudent), statementLines: statementResult.data.map(normalizeStatementLine), movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
+        set({ students: studentsResult.data.map(normalizeStudent), studentSummaries: statementResult.data.map(normalizeStudentSummary), statementLines: [], statementStudentId: null, statementLoading: false, movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
 
         const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
           fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
@@ -118,6 +128,57 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     }
     if (outcome !== 'ok') {
       set({ isLoading: false, loaded: true, error: 'تعذّر تحميل بيانات المركز. تحقّق من الاتصال وحاول تحديث الصفحة.' })
+    }
+  },
+  loadStudentStatement: async (studentId) => {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) {
+      set({ statementLines: [], statementStudentId: studentId, statementLoading: false, error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.' })
+      return
+    }
+    if (get().statementStudentId === studentId && !get().statementLoading) return
+
+    const requestId = ++statementRequestSequence
+    set({ statementLines: [], statementStudentId: studentId, statementLoading: true, error: null })
+    try {
+      const result = await fetchAllRows<StatementRow>((from, to) =>
+        supabase
+          .from('student_statement_lines')
+          .select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id')
+          .eq('student_id', studentId)
+          .order('voucher_date', { ascending: true })
+          .order('voucher_number', { ascending: true })
+          .range(from, to),
+      )
+      if (requestId !== statementRequestSequence) return
+      if (result.error) throw result.error
+      set({ statementLines: result.data.map(normalizeStatementLine), statementStudentId: studentId, statementLoading: false })
+    } catch (error) {
+      if (requestId !== statementRequestSequence) return
+      if (isAuthError(error)) {
+        try { await supabase.auth.refreshSession() } catch (refreshError) { console.error('session refresh failed', refreshError) }
+        if (requestId !== statementRequestSequence) return
+        try {
+          const retry = await fetchAllRows<StatementRow>((from, to) =>
+            supabase
+              .from('student_statement_lines')
+              .select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id')
+              .eq('student_id', studentId)
+              .order('voucher_date', { ascending: true })
+              .order('voucher_number', { ascending: true })
+              .range(from, to),
+          )
+          if (requestId !== statementRequestSequence) return
+          if (retry.error) throw retry.error
+          set({ statementLines: retry.data.map(normalizeStatementLine), statementStudentId: studentId, statementLoading: false })
+          return
+        } catch (retryError) {
+          if (requestId !== statementRequestSequence) return
+          console.error('student statement retry failed', retryError)
+        }
+      }
+      console.error('student statement load failed', error)
+      set({ statementLines: [], statementStudentId: studentId, statementLoading: false, error: 'تعذّر تحميل كشف حساب الطالب. تحقّق من الاتصال وحاول مرة أخرى.' })
     }
   },
 }))

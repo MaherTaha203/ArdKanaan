@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Archive, ArchiveRestore, Pencil, Plus, Printer, Search } from 'lucide-react'
 
@@ -7,7 +7,7 @@ import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, statementFor, studentLedger, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudentsFromSummaries, studentLedger, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
@@ -26,7 +26,11 @@ function statusOf(item: StudentAggregate): StudentStatus {
 
 export function StudentsWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
+  const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const statementStudentId = useWorkspaceStore((state) => state.statementStudentId)
+  const statementLoading = useWorkspaceStore((state) => state.statementLoading)
+  const loadStudentStatement = useWorkspaceStore((state) => state.loadStudentStatement)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
@@ -43,7 +47,7 @@ export function StudentsWorkspace() {
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
 
-  const aggregates = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
+  const aggregates = useMemo(() => aggregateStudentsFromSummaries(students, studentSummaries), [students, studentSummaries])
 
   const sorted = useMemo(
     () => aggregates.slice().sort((a, b) => b.remaining - a.remaining || a.student.name.localeCompare(b.student.name, 'ar')),
@@ -63,13 +67,21 @@ export function StudentsWorkspace() {
         const idHit = idNumber ? idNumber.replace(/\D/g, '').includes(digits) : false
         if (phoneHit || idHit) return true
       }
-      return statementFor(statementLines, item.student.id).some((line) => normalizeArabic(line.courseName).includes(term))
+      return item.courseNames.some((courseName) => normalizeArabic(courseName).includes(term))
     })
-  }, [sorted, query, statementLines])
+  }, [sorted, query])
 
   const activeId = selectedStudentId ?? filtered[0]?.student.id ?? sorted[0]?.student.id ?? null
   const active = useMemo(() => aggregates.find((item) => item.student.id === activeId) ?? null, [aggregates, activeId])
-  const activeLedger = useMemo(() => (activeId ? studentLedger(activeId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }), [activeId, statementLines, enrollments, feeObligations])
+  useEffect(() => {
+    if (loaded && activeId) void loadStudentStatement(activeId)
+  }, [loaded, activeId, loadStudentStatement])
+
+  const statementReady = Boolean(activeId && statementStudentId === activeId && !statementLoading)
+  const activeLedger = useMemo(
+    () => (statementReady && activeId ? studentLedger(activeId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }),
+    [activeId, statementReady, statementLines, enrollments, feeObligations],
+  )
 
   return (
     <div className="detail-workspace">
@@ -117,7 +129,7 @@ export function StudentsWorkspace() {
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
                   {active.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><Archive className="size-4" />أرشفة الطالب</Button> : null}
                   {active.student.status === 'archived' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><ArchiveRestore className="size-4" />إعادة التفعيل</Button> : null}
-                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)}><Printer className="size-4" />طباعة الكشف</Button>
+                  <Button variant="quiet" size="sm" onClick={() => setPrinting(true)} disabled={!statementReady}><Printer className="size-4" />طباعة الكشف</Button>
                 </div>
               </div>
 
@@ -130,7 +142,7 @@ export function StudentsWorkspace() {
                     <th className="border-b border-border px-2.5 py-3 text-end font-semibold">دائن (له)</th>
                     <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد الجاري</th>
                   </tr></thead>
-                  <tbody>{activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
+                  <tbody>{statementLoading && statementStudentId === activeId ? <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">جارٍ تحميل الكشف…</td></tr> : activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
                     <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
                     <td className="border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
                     <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>

@@ -337,6 +337,22 @@ grep -E "Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Execution Tim
 CANDIDATE_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_statement_candidate.out")
 echo "   candidate early-filter student_statement_lines Execution Time: ${CANDIDATE_MS:-unknown} ms"
 
+echo "== GROWTH G2c: server student summary at 100k students ==";
+cat > "$BASE/plan_student_summary.sql" <<'SQL'
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select student_id, paid, remaining, courses, last_activity, line_count, course_names
+from public.student_financial_summary
+order by student_id;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_student_summary.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_student_summary.sql" >"$BASE/plan_student_summary.out"
+grep -E "Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Hash|Execution Time|Planning Time" "$BASE/plan_student_summary.out" | sed 's/^/   /'
+SUMMARY_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_student_summary.out")
+SUMMARY_ROWS=$(runFP "select count(*) from public.student_financial_summary")
+echo "   student_financial_summary rows: \${SUMMARY_ROWS}; Execution Time: \${SUMMARY_MS:-unknown} ms"
+eq "server summary row volume at 100k" "$SUMMARY_ROWS" "100000"
+
 echo "== GROWTH G3: integrity checks after load =="
 eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "25005"
 eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "25011"
