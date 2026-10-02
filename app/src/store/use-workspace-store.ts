@@ -86,7 +86,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   load: async () => {
     const supabase = getSupabaseBrowserClient()
     if (!supabase) { set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.', loaded: true, isLoading: false }); return }
-    set({ isLoading: true, error: null })
+    statementRequestSequence += 1
+    set({ isLoading: true, error: null, statementLines: [], statementStudentId: null, statementLoading: false })
 
     // One load pass. Returns 'ok' on success (state already set), 'auth' when a
     // request failed with an expired/invalid token (recoverable), or 'error'.
