@@ -7,7 +7,7 @@ vi.mock('@/lib/supabase', () => ({
 // The store reloads the workspace after a successful write; stub it so the unit
 // test stays focused on the RPC payload and error mapping.
 vi.mock('@/store/use-workspace-store', () => ({
-  useWorkspaceStore: { getState: () => ({ load: async () => {} }) },
+  useWorkspaceStore: { getState: () => ({ load: async () => {}, loadStudentStatement: async () => {} }) },
 }))
 
 import { useFeeObligationStore } from '@/store/use-fee-obligation-store'
