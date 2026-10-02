@@ -3,7 +3,22 @@ begin;
 create or replace view public.student_financial_summary
 with (security_invoker = true)
 as
-with enrollment_counts as (
+with statement_lines as (
+  select
+    id,
+    voucher_number,
+    voucher_date,
+    student_id,
+    course_name,
+    course_value,
+    amount_received,
+    remaining_balance,
+    entry_type,
+    fee_obligation_id,
+    enrollment_id
+  from public.student_statement_lines
+),
+enrollment_counts as (
   select
     e.student_id,
     e.course_name,
@@ -36,7 +51,7 @@ course_lines as (
       when coalesce(ec.enrollment_count, 0) = 1 then en_by_name.course_name
       else l.course_name
     end as resolved_course_name
-  from public.student_statement_lines l
+  from statement_lines l
   left join public.enrollments en_by_id on en_by_id.id = l.enrollment_id
   left join enrollment_counts ec
     on ec.student_id = l.student_id
@@ -116,7 +131,7 @@ fee_paid as (
     l.student_id,
     l.fee_obligation_id,
     sum(l.amount_received)::numeric as paid
-  from public.student_statement_lines l
+  from statement_lines l
   where l.entry_type = 'fee'
     and l.fee_obligation_id is not null
   group by l.student_id, l.fee_obligation_id
@@ -139,7 +154,7 @@ student_activity as (
     coalesce(sum(l.amount_received), 0)::numeric as paid,
     max(l.voucher_date) as last_activity,
     count(l.id)::bigint as line_count
-  from public.student_statement_lines l
+  from statement_lines l
   group by l.student_id
 )
 select
