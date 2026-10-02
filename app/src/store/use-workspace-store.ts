@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import { fetchAllRows } from '@/lib/fetch-all'
+import type { StudentFinancialSummary } from '@/lib/aggregate'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type {
   CancelledVoucher,
@@ -19,7 +20,7 @@ type WorkspaceStore = {
   statementLines: StudentStatementLine[]
   statementStudentId: string | null
   statementLoading: boolean
-  studentSummaries: StudentSummaryRow[]
+  studentSummaries: StudentFinancialSummary[]
   movements: FinancialMovement[]
   cancelledVouchers: CancelledVoucher[]
   courses: Course[]
@@ -42,6 +43,7 @@ function normalizeStudentStatus(value: string | null | undefined): Student['stat
 }
 function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: normalizeStudentStatus(row.status), archivedAt: row.archived_at ?? null, archiveReason: row.archive_reason ?? null } }
 function normalizeStatementLine(row: StatementRow): StudentStatementLine { return { id: row.id, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, studentId: row.student_id, studentName: row.student_name, courseName: row.course_name, courseValue: Number(row.course_value), amountReceived: Number(row.amount_received), remainingBalance: Number(row.remaining_balance), entryType: row.entry_type ?? 'course', feeObligationId: row.fee_obligation_id ?? null, enrollmentId: row.enrollment_id ?? null } }
+function normalizeStudentSummary(row: StudentSummaryRow): StudentFinancialSummary { return { studentId: row.student_id, paid: Number(row.paid), remaining: Number(row.remaining), courses: Number(row.courses), lastActivity: row.last_activity, lineCount: Number(row.line_count), courseNames: row.course_names ?? [] } }
 function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
 type CourseRow = { id: string; name: string; base_fee: number | string | null; start_date: string | null; end_date: string | null; status: string; notes: string | null }
 function normalizeCourse(row: CourseRow): Course { return { id: row.id, name: row.name, baseFee: row.base_fee === null ? null : Number(row.base_fee), startDate: row.start_date, endDate: row.end_date, status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus, notes: row.notes ?? '' } }
@@ -100,7 +102,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         if (statementResult.error) throw statementResult.error
         if (movementsResult.error) throw movementsResult.error
         if (cancelledResult.error) throw cancelledResult.error
-        set({ students: studentsResult.data.map(normalizeStudent), studentSummaries: statementResult.data, statementLines: [], statementStudentId: null, statementLoading: false, movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
+        set({ students: studentsResult.data.map(normalizeStudent), studentSummaries: statementResult.data.map(normalizeStudentSummary), statementLines: [], statementStudentId: null, statementLoading: false, movements: movementsResult.data.map(normalizeMovement), cancelledVouchers: cancelledResult.data.map(normalizeCancelled) })
 
         const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
           fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
