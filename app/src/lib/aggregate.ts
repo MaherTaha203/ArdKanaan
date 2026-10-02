@@ -1,5 +1,15 @@
 import type { Course, Enrollment, FeeCategory, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
 
+export type StudentFinancialSummary = {
+  studentId: string
+  paid: number
+  remaining: number
+  courses: number
+  lastActivity: string | null
+  lineCount: number
+  courseNames: string[]
+}
+
 export type FinancialTotals = {
   totalIn: number
   totalOut: number
@@ -21,6 +31,7 @@ export type StudentAggregate = {
   courses: number
   lastActivity: string | null
   lineCount: number
+  courseNames: string[]
 }
 
 export function financialTotals(movements: FinancialMovement[]): FinancialTotals {
@@ -312,6 +323,26 @@ export function aggregateStudents(
       courses: breakdown.length,
       lastActivity,
       lineCount: studentLines.length,
+      courseNames: breakdown.map((course) => course.courseName),
+    }
+  })
+}
+
+export function aggregateStudentsFromSummaries(
+  students: Student[],
+  summaries: StudentFinancialSummary[],
+): StudentAggregate[] {
+  const summariesByStudent = new Map(summaries.map((summary) => [summary.studentId, summary]))
+  return students.map((student) => {
+    const summary = summariesByStudent.get(student.id)
+    return {
+      student,
+      paid: summary?.paid ?? 0,
+      remaining: summary?.remaining ?? 0,
+      courses: summary?.courses ?? 0,
+      lastActivity: summary?.lastActivity ?? null,
+      lineCount: summary?.lineCount ?? 0,
+      courseNames: summary?.courseNames ?? [],
     }
   })
 }
