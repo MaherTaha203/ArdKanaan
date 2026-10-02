@@ -88,6 +88,28 @@ SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/seed.sql"
 run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/seed.sql" || { echo seed FAIL; exit 1; }
 
+echo "== Course roster parity: legacy enrollment + legacy receipt remain visible on demand ==";
+cat > "$BASE/course_roster_legacy.sql" <<SQL
+set session_replication_role = replica;
+insert into public.courses (id, name, status)
+values ('00000000-0000-0000-0000-0000000d0001', 'دورة قديمة', 'active');
+insert into public.students (id, name, status)
+values ('00000000-0000-0000-0000-0000000d0002', 'طالب قديم', 'active');
+insert into public.enrollments (id, student_id, course_id, course_name, course_value)
+values ('00000000-0000-0000-0000-0000000d0003', '00000000-0000-0000-0000-0000000d0002', null, 'دورة قديمة', 100);
+insert into public.receipt_vouchers
+  (id, voucher_date, student_id, student_name_snapshot, course_name, course_value, amount_received, payer_name, notes, fee_category, external_share, allocation_mode)
+values
+  ('00000000-0000-0000-0000-0000000d0004', '2026-02-01', '00000000-0000-0000-0000-0000000d0002', 'طالب قديم', 'دورة قديمة', 100, 40, 'طالب قديم', '', null, 0, false);
+set session_replication_role = origin;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/course_roster_legacy.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/course_roster_legacy.sql" || { echo legacy roster fixture FAIL; exit 1; }
+eq "legacy course roster row count" "$(runFP "select count(*) from public.get_course_financial_roster('00000000-0000-0000-0000-0000000d0001')")" "1"
+eq "legacy enrollment is mapped to catalog course" "$(runFP "select count(*) from public.get_course_financial_roster('00000000-0000-0000-0000-0000000d0001') where enrollment_id='00000000-0000-0000-0000-0000000d0003' and course_id='00000000-0000-0000-0000-0000000d0001'")" "1"
+eq "legacy receipt remains visible in course paid total" "$(runFP "select coalesce(paid,0)::int from public.get_course_financial_roster('00000000-0000-0000-0000-0000000d0001') where enrollment_id='00000000-0000-0000-0000-0000000d0003'")" "40"
+eq "legacy course remaining balance preserved" "$(runFP "select coalesce(remaining,0)::int from public.get_course_financial_roster('00000000-0000-0000-0000-0000000d0001') where enrollment_id='00000000-0000-0000-0000-0000000d0003'")" "60"
+
 make_fee() {  # $1 course $2 student $3 desc $4 amount $5 category $6 external
   cat > "$BASE/fee.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
