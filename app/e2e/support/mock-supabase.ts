@@ -139,6 +139,51 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, { students: restoredStudents.length, receipt_vouchers: Array.isArray(backup.receipt_vouchers) ? backup.receipt_vouchers.length : 0, payment_vouchers: Array.isArray(backup.payment_vouchers) ? backup.payment_vouchers.length : 0 })
     }
 
+    if (table?.startsWith('rpc/get_course_financial_roster') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_course_id?: string }
+      const courseId = String(payload.p_course_id ?? '')
+      const course = courses.find((item) => item.id === courseId)
+      const targetEnrollments = enrollments.filter((enrollment) => (
+        enrollment.course_id === courseId
+        || (enrollment.course_id === null && enrollment.course_name === course?.name)
+      ))
+      const activeReceiptIds = new Set(
+        handle.receiptInserts
+          .filter((receipt) => !receipt.cancelled_at)
+          .map((receipt) => String(receipt.id ?? '')),
+      )
+      const allocatedPaid = new Map<string, number>()
+      for (const allocation of handle.receiptAllocations) {
+        const enrollmentId = String(allocation.enrollment_id ?? '')
+        if (!enrollmentId || !activeReceiptIds.has(String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? ''))) continue
+        if (String(allocation.allocation_type ?? allocation.type ?? '') !== 'course') continue
+        allocatedPaid.set(enrollmentId, (allocatedPaid.get(enrollmentId) ?? 0) + Number(allocation.amount ?? 0))
+      }
+      const legacyPaid = new Map<string, number>()
+      for (const receipt of handle.receiptInserts) {
+        if (receipt.cancelled_at) continue
+        if (receipt.allocation_mode !== false) continue
+        if (receipt.fee_category != null) continue
+        const hasAllocation = handle.receiptAllocations.some((allocation) => String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '') === String(receipt.id ?? ''))
+        if (hasAllocation) continue
+        const key = `${String(receipt.student_id ?? '')}|${String(receipt.course_name ?? '')}`
+        legacyPaid.set(key, (legacyPaid.get(key) ?? 0) + Number(receipt.amount_received ?? 0))
+      }
+      return json(route, targetEnrollments.map((enrollment) => {
+        const paid = (allocatedPaid.get(enrollment.id) ?? 0)
+          + (legacyPaid.get(`${enrollment.student_id}|${enrollment.course_name}`) ?? 0)
+        return {
+          enrollment_id: enrollment.id,
+          student_id: enrollment.student_id,
+          course_id: enrollment.course_id ?? courseId,
+          course_name: enrollment.course_name,
+          course_value: enrollment.course_value,
+          paid,
+          remaining: Math.max(0, enrollment.course_value - paid),
+        }
+      }))
+    }
+
     if (table?.startsWith('rpc/post_receipt_with_allocations') && method === 'POST') {
       const body = safeJson(request.postData()) as { payload?: Record<string, unknown> }
       const payload = body.payload ?? {}
