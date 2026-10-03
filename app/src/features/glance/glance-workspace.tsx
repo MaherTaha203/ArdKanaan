@@ -5,7 +5,7 @@ import { User } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Money } from '@/components/ui/money'
 import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudentsFromSummary, attentionList, financialTotals, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
+import { aggregateStudentsFromSummaries, attentionList, financialTotals, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import type { FinancialMovement } from '@/types/domain'
 import { useSettingsStore } from '@/store/use-settings-store'
@@ -43,7 +43,7 @@ export function GlanceWorkspace() {
   const totals = useMemo(() => financialTotals(movements), [movements])
   const recent = useMemo(() => movementsNewestFirst(movements).slice(0, RECENT_LIMIT), [movements])
   const attention = useMemo(
-    () => attentionList(aggregateStudentsFromSummary(students, studentSummaries)).slice(0, attentionCount),
+    () => attentionList(aggregateStudentsFromSummaries(students, studentSummaries)).slice(0, attentionCount),
     [students, studentSummaries, attentionCount],
   )
   useEffect(() => {

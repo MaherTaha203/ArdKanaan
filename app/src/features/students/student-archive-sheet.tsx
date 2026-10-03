@@ -8,7 +8,7 @@ import { Field } from '@/components/ui/field'
 import { Money } from '@/components/ui/money'
 import { Textarea } from '@/components/ui/textarea'
 import { useToastStore } from '@/components/ui/use-toast-store'
-import { aggregateStudentsFromSummary, hasActiveCourse } from '@/lib/aggregate'
+import { aggregateStudentsFromSummaries, hasActiveCourse } from '@/lib/aggregate'
 import { useShellStore } from '@/store/use-shell-store'
 import { useStudentArchiveStore } from '@/store/use-student-archive-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -24,7 +24,6 @@ export function StudentArchiveSheet() {
   const students = useWorkspaceStore((state) => state.students)
   const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
-  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const courses = useWorkspaceStore((state) => state.courses)
   const reloadWorkspace = useWorkspaceStore((state) => state.load)
 
@@ -41,8 +40,8 @@ export function StudentArchiveSheet() {
 
   const remaining = useMemo(() => {
     if (!student) return 0
-    return aggregateStudentsFromSummary([student], studentSummaries)[0]?.remaining ?? 0
-  }, [student, studentSummaries, enrollments, feeObligations])
+    return aggregateStudentsFromSummaries([student], studentSummaries)[0]?.remaining ?? 0
+  }, [student, studentSummaries])
 
   const activeCourseBlocked = useMemo(
     () => (student && !isArchived ? hasActiveCourse(student.id, enrollments, courses) : false),
