@@ -76,6 +76,7 @@ export type MockHandle = {
   studentUpdates: Array<{ id: string | null; body: Record<string, unknown> }>
   cancellations: Array<{ table: 'receipt_vouchers' | 'payment_vouchers'; id: string | null; reason: string }>
   activeMovements: MockMovement[]
+  statementReads: string[]
   cancelledVouchers: MockCancelledVoucher[]
   auditLog: Array<Record<string, unknown>>
   restoreCalls: Array<{ force: boolean; payload: Record<string, unknown> }>
@@ -98,7 +99,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
   const handle: MockHandle = {
 
     receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], studentUpdates: [],
-    cancellations: [], activeMovements, cancelledVouchers, auditLog: [], restoreCalls: [], passwordResets: [], passwordUpdates: [],
+    cancellations: [], activeMovements, statementReads: [], cancelledVouchers, auditLog: [], restoreCalls: [], passwordResets: [], passwordUpdates: [],
   }
 
   await page.route('**/auth/v1/**', (route) => {
@@ -137,6 +138,67 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       students.splice(0, students.length, ...restoredStudents.map((row) => ({ id: String((row as Record<string, unknown>).id ?? 'restored-student'), name: String((row as Record<string, unknown>).name ?? ''), id_number: ((row as Record<string, unknown>).id_number as string | null) ?? null, phone: ((row as Record<string, unknown>).phone as string | null) ?? null, notes: ((row as Record<string, unknown>).notes as string | null) ?? null })))
       handle.restoreCalls.push({ force: Boolean(payload.force), payload: backup })
       return json(route, { students: restoredStudents.length, receipt_vouchers: Array.isArray(backup.receipt_vouchers) ? backup.receipt_vouchers.length : 0, payment_vouchers: Array.isArray(backup.payment_vouchers) ? backup.payment_vouchers.length : 0 })
+    }
+
+    if (table?.startsWith('rpc/get_student_statement_lines') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_student_id?: string }
+      const studentId = String(payload.p_student_id ?? '')
+      handle.statementReads.push(studentId)
+      const lines: Record<string, unknown>[] = []
+      for (const receipt of handle.receiptInserts) {
+        if (receipt.cancelled_at || String(receipt.student_id ?? '') !== studentId) continue
+        const allocations = handle.receiptAllocations.filter((allocation) =>
+          String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '') === String(receipt.id ?? ''),
+        )
+        if (allocations.length > 0) {
+          for (const allocation of allocations) {
+            const isFee = String(allocation.allocation_type ?? allocation.type ?? '') === 'fee'
+            const fee = feeObligations.find((item) => item.id === allocation.fee_obligation_id)
+            const enrollment = enrollments.find((item) => item.id === allocation.enrollment_id)
+            const amount = Number(allocation.amount ?? 0)
+            lines.push({
+              id: String(allocation.id ?? ''),
+              voucher_number: Number(receipt.voucher_number ?? 900),
+              voucher_date: String(receipt.voucher_date ?? '2026-08-31'),
+              student_id: studentId,
+              student_name: String(receipt.student_name ?? receipt.student_name_snapshot ?? ''),
+              course_name: isFee ? fee?.description ?? 'رسم' : enrollment?.course_name ?? String(receipt.course_name ?? 'دورة'),
+              course_value: isFee ? fee?.amount ?? amount : enrollment?.course_value ?? Number(receipt.course_value ?? amount),
+              amount_received: amount,
+              remaining_balance: 0,
+              entry_type: isFee ? 'fee' : 'course',
+              fee_obligation_id: isFee ? fee?.id ?? null : null,
+              enrollment_id: isFee ? null : enrollment?.id ?? null,
+            })
+          }
+        } else {
+          lines.push({
+            id: String(receipt.id ?? `legacy-${lines.length}`),
+            voucher_number: Number(receipt.voucher_number ?? 900),
+            voucher_date: String(receipt.voucher_date ?? '2026-08-31'),
+            student_id: studentId,
+            student_name: String(receipt.student_name ?? receipt.student_name_snapshot ?? ''),
+            course_name: String(receipt.course_name ?? 'دورة'),
+            course_value: Number(receipt.course_value ?? 0),
+            amount_received: Number(receipt.amount_received ?? 0),
+            remaining_balance: Number(receipt.course_value ?? 0) - Number(receipt.amount_received ?? 0),
+            entry_type: 'course',
+            fee_obligation_id: null,
+            enrollment_id: null,
+          })
+        }
+      }
+      lines.sort((a, b) =>
+        String(a.voucher_date).localeCompare(String(b.voucher_date))
+        || Number(a.voucher_number) - Number(b.voucher_number)
+        || String(a.id).localeCompare(String(b.id)),
+      )
+      const bounds = request.headers()['range']?.match(/^(\\d+)-(\\d+)$/)
+      const from = bounds ? Number(bounds[1]) : 0
+      const to = bounds ? Number(bounds[2]) : lines.length - 1
+      const pageRows = lines.slice(from, to + 1)
+      const last = pageRows.length ? from + pageRows.length - 1 : from
+      return json(route, pageRows, 200, { 'content-range': `${from}-${last}/${lines.length}` })
     }
 
     if (table?.startsWith('rpc/get_course_financial_roster') && method === 'POST') {
