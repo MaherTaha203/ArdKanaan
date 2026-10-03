@@ -74,7 +74,7 @@ async function loadStudents(supabase: SupabaseClient): Promise<{ data: StudentRo
 
 const STUDENT_SUMMARY_PAGE_SIZE = 1000
 
-async function loadStudentSummaries(supabase: SupabaseClient): Promise<StudentSummaryRow[]> {
+async function loadStudentSummaries(supabase: SupabaseClient): Promise<{ data: StudentSummaryRow[]; error: unknown }> {
   const rows: StudentSummaryRow[] = []
   let offset = 0
 
@@ -93,7 +93,7 @@ async function loadStudentSummaries(supabase: SupabaseClient): Promise<StudentSu
     offset += page.length
   }
 
-  return rows
+  return { data: rows, error: null }
 }
 
 // A request can fail with 401 when the access token expires mid-session (e.g. the
