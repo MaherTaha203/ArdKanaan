@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - claude/ard-kanaan-phase-0-6rymjv
+      - phase/after-127-perf-base
 
 concurrency:
   group: ci-${{ github.ref }}

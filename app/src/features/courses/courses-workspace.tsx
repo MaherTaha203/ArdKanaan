@@ -6,7 +6,7 @@ import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { courseStats } from '@/lib/courses'
+import { courseEnrollments } from '@/lib/courses'
 import { formatNumber } from '@/lib/format'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
@@ -17,9 +17,7 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 export function CoursesWorkspace() {
   const courses = useWorkspaceStore((state) => state.courses)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
-  const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
-  const loaded = useWorkspaceStore((state) => state.loaded)
+   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
@@ -33,8 +31,8 @@ export function CoursesWorkspace() {
     const term = normalizeArabic(query.trim())
     return courses
       .filter((course) => !term || normalizeArabic(course.name).includes(term))
-      .map((course) => ({ course, stats: courseStats(course, enrollments, students, statementLines) }))
-  }, [courses, enrollments, students, statementLines, query])
+      .map((course) => ({ course, studentCount: new Set(courseEnrollments(course, enrollments).map((enrollment) => enrollment.studentId)).size }))
+  }, [courses, enrollments, query])
 
   return (
     <div className="space-y-4">
@@ -70,7 +68,7 @@ export function CoursesWorkspace() {
           </div>
         ) : rows.length > 0 ? (
           <ul>
-            {rows.map(({ course, stats }) => (
+            {rows.map(({ course, studentCount }) => (
               <li key={course.id} className="border-b border-border last:border-b-0">
                 <button
                   type="button"
@@ -79,7 +77,7 @@ export function CoursesWorkspace() {
                 >
                   <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">{course.name}</span>
                   <span className="text-[12.5px] text-muted-foreground">
-                    عدد الطلاب <span className="figure font-semibold text-foreground">{formatNumber(stats.studentCount)}</span>
+                    عدد الطلاب <span className="figure font-semibold text-foreground">{formatNumber(studentCount)}</span>
                   </span>
                   <span className="text-[12.5px] text-muted-foreground">
                     الرسوم الأساسية{' '}

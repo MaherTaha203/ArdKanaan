@@ -347,6 +347,7 @@ export function aggregateStudentsFromSummaries(
   })
 }
 
+
 export function attentionList(aggregates: StudentAggregate[]): StudentAggregate[] {
   return aggregates.filter((aggregate) => aggregate.remaining > 0.0001).sort((a, b) => b.remaining - a.remaining)
 }

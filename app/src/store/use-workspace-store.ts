@@ -21,6 +21,7 @@ type WorkspaceStore = {
   statementStudentId: string | null
   statementLoading: boolean
   studentSummaries: StudentFinancialSummary[]
+  courseFinancialRows: CourseFinancialRow[]
   movements: FinancialMovement[]
   cancelledVouchers: CancelledVoucher[]
   courses: Course[]
@@ -31,12 +32,14 @@ type WorkspaceStore = {
   error: string | null
   load: () => Promise<void>
   loadStudentStatement: (studentId: string) => Promise<void>
+  loadCourseFinancialRoster: (courseId: string) => Promise<CourseFinancialRow[]>
   clearError: () => void
 }
 
 type StudentRow = { id: string; name: string; id_number: string | null; phone: string | null; notes: string | null; status?: string | null; archived_at?: string | null; archive_reason?: string | null }
 type StatementRow = { id: string; voucher_number: number; voucher_date: string; student_id: string; student_name: string; course_name: string; course_value: number | string; amount_received: number | string; remaining_balance: number | string; entry_type?: 'course' | 'fee' | null; fee_obligation_id?: string | null; enrollment_id?: string | null }
 type StudentSummaryRow = { student_id: string; paid: number | string; remaining: number | string; courses: number; last_activity: string | null; line_count: number | string; course_names: string[] | null }
+type CourseFinancialRow = { enrollmentId: string; studentId: string; courseId: string; courseName: string; courseValue: number; paid: number; remaining: number }
 type MovementRow = { id: string; movement_type: 'receipt' | 'payment'; voucher_number: number; voucher_date: string; amount: number | string; party_name: string | null; context: string | null; external_share?: number | string | null }
 function normalizeStudentStatus(value: string | null | undefined): Student['status'] {
   return value === 'archived' ? 'archived' : value === 'completed' ? 'completed' : 'active'
@@ -44,6 +47,7 @@ function normalizeStudentStatus(value: string | null | undefined): Student['stat
 function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: normalizeStudentStatus(row.status), archivedAt: row.archived_at ?? null, archiveReason: row.archive_reason ?? null } }
 function normalizeStatementLine(row: StatementRow): StudentStatementLine { return { id: row.id, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, studentId: row.student_id, studentName: row.student_name, courseName: row.course_name, courseValue: Number(row.course_value), amountReceived: Number(row.amount_received), remainingBalance: Number(row.remaining_balance), entryType: row.entry_type ?? 'course', feeObligationId: row.fee_obligation_id ?? null, enrollmentId: row.enrollment_id ?? null } }
 function normalizeStudentSummary(row: StudentSummaryRow): StudentFinancialSummary { return { studentId: row.student_id, paid: Number(row.paid), remaining: Number(row.remaining), courses: Number(row.courses), lastActivity: row.last_activity, lineCount: Number(row.line_count), courseNames: row.course_names ?? [] } }
+function normalizeCourseFinancialRow(row: { enrollment_id: string; student_id: string; course_id: string; course_name: string; course_value: number | string; paid: number | string; remaining: number | string }): CourseFinancialRow { return { enrollmentId: row.enrollment_id, studentId: row.student_id, courseId: row.course_id, courseName: row.course_name, courseValue: Number(row.course_value), paid: Number(row.paid), remaining: Number(row.remaining) } }
 function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
 type CourseRow = { id: string; name: string; base_fee: number | string | null; start_date: string | null; end_date: string | null; status: string; notes: string | null }
 function normalizeCourse(row: CourseRow): Course { return { id: row.id, name: row.name, baseFee: row.base_fee === null ? null : Number(row.base_fee), startDate: row.start_date, endDate: row.end_date, status: (row.status === 'ended' ? 'ended' : 'active') as CourseStatus, notes: row.notes ?? '' } }
@@ -81,7 +85,7 @@ function isAuthError(error: unknown): boolean {
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
-  students: [], statementLines: [], statementStudentId: null, statementLoading: false, studentSummaries: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
+  students: [], statementLines: [], statementStudentId: null, statementLoading: false, studentSummaries: [], courseFinancialRows: [], movements: [], cancelledVouchers: [], courses: [], enrollments: [], feeObligations: [], isLoading: false, loaded: false, error: null,
   clearError: () => set({ error: null }),
   load: async () => {
     const supabase = getSupabaseBrowserClient()
@@ -180,5 +184,17 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       console.error('student statement load failed', error)
       set({ statementLines: [], statementStudentId: studentId, statementLoading: false, error: 'تعذّر تحميل كشف حساب الطالب. تحقّق من الاتصال وحاول مرة أخرى.' })
     }
+  },
+  loadCourseFinancialRoster: async (courseId) => {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('عميل قاعدة البيانات غير مهيأ.')
+    const { data, error } = await supabase.rpc('get_course_financial_roster', { p_course_id: courseId })
+    if (error) throw error
+    const rows = (data ?? []) as Array<{ enrollment_id: string; student_id: string; course_id: string; course_name: string; course_value: number | string; paid: number | string; remaining: number | string }>
+    const roster = rows.map(normalizeCourseFinancialRow)
+    set((state) => ({
+      courseFinancialRows: [...state.courseFinancialRows.filter((row) => row.courseId !== courseId), ...roster],
+    }))
+    return roster
   },
 }))

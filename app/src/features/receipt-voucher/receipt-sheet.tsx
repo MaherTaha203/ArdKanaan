@@ -46,6 +46,7 @@ export function ReceiptSheet() {
   const students = useWorkspaceStore((state) => state.students)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const loadStudentStatement = useWorkspaceStore((state) => state.loadStudentStatement)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const currencySymbol = useSettingsStore((state) => state.settings.currencySymbol)
   const maxAmount = useSettingsStore((state) => state.settings.maxVoucherAmount)
@@ -72,6 +73,10 @@ export function ReceiptSheet() {
 
   useLayoutEffect(() => { clearError(); clearAdminError() }, [clearError, clearAdminError])
   useEffect(() => { if (!pickedStudentId) return; form.setValue('allocations', [], { shouldValidate: false }); form.resetField('amountReceived') }, [pickedStudentId, form])
+  useEffect(() => {
+    if (!pickedStudentId) return
+    void loadStudentStatement(pickedStudentId).catch((error) => console.error('receipt student statement load failed', error))
+  }, [pickedStudentId, loadStudentStatement])
   useEffect(() => {
     if (!editVoucherId) return
     let active = true

@@ -1,11 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Money } from '@/components/ui/money'
 import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, attentionList, financialTotals, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
+import { aggregateStudentsFromSummaries, attentionList, financialTotals, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import type { FinancialMovement } from '@/types/domain'
 import { useSettingsStore } from '@/store/use-settings-store'
@@ -26,6 +26,8 @@ function statement(movement: FinancialMovement): string {
 export function GlanceWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const statementLines = useWorkspaceStore((state) => state.statementLines)
+  const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
+  const loadStudentStatement = useWorkspaceStore((state) => state.loadStudentStatement)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
   const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const movements = useWorkspaceStore((state) => state.movements)
@@ -41,9 +43,15 @@ export function GlanceWorkspace() {
   const totals = useMemo(() => financialTotals(movements), [movements])
   const recent = useMemo(() => movementsNewestFirst(movements).slice(0, RECENT_LIMIT), [movements])
   const attention = useMemo(
-    () => attentionList(aggregateStudents(students, statementLines, enrollments, feeObligations)).slice(0, attentionCount),
-    [students, statementLines, enrollments, feeObligations, attentionCount],
+    () => attentionList(aggregateStudentsFromSummaries(students, studentSummaries)).slice(0, attentionCount),
+    [students, studentSummaries, attentionCount],
   )
+  useEffect(() => {
+    const ids = attention.map((item) => item.student.id)
+    if (ids.length === 0) return
+    void Promise.all(ids.map((id) => loadStudentStatement(id))).catch((error) => console.error('attention statements load failed', error))
+  }, [attention, loadStudentStatement])
+
   const owedCourses = useMemo(() => {
     const map = new Map<string, string>()
     for (const item of attention) {

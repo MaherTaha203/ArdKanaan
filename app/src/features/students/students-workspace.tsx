@@ -67,16 +67,25 @@ export function StudentsWorkspace() {
         const idHit = idNumber ? idNumber.replace(/\D/g, '').includes(digits) : false
         if (phoneHit || idHit) return true
       }
-      return item.courseNames.some((courseName) => normalizeArabic(courseName).includes(term))
+      // Course search goes through enrollments (authoritative), not summary-derived
+      // courseNames: a student matches when any of their enrollments' course name
+      // contains the term. (ADR task §4 — regression-tested.)
+      return enrollments.some(
+        (enrollment) => enrollment.studentId === item.student.id && normalizeArabic(enrollment.courseName).includes(term),
+      )
     })
-  }, [sorted, query])
+  }, [sorted, query, enrollments])
 
   const activeId = selectedStudentId ?? filtered[0]?.student.id ?? sorted[0]?.student.id ?? null
   const active = useMemo(() => aggregates.find((item) => item.student.id === activeId) ?? null, [aggregates, activeId])
+  // Lazy-load only the active student's statement; the store guards against a stale
+  // response from a previously-selected student overwriting the current one.
   useEffect(() => {
     if (loaded && activeId) void loadStudentStatement(activeId)
   }, [loaded, activeId, loadStudentStatement])
 
+  // Gate the ledger on the statement for THIS student having finished loading, so the
+  // previous student's statement is never shown while the new one is in flight.
   const statementReady = Boolean(activeId && statementStudentId === activeId && !statementLoading)
   const activeLedger = useMemo(
     () => (statementReady && activeId ? studentLedger(activeId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }),

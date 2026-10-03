@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { Printer, RefreshCw, Search } from 'lucide-react'
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { FinancialReportPrint } from '@/features/print/financial-report-print'
-import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { CancelVoucherDialog } from '@/features/financial-report/cancel-voucher-dialog'
 import { VoucherDetailsSheet } from '@/features/financial-report/voucher-details-sheet'
 import { Button } from '@/components/ui/button'
@@ -11,7 +10,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { ReportPeriodSelector } from '@/features/financial-report/report-period-selector'
 import { periodLabel, reportPeriodRange, type ReportPeriod } from '@/features/financial-report/report-period'
-import { aggregateStudents, externalPartyStatement, financialTotals, paymentCount, receiptCount, studentLedger } from '@/lib/aggregate'
+import { externalPartyStatement, financialTotals, paymentCount, receiptCount } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { voucherRef } from '@/lib/voucher'
 import type { FinancialMovement } from '@/types/domain'
@@ -25,10 +24,6 @@ function partyAndContext(movement: FinancialMovement) {
 }
 export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const movements = useWorkspaceStore((state) => state.movements)
-  const students = useWorkspaceStore((state) => state.students)
-  const statementLines = useWorkspaceStore((state) => state.statementLines)
-  const enrollments = useWorkspaceStore((state) => state.enrollments)
-  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const isLoading = useWorkspaceStore((state) => state.isLoading)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
@@ -41,13 +36,9 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
   const [printing, setPrinting] = useState(false)
   const [cancelTarget, setCancelTarget] = useState<FinancialMovement | null>(null)
   const [detailsId, setDetailsId] = useState<string | null>(null)
-  const [printStudentId, setPrintStudentId] = useState<string | null>(null)
   const [accountName, setAccountName] = useState('')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const studentStatements = useMemo(() => aggregateStudents(students, statementLines, enrollments, feeObligations), [students, statementLines, enrollments, feeObligations])
-  const printStudent = useMemo(() => printStudentId ? studentStatements.find((item) => item.student.id === printStudentId) ?? null : null, [studentStatements, printStudentId])
-  const printStudentLedger = useMemo(() => printStudentId ? studentLedger(printStudentId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }, [printStudentId, statementLines, enrollments, feeObligations])
   const presetRange = period === 'custom' ? { start: customStart || null, end: customEnd || null } : reportPeriodRange(period)
   const start = presetRange.start
   const toDate = presetRange.end
@@ -126,7 +117,6 @@ export function FinancialReportWorkspace({ view }: { view: ReportView }) {
       {isLoading || !loaded ? <SkeletonRows rows={8} /> : view === 'external' ? <section className="border-y border-border"><div className="overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-sm"><thead><tr className="text-[11px] text-faint"><th className="border-b border-border px-4 py-3 text-start">التاريخ</th><th className="border-b border-border px-4 py-3 text-start">رقم السند</th><th className="border-b border-border px-4 py-3 text-start">البيان</th><th className="border-b border-border px-4 py-3 text-end">إجمالي المقبوض</th><th className="border-b border-border px-4 py-3 text-end">حصة المركز</th><th className="border-b border-border px-4 py-3 text-end">لصالح الجهة الخارجية</th></tr></thead><tbody>{externalStatement.lines.map((line) => <tr key={line.id}><td className="figure border-b border-border px-4 py-3">{formatDate(line.voucherDate)}</td><td className="figure border-b border-border px-4 py-3">{voucherRef('receipt', line.voucherNumber)}</td><td className="border-b border-border px-4 py-3 text-muted-foreground">{line.context ? `${line.party} · ${line.context}` : line.party}</td><td className="figure border-b border-border px-4 py-3 text-end font-semibold">{formatNumber(line.amount)}</td><td className="figure border-b border-border px-4 py-3 text-end">{formatNumber(line.instituteShare)}</td><td className="figure border-b border-border px-4 py-3 text-end font-semibold text-gold">{formatNumber(line.externalShare)}</td></tr>)}{externalStatement.lines.length === 0 ? <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-faint">لا توجد مبالغ لجهات خارجية في هذه الفترة.</td></tr> : null}</tbody>{externalStatement.lines.length > 0 ? <tfoot><tr className="font-semibold"><td className="border-t border-border-strong px-4 py-3" colSpan={3}>الإجمالي</td><td className="figure border-t border-border-strong px-4 py-3 text-end">{formatNumber(externalStatement.totalAmount)}</td><td className="figure border-t border-border-strong px-4 py-3 text-end">{formatNumber(externalStatement.totalInstitute)}</td><td className="figure border-t border-border-strong px-4 py-3 text-end text-gold">{formatNumber(externalStatement.totalExternal)}</td></tr></tfoot> : null}</table></div></section> : <section className="border-y border-border"><div className="overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-sm"><thead><tr className="text-[11px] text-faint"><th className="border-b border-border px-4 py-3 text-start">التاريخ</th><th className="border-b border-border px-4 py-3 text-start">رقم السند</th><th className="border-b border-border px-4 py-3 text-start">البيان</th><th className="border-b border-border px-4 py-3 text-end">المبلغ</th></tr></thead><tbody>{viewMovements.map((movement) => <tr key={`${movement.movementType}-${movement.id}`} className="group cursor-pointer transition-colors hover:bg-highlight/50" onClick={() => setDetailsId(movement.id)}><td className="figure border-b border-border px-4 py-3">{formatDate(movement.voucherDate)}</td><td className="border-b border-border px-4 py-3"><button type="button" className="figure font-semibold text-olive underline-offset-4 hover:underline" onClick={(event) => { event.stopPropagation(); setDetailsId(movement.id) }} aria-label={`فتح السند ${voucherRef(movement.movementType, movement.voucherNumber)}`}>{voucherRef(movement.movementType, movement.voucherNumber)}</button></td><td className="border-b border-border px-4 py-3 text-muted-foreground">{partyAndContext(movement)}</td><td className={`figure border-b border-border px-4 py-3 text-end font-semibold ${movement.movementType === 'receipt' ? 'text-gold' : 'text-clay'}`}>{formatNumber(movement.amount)}</td></tr>)}{viewMovements.length === 0 ? <tr><td colSpan={4} className="px-4 py-12 text-center text-sm text-faint">لا توجد حركات في هذه الفترة.</td></tr> : null}</tbody></table></div></section>}
       {detailsMovement ? <VoucherDetailsSheet movement={detailsMovement} onClose={() => setDetailsId(null)} onEdit={() => { setDetailsId(null); if (detailsMovement.movementType === 'receipt') openEditReceipt(detailsMovement.id); else openEditPayment(detailsMovement.id) }} onCancel={() => { setDetailsId(null); setCancelTarget(detailsMovement) }} /> : null}
       {printing ? <FinancialReportPrint view={view} title={printTitle} periodLabel={printPeriodLabel} net={totals.net} totalIn={totals.totalIn} totalOut={totals.totalOut} opening={opening} receiptCount={receiptCount(scoped)} paymentCount={paymentCount(scoped)} movements={scoped} externalHeld={totals.externalHeld} instituteRevenue={totals.instituteRevenue} onClose={() => setPrinting(false)} /> : null}
-      {printStudent ? <StudentStatementPrint studentName={printStudent.student.name} courses={printStudent.courses} entries={printStudentLedger.entries} totalDebit={printStudentLedger.totalDebit} totalCredit={printStudentLedger.totalCredit} balance={printStudentLedger.balance} onClose={() => setPrintStudentId(null)} /> : null}
       {cancelTarget ? <CancelVoucherDialog movement={cancelTarget} onClose={() => setCancelTarget(null)} onCancelled={async () => { setCancelTarget(null); await reload() }} /> : null}
     </div>
   )
