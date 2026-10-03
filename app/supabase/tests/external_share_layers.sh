@@ -88,7 +88,28 @@ SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/seed.sql"
 run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/seed.sql" || { echo seed FAIL; exit 1; }
 
-echo "== Course roster parity: legacy enrollment + legacy receipt remain visible on demand ==";
+echo "== Course roster parity: legacy receipt (pre-allocation posting model) remains visible on demand ==";
+# The enrollment carries a real course_id (enrollments.course_id is NOT NULL since
+# migration 20260915150000, in shared history before any divergence) and needs
+# session_replication_role=replica only to bypass the course_value/base_fee
+# snapshot-match check (this course has no base_fee). The LEGACY element under
+# test is the RECEIPT shape: recorded directly against the course NAME, with
+# allocation_mode=false and no receipt_allocations row — exactly how a receipt
+# looked before the allocation model existed. get_course_financial_roster's
+# legacy_course_paid CTE must still attribute its amount to the matching
+# enrollment via student_id + course_name.
+#
+# The receipt itself is posted through the real app.receipt_posting firewall GUC
+# (the same one post_receipt_with_allocations sets), NOT under replica mode: a
+# legacy, pre-allocation receipt was still a real receipt that went through
+# *some* posting path and so is correctly ledger-tracked, like every other
+# voucher. Posting it under replica mode would bypass the ledger-recording
+# trigger entirely — producing a receipt_vouchers row with no ledger movement, a
+# state the real application can never produce (every receipt_vouchers insert in
+# the real app goes through the RPC, which always records a movement) and that
+# restore_center_data is consequently not designed to reproduce byte-for-byte:
+# restoring a backup correctly re-establishes a ledger movement for every voucher
+# it restores, since every real voucher is a real financial fact.
 cat > "$BASE/course_roster_legacy.sql" <<SQL
 set session_replication_role = replica;
 insert into public.courses (id, name, status)
@@ -96,12 +117,14 @@ values ('00000000-0000-0000-0000-0000000d0001', 'دورة قديمة', 'active')
 insert into public.students (id, name, status)
 values ('00000000-0000-0000-0000-0000000d0002', 'طالب قديم', 'active');
 insert into public.enrollments (id, student_id, course_id, course_name, course_value)
-values ('00000000-0000-0000-0000-0000000d0003', '00000000-0000-0000-0000-0000000d0002', null, 'دورة قديمة', 100);
+values ('00000000-0000-0000-0000-0000000d0003', '00000000-0000-0000-0000-0000000d0002', '00000000-0000-0000-0000-0000000d0001', 'دورة قديمة', 100);
+set session_replication_role = origin;
+select set_config('app.receipt_posting', 'on', false);
 insert into public.receipt_vouchers
   (id, voucher_date, student_id, student_name_snapshot, course_name, course_value, amount_received, payer_name, notes, fee_category, external_share, allocation_mode)
 values
   ('00000000-0000-0000-0000-0000000d0004', '2026-02-01', '00000000-0000-0000-0000-0000000d0002', 'طالب قديم', 'دورة قديمة', 100, 40, 'طالب قديم', '', null, 0, false);
-set session_replication_role = origin;
+select set_config('app.receipt_posting', 'off', false);
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/course_roster_legacy.sql"
 run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/course_roster_legacy.sql" || { echo legacy roster fixture FAIL; exit 1; }
@@ -306,9 +329,13 @@ eq "Non-owner course roster returns no rows" "$(run "$PGBIN/psql -h $SOCK -U $PU
 eq "Non-owner student summary returns no rows" "$(run "$PGBIN/psql -h $SOCK -U $PU -X -qtA -d $DB -f $BASE/course_roster_auth.sql" | tail -n1 | tr -d '[:space:]')" "0"
 
 echo "== Aggregate over financial_movements (receipts only) =="
-eq "total gross in"                  "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "300"
+# 300/140/160 from Cases A-C (100+100+100 gross, 0+40+100 external) + the legacy
+# receipt (40 gross, external_share=0, now ledger-tracked like any other posted
+# receipt — see the course_roster_legacy fixture above): 300+40=340 gross,
+# 140+0=140 external unchanged, 160+40=200 center.
+eq "total gross in"                  "$(runFP "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt'")" "340"
 eq "total external held"             "$(runFP "select coalesce(sum(external_share),0)::int from public.financial_movements where movement_type='receipt'")" "140"
-eq "center receipts (Σ amount-ext)"  "$(runFP "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")" "160"
+eq "center receipts (Σ amount-ext)"  "$(runFP "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt'")" "200"
 
 
 echo "== Expansion P1: payment posting, idempotency, cancellation, ledger reversal ==";
