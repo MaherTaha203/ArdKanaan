@@ -147,13 +147,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     try {
       const result = await fetchAllRows<StatementRow>((from, to) =>
         supabase.rpc('get_student_statement_lines', { p_student_id: studentId })
-
           .order('voucher_date', { ascending: true })
-
           .order('voucher_number', { ascending: true })
-
           .order('id', { ascending: true })
-
           .range(from, to),
       )
       if (requestId !== statementRequestSequence) return
@@ -167,13 +163,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         try {
           const retry = await fetchAllRows<StatementRow>((from, to) =>
             supabase.rpc('get_student_statement_lines', { p_student_id: studentId })
-
               .order('voucher_date', { ascending: true })
-
               .order('voucher_number', { ascending: true })
-
               .order('id', { ascending: true })
-
               .range(from, to),
           )
           if (requestId !== statementRequestSequence) return
