@@ -448,6 +448,22 @@ eq "scoped summary zero-limit" "$(runFP "select count(*) from public.get_student
 eq "scoped summary limit cap" "$(runFP "select count(*) from public.get_student_financial_summary_page(0,5000)")" "1000"
 
 
+echo "== GROWTH G2g: scoped summary RPC execution cost ==";
+for spec in "first:0" "middle:50000" "last:99000"; do
+  label="${spec%%:*}"
+  offset="${spec##*:}"
+  cat > "$BASE/plan_summary_rpc_${label}.sql" <<SQL
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select * from public.get_student_financial_summary_page($offset, 1000);
+SQL
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_summary_rpc_${label}.sql"
+  run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_summary_rpc_${label}.sql" >"$BASE/plan_summary_rpc_${label}.out"
+  grep -E "Function Scan|Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Hash|Execution Time|Planning Time" "$BASE/plan_summary_rpc_${label}.out" | sed 's/^/   /'
+  RPC_PAGE_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_summary_rpc_${label}.out")
+  echo "   scoped summary $label RPC Execution Time: ${RPC_PAGE_MS:-unknown} ms"
+done
+
 echo "== GROWTH G3: integrity checks after load =="
 eq "financial receipt rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='receipt'")" "25005"
 eq "financial payment rows visible" "$(runFP "select count(*) from public.financial_movements where movement_type='payment'")" "25011"
