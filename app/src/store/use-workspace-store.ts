@@ -146,12 +146,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     set({ statementLines: [], statementStudentId: studentId, statementLoading: true, error: null })
     try {
       const result = await fetchAllRows<StatementRow>((from, to) =>
-        supabase
-          .from('student_statement_lines')
-          .select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id')
-          .eq('student_id', studentId)
+        supabase.rpc('get_student_statement_lines', { p_student_id: studentId })
           .order('voucher_date', { ascending: true })
           .order('voucher_number', { ascending: true })
+          .order('id', { ascending: true })
           .range(from, to),
       )
       if (requestId !== statementRequestSequence) return
@@ -164,12 +162,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         if (requestId !== statementRequestSequence) return
         try {
           const retry = await fetchAllRows<StatementRow>((from, to) =>
-            supabase
-              .from('student_statement_lines')
-              .select('id, voucher_number, voucher_date, student_id, student_name, course_name, course_value, amount_received, remaining_balance, entry_type, fee_obligation_id, enrollment_id')
-              .eq('student_id', studentId)
+            supabase.rpc('get_student_statement_lines', { p_student_id: studentId })
               .order('voucher_date', { ascending: true })
               .order('voucher_number', { ascending: true })
+              .order('id', { ascending: true })
               .range(from, to),
           )
           if (requestId !== statementRequestSequence) return

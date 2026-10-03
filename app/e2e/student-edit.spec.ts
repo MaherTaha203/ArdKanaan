@@ -16,6 +16,7 @@ test('edits a student and persists the change through an UPDATE', async ({ page 
 
   // The row click opens a side preview; follow through to the full statement.
   await page.getByRole('button', { name: 'فتح الكشف الكامل' }).click()
+  await expect.poll(() => handle.statementReads).toContain('s-1')
 
   // Open the edit sheet for the active student and correct the name.
   await page.getByRole('button', { name: 'تعديل بيانات الطالب' }).click()
