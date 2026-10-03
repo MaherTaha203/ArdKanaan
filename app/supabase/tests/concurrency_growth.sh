@@ -383,6 +383,37 @@ echo "   sequential 1000-row page requests required: $SUMMARY_PAGES"
 echo "   estimated full summary JSON array payload: $SUMMARY_JSON_BYTES bytes"
 eq "summary page count at 100k" "$SUMMARY_PAGES" "100"
 
+# Compare the repeated range-query path with one server-side JSON aggregation.
+# This preserves the complete current result contract and sort semantics while
+# allowing the view to be evaluated once rather than once per 1,000-row page.
+echo "== GROWTH G2e: one-pass summary JSON aggregation =="
+cat > "$BASE/plan_summary_json.sql" <<SQL
+set statement_timeout = '120s';
+explain (analyze, buffers, format text)
+select coalesce(
+  jsonb_agg(jsonb_build_object(
+    'student_id', s.student_id,
+    'paid', s.paid,
+    'remaining', s.remaining,
+    'courses', s.courses,
+    'last_activity', s.last_activity,
+    'line_count', s.line_count,
+    'course_names', s.course_names
+  ) order by s.student_id),
+  '[]'::jsonb
+)
+from public.student_financial_summary s;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/plan_summary_json.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_summary_json.sql" >"$BASE/plan_summary_json.out"
+grep -E "Aggregate|Sort|Execution Time|Planning Time" "$BASE/plan_summary_json.out" | sed 's/^/   /'
+JSON_SUMMARY_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_summary_json.out")
+JSON_SUMMARY_BYTES=$(runFP "select octet_length(coalesce(jsonb_agg(jsonb_build_object('student_id',s.student_id,'paid',s.paid,'remaining',s.remaining,'courses',s.courses,'last_activity',s.last_activity,'line_count',s.line_count,'course_names',s.course_names) order by s.student_id),'[]'::jsonb)::text) from public.student_financial_summary s")
+JSON_SUMMARY_ROWS=$(runFP "select jsonb_array_length(coalesce(jsonb_agg(jsonb_build_object('student_id',s.student_id) order by s.student_id),'[]'::jsonb)) from public.student_financial_summary s")
+echo "   one-pass JSON summary: rows=$JSON_SUMMARY_ROWS; Execution Time: ${JSON_SUMMARY_MS:-unknown} ms; serialized bytes=$JSON_SUMMARY_BYTES"
+eq "one-pass JSON summary row count" "$JSON_SUMMARY_ROWS" "100000"
+eq "one-pass JSON summary payload is non-empty" "$( [ "${JSON_SUMMARY_BYTES:-0}" -gt 0 ] && echo 1 || echo 0 )" "1"
+
 cat > "$BASE/plan_statement_rpc.sql" <<SQL
 set statement_timeout = '120s';
 explain (analyze, buffers, format text)
