@@ -72,6 +72,30 @@ async function loadStudents(supabase: SupabaseClient): Promise<{ data: StudentRo
   return fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to))
 }
 
+const STUDENT_SUMMARY_PAGE_SIZE = 1000
+
+async function loadStudentSummaries(supabase: SupabaseClient): Promise<StudentSummaryRow[]> {
+  const rows: StudentSummaryRow[] = []
+  let offset = 0
+
+  while (true) {
+    const { data, error } = await supabase.rpc('get_student_financial_summary_page', {
+      p_offset: offset,
+      p_limit: STUDENT_SUMMARY_PAGE_SIZE,
+    })
+
+    if (error) throw error
+
+    const page = (data ?? []) as StudentSummaryRow[]
+    rows.push(...page)
+
+    if (page.length < STUDENT_SUMMARY_PAGE_SIZE) break
+    offset += page.length
+  }
+
+  return rows
+}
+
 // A request can fail with 401 when the access token expires mid-session (e.g. the
 // tab slept past the proactive refresh). That is recoverable: refresh the session
 // and retry once, so a transient expiry never surfaces as a hard load error.
@@ -99,7 +123,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       try {
         const [studentsResult, statementResult, movementsResult, cancelledResult] = await Promise.all([
           loadStudents(supabase),
-          fetchAllRows<StudentSummaryRow>((from, to) => supabase.from('student_financial_summary').select('student_id, paid, remaining, courses, last_activity, line_count, course_names').order('student_id', { ascending: true }).range(from, to)),
+          loadStudentSummaries(supabase),
           fetchAllRows<MovementRow>((from, to) => supabase.from('financial_movements').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, external_share').order('voucher_date', { ascending: true }).order('created_at', { ascending: true }).range(from, to)),
           fetchAllRows<CancelledRow>((from, to) => supabase.from('cancelled_vouchers').select('id, movement_type, voucher_number, voucher_date, amount, party_name, context, cancelled_at, cancel_reason').order('cancelled_at', { ascending: false }).range(from, to)),
         ])
