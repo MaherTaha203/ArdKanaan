@@ -80,7 +80,7 @@ run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/seed.s
 eq "student volume" "$(runFP "select count(*) from public.students where name like 'Growth Student %'")" "100000"
 eq "enrollment volume" "$(runFP "select count(*) from public.enrollments where course_name like 'Growth Course %'")" "100000"
 
-echo "== create 20000 fee obligations through actual RPC =="
+echo "== create 100000 fee obligations through actual RPC =="
 cat > "$BASE/fees.sql" <<SQL
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000aa';
 select public.create_fee_obligations(
@@ -240,7 +240,7 @@ if ! run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/g
   fail "25000 synthetic payment growth load"; sed 's/^/       /' "$BASE/growth_payments.out"
 else
   elapsed_ms=$((($(date +%s%N)-start)/1000000))
-  echo "   5000 payment insert wall time: ${elapsed_ms} ms"
+  echo "   25000 payment insert wall time: ${elapsed_ms} ms"
   pass "25000 synthetic payment growth load"
 fi
 eq "growth payment volume" "$(runFP "select count(*) from public.payment_vouchers where expense_type='Growth synthetic'")" "25000"
@@ -350,7 +350,7 @@ run "$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB -f $BASE/plan_student_summary.sql"
 grep -E "Seq Scan|Index Scan|Index Only Scan|Bitmap|Sort|WindowAgg|Hash|Execution Time|Planning Time" "$BASE/plan_student_summary.out" | sed 's/^/   /'
 SUMMARY_MS=$(awk '/Execution Time:/{gsub(/[^0-9.]/,"",$3); print $3; exit}' "$BASE/plan_student_summary.out")
 SUMMARY_ROWS=$(runFP "select count(*) from public.student_financial_summary")
-echo "   student_financial_summary rows: \${SUMMARY_ROWS}; Execution Time: \${SUMMARY_MS:-unknown} ms"
+echo "   student_financial_summary rows: ${SUMMARY_ROWS}; Execution Time: ${SUMMARY_MS:-unknown} ms"
 eq "server summary row volume at 100k" "$SUMMARY_ROWS" "100000"
 
 cat > "$BASE/plan_statement_rpc.sql" <<SQL
