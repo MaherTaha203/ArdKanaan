@@ -193,7 +193,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         || Number(a.voucher_number) - Number(b.voucher_number)
         || String(a.id).localeCompare(String(b.id)),
       )
-      const bounds = request.headers()['range']?.match(/^(\\d+)-(\\d+)$/)
+      const bounds = request.headers()['range']?.match(/^(\d+)-(\d+)$/)
       const from = bounds ? Number(bounds[1]) : 0
       const to = bounds ? Number(bounds[2]) : lines.length - 1
       const pageRows = lines.slice(from, to + 1)
