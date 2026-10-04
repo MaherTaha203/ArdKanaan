@@ -140,6 +140,68 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, { students: restoredStudents.length, receipt_vouchers: Array.isArray(backup.receipt_vouchers) ? backup.receipt_vouchers.length : 0, payment_vouchers: Array.isArray(backup.payment_vouchers) ? backup.payment_vouchers.length : 0 })
     }
 
+    if (table?.startsWith('rpc/get_student_financial_summary_page') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_offset?: number; p_limit?: number }
+      const offset = Math.max(0, Number(payload.p_offset ?? 0))
+      const limit = Math.min(1000, Math.max(0, Number(payload.p_limit ?? 1000)))
+      const orderedStudents = [...students].sort((a, b) => a.id.localeCompare(b.id))
+      const pageStudents = orderedStudents.slice(offset, offset + limit)
+      const activeReceipts = handle.receiptInserts.filter((receipt) => !receipt.cancelled_at)
+      const activeReceiptIds = new Set(activeReceipts.map((receipt) => String(receipt.id ?? '')))
+      return json(route, pageStudents.map((student) => {
+        const studentReceipts = activeReceipts.filter((receipt) => String(receipt.student_id ?? '') === student.id)
+        const studentAllocations = handle.receiptAllocations.filter((allocation) => activeReceiptIds.has(String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '')))
+        const coursePaidByEnrollment = new Map<string, number>()
+        const feePaidByObligation = new Map<string, number>()
+        for (const allocation of studentAllocations) {
+          const receipt = activeReceipts.find((item) => String(item.id ?? '') === String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? ''))
+          if (!receipt || String(receipt.student_id ?? '') !== student.id) continue
+          const amount = Number(allocation.amount ?? 0)
+          if (String(allocation.allocation_type ?? allocation.type ?? '') === 'course' && allocation.enrollment_id) {
+            const id = String(allocation.enrollment_id)
+            coursePaidByEnrollment.set(id, (coursePaidByEnrollment.get(id) ?? 0) + amount)
+          }
+          if (String(allocation.allocation_type ?? allocation.type ?? '') === 'fee' && allocation.fee_obligation_id) {
+            const id = String(allocation.fee_obligation_id)
+            feePaidByObligation.set(id, (feePaidByObligation.get(id) ?? 0) + amount)
+          }
+        }
+        const legacyPaidByCourse = new Map<string, number>()
+        for (const receipt of studentReceipts) {
+          if (receipt.allocation_mode !== false || receipt.fee_category != null) continue
+          const hasAllocation = handle.receiptAllocations.some((allocation) => String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '') === String(receipt.id ?? ''))
+          if (hasAllocation) continue
+          const key = String(receipt.course_name ?? '')
+          legacyPaidByCourse.set(key, (legacyPaidByCourse.get(key) ?? 0) + Number(receipt.amount_received ?? 0))
+        }
+        const studentEnrollments = enrollments.filter((enrollment) => enrollment.student_id === student.id)
+        const courseNames = [...new Set(studentEnrollments.map((enrollment) => enrollment.course_name).filter(Boolean))]
+        const paid = studentReceipts.reduce((sum, receipt) => sum + Number(receipt.amount_received ?? 0), 0)
+        const courseRemaining = studentEnrollments.reduce((sum, enrollment) => (
+          sum + Math.max(0, enrollment.course_value - (coursePaidByEnrollment.get(enrollment.id) ?? 0) - (legacyPaidByCourse.get(enrollment.course_name) ?? 0))
+        ), 0)
+        const feeRows = feeObligations.filter((fee) => fee.student_id === student.id && !fee.cancelled_at)
+        const feeRemaining = feeRows.reduce((sum, fee) => sum + Math.max(0, fee.amount - (feePaidByObligation.get(fee.id) ?? 0)), 0)
+        const lineCount = studentReceipts.reduce((count, receipt) => {
+          const allocationCount = handle.receiptAllocations.filter((allocation) => String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '') === String(receipt.id ?? '')).length
+          return count + (allocationCount > 0 ? allocationCount : 1)
+        }, 0)
+        const lastActivity = studentReceipts.reduce<string | null>((latest, receipt) => {
+          const date = receipt.voucher_date ? String(receipt.voucher_date) : null
+          return !date || (latest && latest >= date) ? latest : date
+        }, null)
+        return {
+          student_id: student.id,
+          paid,
+          remaining: Math.max(0, courseRemaining + feeRemaining),
+          courses: studentEnrollments.length,
+          last_activity: lastActivity,
+          line_count: lineCount,
+          course_names: courseNames,
+        }
+      }))
+    }
+
     if (table?.startsWith('rpc/get_student_statement_lines') && method === 'POST') {
       const payload = safeJson(request.postData()) as { p_student_id?: string }
       const studentId = String(payload.p_student_id ?? '')
