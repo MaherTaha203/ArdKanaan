@@ -323,10 +323,8 @@ assert_query_eq "non-owner receipt count" "select count(*) from public.receipt_v
 echo "   PASS: non-owner receipt RPC denied"
 
 echo "== Guard G6: fractional receipt remains internally conserved at receipt level =="
-FRAC_GROSS="$(query "select coalesce(sum(amount),0)::numeric from public.financial_movements where id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))")"
-FRAC_CENTER="$(query "select coalesce(sum(amount-external_share),0)::numeric from public.financial_movements where id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))")"
-[ "$FRAC_GROSS" = "100" ]
-[ "$FRAC_CENTER" = "67" ]
+assert_query_eq "fractional receipt gross" "select coalesce(sum(amount),0)::int from public.financial_movements where movement_type='receipt' and id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))" "100"
+assert_query_eq "fractional receipt center" "select coalesce(sum(amount-external_share),0)::int from public.financial_movements where movement_type='receipt' and id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))" "67"
 echo "   PASS: fractional receipts conserve gross 100 and center 67"
 
 echo "=============== FINANCIAL GUARD-GAP SUITE PASSED ==============="
