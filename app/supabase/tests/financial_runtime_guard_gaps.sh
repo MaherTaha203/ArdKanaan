@@ -159,7 +159,7 @@ SQL
 
 echo "== Guard G1: duplicate fee allocation is rejected before any write =="
 make_fee 'رسوم التخصيص المكرر' 50 institute 0
-FEE_DUP="$(query \"select id from public.fee_obligations where description='رسوم التخصيص المكرر'\")"
+FEE_DUP="$(query "select id from public.fee_obligations where description='رسوم التخصيص المكرر'")"
 cat > "$BASE/dup_fee.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
 select public.post_receipt_with_allocations(
