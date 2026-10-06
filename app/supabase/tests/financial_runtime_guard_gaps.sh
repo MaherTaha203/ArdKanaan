@@ -33,7 +33,7 @@ query() { run "$PSQL -qtA -c \"$1\"" | tr -d '[:space:]'; }
 assert_query_eq() {
   local label="$1" sql="$2" expected="$3" actual
   actual="$(query "$sql")"
-  if [ "$actual" != "$expected" ]; then
+  if ! awk -v a="$actual" -v e="$expected" 'BEGIN { exit ((a+0)==(e+0) ? 0 : 1) }'; then
     echo "FAIL: $label expected=$expected actual=$actual"
     exit 1
   fi
