@@ -242,7 +242,7 @@ SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/frac_one.sql"
 run_sql "$BASE/frac_one.sql" >/dev/null
 FRAC_R1="$(query "select ra.external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000003'")"
-[ "$FRAC_R1" = "0.33" ]
+assert_query_eq "fractional external share for 1" "select ra.external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000003'" "0.33"
 
 cat > "$BASE/frac_two.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
@@ -266,9 +266,9 @@ run_sql "$BASE/frac_two.sql" >/dev/null
 FRAC_R2="$(query "select ra.external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000004'")"
 FRAC_TOTAL="$(query "select coalesce(sum(amount),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")"
 FRAC_EXT="$(query "select coalesce(sum(external_share),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")"
-[ "$FRAC_R2" = "32.67" ]
-[ "$FRAC_TOTAL" = "100" ]
-[ "$FRAC_EXT" = "33" ]
+assert_query_eq "fractional external share for 99" "select ra.external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000004'" "32.67"
+assert_query_eq "fractional allocation gross" "select coalesce(sum(amount),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'" "100"
+assert_query_eq "fractional external total" "select coalesce(sum(external_share),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'" "33"
 echo "   PASS: fractional split 0.33 + 32.67 = 33.00 with exact conservation"
 
 echo "== Guard G4: direct receipt insert is rejected outside the posting RPC =="
