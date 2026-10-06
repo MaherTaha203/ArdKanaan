@@ -123,25 +123,14 @@ run_sql "$BASE/owner.sql"
 STUDENT='00000000-0000-0000-0000-0000000a1001'
 ENROLLMENT='00000000-0000-0000-0000-0000000e1001'
 
-make_fee() {
-  local description="$1" amount="$2" category="$3" external="$4"
-  cat > "$BASE/make_fee.sql" <<SQL
+make_fee() {  # course student description amount category external
+  cat > "$BASE/fee.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
-select public.create_fee_obligations(
-  jsonb_build_object(
-    'course_id', '00000000-0000-0000-0000-0000000c1001'::uuid,
-    'student_ids', jsonb_build_array('$STUDENT'::uuid),
-    'description', '$description',
-    'amount', $amount,
-    'fee_category', '$category',
-    'external_share', $external
-  )
-);
+select public.create_fee_obligations('{"course_id":"$1","student_ids":["$2"],"description":"$3","amount":$4,"fee_category":"$5","external_share":$6}'::jsonb);
 SQL
-  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/make_fee.sql"
-  run_sql "$BASE/make_fee.sql" >/dev/null
+  [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/fee.sql"
+  run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/fee.sql"
 }
-
 post_receipt() {
   local amount="$1" key="$2" fee_id="$3" extra="${4:-}"
   cat > "$BASE/post_receipt.sql" <<SQL
@@ -164,7 +153,7 @@ SQL
 }
 
 echo "== Guard G1: duplicate fee allocation is rejected before any write =="
-make_fee 'رسوم التخصيص المكرر' 50 institute 0
+make_fee '00000000-0000-0000-0000-0000000c1001' "$STUDENT" 'رسوم التخصيص المكرر' 50 institute 0
 FEE_DUP="$(query "select id from public.fee_obligations where description='رسوم التخصيص المكرر'")"
 cat > "$BASE/dup_fee.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
@@ -222,7 +211,7 @@ grep -q 'DUPLICATE_ENROLLMENT_ALLOCATION' "$BASE/dup_course.out"
 echo "   PASS: duplicate course allocation rejected atomically"
 
 echo "== Guard G3: derived external split preserves fractional runtime value exactly =="
-make_fee 'رسوم الكسر' 100 shared 33
+make_fee '00000000-0000-0000-0000-0000000c1001' "$STUDENT" 'رسوم الكسر' 100 shared 33
 FEE_FRAC="$(query "select id from public.fee_obligations where description='رسوم الكسر'")""
 
 cat > "$BASE/frac_one.sql" <<SQL
