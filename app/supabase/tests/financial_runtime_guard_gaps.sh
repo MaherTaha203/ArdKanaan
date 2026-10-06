@@ -263,7 +263,7 @@ select public.post_receipt_with_allocations(
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/frac_two.sql"
 run_sql "$BASE/frac_two.sql" >/dev/null
-FRAC_R2="$(query "select external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000004'")"
+FRAC_R2="$(query "select ra.external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000004'")"
 FRAC_TOTAL="$(query "select coalesce(sum(amount),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")"
 FRAC_EXT="$(query "select coalesce(sum(external_share),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")"
 [ "$FRAC_R2" = "32.67" ]
