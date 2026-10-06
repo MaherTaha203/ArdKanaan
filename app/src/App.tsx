@@ -1,3 +1,4 @@
+import { ErrorBoundary } from '@/components/shell/error-boundary'
 import { AppShell } from '@/components/shell/app-shell'
 import { OpeningGate } from '@/features/auth/opening-gate'
 import { RecoveryGate } from '@/features/auth/recovery-gate'
@@ -25,4 +26,10 @@ function App() {
   return session ? <AppShell /> : <OpeningGate />
 }
 
-export default App
+export default function AppWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  )
+}
