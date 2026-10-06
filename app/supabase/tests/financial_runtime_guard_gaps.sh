@@ -242,7 +242,7 @@ select public.post_receipt_with_allocations(
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/frac_one.sql"
 run_sql "$BASE/frac_one.sql" >/dev/null
-FRAC_R1="$(query "select external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000003'")"
+FRAC_R1="$(query "select ra.external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000003'")"
 [ "$FRAC_R1" = "0.33" ]
 
 cat > "$BASE/frac_two.sql" <<SQL
