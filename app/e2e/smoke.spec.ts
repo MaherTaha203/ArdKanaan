@@ -156,11 +156,15 @@ test('supports financial report period selection, custom dates, and print period
   const dialog = page.getByRole('dialog', { name: 'اختيار فترة التقرير' })
   await expect(dialog).toBeVisible()
 
-  const selectorBox = await selector.boundingBox()
-  const dialogBox = await dialog.boundingBox()
-  expect(selectorBox).not.toBeNull()
-  expect(dialogBox).not.toBeNull()
-  expect(Math.abs((selectorBox?.width ?? 0) - (dialogBox?.width ?? 0))).toBeLessThanOrEqual(8)
+  await expect.poll(
+    async () => {
+      const selectorBox = await selector.boundingBox()
+      const dialogBox = await dialog.boundingBox()
+      if (!selectorBox || !dialogBox) return Number.POSITIVE_INFINITY
+      return Math.abs(selectorBox.width - dialogBox.width)
+    },
+    { timeout: 1000, message: 'Period selector and opened panel should converge to the same width after the entrance animation.' },
+  ).toBeLessThanOrEqual(8)
 
   for (const label of ['الكل', 'اليوم', 'أمس', 'هذا الأسبوع', 'الأسبوع الماضي', 'هذا الشهر', 'الشهر الماضي', 'آخر 7 أيام', 'آخر 30 يومًا', 'هذه السنة']) {
     await expect(dialog.getByRole('button', { name: label, exact: true })).toBeVisible()

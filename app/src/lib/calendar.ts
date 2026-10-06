@@ -40,10 +40,29 @@ export function monthMatrix(year: number, month0: number, weekStartsOn: number =
   return weeks
 }
 
+function parseIsoParts(iso: string): [number, number, number] {
+  const [yearText, monthText, dayText] = iso.split('-')
+  if (!yearText || !monthText || !dayText) {
+    throw new RangeError(`Invalid ISO date: ${iso}`)
+  }
+
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    throw new RangeError(`Invalid ISO date: ${iso}`)
+  }
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    throw new RangeError(`Invalid ISO date: ${iso}`)
+  }
+
+  return [year, month, day]
+}
+
 // Shift an ISO date by whole days, staying a valid calendar date across month/year
 // boundaries.
 export function addDays(iso: string, delta: number): string {
-  const [year, month, day] = iso.split('-').map(Number)
+  const [year, month, day] = parseIsoParts(iso)
   const date = new Date(year, month - 1, day + delta)
   return isoDate(date.getFullYear(), date.getMonth(), date.getDate())
 }
@@ -51,7 +70,7 @@ export function addDays(iso: string, delta: number): string {
 // Shift an ISO date by whole months, clamping the day to the target month's length
 // (e.g. 31 Jan − 1 month → 31 Dec, but 31 Mar − 1 month → 28/29 Feb).
 export function addMonths(iso: string, delta: number): string {
-  const [year, month, day] = iso.split('-').map(Number)
+  const [year, month, day] = parseIsoParts(iso)
   const target = new Date(year, month - 1 + delta, 1)
   const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
   return isoDate(target.getFullYear(), target.getMonth(), Math.min(day, lastDay))
@@ -60,5 +79,11 @@ export function addMonths(iso: string, delta: number): string {
 // Short Arabic weekday headers, ordered to match the grid's first column.
 export function weekdayLabels(weekStartsOn: number = WEEK_STARTS_ON): string[] {
   const byDayIndex = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت']
-  return Array.from({ length: 7 }, (_, i) => byDayIndex[(weekStartsOn + i) % 7])
+  return Array.from({ length: 7 }, (_, i) => {
+    const label = byDayIndex[(weekStartsOn + i) % 7]
+    if (label === undefined) {
+      throw new RangeError(`Invalid week start: ${weekStartsOn}`)
+    }
+    return label
+  })
 }

@@ -30,5 +30,7 @@ test('edits a student and persists the change through an UPDATE', async ({ page 
   // The change is confirmed and reached the database as an UPDATE, not a new row.
   await expect(page.getByText('تم حفظ بيانات الطالب')).toBeVisible()
   expect(handle.studentUpdates).toHaveLength(1)
-  expect(handle.studentUpdates[0].body).toMatchObject({ name: 'سارة أحمد الحسن' })
+  const [studentUpdate] = handle.studentUpdates
+  if (!studentUpdate) throw new Error('Expected one student update')
+  expect(studentUpdate.body).toMatchObject({ name: 'سارة أحمد الحسن' })
 })
