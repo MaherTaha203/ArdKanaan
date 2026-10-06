@@ -30,6 +30,14 @@ PU="${PG_RUNAS:-$USER}"
 PSQL="$PGBIN/psql -h $SOCK -U $PU -X -q -d $DB"
 run_sql() { run "$PSQL -v ON_ERROR_STOP=1 -f '$1'"; }
 query() { run "$PSQL -qtA -c \"$1\"" | tr -d '[:space:]'; }
+assert_query_eq() {
+  local label="$1" sql="$2" expected="$3" actual
+  actual="$(query "$sql")"
+  if [ "$actual" != "$expected" ]; then
+    echo "FAIL: $label expected=$expected actual=$actual"
+    exit 1
+  fi
+}
 
 cleanup() {
   run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1 || true
@@ -179,8 +187,8 @@ if run_sql "$BASE/dup_fee.sql" >"$BASE/dup_fee.out" 2>&1; then
   echo "FAIL: duplicate fee allocation was accepted"; exit 1
 fi
 grep -q 'DUPLICATE_FEE_ALLOCATION' "$BASE/dup_fee.out"
-[ "$(query "select count(*) from public.receipt_vouchers where idempotency_key='90000000-0000-0000-0000-000000000001'")" = 0" ]
-[ "$(query "select coalesce(sum(amount),0) from public.receipt_allocations where fee_obligation_id='$FEE_DUP'")" = 0" ]
+assert_query_eq "duplicate fee receipt count" "select count(*) from public.receipt_vouchers where idempotency_key='90000000-0000-0000-0000-000000000001'" "0"
+assert_query_eq "duplicate fee allocation sum" "select coalesce(sum(amount),0) from public.receipt_allocations where fee_obligation_id='$FEE_DUP'" "0"
 echo "   PASS: duplicate fee allocation rejected atomically"
 
 echo "== Guard G2: duplicate course allocation is rejected before any write =="
@@ -207,8 +215,8 @@ if run_sql "$BASE/dup_course.sql" >"$BASE/dup_course.out" 2>&1; then
   echo "FAIL: duplicate course allocation was accepted"; exit 1
 fi
 grep -q 'DUPLICATE_ENROLLMENT_ALLOCATION' "$BASE/dup_course.out"
-[ "$(query "select count(*) from public.receipt_vouchers where idempotency_key='90000000-0000-0000-0000-000000000002'")" = 0" ]
-[ "$(query "select coalesce(sum(amount),0) from public.receipt_allocations where enrollment_id='$ENROLLMENT'")" = 0" ]
+assert_query_eq "duplicate course receipt count" "select count(*) from public.receipt_vouchers where idempotency_key='90000000-0000-0000-0000-000000000002'" "0"
+assert_query_eq "duplicate course allocation sum" "select coalesce(sum(amount),0) from public.receipt_allocations where enrollment_id='$ENROLLMENT'" "0"
 echo "   PASS: duplicate course allocation rejected atomically"
 
 echo "== Guard G3: derived external split preserves fractional runtime value exactly =="
@@ -285,7 +293,7 @@ fi
 if ! grep -Eq 'RECEIPT_POSTING_RPC_REQUIRED|permission denied' "$BASE/direct_receipt.out"; then
   echo "FAIL: direct receipt insert failed for an unexpected reason"; cat "$BASE/direct_receipt.out"; exit 1
 fi
-[ "$(query "select count(*) from public.receipt_vouchers where idempotency_key='$DIRECT_KEY'")" = 0" ]
+assert_query_eq "direct receipt count" "select count(*) from public.receipt_vouchers where idempotency_key='$DIRECT_KEY'" "0"
 echo "   PASS: direct receipt insert cannot create a financial row"
 
 echo "== Guard G5: non-owner receipt RPC is denied =="
@@ -312,7 +320,7 @@ if run_sql "$BASE/non_owner_receipt.sql" >"$BASE/non_owner_receipt.out" 2>&1; th
   echo "FAIL: non-owner receipt RPC was accepted"; exit 1
 fi
 grep -q 'OWNER_ONLY' "$BASE/non_owner_receipt.out"
-[ "$(query "select count(*) from public.receipt_vouchers where idempotency_key='90000000-0000-0000-0000-000000000006'")" = 0" ]
+assert_query_eq "non-owner receipt count" "select count(*) from public.receipt_vouchers where idempotency_key='90000000-0000-0000-0000-000000000006'" "0"
 echo "   PASS: non-owner receipt RPC denied"
 
 echo "== Guard G6: fractional receipt remains internally conserved at receipt level =="
