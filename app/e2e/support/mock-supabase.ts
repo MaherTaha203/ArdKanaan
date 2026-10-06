@@ -420,7 +420,9 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
     if (method === 'HEAD') {
       if (['students', 'courses', 'enrollments', 'receipt_vouchers', 'payment_vouchers', 'fee_obligations'].includes(table ?? '')) {
         const counts: Record<string, number> = { students: students.length, courses: courses.length, enrollments: enrollments.length, receipt_vouchers: handle.receiptInserts.length, payment_vouchers: handle.paymentInserts.length, fee_obligations: feeObligations.length }
-        return route.fulfill({ status: 200, headers: { ...CORS, 'content-range': `0-${Math.max(counts[table ?? ''] - 1, 0)}/${counts[table ?? '']}` } })
+        const count = counts[table ?? '']
+        if (count === undefined) throw new Error(`Missing mock count for table: ${table ?? '<unknown>'}`)
+        return route.fulfill({ status: 200, headers: { ...CORS, 'content-range': `0-${Math.max(count - 1, 0)}/${count}` } })
       }
       return route.fulfill({ status: 200, headers: CORS })
     }
@@ -489,7 +491,9 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
           }
           const index = activeMovements.findIndex((movement) => movement.id === id)
           if (index >= 0) {
-            const [movement] = activeMovements.splice(index, 1)
+            const movement = activeMovements[index]
+            if (!movement) throw new Error(`Active movement disappeared during cancellation: ${id}`)
+            activeMovements.splice(index, 1)
             cancelledVouchers.unshift({ ...movement, cancelled_at: cancelledAt, cancel_reason: reason || null })
           }
           handle.cancellations.push({ table, id, reason })
