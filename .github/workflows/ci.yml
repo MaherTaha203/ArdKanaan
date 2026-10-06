@@ -2,13 +2,7 @@ name: CI
 
 on:
   push:
-    branches:
-      - claude/ard-kanaan-phase-0-6rymjv
-      - fix/finance-receipt-enrollment-only
-      - claude/enrollment-fee-adjustment
   pull_request:
-    branches:
-      - claude/ard-kanaan-phase-0-6rymjv
 
 concurrency:
   group: ci-${{ github.ref }}
