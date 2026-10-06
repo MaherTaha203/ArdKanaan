@@ -221,7 +221,7 @@ echo "   PASS: duplicate course allocation rejected atomically"
 
 echo "== Guard G3: derived external split preserves fractional runtime value exactly =="
 make_fee '00000000-0000-0000-0000-0000000c1001' "$STUDENT" 'رسوم الكسر' 100 shared 33
-FEE_FRAC="$(query "select id from public.fee_obligations where description='رسوم الكسر'")""
+FEE_FRAC="$(query "select id from public.fee_obligations where description='رسوم الكسر'")"
 
 cat > "$BASE/frac_one.sql" <<SQL
 set request.jwt.claim.sub = '$OWNER';
@@ -242,7 +242,7 @@ select public.post_receipt_with_allocations(
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/frac_one.sql"
 run_sql "$BASE/frac_one.sql" >/dev/null
-FRAC_R1="$(query "select external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000003'")""
+FRAC_R1="$(query "select external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000003'")"
 [ "$FRAC_R1" = "0.33" ]
 
 cat > "$BASE/frac_two.sql" <<SQL
@@ -264,9 +264,9 @@ select public.post_receipt_with_allocations(
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/frac_two.sql"
 run_sql "$BASE/frac_two.sql" >/dev/null
-FRAC_R2="$(query "select external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000004'")""
-FRAC_TOTAL="$(query "select coalesce(sum(amount),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")""
-FRAC_EXT="$(query "select coalesce(sum(external_share),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")""
+FRAC_R2="$(query "select external_share::numeric from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where rv.idempotency_key='90000000-0000-0000-0000-000000000004'")"
+FRAC_TOTAL="$(query "select coalesce(sum(amount),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")"
+FRAC_EXT="$(query "select coalesce(sum(external_share),0)::numeric from public.receipt_allocations where fee_obligation_id='$FEE_FRAC'")"
 [ "$FRAC_R2" = "32.67" ]
 [ "$FRAC_TOTAL" = "100" ]
 [ "$FRAC_EXT" = "33" ]
@@ -324,8 +324,8 @@ assert_query_eq "non-owner receipt count" "select count(*) from public.receipt_v
 echo "   PASS: non-owner receipt RPC denied"
 
 echo "== Guard G6: fractional receipt remains internally conserved at receipt level =="
-FRAC_GROSS="$(query "select coalesce(sum(amount),0)::numeric from public.financial_movements where id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))")""
-FRAC_CENTER="$(query "select coalesce(sum(amount-external_share),0)::numeric from public.financial_movements where id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))")""
+FRAC_GROSS="$(query "select coalesce(sum(amount),0)::numeric from public.financial_movements where id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))")"
+FRAC_CENTER="$(query "select coalesce(sum(amount-external_share),0)::numeric from public.financial_movements where id in (select id from public.receipt_vouchers where idempotency_key in ('90000000-0000-0000-0000-000000000003','90000000-0000-0000-0000-000000000004'))")"
 [ "$FRAC_GROSS" = "100" ]
 [ "$FRAC_CENTER" = "67" ]
 echo "   PASS: fractional receipts conserve gross 100 and center 67"
