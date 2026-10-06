@@ -43,11 +43,17 @@ mkdir -p "$DATADIR" "$SOCK"
 
 run "$PGBIN/initdb -D $DATADIR -U $PU --auth=trust -E UTF8" >"$BASE/initdb.log" 2>&1
 run "$PGBIN/pg_ctl -D $DATADIR -l $LOG -o '-c unix_socket_directories=$SOCK -c listen_addresses=\"\"' -w start" >/dev/null
-run "$PGBIN/psql -h $SOCK -U $PU -X -q -d postgres -c \"do \$\$ begin
+cat > "$BASE/roles.sql" <<'SQL'
+do $$
+begin
   if not exists (select 1 from pg_roles where rolname='anon') then create role anon nologin; end if;
   if not exists (select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin; end if;
   if not exists (select 1 from pg_roles where rolname='service_role') then create role service_role nologin bypassrls; end if;
-end \$\$;\""
+end
+$$;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/roles.sql"
+run "$PGBIN/psql -h $SOCK -U $PU -X -q -d postgres -f '$BASE/roles.sql'"
 run "$PGBIN/createdb -h $SOCK -U $PU $DB"
 
 cat > "$BASE/stubs.sql" <<SQL
