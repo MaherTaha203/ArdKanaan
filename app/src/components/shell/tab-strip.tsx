@@ -30,8 +30,11 @@ export function TabStrip() {
     else if (event.key === 'Home') next = 0
     else if (event.key === 'End') next = els.length - 1
     if (next >= 0) {
-      event.preventDefault()
-      els[next].focus()
+      const nextTab = els[next]
+      if (nextTab) {
+        event.preventDefault()
+        nextTab.focus()
+      }
     }
   }
 

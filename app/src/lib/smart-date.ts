@@ -17,6 +17,7 @@ export function parseSmartDate(raw: string, today: Date = new Date()): string | 
 
   if (tokens.length === 1) {
     const t = tokens[0]
+    if (t === undefined) return null
     if (t.length <= 2) {
       day = Number(t)
     } else if (t.length === 3) {
@@ -38,13 +39,19 @@ export function parseSmartDate(raw: string, today: Date = new Date()): string | 
       return null
     }
   } else if (tokens.length === 2) {
-    day = Number(tokens[0])
-    month = Number(tokens[1])
+    const dayText = tokens[0]
+    const monthText = tokens[1]
+    if (dayText === undefined || monthText === undefined) return null
+    day = Number(dayText)
+    month = Number(monthText)
   } else {
-    day = Number(tokens[0])
-    month = Number(tokens[1])
-    const y = tokens[2]
-    year = y.length <= 2 ? 2000 + Number(y) : Number(y)
+    const dayText = tokens[0]
+    const monthText = tokens[1]
+    const yearText = tokens[2]
+    if (dayText === undefined || monthText === undefined || yearText === undefined) return null
+    day = Number(dayText)
+    month = Number(monthText)
+    year = yearText.length <= 2 ? 2000 + Number(yearText) : Number(yearText)
   }
 
   if (!Number.isInteger(day) || !Number.isInteger(month) || !Number.isInteger(year)) return null

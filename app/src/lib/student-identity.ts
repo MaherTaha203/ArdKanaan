@@ -31,7 +31,11 @@ export function findNameMatchIds(students: readonly Student[], name: string): st
  */
 export function classifyNameMatches(matchIds: readonly string[]): StudentResolution {
   if (matchIds.length === 0) return { kind: 'new' }
-  if (matchIds.length === 1) return { kind: 'existing', id: matchIds[0] }
+  if (matchIds.length === 1) {
+    const id = matchIds[0]
+    if (id === undefined) return { kind: 'new' }
+    return { kind: 'existing', id }
+  }
   return { kind: 'ambiguous', count: matchIds.length }
 }
 

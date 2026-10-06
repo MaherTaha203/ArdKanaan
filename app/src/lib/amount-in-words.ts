@@ -56,35 +56,50 @@ const TENS_EN = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy
 
 const SCALES_EN = ['', 'thousand', 'million']
 
+function requiredAt<T>(values: readonly T[], index: number, label: string): T {
+  const value = values[index]
+  if (value === undefined) {
+    throw new RangeError(`${label} index ${index} is out of range`)
+  }
+  return value
+}
+
 function underThousandAr(value: number): string {
-  if (value < 20) return ONES_AR[value]
+  if (value < 20) return requiredAt(ONES_AR, value, 'Arabic ones')
 
   const hundreds = Math.floor(value / 100)
   const remainder = value % 100
   const hundredsWords = ['', 'مئة', 'مئتان', 'ثلاثمئة', 'أربعمئة', 'خمسمئة', 'ستمئة', 'سبعمئة', 'ثمانمئة', 'تسعمئة']
   const parts: string[] = []
 
-  if (hundreds) parts.push(hundredsWords[hundreds])
+  if (hundreds) parts.push(requiredAt(hundredsWords, hundreds, 'Arabic hundreds'))
   if (remainder) {
-    if (remainder < 20) parts.push(ONES_AR[remainder])
-    else if (remainder % 10 === 0) parts.push(TENS_AR[remainder / 10])
-    else parts.push(`${ONES_AR[remainder % 10]} و${TENS_AR[Math.floor(remainder / 10)]}`)
+    if (remainder < 20) parts.push(requiredAt(ONES_AR, remainder, 'Arabic ones'))
+    else if (remainder % 10 === 0) parts.push(requiredAt(TENS_AR, remainder / 10, 'Arabic tens'))
+    else parts.push(`${requiredAt(ONES_AR, remainder % 10, 'Arabic ones')} و${requiredAt(TENS_AR, Math.floor(remainder / 10), 'Arabic tens')}`)
   }
 
   return parts.join(' و')
 }
 
 function underThousandEn(value: number): string {
-  if (value < 20) return ONES_EN[value]
+  if (value < 20) return requiredAt(ONES_EN, value, 'English ones')
 
   const hundreds = Math.floor(value / 100)
   const remainder = value % 100
   const parts: string[] = []
 
-  if (hundreds) parts.push(`${ONES_EN[hundreds]} hundred`)
+  if (hundreds) parts.push(`${requiredAt(ONES_EN, hundreds, 'English ones')} hundred`)
   if (remainder) {
-    if (remainder < 20) parts.push(ONES_EN[remainder])
-    else parts.push(remainder % 10 ? `${TENS_EN[Math.floor(remainder / 10)]}-${ONES_EN[remainder % 10]}` : TENS_EN[remainder / 10])
+    if (remainder < 20) parts.push(requiredAt(ONES_EN, remainder, 'English ones'))
+    else {
+      const tens = requiredAt(TENS_EN, Math.floor(remainder / 10), 'English tens')
+      if (remainder % 10) {
+        parts.push(`${tens}-${requiredAt(ONES_EN, remainder % 10, 'English ones')}`)
+      } else {
+        parts.push(tens)
+      }
+    }
   }
 
   return parts.join(' ')
@@ -121,11 +136,12 @@ export function amountInWordsArabic(amount: number): string {
     const group = remaining % 1000
     if (group) {
       const words = underThousandAr(group)
+      const scaleInfo = requiredAt(SCALES_AR, scale, 'Arabic scale')
       if (scale === 0) groups.unshift(words)
-      else if (group === 1) groups.unshift(SCALES_AR[scale].singular)
-      else if (group === 2) groups.unshift(SCALES_AR[scale].dual)
-      else if (group >= 3 && group <= 10) groups.unshift(`${words} ${SCALES_AR[scale].plural}`)
-      else groups.unshift(`${words} ${SCALES_AR[scale].singular}`)
+      else if (group === 1) groups.unshift(scaleInfo.singular)
+      else if (group === 2) groups.unshift(scaleInfo.dual)
+      else if (group >= 3 && group <= 10) groups.unshift(`${words} ${scaleInfo.plural}`)
+      else groups.unshift(`${words} ${scaleInfo.singular}`)
     }
     remaining = Math.floor(remaining / 1000)
     scale += 1
@@ -147,7 +163,8 @@ export function amountInWordsEnglish(amount: number): string {
     const group = remaining % 1000
     if (group) {
       const words = underThousandEn(group)
-      groups.unshift(scale ? `${words} ${SCALES_EN[scale]}` : words)
+      if (scale === 0) groups.unshift(words)
+      else groups.unshift(`${words} ${requiredAt(SCALES_EN, scale, 'English scale')}`)
     }
     remaining = Math.floor(remaining / 1000)
     scale += 1

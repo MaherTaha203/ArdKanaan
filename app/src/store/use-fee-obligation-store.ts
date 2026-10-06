@@ -67,6 +67,12 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
       return false
     }
 
+    const primaryStudentId = uniqueStudentIds[0]
+    if (primaryStudentId === undefined) {
+      set({ error: 'اختر الطالب واكتب وصف الرسم وقيمته.' })
+      return false
+    }
+
     set({ isSaving: true, error: null })
     try {
       // course_id / enrollment_id are optional — only included when provided, so a
@@ -86,7 +92,7 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
 
       const workspace = useWorkspaceStore.getState()
       await workspace.load()
-      await useWorkspaceStore.getState().loadStudentStatement(uniqueStudentIds[0])
+      await useWorkspaceStore.getState().loadStudentStatement(primaryStudentId)
       set({ isSaving: false })
       return true
     } catch (error) {
