@@ -555,7 +555,7 @@ cat > "$BASE2/r2_2_shrink_guard.sql" <<'SQL'
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000aa';
 
-do $
+do $r2$
 declare
   base_payload jsonb;
   test_payload jsonb;
@@ -592,7 +592,7 @@ begin
     end;
   end loop;
 end
-$$;
+$r2$;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/r2_2_shrink_guard.sql"
 if run2 "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/r2_2_shrink_guard.sql" >"$BASE2/r2_2_shrink_guard.out" 2>&1; then
