@@ -261,9 +261,25 @@ begin
 end;
 $$;
 
+-- Policy A permits a rounded partial receipt to legitimately carry zero
+-- external share (the institute absorbs that rounding remainder); the original
+-- fee-distribution check incorrectly required shared receipts to be > 0.
+alter table public.receipt_vouchers
+  drop constraint if exists receipt_vouchers_fee_distribution_valid,
+  drop constraint if exists receipt_vouchers_external_share_whole_shekel;
+
 alter table public.receipt_vouchers
   add constraint receipt_vouchers_external_share_whole_shekel
-  check (external_share = trunc(external_share));
+    check (external_share = trunc(external_share)),
+  add constraint receipt_vouchers_fee_distribution_valid check (
+    case
+      when fee_category is null then external_share = 0
+      when fee_category = 'institute' then external_share = 0
+      when fee_category = 'external' then external_share = amount_received
+      when fee_category = 'shared' then external_share >= 0 and external_share < amount_received
+      else false
+    end
+  );
 
 alter table public.receipt_allocations
   add constraint receipt_allocations_external_share_whole_shekel
