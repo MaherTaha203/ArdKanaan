@@ -552,7 +552,10 @@ eq2 "Restore cancelled payment state" "$(runFP2 "select count(*) from public.pay
 
 echo "== R2.2 runtime: every restore section shrink is rejected before destructive phase ==";
 cat > "$BASE2/r2_2_shrink_guard.sql" <<'SQL'
-do $$
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000aa';
+
+do $
 declare
   base_payload jsonb;
   test_payload jsonb;
