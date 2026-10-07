@@ -549,6 +549,58 @@ eq2 "Restore payment idempotency key exact value" "$(runFP2 "select count(*) fro
 eq2 "Restore cancelled receipt state" "$(runFP2 "select count(*) from public.receipt_vouchers where id='$RVD2' and cancelled_at is not null")" "1"
 eq2 "Restore cancelled payment state" "$(runFP2 "select count(*) from public.payment_vouchers where id='$PAYID' and cancelled_at is not null")" "1"
 
+
+echo "== R2.2 runtime: every restore section shrink is rejected before destructive phase ==";
+cat > "$BASE2/r2_2_shrink_guard.sql" <<'SQL'
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000aa';
+
+do $r2$
+declare
+  base_payload jsonb;
+  test_payload jsonb;
+  section text;
+begin
+  select jsonb_build_object(
+    'students', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.students x), '[]'::jsonb),
+    'courses', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.courses x), '[]'::jsonb),
+    'enrollments', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.enrollments x), '[]'::jsonb),
+    'fee_obligations', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.fee_obligations x), '[]'::jsonb),
+    'receipt_vouchers', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.receipt_vouchers x), '[]'::jsonb),
+    'receipt_allocations', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.receipt_allocations x), '[]'::jsonb),
+    'payment_vouchers', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.payment_vouchers x), '[]'::jsonb)
+  ) into base_payload;
+
+  foreach section in array array[
+    'students',
+    'courses',
+    'enrollments',
+    'fee_obligations',
+    'receipt_vouchers',
+    'receipt_allocations',
+    'payment_vouchers'
+  ] loop
+    test_payload := jsonb_set(base_payload, array[section], '[]'::jsonb, true);
+    begin
+      perform public.restore_center_data(test_payload, false);
+      raise exception 'R2_2_EXPECTED_RESTORE_SHRINKS_NOT_RAISED:%', section;
+    exception
+      when others then
+        if sqlerrm not like 'RESTORE_SHRINKS%' then
+          raise exception 'R2_2_WRONG_ERROR:%:%', section, sqlerrm;
+        end if;
+    end;
+  end loop;
+end
+$r2$;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/r2_2_shrink_guard.sql"
+if run2 "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/r2_2_shrink_guard.sql" >"$BASE2/r2_2_shrink_guard.out" 2>&1; then
+  pass "R2.2 every independently restorable section rejects non-forced shrink"
+else
+  fail "R2.2 child-section shrink guard runtime test failed"; sed 's/^/       /' "$BASE2/r2_2_shrink_guard.out"
+fi
+
 run2 "$PGBIN/pg_ctl -D $DATADIR2 -w stop" >/dev/null 2>&1
 rm -rf "$BASE2"
 
