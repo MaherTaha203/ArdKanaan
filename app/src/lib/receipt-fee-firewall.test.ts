@@ -18,6 +18,10 @@ const receiptFirewall = readFileSync(
   new URL('../../supabase/migrations/20260916100000_receipt_posting_integrity_hardening.sql', import.meta.url),
   'utf8',
 )
+const fin001Migration = readFileSync(
+  new URL('../../supabase/migrations/20261007082000_fin001_whole_shekel_external_share.sql', import.meta.url),
+  'utf8',
+)
 
 describe('Receipt fee distribution migration contract', () => {
   it('keeps the fee snapshot columns and category constraints', () => {
@@ -27,9 +31,12 @@ describe('Receipt fee distribution migration contract', () => {
     expect(feeMigration).toContain('receipt_vouchers_external_share_within_amount')
   })
 
-  it('allows fractional derived external shares for partial payments', () => {
+  it('keeps derived external shares at whole-shekel precision', () => {
     expect(operationMigration).toContain('drop constraint if exists receipt_vouchers_external_share_whole_shekel')
-    expect(receiptMigration).toContain('round(v_amount * v_fee_external / v_fee_total, 2)')
+    expect(fin001Migration).toContain('round(v_amount * v_fee_external / v_fee_total)')
+    expect(fin001Migration).not.toContain('round(v_amount * v_fee_external / v_fee_total, 2)')
+    expect(fin001Migration).toContain('receipt_vouchers_external_share_whole_shekel')
+    expect(fin001Migration).toContain('receipt_allocations_external_share_whole_shekel')
   })
 
   it('conserves the split per category', () => {

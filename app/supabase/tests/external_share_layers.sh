@@ -591,6 +591,34 @@ else
 fi
 eq "Direct payment insert created no row" "$(runFP "select count(*) from public.payment_vouchers where idempotency_key='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'")" "0"
 
+echo "== FIN-001: whole-shekel derived external share == "
+make_fee 00000000-0000-0000-0000-0000000c0001 00000000-0000-0000-0000-0000000a0001 "رسوم تقريب" 100 shared 33
+FEEW=$(runFP "select id from public.fee_obligations where student_id='00000000-0000-0000-0000-0000000a0001' and description='رسوم تقريب'")
+post_receipt 00000000-0000-0000-0000-0000000a0001 "طالب أ" 1 99999999-0000-0000-0000-000000000009 "$FEEW"
+RVW1=$(runFP "select id from public.receipt_vouchers where idempotency_key='99999999-0000-0000-0000-000000000009'")
+eq "FIN-001 first partial external_share rounds 0" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVW1'")" "0"
+eq "FIN-001 first partial voucher external_share rounds 0" "$(runFP "select external_share::int from public.receipt_vouchers where id='$RVW1'")" "0"
+eq "FIN-001 first partial center share stays 1" "$(runFP "select (amount-external_share)::int from public.financial_movements where id='$RVW1'")" "1"
+post_receipt 00000000-0000-0000-0000-0000000a0001 "طالب أ" 99 aaaaaaaa-0000-0000-0000-00000000000a "$FEEW"
+RVW2=$(runFP "select id from public.receipt_vouchers where idempotency_key='aaaaaaaa-0000-0000-0000-00000000000a'")
+eq "FIN-001 final partial external_share receives remaining 33" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVW2'")" "33"
+eq "FIN-001 final voucher external_share = 33" "$(runFP "select external_share::int from public.receipt_vouchers where id='$RVW2'")" "33"
+eq "FIN-001 external total conserved at 33" "$(runFP "select coalesce(sum(external_share),0)::int from public.receipt_allocations where fee_obligation_id='$FEEW'")" "33"
+eq "FIN-001 gross total conserved at 100" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEEW'")" "100"
+eq "FIN-001 all allocation external shares are whole shekels" "$(runFP "select count(*) from public.receipt_allocations where fee_obligation_id='$FEEW' and external_share <> trunc(external_share)")" "0"
+
+make_fee 00000000-0000-0000-0000-0000000c0002 00000000-0000-0000-0000-0000000a0002 "رسوم تقريب نصفية" 100 shared 33
+FEEW2=$(runFP "select id from public.fee_obligations where student_id='00000000-0000-0000-0000-0000000a0002' and description='رسوم تقريب نصفية'")
+post_receipt 00000000-0000-0000-0000-0000000a0002 "طالب ب" 50 bbbbbbbb-0000-0000-0000-00000000000b "$FEEW2"
+RVW3=$(runFP "select id from public.receipt_vouchers where idempotency_key='bbbbbbbb-0000-0000-0000-00000000000b'")
+eq "FIN-001 50/100 rounds 16.5 to 17" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVW3'")" "17"
+post_receipt 00000000-0000-0000-0000-0000000a0002 "طالب ب" 50 cccccccc-0000-0000-0000-00000000000c "$FEEW2"
+RVW4=$(runFP "select id from public.receipt_vouchers where idempotency_key='cccccccc-0000-0000-0000-00000000000c'")
+eq "FIN-001 final 50/100 receives remaining 16" "$(runFP "select external_share::int from public.receipt_allocations where receipt_voucher_id='$RVW4'")" "16"
+eq "FIN-001 50/50 external total remains exactly 33" "$(runFP "select coalesce(sum(external_share),0)::int from public.receipt_allocations where fee_obligation_id='$FEEW2'")" "33"
+eq "FIN-001 50/50 gross total remains exactly 100" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEEW2'")" "100"
+eq "FIN-001 all receipt external shares are whole shekels" "$(runFP "select count(*) from public.receipt_vouchers where external_share <> trunc(external_share)")" "0"
+
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
 rm -rf "$BASE"
 echo

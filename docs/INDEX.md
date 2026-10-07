@@ -6,7 +6,7 @@
 | Title | Documentation Index |
 | Phase | 0 |
 | Status | LIVING |
-| Version | 1.61.0 |
+| Version | 1.62.0 |
 | Depends on | GOV-000, GOV-001, GOV-002 |
 
 This is the **master map** of all documentation in the Ard Kanaan repository.
@@ -287,6 +287,7 @@ Gate 8 (Repository Integrity) violation.
 | ADR-0076 | `docs/decisions/ADR-0076-student-archive-lifecycle-authorization.md` | Student Archive Lifecycle Authorization — independent student-level `archived` state (`active`/`completed`/`archived`) with dedicated `archive_student`/`unarchive_student` RPCs, active-course eligibility, owner-only authorization, zero financial impact; records an exception to the frozen **DB-014** (DAT-002) for archiving only as a **tracked divergence** reconciled at Documentation Freeze; `completed` kept distinct; opens/advances no phase (Owner-Decision ADR) | ACCEPTED |
 | ADR-0077 | `docs/decisions/ADR-0077-student-anchored-financial-obligations.md` | Student-Anchored Financial Obligations — fee obligations independent of course enrollment (`course_id`/`enrollment_id` demoted to OPTIONAL context; standalone exam/certificate/external/other fees enabled); relaxes `create_fee_obligations` + the two fee triggers while keeping all context validation; `enrollment_id`/`course_name` made nullable; records a **tracked divergence** from the registration-anchored DAT-003/004/005 model reconciled at Documentation Freeze; financial firewall absolute (obligations immutable, non-deletable, move no cash — only a receipt does); migration created in-repo, NOT applied to Production; opens/advances no phase (Owner-Decision ADR) | ACCEPTED |
 | ADR-0078 | `docs/decisions/ADR-0078-owner-adjustable-enrollment-fee.md` | Owner-Adjustable Per-Enrollment Registration Price — Owner may adjust one enrollment's total course fee (`enrollments.course_value`, the FRP) pre/post receipt, floored at the valid collected total (atomic reject below it) via an owner-only `update_enrollment_fee` RPC + a narrow, non-forgeable `course_value`-only firewall exception; historical receipts/allocations/ledger immutable (remaining re-derives per DB-126); each enrollment independent, `courses.base_fee` untouched, no discount/new obligation, audit old/new/reason/actor/timestamp; records a **tracked divergence** from BR-013 / DAT-003 DB-047 reconciled at Documentation Freeze (full GOV-004 §5 amendment deferred; frozen text unedited); migration `20260928120000_owner_edit_enrollment_fee.sql` **applied to Production under explicit Owner authorization** and recorded as `20260929092343`; Production verification completed; opens/advances no phase (Owner-Decision ADR) | ACCEPTED |
+| ADR-0079 | `docs/decisions/ADR-0079-fin001-whole-shekel-derived-external-share.md` | FIN-001 / DB-001 Whole-Shekel Derived External Share — restores the frozen ADR-0014 whole-shekel rule for derived external_share; nearest-shekel rounding, remainder to institute, exact partial-payment conservation; executable throwaway-PostgreSQL proof; migration created in-repo only, NOT applied to Production; opens/advances no phase (Owner-Decision ADR) | ACCEPTED |
 
 ### 2.7 Phase 6 — Screen Blueprints (NOT YET OPEN)
 
