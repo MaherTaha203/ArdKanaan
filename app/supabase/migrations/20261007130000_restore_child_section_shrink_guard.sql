@@ -290,9 +290,10 @@ begin
   select coalesce((src->>'id')::uuid, gen_random_uuid()), (src->>'receipt_voucher_id')::uuid, src->>'allocation_type', nullif(src->>'enrollment_id', '')::uuid, nullif(src->>'fee_obligation_id', '')::uuid, (src->>'amount')::numeric, coalesce((src->>'external_share')::numeric, 0), coalesce((src->>'created_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(receipt_allocations) src;
   get diagnostics a_out = row_count;
 
-  insert into public.payment_vouchers (id, voucher_number, voucher_date, expense_type, amount, notes, cancelled_at, cancel_reason, created_at)
+  -- Preserve payment idempotency identity across backup/restore.
+  insert into public.payment_vouchers (id, voucher_number, voucher_date, expense_type, amount, notes, cancelled_at, cancel_reason, created_at, idempotency_key)
   overriding system value
-  select (src->>'id')::uuid, (src->>'voucher_number')::bigint, (src->>'voucher_date')::date, src->>'expense_type', (src->>'amount')::numeric, coalesce(src->>'notes', ''), (src->>'cancelled_at')::timestamptz, src->>'cancel_reason', coalesce((src->>'created_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(payload->'payment_vouchers') src;
+  select (src->>'id')::uuid, (src->>'voucher_number')::bigint, (src->>'voucher_date')::date, src->>'expense_type', (src->>'amount')::numeric, coalesce(src->>'notes', ''), (src->>'cancelled_at')::timestamptz, src->>'cancel_reason', coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), nullif(src->>'idempotency_key', '')::uuid from jsonb_array_elements(payload->'payment_vouchers') src;
   get diagnostics p_out = row_count;
 
   -- Rebuild missing fingerprints for restored idempotent receipts when the
