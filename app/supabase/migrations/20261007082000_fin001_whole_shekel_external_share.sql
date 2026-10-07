@@ -209,7 +209,7 @@ begin
 
   if v_external > p_amount then raise exception 'INVALID_EXTERNAL_SHARE'; end if;
   if v_fee_category = 'external' and v_external <> p_amount then raise exception 'EXTERNAL_SHARE_MISMATCH'; end if;
-  if v_fee_category in ('shared', 'mixed') and v_external <= 0 then raise exception 'INVALID_EXTERNAL_SHARE'; end if;
+  if v_fee_category in ('shared', 'mixed') and v_external < 0 then raise exception 'INVALID_EXTERNAL_SHARE'; end if;
   if v_summary_value = 0 then v_summary_value := p_amount; end if;
 
   perform set_config('app.receipt_posting', 'on', true);
