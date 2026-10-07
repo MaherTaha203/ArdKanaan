@@ -552,25 +552,22 @@ eq2 "Restore cancelled payment state" "$(runFP2 "select count(*) from public.pay
 
 echo "== R2.2 runtime: every restore section shrink is rejected before destructive phase ==";
 cat > "$BASE2/r2_2_shrink_guard.sql" <<'SQL'
-create temporary table r2_2_backup(payload jsonb) on commit drop;
-insert into r2_2_backup(payload)
-select jsonb_build_object(
-  'students', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.students x), '[]'::jsonb),
-  'courses', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.courses x), '[]'::jsonb),
-  'enrollments', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.enrollments x), '[]'::jsonb),
-  'fee_obligations', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.fee_obligations x), '[]'::jsonb),
-  'receipt_vouchers', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.receipt_vouchers x), '[]'::jsonb),
-  'receipt_allocations', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.receipt_allocations x), '[]'::jsonb),
-  'payment_vouchers', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.payment_vouchers x), '[]'::jsonb)
-);
-
-do $
+do $$
 declare
   base_payload jsonb;
   test_payload jsonb;
   section text;
 begin
-  select payload into base_payload from r2_2_backup;
+  select jsonb_build_object(
+    'students', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.students x), '[]'::jsonb),
+    'courses', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.courses x), '[]'::jsonb),
+    'enrollments', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.enrollments x), '[]'::jsonb),
+    'fee_obligations', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.fee_obligations x), '[]'::jsonb),
+    'receipt_vouchers', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.receipt_vouchers x), '[]'::jsonb),
+    'receipt_allocations', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.receipt_allocations x), '[]'::jsonb),
+    'payment_vouchers', coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from public.payment_vouchers x), '[]'::jsonb)
+  ) into base_payload;
+
   foreach section in array array[
     'students',
     'courses',
@@ -592,7 +589,7 @@ begin
     end;
   end loop;
 end
-$;
+$$;
 SQL
 [ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE2/r2_2_shrink_guard.sql"
 if run2 "$PGBIN/psql -h $SOCK2 -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB2 -f $BASE2/r2_2_shrink_guard.sql" >"$BASE2/r2_2_shrink_guard.out" 2>&1; then
