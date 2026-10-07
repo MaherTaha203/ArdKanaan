@@ -1,3 +1,4 @@
+import { studentCourseBreakdown } from '@/lib/aggregate'
 import type { Course, Enrollment, Student, StudentStatementLine } from '@/types/domain'
 
 // Pure derivations for the Courses feature. Nothing here is stored: fees come from
@@ -29,16 +30,6 @@ export function enrollmentBelongsToCourse(enrollment: Enrollment, course: Course
 
 export function courseEnrollments(course: Course, enrollments: Enrollment[]): Enrollment[] {
   return enrollments.filter((enrollment) => enrollmentBelongsToCourse(enrollment, course))
-}
-
-function paidFor(lines: StudentStatementLine[], studentId: string, courseName: string): number {
-  let paid = 0
-  for (const line of lines) {
-    if (line.studentId === studentId && line.courseName === courseName) {
-      paid += line.amountReceived
-    }
-  }
-  return paid
 }
 
 // The enrolled students of a course, each with fee (enrollment snapshot),
