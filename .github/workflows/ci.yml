@@ -108,3 +108,16 @@ jobs:
         run: bash supabase/tests/enrollment_fee_adjustment.sh
         env:
           PGBIN: /usr/lib/postgresql/16/bin
+
+  db-student-lifecycle-access:
+    name: DB Runtime · Student Lifecycle Access
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run student lifecycle authorization harness
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -w /workspace \
+            postgres:17-bookworm \
+            bash -lc 'PGBIN=/usr/lib/postgresql/17/bin PG_RUNAS=postgres bash app/supabase/tests/student_lifecycle_access.sh'
