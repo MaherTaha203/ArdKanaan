@@ -80,4 +80,68 @@ describe('courseRoster', () => {
     // s1 paid 40 toward إنجليزي — it must not leak into رياضيات's paid (120).
     expect(s1?.paid).toBe(120)
   })
+  it('ignores fee lines even when the fee snapshot uses the same course name', () => {
+    const feeLine: StudentStatementLine = {
+      id: 'fee-1',
+      voucherNumber: 4,
+      voucherDate: '2026-09-04',
+      studentId: 's1',
+      studentName: 'محمد أحمد',
+      courseName: 'رياضيات',
+      courseValue: 50,
+      entryType: 'fee',
+      feeObligationId: 'fee-1',
+      amountReceived: 50,
+      remainingBalance: 0,
+    }
+
+    const roster = courseRoster(course, enrollments, students, [...lines, feeLine])
+    const s1 = roster.find((entry) => entry.enrollment.id === 'e1')
+    expect(s1?.paid).toBe(120)
+    expect(s1?.remaining).toBe(80)
+  })
+
+  it('keeps same-named enrollments isolated by enrollment identity', () => {
+    const sameNameEnrollments: Enrollment[] = [
+      { id: 'e1', studentId: 's1', courseId: 'c1', courseName: 'رياضيات', courseValue: 200 },
+      { id: 'e4', studentId: 's1', courseId: 'c1', courseName: 'رياضيات', courseValue: 300 },
+    ]
+    const sameNameLines: StudentStatementLine[] = [
+      {
+        id: 'l4',
+        voucherNumber: 4,
+        voucherDate: '2026-09-04',
+        studentId: 's1',
+        studentName: 'محمد أحمد',
+        courseName: 'رياضيات',
+        courseValue: 200,
+        entryType: 'course',
+        feeObligationId: null,
+        enrollmentId: 'e1',
+        amountReceived: 120,
+        remainingBalance: 80,
+      },
+      {
+        id: 'l5',
+        voucherNumber: 5,
+        voucherDate: '2026-09-05',
+        studentId: 's1',
+        studentName: 'محمد أحمد',
+        courseName: 'رياضيات',
+        courseValue: 300,
+        entryType: 'course',
+        feeObligationId: null,
+        enrollmentId: 'e4',
+        amountReceived: 50,
+        remainingBalance: 250,
+      },
+    ]
+
+    const roster = courseRoster(course, sameNameEnrollments, students, sameNameLines)
+    const byEnrollment = Object.fromEntries(roster.map((entry) => [entry.enrollment.id, entry]))
+
+    expect(byEnrollment.e1).toMatchObject({ paid: 120, remaining: 80 })
+    expect(byEnrollment.e4).toMatchObject({ paid: 50, remaining: 250 })
+  })
+
 })
