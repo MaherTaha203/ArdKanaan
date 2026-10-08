@@ -4,13 +4,21 @@ import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type { Student, StudentStatementLine } from '@/types/domain'
 
+export type SavedReceiptVoucher = {
+  id: string
+  voucherNumber: number
+  amount: number
+  voucherDate: string
+  studentName: string
+}
+
 type MoneyInStore = {
   currentView: 'receipt-voucher' | 'student-statement'
   statementLines: StudentStatementLine[]
   activeStudent: Student | null
   isSaving: boolean
   error: string | null
-  saveReceiptVoucher: (values: ReceiptVoucherFormValues) => Promise<boolean>
+  saveReceiptVoucher: (values: ReceiptVoucherFormValues) => Promise<SavedReceiptVoucher | null>
   goToReceiptVoucher: () => void
   clearError: () => void
 }
@@ -136,7 +144,7 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
         amount: allocation.amount,
       }))
 
-      const { error: postError } = await supabase.rpc('post_receipt_with_allocations', {
+      const { data: postedReceipt, error: postError } = await supabase.rpc('post_receipt_with_allocations', {
         payload: {
           student_id: activeStudent.id,
           student_name: activeStudent.name,
@@ -150,9 +158,18 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
       })
       if (postError) throw postError
 
+      const posted = postedReceipt as { id?: string; voucher_number?: number; amount_received?: number } | null
+      if (!posted?.id || posted.voucher_number == null) throw new Error('INVALID_RECEIPT_POST_RESULT')
+
       const statementLines = await fetchStatementLines(activeStudent.id)
       set({ activeStudent, statementLines, currentView: 'student-statement', isSaving: false })
-      return true
+      return {
+        id: posted.id,
+        voucherNumber: Number(posted.voucher_number),
+        amount: Number(posted.amount_received ?? values.amountReceived),
+        voucherDate: values.paymentDate,
+        studentName: activeStudent.name,
+      }
     } catch (error) {
       console.error('saveReceiptVoucher failed', error)
       set({ isSaving: false, error: 'تعذّر حفظ السند. تحقّق من البيانات وحاول مرّة أخرى.' })
