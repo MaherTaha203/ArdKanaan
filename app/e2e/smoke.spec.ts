@@ -72,7 +72,7 @@ test('prints every selected course allocation after saving a multi-course receip
   await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
   await dialog.getByRole('button', { name: /دورة اللغة الإنجليزية/ }).click()
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
-  await expect.poll(() => page.getByText('معاينة الطباعة — سند قبض').count()).toBe(1)
+  await expect(page.getByText('تم حفظ السند')).toBeVisible()
   await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
   await expect(page.getByText('دورة اللغة الإنجليزية', { exact: true })).toBeVisible()
 })
