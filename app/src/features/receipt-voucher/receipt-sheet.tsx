@@ -132,20 +132,21 @@ export function ReceiptSheet() {
       const fee = allocation.feeObligationId ? studentFees.find((item) => item.fee.id === allocation.feeObligationId)?.fee : undefined
       return { type: 'fee' as const, label: fee?.description ?? 'رسم', amount: allocation.amount }
     })
-    await reloadWorkspace()
-    const activeStudent = useMoneyInStore.getState().activeStudent
-    if (activeStudent) selectStudent(activeStudent.id)
+    const currentStudent = useMoneyInStore.getState().activeStudent
     setSavedVoucher({
       id: saved.id,
       movementType: 'receipt',
       voucherNumber: saved.voucherNumber,
       voucherDate: saved.voucherDate,
       amount: saved.amount,
-      partyName: activeStudent?.name ?? saved.studentName,
+      partyName: currentStudent?.name ?? saved.studentName,
       context: printableAllocations.length === 1 ? printableAllocations[0].label : 'تحصيل متعدّد',
       allocations: printableAllocations,
       autoPrint: true,
     })
+    await reloadWorkspace()
+    const refreshedStudent = useMoneyInStore.getState().activeStudent
+    if (refreshedStudent) selectStudent(refreshedStudent.id)
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
