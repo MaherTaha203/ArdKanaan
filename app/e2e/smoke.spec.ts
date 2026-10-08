@@ -57,7 +57,6 @@ test('creates a receipt, reaches the student statement, then opens its print pre
 
 
 test('prints every selected course allocation after saving a multi-course receipt', async ({ page }) => {
-  await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
   await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
     enrollments: [
