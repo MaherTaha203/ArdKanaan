@@ -190,6 +190,10 @@ test('opens voucher details from the general statement without row action button
   await expect(details.getByText('دبكة')).toBeVisible()
   await expect(details.getByRole('button', { name: 'تعديل السند' })).toBeVisible()
   await expect(details.getByRole('button', { name: 'إبطال السند' })).toBeVisible()
+  await expect(details.getByRole('button', { name: 'طباعة السند' })).toBeVisible()
+  await details.getByRole('button', { name: 'طباعة السند' }).click()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-902')).toBeVisible()
 })
 
 test('supports financial report period selection, custom dates, and print period metadata', async ({ page }) => {
