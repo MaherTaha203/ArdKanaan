@@ -6,8 +6,16 @@ import { voucherRef, voucherTypeLabel } from '@/lib/voucher'
 import { getSettings } from '@/store/use-settings-store'
 import type { FinancialMovement } from '@/types/domain'
 
+type ReceiptPrintAllocation = {
+  type: 'course' | 'fee'
+  label: string
+  amount: number
+}
+
 type VoucherPrintProps = {
   movement: FinancialMovement
+  allocations?: ReceiptPrintAllocation[]
+  autoPrint?: boolean
   onClose: () => void
 }
 
@@ -15,7 +23,7 @@ const INK = 'text-[#0f172a]'
 const MUTED = 'text-[#475569]'
 const HAIR = 'border-[#e2e8f0]'
 
-export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
+export function VoucherPrint({ movement, allocations = [], autoPrint = false, onClose }: VoucherPrintProps) {
   const isReceipt = movement.movementType === 'receipt'
   const typeLabel = voucherTypeLabel(movement.movementType)
   const typeLabelEn = isReceipt ? 'Receipt Voucher' : 'Payment Voucher'
@@ -30,6 +38,7 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
       docTitleEn={typeLabelEn}
       documentTitle={`${typeLabel} ${ref} — ${centerName}`}
       onClose={onClose}
+      autoPrint={autoPrint}
       meta={
         <>
           <div className="figure text-left text-[15px] font-extrabold text-[#dc2626]" dir="ltr">
@@ -43,7 +52,19 @@ export function VoucherPrint({ movement, onClose }: VoucherPrintProps) {
     >
       <div className={`rounded-xl border ${HAIR} p-5`}>
         {isReceipt ? <Row label="استلمنا من" value={movement.partyName ?? '—'} /> : null}
-        {movement.context ? <Row label={isReceipt ? 'عن الدورة' : 'بند المصروف'} value={movement.context} /> : null}
+        {isReceipt && allocations.length > 0 ? (
+          <div className={`mt-2 border-t ${HAIR} pt-2`}>
+            <div className="mb-1 text-[12px] font-medium text-[#64748b]">بنود التحصيل</div>
+            <div className="divide-y divide-[#e2e8f0]">
+              {allocations.map((allocation, index) => (
+                <div key={`${allocation.type}-${index}`} className="flex items-center justify-between gap-4 py-2 text-[13px]">
+                  <span className={MUTED}>{allocation.type === 'course' ? 'دورة' : 'رسم'}</span>
+                  <span className={`text-right font-semibold ${INK}`}>{allocation.label} — {formatNumber(allocation.amount)} {settings.currencySymbol}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : movement.context ? <Row label={isReceipt ? 'عن الدورة' : 'بند المصروف'} value={movement.context} /> : null}
         <div className={`mt-4 border-t ${HAIR} pt-4`}>
           <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0 text-right">
