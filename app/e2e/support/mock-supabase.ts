@@ -261,6 +261,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       if (table === 'courses') return arr(applyEqFiltersLoose(courses, url.searchParams))
       if (table === 'enrollments') return arr(applyEqFiltersLoose(enrollments, url.searchParams))
       if (table === 'fee_obligations') return arr(applyEqFiltersLoose(feeObligations, url.searchParams))
+      if (table === 'receipt_allocations') return arr(applyEqFiltersLoose(handle.receiptAllocations, url.searchParams))
       if (table === 'student_statement_lines') {
         const lines: Record<string, unknown>[] = []
         for (const receipt of handle.receiptInserts) {
