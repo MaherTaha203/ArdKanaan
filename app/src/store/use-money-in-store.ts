@@ -18,7 +18,7 @@ type MoneyInStore = {
   activeStudent: Student | null
   isSaving: boolean
   error: string | null
-  saveReceiptVoucher: (values: ReceiptVoucherFormValues) => Promise<SavedReceiptVoucher | null>
+  saveReceiptVoucher: (values: ReceiptVoucherFormValues) => Promise<SavedReceiptVoucher | false>
   goToReceiptVoucher: () => void
   clearError: () => void
 }
