@@ -18,7 +18,7 @@ type MoneyInStore = {
   activeStudent: Student | null
   isSaving: boolean
   error: string | null
-  saveReceiptVoucher: (values: ReceiptVoucherFormValues) => Promise<SavedReceiptVoucher | false>
+  saveReceiptVoucher: (values: ReceiptVoucherFormValues) => Promise<SavedReceiptVoucher | null>
   goToReceiptVoucher: () => void
   clearError: () => void
 }
@@ -94,30 +94,30 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
   saveReceiptVoucher: async (values) => {
     if (get().isSaving) {
       set({ error: 'جارٍ حفظ سند القبض بالفعل.' })
-      return false
+      return null
     }
 
     const supabase = getSupabaseBrowserClient()
     if (!supabase) {
       set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.' })
-      return false
+      return null
     }
 
     const pickedStudentId = values.studentId.trim()
     if (!pickedStudentId) {
       set({ error: 'اختر الطالب من قائمة الطلاب قبل إصدار سند القبض.' })
-      return false
+      return null
     }
 
     if (values.allocations.length === 0) {
       set({ error: 'اختر الدورة أو الرسم المستحق الذي سيتم تحصيله قبل حفظ سند القبض.' })
-      return false
+      return null
     }
 
     const allocationSum = values.allocations.reduce((sum, item) => sum + item.amount, 0)
     if (allocationSum !== values.amountReceived) {
       set({ error: 'مجموع بنود التحصيل لا يساوي المبلغ المقبوض.' })
-      return false
+      return null
     }
 
     set({ isSaving: true, error: null })
@@ -134,7 +134,7 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
       const activeStudent = pickedRows?.[0] ? normalizeStudent(pickedRows[0] as StudentRow) : null
       if (!activeStudent) {
         set({ isSaving: false, error: 'الطالب المحدد غير موجود. أعد اختيار الطالب ثم حاول مرة أخرى.' })
-        return false
+        return null
       }
 
       const allocations = values.allocations.map((allocation) => ({
@@ -173,7 +173,7 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
     } catch (error) {
       console.error('saveReceiptVoucher failed', error)
       set({ isSaving: false, error: 'تعذّر حفظ السند. تحقّق من البيانات وحاول مرّة أخرى.' })
-      return false
+      return null
     }
   },
 }))
