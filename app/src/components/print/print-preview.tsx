@@ -16,6 +16,7 @@ type PrintPreviewProps = {
   /** Right-side letterhead meta (date, number, name…). */
   meta?: ReactNode
   onClose: () => void
+  autoPrint?: boolean
   children: ReactNode
 }
 
@@ -24,9 +25,17 @@ type PrintPreviewProps = {
  * on a dark backdrop and prints that exact node via react-to-print. Reads nothing
  * and writes nothing — it only presents voucher-derived data passed as children.
  */
-export function PrintPreview({ docTitle, docTitleEn, documentTitle, meta, onClose, children }: PrintPreviewProps) {
+export function PrintPreview({ docTitle, docTitleEn, documentTitle, meta, onClose, autoPrint = false, children }: PrintPreviewProps) {
   const contentRef = useRef<HTMLDivElement>(null)
+  const autoPrintTriggered = useRef(false)
   const handlePrint = useReactToPrint({ contentRef, documentTitle: documentTitle ?? docTitle })
+
+  useEffect(() => {
+    if (!autoPrint || autoPrintTriggered.current) return
+    autoPrintTriggered.current = true
+    const timer = window.setTimeout(() => handlePrint(), 100)
+    return () => window.clearTimeout(timer)
+  }, [autoPrint, handlePrint])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

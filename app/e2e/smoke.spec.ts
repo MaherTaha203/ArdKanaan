@@ -55,6 +55,61 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await expect(page.getByText('معاينة الطباعة — كشف حساب الطالب')).toBeVisible()
 })
 
+
+test('prints every selected course allocation after saving a multi-course receipt', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
+    enrollments: [
+      { id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 },
+      { id: '22222222-2222-4222-8222-222222222222', student_id: 's-1', course_id: 'c-2', course_name: 'دورة اللغة الإنجليزية', course_value: 300 },
+    ],
+  })
+  await login(page)
+  await openReceiptSheet(page)
+  const dialog = page.getByRole('dialog', { name: 'سند قبض' })
+  await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
+  await page.getByRole('option', { name: /سارة أحمد/ }).click()
+  await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
+  await dialog.getByRole('button', { name: /دورة اللغة الإنجليزية/ }).click()
+  await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-901')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 400', { exact: false })).toBeVisible()
+  await expect(page.getByText('دورة اللغة الإنجليزية — 300', { exact: false })).toBeVisible()
+})
+
+test('prints both a course and a fee allocation after saving one receipt', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
+  await installSupabaseMocks(page, {
+    students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
+    enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
+    feeObligations: [{
+      id: '33333333-3333-4333-8333-333333333333',
+      student_id: 's-1',
+      course_id: 'c-1',
+      course_name: 'دورة الرياضيات',
+      description: 'رسم امتحان',
+      amount: 100,
+      fee_category: 'institute',
+      external_share: 0,
+      cancelled_at: null,
+      cancel_reason: null,
+      created_at: '2026-08-31T00:00:00.000Z',
+    }],
+  })
+  await login(page)
+  await openReceiptSheet(page)
+  const dialog = page.getByRole('dialog', { name: 'سند قبض' })
+  await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
+  await page.getByRole('option', { name: /سارة أحمد/ }).click()
+  await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
+  await dialog.getByRole('button', { name: /رسم امتحان/ }).click()
+  await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
+  await expect(page.getByText('تم حفظ السند')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
+  await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
+})
+
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
   await login(page)
@@ -117,8 +172,22 @@ test('keeps financial reports separated by report type and period', async ({ pag
 
 test('opens voucher details from the general statement without row action buttons', async ({ page }) => {
   await installSupabaseMocks(page, {
+    enrollments: [
+      { id: 'en-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 200 },
+      { id: 'en-2', student_id: 's-1', course_id: 'c-2', course_name: 'دورة اللغة الإنجليزية', course_value: 100 },
+    ],
+    feeObligations: [{
+      id: 'fee-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات',
+      description: 'رسم امتحان', amount: 100, fee_category: 'institute', external_share: 0,
+      cancelled_at: null, cancel_reason: null, created_at: '2026-08-31T00:00:00.000Z',
+    }],
     financialMovements: [
-      { id: 'r-2', movement_type: 'receipt', voucher_number: 902, voucher_date: '2026-08-31', amount: 150, party_name: 'سيف الدين احمد بياتنة', context: 'دبكة' },
+      { id: 'r-2', movement_type: 'receipt', voucher_number: 902, voucher_date: '2026-08-31', amount: 400, party_name: 'سيف الدين احمد بياتنة', context: 'تحصيل متعدّد' },
+    ],
+    receiptAllocations: [
+      { id: 'ra-1', receipt_voucher_id: 'r-2', allocation_type: 'course', enrollment_id: 'en-1', fee_obligation_id: null, amount: 200 },
+      { id: 'ra-2', receipt_voucher_id: 'r-2', allocation_type: 'course', enrollment_id: 'en-2', fee_obligation_id: null, amount: 100 },
+      { id: 'ra-3', receipt_voucher_id: 'r-2', allocation_type: 'fee', enrollment_id: null, fee_obligation_id: 'fee-1', amount: 100 },
     ],
   })
   await login(page)
@@ -134,9 +203,16 @@ test('opens voucher details from the general statement without row action button
   const details = page.getByRole('dialog', { name: 'R-902' })
   await expect(details).toBeVisible()
   await expect(details.getByText('سيف الدين احمد بياتنة')).toBeVisible()
-  await expect(details.getByText('دبكة')).toBeVisible()
+  await expect(details.getByText('تحصيل متعدّد')).toBeVisible()
   await expect(details.getByRole('button', { name: 'تعديل السند' })).toBeVisible()
   await expect(details.getByRole('button', { name: 'إبطال السند' })).toBeVisible()
+  await expect(details.getByRole('button', { name: 'طباعة السند' })).toBeVisible()
+  await details.getByRole('button', { name: 'طباعة السند' }).click()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-902')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 200', { exact: false })).toBeVisible()
+  await expect(page.getByText('دورة اللغة الإنجليزية — 100', { exact: false })).toBeVisible()
+  await expect(page.getByText('رسم امتحان — 100', { exact: false })).toBeVisible()
 })
 
 test('supports financial report period selection, custom dates, and print period metadata', async ({ page }) => {

@@ -23,6 +23,11 @@ import { useVoucherAdminStore } from '@/store/use-voucher-admin-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import type { FinancialMovement, FeeObligation } from '@/types/domain'
 
+type SavedReceiptPrint = FinancialMovement & {
+  allocations: Array<{ type: 'course' | 'fee'; label: string; amount: number }>
+  autoPrint: boolean
+}
+
 function buildDefaults(studentName: string | null): DefaultValues<ReceiptVoucherFormValues> {
   return { paymentDate: todayIsoDate(), studentName: studentName ?? '', studentId: '', studentIdNumber: '', studentPhone: '', courseName: '', courseValue: undefined, amountReceived: undefined, payerName: '', notes: '', entryType: 'course', feeCategory: undefined, externalShare: undefined, allocations: [] }
 }
@@ -53,7 +58,7 @@ export function ReceiptSheet() {
   const maxDate = blockFutureDate ? todayIsoDate() : undefined
   const [loadingEdit, setLoadingEdit] = useState(isEdit)
   const [editStudentName, setEditStudentName] = useState('')
-  const [savedVoucher, setSavedVoucher] = useState<FinancialMovement | null>(null)
+  const [savedVoucher, setSavedVoucher] = useState<SavedReceiptPrint | null>(null)
 
   const form = useForm<ReceiptVoucherFormValues>({ resolver: zodResolver(receiptVoucherFormSchema, undefined, { mode: 'sync' }), defaultValues: buildDefaults(prefillName) })
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
@@ -119,16 +124,29 @@ export function ReceiptSheet() {
     if (values.amountReceived > maxAmount) { form.setError('amountReceived', { message: `المبلغ أكبر من الحدّ المسموح (${formatNumber(maxAmount)})` }); return }
     if (values.courseValue != null && values.courseValue > maxAmount) { form.setError('courseValue', { message: `القيمة أكبر من الحدّ المسموح (${formatNumber(maxAmount)})` }); return }
     const saved = await saveReceiptVoucher({ ...values, entryType: activeType }); if (!saved) return
+    const printableAllocations = values.allocations.map((allocation) => {
+      if (allocation.type === 'course') {
+        const enrollment = allocation.enrollmentId ? studentEnrollments.find((item) => item.id === allocation.enrollmentId) : undefined
+        return { type: 'course' as const, label: enrollment?.courseName ?? 'دورة', amount: allocation.amount }
+      }
+      const fee = allocation.feeObligationId ? studentFees.find((item) => item.fee.id === allocation.feeObligationId)?.fee : undefined
+      return { type: 'fee' as const, label: fee?.description ?? 'رسم', amount: allocation.amount }
+    })
+    const currentStudent = useMoneyInStore.getState().activeStudent
+    setSavedVoucher({
+      id: saved.id,
+      movementType: 'receipt',
+      voucherNumber: saved.voucherNumber,
+      voucherDate: saved.voucherDate,
+      amount: saved.amount,
+      partyName: currentStudent?.name ?? saved.studentName,
+      context: printableAllocations.length === 1 ? printableAllocations[0].label : 'تحصيل متعدّد',
+      allocations: printableAllocations,
+      autoPrint: true,
+    })
     await reloadWorkspace()
-    const activeStudent = useMoneyInStore.getState().activeStudent
-    const latestLine = useMoneyInStore.getState().statementLines.at(-1)
-    if (activeStudent) selectStudent(activeStudent.id)
-    const voucherLine = latestLine ?? useMoneyInStore.getState().statementLines.find((line) => line.studentId === activeStudent?.id)
-    if (voucherLine) {
-      setSavedVoucher({ id: voucherLine.id, movementType: 'receipt', voucherNumber: voucherLine.voucherNumber, voucherDate: voucherLine.voucherDate, amount: values.amountReceived, partyName: voucherLine.studentName, context: voucherLine.courseName })
-    } else {
-      setSavedVoucher({ id: `saved-${Date.now()}`, movementType: 'receipt', voucherNumber: 0, voucherDate: values.paymentDate, amount: values.amountReceived, partyName: values.studentName, context: values.courseName })
-    }
+    const refreshedStudent = useMoneyInStore.getState().activeStudent
+    if (refreshedStudent) selectStudent(refreshedStudent.id)
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
@@ -176,6 +194,6 @@ export function ReceiptSheet() {
         <Button type="button" size="lg" className="w-full" disabled={busy} onClick={buildAndSubmit}>{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
       </form>}
     </ActionSheet>
-    {savedVoucher ? <VoucherPrint movement={savedVoucher} onClose={closeOverlay} /> : null}
+    {savedVoucher ? <VoucherPrint movement={savedVoucher} allocations={savedVoucher.allocations} autoPrint={savedVoucher.autoPrint} onClose={closeOverlay} /> : null}
   </>
 }
