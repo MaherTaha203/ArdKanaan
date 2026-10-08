@@ -73,9 +73,9 @@ test('prints every selected course allocation after saving a multi-course receip
   await dialog.getByRole('button', { name: /دورة اللغة الإنجليزية/ }).click()
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
-  await expect(page.getByText('# R-902')).toBeVisible()
-  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
-  await expect(page.getByText('دورة اللغة الإنجليزية', { exact: true })).toBeVisible()
+  await expect(page.getByText('# R-901')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 400', { exact: false })).toBeVisible()
+  await expect(page.getByText('دورة اللغة الإنجليزية — 300', { exact: false })).toBeVisible()
 })
 
 test('prints both a course and a fee allocation after saving one receipt', async ({ page }) => {
@@ -210,9 +210,9 @@ test('opens voucher details from the general statement without row action button
   await details.getByRole('button', { name: 'طباعة السند' }).click()
   await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
   await expect(page.getByText('# R-902')).toBeVisible()
-  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
-  await expect(page.getByText('دورة اللغة الإنجليزية', { exact: true })).toBeVisible()
-  await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 200', { exact: false })).toBeVisible()
+  await expect(page.getByText('دورة اللغة الإنجليزية — 100', { exact: false })).toBeVisible()
+  await expect(page.getByText('رسم امتحان — 100', { exact: false })).toBeVisible()
 })
 
 test('supports financial report period selection, custom dates, and print period metadata', async ({ page }) => {
