@@ -21,19 +21,34 @@ type VoucherDetailsSheetProps = {
   onCancel: () => void
 }
 
-export function VoucherDetailsSheet({ movement, statementLines = [], onClose, onEdit, onCancel }: VoucherDetailsSheetProps) {
+export function VoucherDetailsSheet({ movement, statementLines = [], enrollments = [], feeObligations = [], onClose, onEdit, onCancel }: VoucherDetailsSheetProps) {
   const [printing, setPrinting] = useState(false)
+  const [receiptAllocations, setReceiptAllocations] = useState<{ type: 'course' | 'fee'; label: string; amount: number }[]>([])
   const typeLabel = voucherTypeLabel(movement.movementType)
   const reference = voucherRef(movement.movementType, movement.voucherNumber)
-  const receiptAllocations = movement.movementType === 'receipt'
-    ? statementLines
-        .filter((line) => line.voucherNumber === movement.voucherNumber)
-        .map((line) => ({
-          type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee',
-          label: line.courseName,
-          amount: line.amountReceived,
+  async function handlePrintReceipt() {
+    if (movement.movementType !== 'receipt') return
+    const supabase = getSupabaseBrowserClient()
+    if (supabase) {
+      const result = await supabase
+        .from('receipt_allocations')
+        .select('allocation_type, enrollment_id, fee_obligation_id, amount')
+        .eq('receipt_voucher_id', movement.id)
+      if (!result.error && result.data.length > 0) {
+        setReceiptAllocations(result.data.map((row) => {
+          const isFee = row.allocation_type === 'fee'
+          const enrollment = enrollments.find((item) => item.id === row.enrollment_id)
+          const fee = feeObligations.find((item) => item.id === row.fee_obligation_id)
+          return { type: isFee ? 'fee' : 'course', label: isFee ? fee?.description ?? 'رسم' : enrollment?.courseName ?? movement.context ?? 'دورة', amount: Number(row.amount) }
         }))
-    : []
+      } else {
+        setReceiptAllocations(fallbackAllocations(statementLines, movement.voucherNumber))
+      }
+    } else {
+      setReceiptAllocations(fallbackAllocations(statementLines, movement.voucherNumber))
+    }
+    setPrinting(true)
+  }
 
   return (
     <>
@@ -98,7 +113,13 @@ export function VoucherDetailsSheet({ movement, statementLines = [], onClose, on
   )
 }
 
-function fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {\n  return lines\n    .filter((line) => line.voucherNumber === voucherNumber)\n    .map((line) => ({ type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee', label: line.courseName, amount: line.amountReceived }))\n}\n\nfunction Detail({ label, value, figure = false }: { label: string; value: string; figure?: boolean }) {
+function fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {\n  return lines\n    .filter((line) => line.voucherNumber === voucherNumber)\n    .map((line) => ({ type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee', label: line.courseName, amount: line.amountReceived }))\n}\n\nfunction fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {
+  return lines
+    .filter((line) => line.voucherNumber === voucherNumber)
+    .map((line) => ({ type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee', label: line.courseName, amount: line.amountReceived }))
+}
+
+function Detail({ label, value, figure = false }: { label: string; value: string; figure?: boolean }) {
   return (
     <div>
       <div className="text-[11px] font-medium text-faint">{label}</div>
