@@ -113,7 +113,7 @@ export function VoucherDetailsSheet({ movement, statementLines = [], enrollments
   )
 }
 
-function fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {\n  return lines\n    .filter((line) => line.voucherNumber === voucherNumber)\n    .map((line) => ({ type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee', label: line.courseName, amount: line.amountReceived }))\n}\n\nfunction fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {
+function fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {
   return lines
     .filter((line) => line.voucherNumber === voucherNumber)
     .map((line) => ({ type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee', label: line.courseName, amount: line.amountReceived }))
