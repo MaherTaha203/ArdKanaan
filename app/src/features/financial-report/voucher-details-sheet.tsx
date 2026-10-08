@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { Ban, Pencil, Printer } from 'lucide-react'
 
 import { ActionSheet } from '@/components/shell/action-sheet'
@@ -7,7 +9,6 @@ import { VoucherPrint } from '@/features/print/voucher-print'
 import { formatDate } from '@/lib/format'
 import { voucherRef, voucherTypeLabel } from '@/lib/voucher'
 import type { FinancialMovement, StudentStatementLine } from '@/types/domain'
-import { useState } from 'react'
 
 type VoucherDetailsSheetProps = {
   movement: FinancialMovement
