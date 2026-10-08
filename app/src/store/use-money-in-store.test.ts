@@ -72,21 +72,21 @@ describe('saveReceiptVoucher — financial workflow guard', () => {
   it('requires an explicitly selected existing student', async () => {
     hoisted.client = makeClient(() => { throw new Error('no query should run') })
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ studentId: '', allocations: [] }))
-    expect(ok).toBe(false)
+    expect(ok).toBeNull()
     expect(useMoneyInStore.getState().error).toContain('اختر الطالب')
   })
 
   it('requires at least one enrollment-scoped allocation', async () => {
     hoisted.client = makeClient(() => { throw new Error('no query should run') })
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ allocations: [] }))
-    expect(ok).toBe(false)
+    expect(ok).toBeNull()
     expect(useMoneyInStore.getState().error).toContain('الدورة أو الرسم المستحق')
   })
 
   it('requires allocation totals to equal the receipt amount', async () => {
     hoisted.client = makeClient(() => { throw new Error('no query should run') })
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ amountReceived: 500 }))
-    expect(ok).toBe(false)
+    expect(ok).toBeNull()
     expect(useMoneyInStore.getState().error).toContain('مجموع بنود التحصيل')
   })
 })
@@ -115,7 +115,7 @@ describe('saveReceiptVoucher — allocation posting', () => {
       { type: 'fee' as const, feeObligationId: '33333333-3333-4333-8333-333333333333', amount: 20 },
     ]
     const ok = await useMoneyInStore.getState().saveReceiptVoucher(formValues({ studentId: 's-1', entryType: 'mixed', courseValue: undefined, amountReceived: 320, allocations }))
-    expect(ok).toBe(true)
+    expect(ok).toMatchObject({ id: 'r-atomic', voucherNumber: 901, amount: 320, voucherDate: '2026-08-31', studentName: 'محمد علي' })
     expect(rpcName).toBe('post_receipt_with_allocations')
     expect(rpcArgs?.payload.allocations).toEqual([
       { type: 'course', enrollment_id: '11111111-1111-4111-8111-111111111111', fee_obligation_id: null, amount: 250 },
