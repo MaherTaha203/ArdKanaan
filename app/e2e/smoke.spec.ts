@@ -57,6 +57,7 @@ test('creates a receipt, reaches the student statement, then opens its print pre
 
 
 test('prints every selected course allocation after saving a multi-course receipt', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
   await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
     enrollments: [
@@ -78,6 +79,7 @@ test('prints every selected course allocation after saving a multi-course receip
 })
 
 test('prints both a course and a fee allocation after saving one receipt', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
   await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
     enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
