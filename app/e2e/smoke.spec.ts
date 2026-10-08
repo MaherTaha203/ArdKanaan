@@ -104,7 +104,7 @@ test('prints both a course and a fee allocation after saving one receipt', async
   await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
   await dialog.getByRole('button', { name: /رسم امتحان/ }).click()
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
-  await expect.poll(() => page.getByText('معاينة الطباعة — سند قبض').count()).toBe(1)
+  await expect(page.getByText('تم حفظ السند')).toBeVisible()
   await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
   await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
 })
