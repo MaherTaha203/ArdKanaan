@@ -35,12 +35,39 @@ export function VoucherDetailsSheet({ movement, statementLines = [], enrollments
         .select('allocation_type, enrollment_id, fee_obligation_id, amount')
         .eq('receipt_voucher_id', movement.id)
       if (!result.error && result.data.length > 0) {
-        setReceiptAllocations(result.data.map((row) => {
+        const resolved = await Promise.all(result.data.map(async (row) => {
           const isFee = row.allocation_type === 'fee'
-          const enrollment = enrollments.find((item) => item.id === row.enrollment_id)
-          const fee = feeObligations.find((item) => item.id === row.fee_obligation_id)
-          return { type: isFee ? 'fee' : 'course', label: isFee ? fee?.description ?? 'رسم' : enrollment?.courseName ?? movement.context ?? 'دورة', amount: Number(row.amount) }
+          if (isFee) {
+            const localFee = feeObligations.find((item) => item.id === row.fee_obligation_id)
+            if (localFee) return { type: 'fee' as const, label: localFee.description, amount: Number(row.amount) }
+            if (row.fee_obligation_id) {
+              const feeResult = await supabase
+                .from('fee_obligations')
+                .select('description')
+                .eq('id', row.fee_obligation_id)
+                .maybeSingle()
+              if (!feeResult.error && feeResult.data?.description) {
+                return { type: 'fee' as const, label: String(feeResult.data.description), amount: Number(row.amount) }
+              }
+            }
+            return { type: 'fee' as const, label: 'رسم', amount: Number(row.amount) }
+          }
+
+          const localEnrollment = enrollments.find((item) => item.id === row.enrollment_id)
+          if (localEnrollment) return { type: 'course' as const, label: localEnrollment.courseName, amount: Number(row.amount) }
+          if (row.enrollment_id) {
+            const enrollmentResult = await supabase
+              .from('enrollments')
+              .select('course_name')
+              .eq('id', row.enrollment_id)
+              .maybeSingle()
+            if (!enrollmentResult.error && enrollmentResult.data?.course_name) {
+              return { type: 'course' as const, label: String(enrollmentResult.data.course_name), amount: Number(row.amount) }
+            }
+          }
+          return { type: 'course' as const, label: movement.context ?? 'دورة', amount: Number(row.amount) }
         }))
+        setReceiptAllocations(resolved)
       } else {
         setReceiptAllocations(fallbackAllocations(statementLines, movement.voucherNumber))
       }
