@@ -171,8 +171,22 @@ test('keeps financial reports separated by report type and period', async ({ pag
 
 test('opens voucher details from the general statement without row action buttons', async ({ page }) => {
   await installSupabaseMocks(page, {
+    enrollments: [
+      { id: 'en-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 200 },
+      { id: 'en-2', student_id: 's-1', course_id: 'c-2', course_name: 'دورة اللغة الإنجليزية', course_value: 100 },
+    ],
+    feeObligations: [{
+      id: 'fee-1', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات',
+      description: 'رسم امتحان', amount: 100, fee_category: 'institute', external_share: 0,
+      cancelled_at: null, cancel_reason: null, created_at: '2026-08-31T00:00:00.000Z',
+    }],
     financialMovements: [
-      { id: 'r-2', movement_type: 'receipt', voucher_number: 902, voucher_date: '2026-08-31', amount: 150, party_name: 'سيف الدين احمد بياتنة', context: 'دبكة' },
+      { id: 'r-2', movement_type: 'receipt', voucher_number: 902, voucher_date: '2026-08-31', amount: 400, party_name: 'سيف الدين احمد بياتنة', context: 'تحصيل متعدّد' },
+    ],
+    receiptAllocations: [
+      { id: 'ra-1', receipt_voucher_id: 'r-2', allocation_type: 'course', enrollment_id: 'en-1', fee_obligation_id: null, amount: 200 },
+      { id: 'ra-2', receipt_voucher_id: 'r-2', allocation_type: 'course', enrollment_id: 'en-2', fee_obligation_id: null, amount: 100 },
+      { id: 'ra-3', receipt_voucher_id: 'r-2', allocation_type: 'fee', enrollment_id: null, fee_obligation_id: 'fee-1', amount: 100 },
     ],
   })
   await login(page)
@@ -188,13 +202,16 @@ test('opens voucher details from the general statement without row action button
   const details = page.getByRole('dialog', { name: 'R-902' })
   await expect(details).toBeVisible()
   await expect(details.getByText('سيف الدين احمد بياتنة')).toBeVisible()
-  await expect(details.getByText('دبكة')).toBeVisible()
+  await expect(details.getByText('تحصيل متعدّد')).toBeVisible()
   await expect(details.getByRole('button', { name: 'تعديل السند' })).toBeVisible()
   await expect(details.getByRole('button', { name: 'إبطال السند' })).toBeVisible()
   await expect(details.getByRole('button', { name: 'طباعة السند' })).toBeVisible()
   await details.getByRole('button', { name: 'طباعة السند' }).click()
   await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
   await expect(page.getByText('# R-902')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
+  await expect(page.getByText('دورة اللغة الإنجليزية', { exact: true })).toBeVisible()
+  await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
 })
 
 test('supports financial report period selection, custom dates, and print period metadata', async ({ page }) => {
