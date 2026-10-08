@@ -55,6 +55,59 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await expect(page.getByText('معاينة الطباعة — كشف حساب الطالب')).toBeVisible()
 })
 
+
+test('prints every selected course allocation after saving a multi-course receipt', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
+    enrollments: [
+      { id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 },
+      { id: '22222222-2222-4222-8222-222222222222', student_id: 's-1', course_id: 'c-2', course_name: 'دورة اللغة الإنجليزية', course_value: 300 },
+    ],
+  })
+  await login(page)
+  await openReceiptSheet(page)
+  const dialog = page.getByRole('dialog', { name: 'سند قبض' })
+  await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
+  await page.getByRole('option', { name: /سارة أحمد/ }).click()
+  await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
+  await dialog.getByRole('button', { name: /دورة اللغة الإنجليزية/ }).click()
+  await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
+  await expect.poll(() => page.getByText('معاينة الطباعة — سند قبض').count()).toBe(1)
+  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
+  await expect(page.getByText('دورة اللغة الإنجليزية', { exact: true })).toBeVisible()
+})
+
+test('prints both a course and a fee allocation after saving one receipt', async ({ page }) => {
+  await installSupabaseMocks(page, {
+    students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
+    enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
+    feeObligations: [{
+      id: '33333333-3333-4333-8333-333333333333',
+      student_id: 's-1',
+      course_id: 'c-1',
+      course_name: 'دورة الرياضيات',
+      description: 'رسم امتحان',
+      amount: 100,
+      fee_category: 'institute',
+      external_share: 0,
+      cancelled_at: null,
+      cancel_reason: null,
+      created_at: '2026-08-31T00:00:00.000Z',
+    }],
+  })
+  await login(page)
+  await openReceiptSheet(page)
+  const dialog = page.getByRole('dialog', { name: 'سند قبض' })
+  await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
+  await page.getByRole('option', { name: /سارة أحمد/ }).click()
+  await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
+  await dialog.getByRole('button', { name: /رسم امتحان/ }).click()
+  await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
+  await expect.poll(() => page.getByText('معاينة الطباعة — سند قبض').count()).toBe(1)
+  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
+  await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
+})
+
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page)
   await login(page)
