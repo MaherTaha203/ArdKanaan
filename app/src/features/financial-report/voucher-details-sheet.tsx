@@ -8,11 +8,14 @@ import { Money } from '@/components/ui/money'
 import { VoucherPrint } from '@/features/print/voucher-print'
 import { formatDate } from '@/lib/format'
 import { voucherRef, voucherTypeLabel } from '@/lib/voucher'
-import type { FinancialMovement, StudentStatementLine } from '@/types/domain'
+import type { Enrollment, FeeObligation, FinancialMovement, StudentStatementLine } from '@/types/domain'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 type VoucherDetailsSheetProps = {
   movement: FinancialMovement
   statementLines?: StudentStatementLine[]
+  enrollments?: Enrollment[]
+  feeObligations?: FeeObligation[]
   onClose: () => void
   onEdit: () => void
   onCancel: () => void
@@ -67,7 +70,7 @@ export function VoucherDetailsSheet({ movement, statementLines = [], onClose, on
               إغلاق
             </Button>
             {movement.movementType === 'receipt' ? (
-              <Button variant="outline" className="sm:flex-1" onClick={() => setPrinting(true)}>
+              <Button variant="outline" className="sm:flex-1" onClick={() => void handlePrintReceipt()}>
                 <Printer className="size-4" />
                 طباعة السند
               </Button>
@@ -95,7 +98,7 @@ export function VoucherDetailsSheet({ movement, statementLines = [], onClose, on
   )
 }
 
-function Detail({ label, value, figure = false }: { label: string; value: string; figure?: boolean }) {
+function fallbackAllocations(lines: StudentStatementLine[], voucherNumber: number) {\n  return lines\n    .filter((line) => line.voucherNumber === voucherNumber)\n    .map((line) => ({ type: (line.entryType === 'fee' ? 'fee' : 'course') as 'course' | 'fee', label: line.courseName, amount: line.amountReceived }))\n}\n\nfunction Detail({ label, value, figure = false }: { label: string; value: string; figure?: boolean }) {
   return (
     <div>
       <div className="text-[11px] font-medium text-faint">{label}</div>
