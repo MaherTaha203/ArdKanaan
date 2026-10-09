@@ -77,6 +77,7 @@ export type MockHandle = {
   feeObligationInserts: Array<Record<string, unknown>[]>
   receiptAllocations: Array<Record<string, unknown>>
   studentInserts: Array<Record<string, unknown>>
+  courseInserts: Array<Record<string, unknown>>
   studentUpdates: Array<{ id: string | null; body: Record<string, unknown> }>
   cancellations: Array<{ table: 'receipt_vouchers' | 'payment_vouchers'; id: string | null; reason: string }>
   activeMovements: MockMovement[]
@@ -101,7 +102,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
   const initialReceiptVouchers = [...(options.receiptVouchers ?? [])]
   const handle: MockHandle = {
 
-    receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], studentUpdates: [],
+    receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], courseInserts: [], studentUpdates: [],
     cancellations: [], activeMovements, cancelledVouchers, auditLog: [], restoreCalls: [], passwordResets: [], passwordUpdates: [],
   }
 
@@ -343,6 +344,22 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
 
     if (method === 'POST') {
       const payload = safeJson(request.postData())
+      if (table === 'courses') {
+        const course = payload as Record<string, unknown>
+        const id = `new-course-${courses.length + 1}`
+        handle.courseInserts.push({ ...course })
+        courses.push({
+          id,
+          name: String(course.name ?? ''),
+          base_fee: course.base_fee == null ? null : Number(course.base_fee),
+          monthly_fee: course.monthly_fee == null ? null : Number(course.monthly_fee),
+          start_date: (course.start_date as string | null) ?? null,
+          end_date: (course.end_date as string | null) ?? null,
+          status: course.status === 'ended' ? 'ended' : 'active',
+          notes: (course.notes as string | null) ?? null,
+        })
+        return json(route, { id, ...course }, 201)
+      }
       if (table === 'students') {
         handle.studentInserts.push(payload as Record<string, unknown>)
         const student = payload as Record<string, unknown>
