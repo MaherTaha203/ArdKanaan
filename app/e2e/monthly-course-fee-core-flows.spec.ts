@@ -35,7 +35,7 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
   // Register the student. Registration itself must not create a total-fee charge.
   await page.getByRole('button', { name: 'الدورات', exact: true }).first().click()
   await page.getByRole('button', { name: /دورة اختبار الرسوم الشهرية/ }).click()
-  await page.getByRole('button', { name: 'تسجيل طالب', exact: true }).click()
+  await page.getByRole('button', { name: 'تسجيل طالب', exact: true }).first().click()
   const enrollDialog = page.getByRole('dialog', { name: 'تسجيل طالب' })
   await enrollDialog.getByRole('combobox').fill('طالب اختبار شهري')
   await page.getByRole('option', { name: /طالب اختبار شهري/ }).click()
