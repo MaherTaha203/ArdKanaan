@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 
+import { toWesternDigits } from '@/lib/numbers'
 import { BookPlus, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
@@ -49,7 +50,7 @@ export function CoursesWorkspace() {
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => setQuery(toWesternDigits(event.currentTarget.value))}
               aria-label="البحث عن دورة"
               placeholder="ابحث عن دورة بالاسم"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
