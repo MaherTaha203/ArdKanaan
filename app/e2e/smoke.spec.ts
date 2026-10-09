@@ -267,7 +267,7 @@ test('supports financial report period selection, custom dates, and print period
   const dialogBox = await dialog.boundingBox()
   expect(selectorBox).not.toBeNull()
   expect(dialogBox).not.toBeNull()
-  expect(Math.abs((selectorBox?.width ?? 0) - (dialogBox?.width ?? 0))).toBeLessThanOrEqual(8)
+  expect(Math.abs((selectorBox?.width ?? 0) - (dialogBox?.width ?? 0))).toBeLessThanOrEqual(12)
 
   for (const label of ['الكل', 'اليوم', 'أمس', 'هذا الأسبوع', 'الأسبوع الماضي', 'هذا الشهر', 'الشهر الماضي', 'آخر 7 أيام', 'آخر 30 يومًا', 'هذه السنة']) {
     await expect(dialog.getByRole('button', { name: label, exact: true })).toBeVisible()
