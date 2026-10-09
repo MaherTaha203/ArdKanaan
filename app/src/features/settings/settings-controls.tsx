@@ -1,6 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from 'react'
 
 import { Input } from '@/components/ui/input'
+import { toWesternDigits } from '@/lib/numbers'
 
 // A labelled settings row: label on the start, control on the end. Deliberately
 // carries no helper/description text — the label and control speak for themselves.
@@ -54,21 +55,22 @@ export function TextSetting({
   onCommit,
   ...inputProps
 }: { value: string; onCommit: (next: string) => void } & Omit<ComponentProps<typeof Input>, 'value' | 'onChange' | 'onBlur'>) {
-  const [buffer, setBuffer] = useState(value)
+  const normalizedValue = toWesternDigits(value)
+  const [buffer, setBuffer] = useState(normalizedValue)
   // Re-sync the buffer when the committed value changes externally (e.g. after a
   // reset, or store-side trimming) — the recommended "adjust state during render"
   // pattern, tracked by the last value seen, rather than a sync effect.
-  const [lastValue, setLastValue] = useState(value)
-  if (value !== lastValue) {
-    setLastValue(value)
-    setBuffer(value)
+  const [lastValue, setLastValue] = useState(normalizedValue)
+  if (normalizedValue !== lastValue) {
+    setLastValue(normalizedValue)
+    setBuffer(normalizedValue)
   }
   return (
     <Input
       value={buffer}
       onChange={(event) => setBuffer(event.target.value)}
       onBlur={() => {
-        if (buffer !== value) onCommit(buffer)
+        if (buffer !== normalizedValue) onCommit(toWesternDigits(buffer))
       }}
       {...inputProps}
     />

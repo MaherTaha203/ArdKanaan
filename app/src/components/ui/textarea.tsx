@@ -1,16 +1,25 @@
-import { forwardRef, type TextareaHTMLAttributes } from 'react'
+import { forwardRef, type ChangeEventHandler, type TextareaHTMLAttributes } from 'react'
+
+import { toWesternDigits } from '@/lib/numbers'
 
 import { cn } from '@/lib/utils'
 
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { className, ...props },
+  { className, onChange, ...props },
   ref,
 ) {
+  const handleChange: ChangeEventHandler<HTMLTextAreaElement> = (event) => {
+    const normalized = toWesternDigits(event.currentTarget.value)
+    if (normalized !== event.currentTarget.value) event.currentTarget.value = normalized
+    onChange?.(event)
+  }
+
   return (
     <textarea
       ref={ref}
+      onChange={handleChange}
       className={cn(
         'flex min-h-24 w-full rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 text-sm text-foreground outline-none placeholder:text-faint focus:border-olive',
         className,

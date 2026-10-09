@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { toWesternDigits } from '@/lib/numbers'
 import type { Student, StudentStatementLine } from '@/types/domain'
 
 export type SavedReceiptVoucher = {
@@ -51,7 +52,7 @@ type StudentStatementRow = {
 function normalizeStudent(row: StudentRow): Student {
   // The receipt-flow picker deals with identity only, not the lifecycle; the
   // lifecycle fields are defaulted so the shared Student shape is satisfied.
-  return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: 'active', archivedAt: null, archiveReason: null }
+  return { id: row.id, name: toWesternDigits(row.name), idNumber: row.id_number == null ? null : toWesternDigits(row.id_number), phone: row.phone == null ? null : toWesternDigits(row.phone), notes: row.notes == null ? null : toWesternDigits(row.notes), status: 'active', archivedAt: null, archiveReason: null }
 }
 
 function normalizeStatementLine(row: StudentStatementRow): StudentStatementLine {
@@ -60,8 +61,8 @@ function normalizeStatementLine(row: StudentStatementRow): StudentStatementLine 
     voucherNumber: row.voucher_number,
     voucherDate: row.voucher_date,
     studentId: row.student_id,
-    studentName: row.student_name,
-    courseName: row.course_name,
+    studentName: toWesternDigits(row.student_name),
+    courseName: toWesternDigits(row.course_name),
     courseValue: Number(row.course_value),
     amountReceived: Number(row.amount_received),
     remainingBalance: Number(row.remaining_balance),
@@ -161,7 +162,15 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
       const posted = postedReceipt as { id?: string; voucher_number?: number; amount_received?: number } | null
       if (!posted?.id || posted.voucher_number == null) throw new Error('INVALID_RECEIPT_POST_RESULT')
 
-      const statementLines = await fetchStatementLines(activeStudent.id)
+      // The receipt RPC has committed successfully at this point. A subsequent
+      // statement refresh is a read-after-write convenience and must not make a
+      // committed receipt look like a failed save if that read temporarily fails.
+      let statementLines = get().statementLines
+      try {
+        statementLines = await fetchStatementLines(activeStudent.id)
+      } catch (refreshError) {
+        console.error('Receipt saved, but statement refresh failed', refreshError)
+      }
       set({ activeStudent, statementLines, currentView: 'student-statement', isSaving: false })
       return {
         id: posted.id,

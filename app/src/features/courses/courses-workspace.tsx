@@ -8,6 +8,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { courseStats } from '@/lib/courses'
 import { formatNumber } from '@/lib/format'
+import { toWesternDigits } from '@/lib/numbers'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -49,7 +50,7 @@ export function CoursesWorkspace() {
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => setQuery(toWesternDigits(event.currentTarget.value))}
               aria-label="البحث عن دورة"
               placeholder="ابحث عن دورة بالاسم"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"

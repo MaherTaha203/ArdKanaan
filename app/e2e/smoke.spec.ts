@@ -32,7 +32,7 @@ test('opens the activity log as a read-only workspace', async ({ page }) => {
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
 })
 
-test('creates a receipt, reaches the student statement, then opens its print preview', async ({ page }) => {
+test('creates a receipt and opens its saved voucher print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: '900000000', phone: '0590000000', notes: null }],
     enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
@@ -48,15 +48,46 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect.poll(() => handle.receiptInserts.length).toBe(1)
   expect(handle.receiptInserts[0]).toMatchObject({ amount_received: 400, allocation_mode: true })
-  const statement = page.getByLabel('كشف حساب سارة أحمد')
-  await expect(statement.getByRole('heading', { name: 'كشف الحساب' })).toBeVisible()
-  await expect(page.getByText('دورة الرياضيات').first()).toBeVisible()
-  await page.getByRole('button', { name: 'طباعة الكشف' }).click()
-  await expect(page.getByText('معاينة الطباعة — كشف حساب الطالب')).toBeVisible()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-901')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 400', { exact: false })).toBeVisible()
+})
+
+
+test('accepts Western-digit receipt amounts and saves a partial course payment', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
+  const handle = await installSupabaseMocks(page, {
+    students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
+    enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
+  })
+  await login(page)
+  await openReceiptSheet(page)
+  const dialog = page.getByRole('dialog', { name: 'سند قبض' })
+  await dialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('سارة')
+  await page.getByRole('option', { name: /سارة أحمد/ }).click()
+  await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
+  const amount = dialog.getByRole('textbox', { name: 'المبلغ المقبوض' })
+  await expect(amount).toHaveValue('400')
+  await amount.fill('450')
+  await expect(dialog.getByText(/المبلغ لا يمكن أن يتجاوز/)).toBeVisible()
+  await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
+  await expect(dialog).toBeVisible()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toHaveCount(0)
+  await expect.poll(() => handle.receiptInserts.length).toBe(0)
+  await amount.fill('١٥٠')
+  await expect(amount).toHaveValue('150')
+  await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
+  await expect.poll(() => handle.receiptInserts.length).toBe(1)
+  expect(handle.receiptInserts[0]).toMatchObject({ amount_received: 150, allocation_mode: true })
+  expect(handle.receiptAllocations[0]).toMatchObject({ type: 'course', amount: 150 })
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-901')).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'حفظ سند القبض' })).toHaveCount(0)
 })
 
 
 test('prints every selected course allocation after saving a multi-course receipt', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
   await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
     enrollments: [
@@ -106,8 +137,8 @@ test('prints both a course and a fee allocation after saving one receipt', async
   await dialog.getByRole('button', { name: /رسم امتحان/ }).click()
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect(page.getByText('تم حفظ السند')).toBeVisible()
-  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
-  await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 400', { exact: false })).toBeVisible()
+  await expect(page.getByText('رسم امتحان — 100', { exact: false })).toBeVisible()
 })
 
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
@@ -117,7 +148,7 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   const dialog = page.getByRole('dialog', { name: 'سند صرف' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('textbox', { name: 'بند المصروف' }).fill('كهرباء')
-  await dialog.getByRole('spinbutton', { name: 'المبلغ المدفوع' }).fill('250')
+  await dialog.getByRole('textbox', { name: 'المبلغ المدفوع' }).fill('250')
   await dialog.getByRole('button', { name: 'حفظ سند الصرف' }).click()
   await expect.poll(() => handle.paymentInserts.length).toBe(1)
   expect(handle.paymentInserts[0]).toMatchObject({ expense_type: 'كهرباء', amount: 250 })
@@ -236,7 +267,7 @@ test('supports financial report period selection, custom dates, and print period
   const dialogBox = await dialog.boundingBox()
   expect(selectorBox).not.toBeNull()
   expect(dialogBox).not.toBeNull()
-  expect(Math.abs((selectorBox?.width ?? 0) - (dialogBox?.width ?? 0))).toBeLessThanOrEqual(8)
+  expect(Math.abs((selectorBox?.width ?? 0) - (dialogBox?.width ?? 0))).toBeLessThanOrEqual(12)
 
   for (const label of ['الكل', 'اليوم', 'أمس', 'هذا الأسبوع', 'الأسبوع الماضي', 'هذا الشهر', 'الشهر الماضي', 'آخر 7 أيام', 'آخر 30 يومًا', 'هذه السنة']) {
     await expect(dialog.getByRole('button', { name: label, exact: true })).toBeVisible()

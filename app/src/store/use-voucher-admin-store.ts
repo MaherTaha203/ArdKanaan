@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import type { PaymentVoucherFormValues } from '@/features/payment-voucher/schema'
 import type { ReceiptVoucherFormValues } from '@/features/receipt-voucher/schema'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { toWesternDigits } from '@/lib/numbers'
 
 // Administrative voucher actions: cancel (never delete) and descriptive-only edit.
 // Financial fields are immutable after posting; every UPDATE is recorded server-side
@@ -86,12 +87,12 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
     }
     return {
       paymentDate: data.voucher_date as string,
-      studentName: (data.student_name_snapshot as string) ?? '',
-      courseName: (data.course_name as string) ?? '',
+      studentName: toWesternDigits((data.student_name_snapshot as string) ?? ''),
+      courseName: toWesternDigits((data.course_name as string) ?? ''),
       courseValue: Number(data.course_value),
       amountReceived: Number(data.amount_received),
-      payerName: (data.payer_name as string) ?? '',
-      notes: (data.notes as string) ?? '',
+      payerName: toWesternDigits((data.payer_name as string) ?? ''),
+      notes: toWesternDigits((data.notes as string) ?? ''),
     }
   },
 
@@ -112,9 +113,9 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
     }
     return {
       paymentDate: data.voucher_date as string,
-      expenseType: (data.expense_type as string) ?? '',
+      expenseType: toWesternDigits((data.expense_type as string) ?? ''),
       amount: Number(data.amount),
-      notes: (data.notes as string) ?? '',
+      notes: toWesternDigits((data.notes as string) ?? ''),
     }
   },
 

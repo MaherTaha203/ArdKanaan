@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { ArrowLeft } from 'lucide-react'
 
+import { toWesternDigits } from '@/lib/numbers'
 import { useAuthStore } from '@/store/use-auth-store'
 
 const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
@@ -79,7 +80,7 @@ export function OpeningGate() {
                   required
                   value={email}
                   onChange={(event) => {
-                    setEmail(event.target.value)
+                    setEmail(toWesternDigits(event.currentTarget.value))
                     if (error) clearError()
                   }}
                   placeholder="name@example.com"
@@ -147,7 +148,7 @@ export function OpeningGate() {
                       required
                       value={email}
                       onChange={(event) => {
-                        setEmail(event.target.value)
+                        setEmail(toWesternDigits(event.currentTarget.value))
                         if (error) clearError()
                       }}
                       placeholder="name@example.com"

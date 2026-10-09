@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatTimestamp } from '@/lib/format'
+import { formatDate, formatNumber, formatTimestamp } from '@/lib/format'
 
 describe('formatTimestamp', () => {
   it('renders date and 24h time parts with Western digits', () => {
@@ -18,8 +18,8 @@ describe('formatTimestamp', () => {
     expect(stripMarks(date)).toMatch(/^\d{2}\/\d{2}\/\d{4}$/)
     expect(stripMarks(time)).toMatch(/^\d{2}:\d{2}:\d{2}$/)
     // No Arabic-Indic digits (٠-٩) — the Owner Decision mandates Western digits.
-    expect(date).not.toMatch(/[٠-٩]/)
-    expect(time).not.toMatch(/[٠-٩]/)
+    expect(date).not.toMatch(/[٠-٩۰-۹]/)
+    expect(time).not.toMatch(/[٠-٩۰-۹]/)
   })
 
   it('returns the raw value and empty time for an unparseable input', () => {
@@ -31,5 +31,32 @@ describe('formatTimestamp', () => {
 
     // Assert
     expect(result).toEqual({ date: 'not-a-date', time: '' })
+  })
+})
+
+describe('Western digit display', () => {
+  it('formats numeric amounts using only Western digits', () => {
+    const result = formatNumber(1234567)
+
+    expect(result).toContain('1')
+    expect(result).not.toMatch(/[٠-٩۰-۹]/)
+  })
+
+  it('normalizes legacy numeric strings before formatting', () => {
+    const result = formatNumber('١٢۳٤')
+
+    expect(result).toContain('1')
+    expect(result).not.toMatch(/[٠-٩۰-۹]/)
+  })
+
+  it('normalizes legacy date strings before parsing', () => {
+    expect(formatDate('٢٠٢٦-١٠-٠٩', 'dmy')).toBe('09/10/2026')
+  })
+
+  it('formats dates using only Western digits', () => {
+    const result = formatDate('2026-10-09', 'dmy')
+
+    expect(result).toBe('09/10/2026')
+    expect(result).not.toMatch(/[٠-٩۰-۹]/)
   })
 })

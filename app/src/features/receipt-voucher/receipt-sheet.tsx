@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash2 } from 'lucide-react'
@@ -15,6 +15,7 @@ import { receiptVoucherFormSchema, type ReceiptAllocationFormValue, type Receipt
 import { StudentPicker } from '@/features/receipt-voucher/student-picker'
 import { studentCourseBreakdown } from '@/lib/aggregate'
 import { formatNumber, todayIsoDate } from '@/lib/format'
+import { toWesternDigits } from '@/lib/numbers'
 import { useMoneyInStore } from '@/store/use-money-in-store'
 import { useSettingsStore } from '@/store/use-settings-store'
 import { useShellStore } from '@/store/use-shell-store'
@@ -59,9 +60,16 @@ export function ReceiptSheet() {
   const [loadingEdit, setLoadingEdit] = useState(isEdit)
   const [editStudentName, setEditStudentName] = useState('')
   const [savedVoucher, setSavedVoucher] = useState<SavedReceiptPrint | null>(null)
+  const [amountDraft, setAmountDraft] = useState('')
+  const amountDraftRef = useRef('')
+  function setAmountDraftValue(value: string) {
+    amountDraftRef.current = value
+    setAmountDraft(value)
+  }
 
   const form = useForm<ReceiptVoucherFormValues>({ resolver: zodResolver(receiptVoucherFormSchema, undefined, { mode: 'sync' }), defaultValues: buildDefaults(prefillName) })
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
+  const watchedAmount = useWatch({ control: form.control, name: 'amountReceived' })
   const pickedStudentId = useWatch({ control: form.control, name: 'studentId' }) ?? ''
   const watchedAllocations = useWatch({ control: form.control, name: 'allocations' }) ?? []
 
@@ -97,8 +105,14 @@ export function ReceiptSheet() {
 
   function setAllocations(next: ReceiptAllocationFormValue[]) {
     form.setValue('allocations', next, { shouldValidate: false, shouldDirty: true })
-    if (next.length > 0) form.setValue('amountReceived', next.reduce((sum, item) => sum + item.amount, 0), { shouldValidate: false, shouldDirty: true })
-    else form.resetField('amountReceived')
+    if (next.length > 0) {
+      const total = next.reduce((sum, item) => sum + item.amount, 0)
+      form.setValue('amountReceived', total, { shouldValidate: false, shouldDirty: true })
+      setAmountDraftValue(String(total))
+    } else {
+      form.resetField('amountReceived')
+      setAmountDraftValue('')
+    }
   }
   function addCourseAllocation(course: { enrollmentId?: string; courseName: string; fee: number; remaining: number }) {
     const enrollment = course.enrollmentId ? studentEnrollments.find((item) => item.id === course.enrollmentId) : undefined
@@ -112,7 +126,39 @@ export function ReceiptSheet() {
   function updateAllocation(index: number, amount: number) {
     const current = watchedAllocations[index]
     if (!current || !Number.isInteger(amount) || amount <= 0) return
+    const maxRemaining = current.type === 'course'
+      ? studentCourses.find((course) => course.enrollmentId === current.enrollmentId)?.remaining
+      : studentFees.find((item) => item.fee.id === current.feeObligationId)?.remaining
+    if (maxRemaining == null || amount > maxRemaining) {
+      form.setError('amountReceived', { message: `المبلغ لا يمكن أن يتجاوز الذمة المتبقية (${formatNumber(maxRemaining ?? 0)})` })
+      return
+    }
+    form.clearErrors('amountReceived')
     const next = watchedAllocations.slice(); next[index] = { ...current, amount }; setAllocations(next)
+  }
+  function normalizeDigits(value: string) {
+    return toWesternDigits(value).replace(/[^0-9]/g, '')
+  }
+  function updateReceiptAmount(rawValue: string) {
+    const normalized = normalizeDigits(rawValue)
+    setAmountDraftValue(normalized)
+    const amount = normalized ? Number(normalized) : undefined
+    if (watchedAllocations.length === 1) {
+      if (amount == null) return
+      const allocation = watchedAllocations[0]
+      const maxRemaining = allocation.type === 'course'
+        ? studentCourses.find((course) => course.enrollmentId === allocation.enrollmentId)?.remaining
+        : studentFees.find((item) => item.fee.id === allocation.feeObligationId)?.remaining
+      if (amount <= 0 || maxRemaining == null || amount > maxRemaining) {
+        form.setError('amountReceived', { message: `المبلغ لا يمكن أن يتجاوز الذمة المتبقية (${formatNumber(maxRemaining ?? 0)})` })
+        return
+      }
+      form.clearErrors('amountReceived')
+      updateAllocation(0, amount)
+      return
+    }
+    if (amount == null) form.resetField('amountReceived')
+    else form.setValue('amountReceived', amount, { shouldValidate: true, shouldDirty: true })
   }
   function removeAllocation(index: number) { setAllocations(watchedAllocations.filter((_, itemIndex) => itemIndex !== index)) }
 
@@ -145,12 +191,29 @@ export function ReceiptSheet() {
       autoPrint: true,
     })
     await reloadWorkspace()
-    const refreshedStudent = useMoneyInStore.getState().activeStudent
-    if (refreshedStudent) selectStudent(refreshedStudent.id)
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
   function buildAndSubmit() {
+    // Do not let an invalid or cleared amount draft silently fall back to the
+    // previous allocation amount when the operator presses Save.
+    if (watchedAllocations.length === 1) {
+      const draft = normalizeDigits(amountDraftRef.current)
+      const amount = draft ? Number(draft) : Number.NaN
+      const allocation = watchedAllocations[0]
+      const maxRemaining = allocation.type === 'course'
+        ? studentCourses.find((course) => course.enrollmentId === allocation.enrollmentId)?.remaining
+        : studentFees.find((item) => item.fee.id === allocation.feeObligationId)?.remaining
+      if (!Number.isInteger(amount) || amount <= 0 || maxRemaining == null || amount > maxRemaining) {
+        form.setError('amountReceived', { message: `المبلغ لا يمكن أن يتجاوز الذمة المتبقية (${formatNumber(maxRemaining ?? 0)}) ويجب أن يكون عددًا صحيحًا أكبر من صفر` })
+        return
+      }
+      if (amount !== allocation.amount) {
+        updateReceiptAmount(draft)
+        return
+      }
+      form.clearErrors('amountReceived')
+    }
     const current = form.getValues()
     const values: ReceiptVoucherFormValues = {
       ...current,
@@ -180,15 +243,19 @@ export function ReceiptSheet() {
   return <>
     <ActionSheet title="سند قبض" onClose={closeOverlay}>
       {showError ? <div role="alert" className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}</div> : null}
-      {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={closeOverlay}>إغلاق بعد الطباعة</Button></div> : <form className="space-y-4" noValidate>
-        {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} />}
+      {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={() => {
+        const refreshedStudent = useMoneyInStore.getState().activeStudent
+        if (refreshedStudent) selectStudent(refreshedStudent.id)
+        else closeOverlay()
+      }}>إغلاق بعد الطباعة</Button></div> : <form className="space-y-4" noValidate>
+        {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} onStudentChange={() => setAmountDraft('')} />}
         {!isEdit && pickedStudentId ? <section className="space-y-3 border-y border-border py-4"><div><div className="text-[13px] font-semibold text-foreground">بنود التحصيل</div></div>
           {studentCourses.filter((course) => course.remaining > 0).map((course) => { const selected = course.enrollmentId ? watchedAllocations.some((item) => item.type === 'course' && item.enrollmentId === course.enrollmentId) : false; return <button key={course.enrollmentId ?? `legacy-${course.courseName}`} type="button" disabled={!course.enrollmentId || selected} onClick={() => addCourseAllocation(course)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{course.courseName}</span><span className="text-[12px] text-muted-foreground">متبقّي الدورة: {formatNumber(course.remaining)}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
           {studentFees.map((item) => { const selected = watchedAllocations.some((allocation) => allocation.type === 'fee' && allocation.feeObligationId === item.fee.id); return <button key={item.fee.id} type="button" disabled={selected} onClick={() => addFeeAllocation(item)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{item.fee.description}</span><span className="text-[12px] text-muted-foreground">رسم · متبقّي: {formatNumber(item.remaining)} · {item.fee.feeCategory === 'institute' ? 'للمعهد' : item.fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
           {studentCourses.every((course) => course.remaining <= 0) && studentFees.length === 0 ? <p className="py-5 text-center text-sm text-faint">لا توجد مستحقات مفتوحة لهذا الطالب.</p> : null}
-          {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="number" min="1" step="1" value={allocation.amount} readOnly={allocation.type === 'fee'} onChange={(event) => updateAllocation(index, Number(event.target.value))} className="figure-input w-28 rounded-lg border border-border bg-background px-2 py-1.5 text-sm" /><button type="button" aria-label={`حذف ${label}`} onClick={() => removeAllocation(index)} className="p-1.5 text-muted-foreground" title="حذف"><Trash2 className="size-4" /></button></div> })}<div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold"><span>إجمالي البنود</span><span>{formatNumber(selectedAmount)} {currencySymbol}</span></div></div> : null}
+          {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="text" inputMode="numeric" dir="ltr" minLength={1} value={allocation.amount} onChange={(event) => { const normalized = normalizeDigits(event.currentTarget.value); event.currentTarget.value = normalized; if (normalized) updateAllocation(index, Number(normalized)) }} className="figure-input w-28 rounded-lg border border-border bg-background px-2 py-1.5 text-sm" aria-label={`مبلغ تحصيل ${label}`} /><button type="button" aria-label={`حذف ${label}`} onClick={() => removeAllocation(index)} className="p-1.5 text-muted-foreground" title="حذف"><Trash2 className="size-4" /></button></div> })}<div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold"><span>إجمالي البنود</span><span>{formatNumber(selectedAmount)} {currencySymbol}</span></div></div> : null}
         </section> : null}
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض">{(control) => <Input {...control} type="number" min="1" step="1" readOnly={hasAllocations} />}</Field></div>
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>{(control) => <Input {...control} {...form.register('amountReceived')} type="text" inputMode="numeric" dir="ltr" value={isEdit ? (watchedAmount == null || Number.isNaN(Number(watchedAmount)) ? '' : String(watchedAmount)) : amountDraft} onChange={(event) => updateReceiptAmount(event.currentTarget.value)} onBlur={() => { if (!amountDraft || Number(amountDraft) <= 0) setAmountDraftValue(isEdit ? String(watchedAmount ?? '') : watchedAllocations.length > 0 ? String(selectedAmount) : '') }} readOnly={watchedAllocations.length > 1} placeholder="أدخل المبلغ أو اختر بند التحصيل" />}</Field></div>
         <Field label="اسم الدافع">{(control) => <Input {...control} placeholder="اختياري" />}</Field>
         <Field label="ملاحظات">{(control) => <Textarea {...control} rows={3} placeholder="اختياري" />}</Field>
         <Button type="button" size="lg" className="w-full" disabled={busy} onClick={buildAndSubmit}>{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>

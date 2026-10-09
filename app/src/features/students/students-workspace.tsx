@@ -9,6 +9,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudentsFromSummaries, studentLedger, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
+import { toWesternDigits } from '@/lib/numbers'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
@@ -95,7 +96,19 @@ export function StudentsWorkspace() {
         <div>
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 shadow-sm focus-within:border-olive">
             <Search aria-hidden className="size-4 flex-none text-faint" />
-            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id) }} aria-label="البحث عن طالب" placeholder="الاسم أو الهاتف أو الرقم التعريفي أو الدورة" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(toWesternDigits(event.currentTarget.value))
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && filtered[0]) selectStudent(filtered[0].student.id)
+              }}
+              aria-label="البحث عن طالب"
+              placeholder="الاسم أو الهاتف أو الرقم التعريفي أو الدورة"
+              className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
+            />
           </div>
 
           <div className="border-t border-border-strong">
