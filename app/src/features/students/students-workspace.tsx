@@ -235,7 +235,7 @@ function StudentRow({ item, active, onSelect, hasObligations }: { item: StudentA
       <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
       {item.student.status === 'archived' ? <span className="rounded-full border border-border-strong bg-highlight px-1.5 py-0.5 text-[10px] font-medium text-faint">مؤرشف</span> : null}
       <span className="text-[11px] font-medium text-muted-foreground">{statusLabel}</span>
-      {item.remaining > REMAINING_EPSILON ? <Money value={item.remaining} currency={false} className="text-xs font-semibold text-warn" /> : null}
+      <Money value={item.remaining} currency={false} className={`text-xs font-semibold ${item.remaining > REMAINING_EPSILON ? "text-warn" : "text-foreground"}`} />
     </button>
   </div>
 }
