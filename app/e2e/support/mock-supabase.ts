@@ -19,6 +19,7 @@ export type MockEnrollment = {
   course_id: string | null
   course_name: string
   course_value: number
+  billing_model?: 'legacy_total' | 'monthly'
 }
 
 export type MockFeeObligation = {
@@ -235,6 +236,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         course_id: String(payload.course_id ?? ''),
         course_name: course?.name ?? '',
         course_value: 0,
+        billing_model: 'monthly',
       }
       enrollments.push(enrollment)
       return json(route, enrollment)
