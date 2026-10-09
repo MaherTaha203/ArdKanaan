@@ -1,7 +1,8 @@
 # ADR-0080 — Monthly course fees for future enrollments
 
-- **Status:** Proposed for isolated implementation review; not approved for Production.
+- **Status:** IN-REVIEW; isolated implementation only, not approved for Production.
 - **Decision:** For future registrations, stop treating `enrollments.course_value` as a new total course charge. Keep existing enrollment snapshots and their receipt allocations unchanged. Future monthly charges are separate, student-anchored `fee_obligations`.
+- **Catalog-price separation:** `courses.monthly_fee` is a new, separate nullable field. Existing `courses.base_fee` retains its legacy total-registration meaning and is never copied automatically into `monthly_fee`. A course must have a valid `monthly_fee` before new monthly enrollments or monthly obligation generation are allowed.
 - **Effective boundary:** This change does not rewrite, cancel, reprice, or reallocate any existing enrollment, receipt voucher, receipt allocation, or ledger movement. Existing outstanding balances remain historical obligations. Monthly obligations are created only for the month explicitly selected by the owner; no historical months are backfilled automatically.
 
 ## Monthly obligation identity
@@ -37,6 +38,6 @@ Monthly fees use the existing fee-obligation and receipt-allocation path. `fee_c
 - Legacy enrollments and all existing receipt/fee allocations produce identical balances before and after migration.
 - A new enrollment has no legacy total-course charge; its monthly amount is charged only when the owner generates that month.
 - Additional fees remain distinguishable from monthly course fees, while recipient category remains independent.
-- Backup → restore → backup preserves monthly fee identity and due month.
+- Backup → restore → backup preserves `courses.monthly_fee`, enrollment `billing_model`, monthly fee identity, and due month. Old backups missing these fields restore with safe legacy defaults.
 - UI uses Western digits (0–9) for month and monetary values.
 - All relevant unit, SQL integration, typecheck, lint, build, and e2e tests pass.
