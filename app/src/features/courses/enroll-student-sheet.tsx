@@ -57,7 +57,7 @@ export function EnrollStudentSheet() {
   const suggestions = useMemo(() => {
     const term = normalizeArabic(query.trim())
     if (!term) return []
-    return students.filter((student) => normalizeArabic(student.name).includes(term)).slice(0, MAX_SUGGESTIONS)
+    return students.filter((student) => student.status === 'active' && normalizeArabic(student.name).includes(term)).slice(0, MAX_SUGGESTIONS)
   }, [students, query])
 
   const showDropdown = open && query.trim().length > 0
