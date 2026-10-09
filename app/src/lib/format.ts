@@ -1,12 +1,13 @@
 import { getSettings } from '@/store/use-settings-store'
 import type { DateFormat } from '@/lib/app-settings'
+import { toWesternDigits } from '@/lib/numbers'
 
 // Owner Decision: every numeric value shown to users must always render with Western digits (0-9),
 // regardless of the Arabic RTL interface. Route every displayed number/date through these helpers.
 const WESTERN_DIGITS_NUMBERING_SYSTEM = 'latn'
 
 export function formatNumber(value: number | string) {
-  const numericValue = Number(value)
+  const numericValue = Number(typeof value === 'string' ? toWesternDigits(value) : value)
 
   if (Number.isNaN(numericValue)) {
     return '—'
