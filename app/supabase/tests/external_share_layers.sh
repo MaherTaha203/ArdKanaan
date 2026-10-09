@@ -702,11 +702,11 @@ eq "ADR-0080 legacy base_fee is not repurposed" "$(runFP "select count(*) from p
 # The existing receipt-posting RPC must accept a monthly-course fee allocation
 # exactly like other fee obligations, without treating it as an enrollment total.
 MONTHLY_FEE_ID="$(runFP "select id from public.fee_obligations where course_id='$C4' and student_id='00000000-0000-0000-0000-0000000a0001' and fee_kind='monthly_course' and due_month='2026-10-01'")"
-eq "ADR-0080 monthly fee target exists for receipt" "[ -n '$MONTHLY_FEE_ID' ] && echo 1 || echo 0" "1"
+eq "ADR-0080 monthly fee target exists for receipt" "$( [ -n "$MONTHLY_FEE_ID" ] && echo 1 || echo 0)" "1"
 runFP "set request.jwt.claim.sub='$OWNER'; select public.post_receipt_with_allocations('{\"student_id\":\"00000000-0000-0000-0000-0000000a0001\",\"student_name\":\"طالب أ\",\"voucher_date\":\"2026-10-09\",\"amount_received\":250,\"payer_name\":\"طالب أ\",\"notes\":\"تحصيل رسم شهري\",\"idempotency_key\":\"99999999-0000-0000-0000-000000000008\",\"allocations\":[{\"type\":\"fee\",\"fee_obligation_id\":\"$MONTHLY_FEE_ID\",\"amount\":250}]}'::jsonb);"
 eq "ADR-0080 monthly obligation accepts a full receipt allocation" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.fee_obligation_id='$MONTHLY_FEE_ID' and ra.amount=250 and rv.cancelled_at is null")" "1"
 eq "ADR-0080 monthly receipt keeps zero external share for institute fee" "$(runFP "select count(*) from public.receipt_allocations where fee_obligation_id='$MONTHLY_FEE_ID' and external_share=0")" "1"
-eq "ADR-0080 monthly fee remains a zero-total enrollment, not a course receipt" "$(runFP "select count(*) from public.enrollments where id='00000000-0000-0000-0000-0000000e0004' and course_value=0 and billing_model='monthly'")" "1"
+eq "ADR-0080 monthly fee remains a zero-total enrollment, not a course receipt" "$(runFP "select count(*) from public.enrollments where course_id='$C4' and student_id='00000000-0000-0000-0000-0000000a0001' and course_value=0 and billing_model='monthly'")" "1"
 
 # Record row counts before the round-trip so preservation is checked
 # against a pre-restore snapshot, not against a self-comparison.
