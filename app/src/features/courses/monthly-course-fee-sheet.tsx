@@ -103,7 +103,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
         {error ? <div role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{error}</div> : null}
         <label className="block text-[13px] font-medium text-muted-foreground">
           شهر الاستحقاق
-          <Input className="mt-1.5 figure" type="month" inputMode="numeric" value={month} onChange={(event) => { setMonth(event.target.value); setPreview(null) }} />
+          <Input className="mt-1.5 figure" type="text" inputMode="numeric" autoComplete="off" placeholder="YYYY-MM" value={month} onChange={(event) => { setMonth(event.target.value); setPreview(null) }} />
         </label>
         <Button type="button" variant="quiet" className="w-full" disabled={busy || !month} onClick={loadPreview}>
           <Eye className="size-4" />
