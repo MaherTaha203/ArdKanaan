@@ -694,6 +694,8 @@ eq "ADR-0080 first October generation creates two obligations" "$(runFP "set req
 eq "ADR-0080 retry October generation creates zero duplicates" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-10-01')->>'created'")" "0"
 eq "ADR-0080 exactly two October identities exist" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-10-01'")" "2"
 eq "ADR-0080 November is an independent month" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.preview_monthly_course_obligations('$C4','2026-11-29')->>'to_create_count'")" "2"
+eq "ADR-0080 shared November generation creates two obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-11-01','shared',50)->>'created'")" "2"
+eq "ADR-0080 recipient category is independent from monthly fee kind" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-11-01' and fee_category='shared' and external_share=50")" "2"
 eq "ADR-0080 monthly fees snapshot the course price" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and amount=250 and fee_category='institute' and external_share=0")" "2"
 
 # Record historical row counts before the round-trip so preservation is checked
