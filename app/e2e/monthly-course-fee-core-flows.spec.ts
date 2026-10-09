@@ -12,7 +12,7 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
 
   // A new course stores the monthly price separately; the old total price stays unset.
   await page.getByRole('button', { name: 'الدورات', exact: true }).first().click()
-  await page.getByRole('button', { name: 'إضافة دورة', exact: true }).click()
+  await page.getByRole('button', { name: 'إضافة دورة', exact: true }).first().click()
   const courseDialog = page.getByRole('dialog', { name: 'إضافة دورة' })
   await courseDialog.getByLabel('اسم الدورة').fill('دورة اختبار الرسوم الشهرية')
   await courseDialog.getByLabel('الرسوم الشهرية الافتراضية').fill('250')
