@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { login } from './support/actions'
 import { installSupabaseMocks } from './support/mock-supabase'
 
-const COURSE = { id: 'c-monthly', name: 'دورة شهرية', base_fee: 250, start_date: '2026-09-01', end_date: null, status: 'active' as const, notes: null }
+const COURSE = { id: 'c-monthly', name: 'دورة شهرية', base_fee: 700, monthly_fee: 250, start_date: '2026-09-01', end_date: null, status: 'active' as const, notes: null }
 const STUDENTS = [
   { id: 's-monthly-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null, status: 'active' as const },
   { id: 's-monthly-2', name: 'محمد علي', id_number: null, phone: null, notes: null, status: 'active' as const },
