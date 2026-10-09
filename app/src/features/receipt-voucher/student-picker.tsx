@@ -16,13 +16,14 @@ const MAX_SUGGESTIONS = 8
 type StudentPickerProps = {
   form: UseFormReturn<ReceiptVoucherFormValues>
   students: Student[]
+  onStudentChange?: () => void
 }
 
 function digitsOf(value: string): string {
   return value.replace(/\D/g, '')
 }
 
-export function StudentPicker({ form, students }: StudentPickerProps) {
+export function StudentPicker({ form, students, onStudentChange }: StudentPickerProps) {
   const { register, setValue, watch } = form
   const name = watch('studentName')
   const studentId = watch('studentId')
@@ -67,6 +68,7 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
   }, [highlighted, showDropdown])
 
   function pick(student: Student) {
+    onStudentChange?.()
     setValue('studentName', student.name, { shouldValidate: true })
     setValue('studentId', student.id)
     setValue('studentIdNumber', student.idNumber ?? '')
@@ -76,6 +78,7 @@ export function StudentPicker({ form, students }: StudentPickerProps) {
   }
 
   function onType(value: string) {
+    onStudentChange?.()
     setValue('studentName', value, { shouldValidate: true })
     if (studentId) {
       setValue('studentId', '')
