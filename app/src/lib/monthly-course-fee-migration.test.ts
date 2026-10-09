@@ -29,6 +29,9 @@ describe('Monthly course fee migration (ADR-0080)', () => {
   it('does not eagerly update historical enrollment or receipt rows', () => {
     expect(migration).toContain("values (p_student_id, p_course_id, v_course_name, 0, 'monthly')")
     expect(migration).toContain("add column if not exists billing_model text not null default 'legacy_total'")
+    expect(migration).toContain('add column if not exists monthly_fee numeric')
+    expect(migration).toContain('select c.name, c.monthly_fee')
+    expect(migration).toContain("nullif(src->>'monthly_fee', '')::numeric")
     expect(migration).toContain("coalesce(nullif(src->>'billing_model', ''), 'legacy_total')")
     expect(migration).toContain('INVALID_ENROLLMENT_BILLING_MODEL_BACKUP')
     expect(migration).not.toMatch(/update\s+public\.(enrollments|receipt_allocations|financial_movement_ledger)/i)
