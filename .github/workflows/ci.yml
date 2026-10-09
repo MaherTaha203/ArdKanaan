@@ -72,6 +72,13 @@ jobs:
             -w /workspace \
             postgres:17-bookworm \
             bash -lc 'PGBIN=/usr/lib/postgresql/17/bin PG_RUNAS=postgres bash app/supabase/tests/external_share_layers.sh'
+      - name: Run monthly course fee integration harness
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -w /workspace \
+            postgres:17-bookworm \
+            bash -lc 'PGBIN=/usr/lib/postgresql/17/bin PG_RUNAS=postgres bash app/supabase/tests/monthly_course_fees.sh'
 
   db-concurrency-growth:
     name: DB Runtime · Concurrency & Growth
