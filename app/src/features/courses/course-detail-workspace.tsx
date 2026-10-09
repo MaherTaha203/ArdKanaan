@@ -96,8 +96,14 @@ export function CourseDetailWorkspace() {
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[12.5px] text-muted-foreground">
             <span>
               الرسوم الشهرية الافتراضية{' '}
-              {course.baseFee == null ? <span className="text-faint">—</span> : <Money value={course.baseFee} currency={false} className="font-semibold text-foreground" />}
+              {course.monthlyFee == null ? <span className="text-faint">—</span> : <Money value={course.monthlyFee} currency={false} className="font-semibold text-foreground" />}
             </span>
+            {course.baseFee != null ? (
+              <span>
+                قيمة التسجيل الإجمالية القديمة{' '}
+                <Money value={course.baseFee} currency={false} className="font-semibold text-foreground" />
+              </span>
+            ) : null}
             {period ? <span className="figure">{period}</span> : null}
             {course.notes ? <span>{course.notes}</span> : null}
           </div>
