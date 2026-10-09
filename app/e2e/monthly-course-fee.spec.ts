@@ -32,7 +32,7 @@ test('owner previews and confirms monthly course fees without duplicating a mont
   await dialog.getByRole('button', { name: /تأكيد إنشاء 2 استحقاق/ }).click()
 
   await expect(page.getByText('تم إنشاء 2 استحقاق شهري')).toBeVisible()
-  await expect(page.getByText('2026-10-01')).toBeVisible()
+  await expect(page.getByText('2026-10-01').first()).toBeVisible()
 })
 
 test('monthly fee type and recipient split remain independent', async ({ page }) => {
