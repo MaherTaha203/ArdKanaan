@@ -9,8 +9,8 @@ const STUDENTS = [
   { id: 's-monthly-2', name: 'محمد علي', id_number: null, phone: null, notes: null, status: 'active' as const },
 ]
 const ENROLLMENTS = [
-  { id: 'e-monthly-1', student_id: 's-monthly-1', course_id: 'c-monthly', course_name: 'دورة شهرية', course_value: 0 },
-  { id: 'e-monthly-2', student_id: 's-monthly-2', course_id: 'c-monthly', course_name: 'دورة شهرية', course_value: 0 },
+  { id: 'e-monthly-1', student_id: 's-monthly-1', course_id: 'c-monthly', course_name: 'دورة شهرية', course_value: 0, billing_model: 'monthly' },
+  { id: 'e-monthly-2', student_id: 's-monthly-2', course_id: 'c-monthly', course_name: 'دورة شهرية', course_value: 0, billing_model: 'monthly' },
 ]
 
 test('owner previews and confirms monthly course fees without duplicating a month', async ({ page }) => {
