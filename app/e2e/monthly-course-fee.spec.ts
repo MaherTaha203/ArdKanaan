@@ -34,3 +34,22 @@ test('owner previews and confirms monthly course fees without duplicating a mont
   await expect(page.getByText('تم إنشاء 2 استحقاق شهري')).toBeVisible()
   await expect(page.getByText('2026-10-01')).toBeVisible()
 })
+
+test('monthly fee type and recipient split remain independent', async ({ page }) => {
+  await installSupabaseMocks(page, { courses: [COURSE], students: STUDENTS, enrollments: ENROLLMENTS })
+  await login(page)
+  await page.getByRole('button', { name: 'الدورات', exact: true }).first().click()
+  await page.getByRole('button', { name: /دورة شهرية/ }).click()
+  await page.getByRole('button', { name: 'رسوم شهرية' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
+  await dialog.getByLabel('شهر الاستحقاق').fill('2026-11')
+  await dialog.getByLabel('الجهة المستحقة').selectOption('shared')
+  await dialog.getByLabel(/حصة الجهة الخارجية/).fill('50')
+  await dialog.getByRole('button', { name: 'معاينة الطلاب والاستحقاقات' }).click()
+
+  await expect(dialog.getByText('مشتركة', { exact: true })).toBeVisible()
+  await expect(dialog.getByText('50', { exact: true })).toBeVisible()
+  await dialog.getByRole('button', { name: /تأكيد إنشاء 2 استحقاق/ }).click()
+  await expect(page.getByText('تم إنشاء 2 استحقاق شهري')).toBeVisible()
+});
