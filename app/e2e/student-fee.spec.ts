@@ -25,7 +25,7 @@ test('adds a standalone (no-course) fee to a student from the statement', async 
   await expect(dialog).toBeVisible()
 
   await dialog.getByPlaceholder('مثال: رسوم امتحان').fill('رسوم امتحان')
-  await dialog.getByRole('spinbutton').first().fill('50')
+  await dialog.getByPlaceholder('0').fill('50')
   // The course select stays on "بدون دورة (رسم مستقل)" — a standalone obligation.
   await dialog.getByRole('button', { name: 'إضافة الرسم', exact: true }).click()
 
