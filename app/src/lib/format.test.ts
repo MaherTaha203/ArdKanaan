@@ -43,7 +43,7 @@ describe('Western digit display', () => {
   })
 
   it('formats dates using only Western digits', () => {
-    const result = formatDate('2026-10-09')
+    const result = formatDate('2026-10-09', 'dmy')
 
     expect(result).toBe('09/10/2026')
     expect(result).not.toMatch(/[٠-٩۰-۹]/)
