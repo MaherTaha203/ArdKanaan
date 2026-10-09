@@ -26,9 +26,9 @@ describe('Monthly course fee migration (ADR-0080)', () => {
     expect(migration).toContain("if not public.is_owner() then raise exception 'OWNER_ONLY'; end if")
   })
 
-  it('does not rewrite historical enrollment or receipt records', () => {
+  it('does not eagerly update historical enrollment or receipt rows', () => {
     expect(migration).toContain('values (p_student_id, p_course_id, v_course_name, 0)')
-    expect(migration).toContain('delete from public.receipt_vouchers')
+    expect(migration).not.toMatch(/update\\s+public\\.(enrollments|receipt_vouchers|receipt_allocations|financial_movement_ledger)/i)
     expect(migration).toContain("current_setting('app.restoring', true) = 'on'")
     expect(migration).toContain("coalesce(nullif(src->>'fee_kind', ''), 'additional')")
   })
