@@ -4,10 +4,9 @@ import type { CourseFormValues, EnrollFormValues } from '@/features/courses/sche
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-// Course catalog administration + student registration. Courses are pure catalog
-// metadata. Registering a student writes an enrollment using the course's pre-defined
-// price as the authoritative financial snapshot; it never asks the receipt to re-enter
-// the course price.
+// Course catalog administration + student registration. base_fee is the default
+// monthly price for future obligations. Registering a student creates enrollment
+// identity only; the month-specific financial obligation is generated separately.
 
 const NOT_CONFIGURED = 'الاتصال بقاعدة البيانات غير مهيأ بعد.'
 
