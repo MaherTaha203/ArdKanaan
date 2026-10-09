@@ -1,5 +1,13 @@
 begin;
 -- ADR-0080: monthly billing for future enrollments; no historical rows are rewritten.
+-- Existing base_fee remains the historical total-registration price. The new monthly_fee
+-- is deliberately separate; existing catalog values are never assumed to be monthly prices.
+alter table public.courses
+  add column if not exists monthly_fee numeric;
+alter table public.courses
+  add constraint courses_monthly_fee_whole_nonnegative
+  check (monthly_fee is null or (monthly_fee >= 0 and monthly_fee = trunc(monthly_fee)));
+
 -- The explicit model marker avoids mistaking a legitimate legacy zero-price enrollment
 -- for a monthly enrollment. Existing rows default to their original total-fee model.
 alter table public.enrollments
@@ -72,18 +80,25 @@ revoke all on function public.enforce_fee_obligation_financial_identity() from p
 
 create or replace function public.enforce_enrollment_financial_firewall()
 returns trigger language plpgsql security definer set search_path = '' as $$
-declare v_course_name text; v_course_value numeric;
+declare v_course_name text; v_course_value numeric; v_monthly_fee numeric;
 begin
   if current_setting('app.restoring', true) = 'on' then return new; end if;
   if tg_op = 'INSERT' then
     if new.id is null or new.student_id is null or new.course_id is null or new.course_name is null or new.course_value is null then
       raise exception 'ENROLLMENT_FINANCIAL_IDENTITY_REQUIRED';
     end if;
-    select c.name, c.base_fee into v_course_name, v_course_value from public.courses c where c.id = new.course_id;
+    select c.name, c.base_fee, c.monthly_fee into v_course_name, v_course_value, v_monthly_fee
+    from public.courses c where c.id = new.course_id;
     if v_course_name is null then raise exception 'COURSE_NOT_FOUND'; end if;
-    if v_course_value is null then raise exception 'COURSE_BASE_FEE_REQUIRED'; end if;
     if new.billing_model not in ('legacy_total', 'monthly') then
       raise exception 'INVALID_ENROLLMENT_BILLING_MODEL';
+    end if;
+    if new.billing_model = 'legacy_total' and v_course_value is null then
+      raise exception 'COURSE_BASE_FEE_REQUIRED';
+    end if;
+    if new.billing_model = 'monthly'
+       and (v_monthly_fee is null or v_monthly_fee <= 0 or v_monthly_fee <> trunc(v_monthly_fee)) then
+      raise exception 'COURSE_MONTHLY_FEE_REQUIRED';
     end if;
     if new.course_name is distinct from v_course_name
        or (new.billing_model = 'monthly' and new.course_value <> 0)
@@ -121,7 +136,7 @@ begin
   if p_student_id is null or p_course_id is null then raise exception 'INVALID_ENROLLMENT_PAYLOAD'; end if;
   perform 1 from public.students s where s.id = p_student_id and coalesce(s.status, 'active') = 'active';
   if not found then raise exception 'STUDENT_NOT_FOUND_OR_INACTIVE'; end if;
-  select c.name, c.base_fee into v_course_name, v_monthly_fee from public.courses c
+  select c.name, c.monthly_fee into v_course_name, v_monthly_fee from public.courses c
     where c.id = p_course_id and c.status = 'active';
   if v_course_name is null then raise exception 'COURSE_NOT_FOUND_OR_INACTIVE'; end if;
   if v_monthly_fee is null or v_monthly_fee <= 0 or v_monthly_fee <> trunc(v_monthly_fee) then
@@ -151,7 +166,7 @@ begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
   if p_course_id is null or p_due_month is null then raise exception 'INVALID_MONTHLY_FEE_REQUEST'; end if;
   v_month := date_trunc('month', p_due_month)::date;
-  select c.name, c.base_fee into v_course_name, v_amount from public.courses c
+  select c.name, c.monthly_fee into v_course_name, v_amount from public.courses c
     where c.id = p_course_id and c.status = 'active';
   if v_course_name is null then raise exception 'COURSE_NOT_FOUND_OR_INACTIVE'; end if;
   if v_amount is null or v_amount <= 0 or v_amount <> trunc(v_amount) then raise exception 'COURSE_MONTHLY_FEE_REQUIRED'; end if;
@@ -194,7 +209,7 @@ begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
   if p_course_id is null or p_due_month is null then raise exception 'INVALID_MONTHLY_FEE_REQUEST'; end if;
   v_month := date_trunc('month', p_due_month)::date;
-  select c.name, c.base_fee into v_course_name, v_amount from public.courses c
+  select c.name, c.monthly_fee into v_course_name, v_amount from public.courses c
     where c.id = p_course_id and c.status = 'active' for share;
   if v_course_name is null then raise exception 'COURSE_NOT_FOUND_OR_INACTIVE'; end if;
   if v_amount is null or v_amount <= 0 or v_amount <> trunc(v_amount) then raise exception 'COURSE_MONTHLY_FEE_REQUIRED'; end if;
@@ -497,8 +512,8 @@ begin
   delete from public.students;
   delete from public.courses;
 
-  insert into public.courses (id, name, base_fee, start_date, end_date, status, notes, created_at, updated_at)
-  select coalesce((src->>'id')::uuid, gen_random_uuid()), src->>'name', nullif(src->>'base_fee', '')::numeric, nullif(src->>'start_date', '')::date, nullif(src->>'end_date', '')::date, coalesce(nullif(src->>'status', ''), 'active'), coalesce(src->>'notes', ''), coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), coalesce((src->>'updated_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(courses) src;
+  insert into public.courses (id, name, base_fee, monthly_fee, start_date, end_date, status, notes, created_at, updated_at)
+  select coalesce((src->>'id')::uuid, gen_random_uuid()), src->>'name', nullif(src->>'base_fee', '')::numeric, nullif(src->>'monthly_fee', '')::numeric, nullif(src->>'start_date', '')::date, nullif(src->>'end_date', '')::date, coalesce(nullif(src->>'status', ''), 'active'), coalesce(src->>'notes', ''), coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), coalesce((src->>'updated_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(courses) src;
   get diagnostics c_out = row_count;
 
   insert into public.students (id, name, id_number, phone, notes, status, completed_at, completion_reason, archived_at, archive_reason, created_at, updated_at)
