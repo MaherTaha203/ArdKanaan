@@ -190,6 +190,25 @@ export function ReceiptSheet() {
   }
 
   function buildAndSubmit() {
+    // Do not let an invalid or cleared amount draft silently fall back to the
+    // previous allocation amount when the operator presses Save.
+    if (watchedAllocations.length === 1) {
+      const draft = normalizeDigits(amountDraft)
+      const amount = draft ? Number(draft) : Number.NaN
+      const allocation = watchedAllocations[0]
+      const maxRemaining = allocation.type === 'course'
+        ? studentCourses.find((course) => course.enrollmentId === allocation.enrollmentId)?.remaining
+        : studentFees.find((item) => item.fee.id === allocation.feeObligationId)?.remaining
+      if (!Number.isInteger(amount) || amount <= 0 || maxRemaining == null || amount > maxRemaining) {
+        form.setError('amountReceived', { message: `المبلغ لا يمكن أن يتجاوز الذمة المتبقية (${formatNumber(maxRemaining ?? 0)}) ويجب أن يكون عددًا صحيحًا أكبر من صفر` })
+        return
+      }
+      if (amount !== allocation.amount) {
+        updateReceiptAmount(draft)
+        return
+      }
+      form.clearErrors('amountReceived')
+    }
     const current = form.getValues()
     const values: ReceiptVoucherFormValues = {
       ...current,
