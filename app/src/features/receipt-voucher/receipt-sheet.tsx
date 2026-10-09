@@ -64,6 +64,7 @@ export function ReceiptSheet() {
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
   const pickedStudentId = useWatch({ control: form.control, name: 'studentId' }) ?? ''
   const watchedAllocations = useWatch({ control: form.control, name: 'allocations' }) ?? []
+  const watchedAmount = useWatch({ control: form.control, name: 'amountReceived' })
 
   const studentCourses = useMemo(() => (!isEdit && pickedStudentId ? studentCourseBreakdown(pickedStudentId, statementLines, enrollments) : []), [isEdit, pickedStudentId, statementLines, enrollments])
   const studentEnrollments = useMemo(() => (pickedStudentId ? enrollments.filter((item) => item.studentId === pickedStudentId) : []), [pickedStudentId, enrollments])
@@ -112,7 +113,27 @@ export function ReceiptSheet() {
   function updateAllocation(index: number, amount: number) {
     const current = watchedAllocations[index]
     if (!current || !Number.isInteger(amount) || amount <= 0) return
+    const maxRemaining = current.type === 'course'
+      ? studentCourses.find((course) => course.enrollmentId === current.enrollmentId)?.remaining
+      : studentFees.find((item) => item.fee.id === current.feeObligationId)?.remaining
+    if (maxRemaining == null || amount > maxRemaining) {
+      form.setError('amountReceived', { message: `المبلغ لا يمكن أن يتجاوز الذمة المتبقية (${formatNumber(maxRemaining ?? 0)})` })
+      return
+    }
+    form.clearErrors('amountReceived')
     const next = watchedAllocations.slice(); next[index] = { ...current, amount }; setAllocations(next)
+  }
+  function normalizeDigits(value: string) {
+    return value.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+      .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+      .replace(/[^0-9]/g, '')
+  }
+  function updateReceiptAmount(rawValue: string) {
+    const normalized = normalizeDigits(rawValue)
+    const amount = normalized ? Number(normalized) : undefined
+    form.setValue('amountReceived', amount as number, { shouldValidate: true, shouldDirty: true })
+    if (watchedAllocations.length !== 1 || amount == null || amount <= 0) return
+    updateAllocation(0, amount)
   }
   function removeAllocation(index: number) { setAllocations(watchedAllocations.filter((_, itemIndex) => itemIndex !== index)) }
 
@@ -186,9 +207,9 @@ export function ReceiptSheet() {
           {studentCourses.filter((course) => course.remaining > 0).map((course) => { const selected = course.enrollmentId ? watchedAllocations.some((item) => item.type === 'course' && item.enrollmentId === course.enrollmentId) : false; return <button key={course.enrollmentId ?? `legacy-${course.courseName}`} type="button" disabled={!course.enrollmentId || selected} onClick={() => addCourseAllocation(course)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{course.courseName}</span><span className="text-[12px] text-muted-foreground">متبقّي الدورة: {formatNumber(course.remaining)}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
           {studentFees.map((item) => { const selected = watchedAllocations.some((allocation) => allocation.type === 'fee' && allocation.feeObligationId === item.fee.id); return <button key={item.fee.id} type="button" disabled={selected} onClick={() => addFeeAllocation(item)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{item.fee.description}</span><span className="text-[12px] text-muted-foreground">رسم · متبقّي: {formatNumber(item.remaining)} · {item.fee.feeCategory === 'institute' ? 'للمعهد' : item.fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
           {studentCourses.every((course) => course.remaining <= 0) && studentFees.length === 0 ? <p className="py-5 text-center text-sm text-faint">لا توجد مستحقات مفتوحة لهذا الطالب.</p> : null}
-          {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="number" min="1" step="1" value={allocation.amount} readOnly={allocation.type === 'fee'} onChange={(event) => updateAllocation(index, Number(event.target.value))} className="figure-input w-28 rounded-lg border border-border bg-background px-2 py-1.5 text-sm" /><button type="button" aria-label={`حذف ${label}`} onClick={() => removeAllocation(index)} className="p-1.5 text-muted-foreground" title="حذف"><Trash2 className="size-4" /></button></div> })}<div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold"><span>إجمالي البنود</span><span>{formatNumber(selectedAmount)} {currencySymbol}</span></div></div> : null}
+          {hasAllocations ? <div className="space-y-2 pt-2">{watchedAllocations.map((allocation, index) => { const label = allocation.type === 'fee' ? feeObligations.find((fee) => fee.id === allocation.feeObligationId)?.description ?? 'رسم' : enrollments.find((enrollment) => enrollment.id === allocation.enrollmentId)?.courseName ?? 'دورة'; const fee = allocation.type === 'fee' ? feeObligations.find((item) => item.id === allocation.feeObligationId) : null; return <div key={`${allocation.type}-${allocation.enrollmentId ?? allocation.feeObligationId}`} className="flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2.5"><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}{fee ? ` · ${fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}` : ''}</span><input type="text" inputMode="numeric" dir="ltr" minLength={1} value={allocation.amount} onChange={(event) => { const normalized = normalizeDigits(event.target.value); if (normalized) updateAllocation(index, Number(normalized)) }} className="figure-input w-28 rounded-lg border border-border bg-background px-2 py-1.5 text-sm" aria-label={`مبلغ تحصيل ${label}`} /><button type="button" aria-label={`حذف ${label}`} onClick={() => removeAllocation(index)} className="p-1.5 text-muted-foreground" title="حذف"><Trash2 className="size-4" /></button></div> })}<div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold"><span>إجمالي البنود</span><span>{formatNumber(selectedAmount)} {currencySymbol}</span></div></div> : null}
         </section> : null}
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض">{(control) => <Input {...control} type="number" min="1" step="1" readOnly={hasAllocations} />}</Field></div>
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="تاريخ السند">{(control) => <SmartDateInput {...control} value={paymentDate} max={maxDate} onChange={(iso) => form.setValue('paymentDate', iso, { shouldValidate: true })} />}</Field><Field label="المبلغ المقبوض" error={form.formState.errors.amountReceived?.message}>{(control) => <Input {...control} {...form.register('amountReceived')} type="text" inputMode="numeric" dir="ltr" value={watchedAmount == null || Number.isNaN(Number(watchedAmount)) ? '' : String(watchedAmount)} onChange={(event) => updateReceiptAmount(event.target.value)} readOnly={watchedAllocations.length > 1} placeholder="أدخل المبلغ أو اختر بند التحصيل" />}</Field></div>
         <Field label="اسم الدافع">{(control) => <Input {...control} placeholder="اختياري" />}</Field>
         <Field label="ملاحظات">{(control) => <Textarea {...control} rows={3} placeholder="اختياري" />}</Field>
         <Button type="button" size="lg" className="w-full" disabled={busy} onClick={buildAndSubmit}>{busy ? 'جارٍ الحفظ…' : isEdit ? 'حفظ التعديل' : 'حفظ سند القبض'}</Button>
