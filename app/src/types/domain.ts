@@ -37,7 +37,10 @@ export type CourseStatus = 'active' | 'ended'
 export type Course = {
   id: string
   name: string
+  // Legacy aggregate registration price, retained for historical enrollments only.
   baseFee: number | null
+  // Separate default monthly price for future obligations.
+  monthlyFee?: number | null
   startDate: string | null
   endDate: string | null
   status: CourseStatus
