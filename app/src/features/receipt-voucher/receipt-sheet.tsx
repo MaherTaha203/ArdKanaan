@@ -64,7 +64,6 @@ export function ReceiptSheet() {
   const paymentDate = useWatch({ control: form.control, name: 'paymentDate' }) ?? ''
   const pickedStudentId = useWatch({ control: form.control, name: 'studentId' }) ?? ''
   const watchedAllocations = useWatch({ control: form.control, name: 'allocations' }) ?? []
-  const watchedAmount = useWatch({ control: form.control, name: 'amountReceived' })
 
   const studentCourses = useMemo(() => (!isEdit && pickedStudentId ? studentCourseBreakdown(pickedStudentId, statementLines, enrollments) : []), [isEdit, pickedStudentId, statementLines, enrollments])
   const studentEnrollments = useMemo(() => (pickedStudentId ? enrollments.filter((item) => item.studentId === pickedStudentId) : []), [pickedStudentId, enrollments])
