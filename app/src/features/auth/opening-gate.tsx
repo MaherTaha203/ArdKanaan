@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 
 import { toWesternDigits } from '@/lib/numbers'
-
 import { useAuthStore } from '@/store/use-auth-store'
 
 const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
