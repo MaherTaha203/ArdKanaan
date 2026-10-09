@@ -21,6 +21,15 @@ describe('Input numeric digit handling', () => {
     expect(onChange).toHaveBeenCalledTimes(1)
   })
 
+  it('preserves decimal separators so whole-number validation can reject fractions', () => {
+    render(<Input type="number" aria-label="الرسوم الجديدة" />)
+
+    const input = screen.getByRole('textbox', { name: 'الرسوم الجديدة' })
+    fireEvent.change(input, { target: { value: '٢٥٠.٥' } })
+
+    expect(input).toHaveValue('250.5')
+  })
+
   it('normalizes digits in regular text fields but leaves passwords unchanged', () => {
     render(
       <>
