@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 
 import { Archive, ChevronDown, ChevronLeft, Search, User, UserPlus } from 'lucide-react'
-import { toWesternDigits } from '@/lib/numbers'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -9,6 +8,7 @@ import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { aggregateStudentsFromSummaries, selectNonArchived, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
+import { toWesternDigits } from '@/lib/numbers'
 import { normalizeArabic } from '@/lib/text'
 import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
