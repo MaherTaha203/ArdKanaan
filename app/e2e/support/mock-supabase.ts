@@ -182,9 +182,11 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
     }
 
     if (table?.startsWith('rpc/preview_monthly_course_obligations') && method === 'POST') {
-      const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string }
+      const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string; p_fee_category?: 'institute' | 'external' | 'shared'; p_external_share?: number }
       const course = courses.find((item) => item.id === body.p_course_id)
       const dueMonth = String(body.p_due_month ?? '').slice(0, 7) + '-01'
+      const feeCategory = body.p_fee_category ?? 'institute'
+      const externalShare = Number(body.p_external_share ?? 0)
       const eligible = enrollments.filter((enrollment) => {
         const student = students.find((item) => item.id === enrollment.student_id)
         return enrollment.course_id === body.p_course_id && (!student || (student.status ?? 'active') === 'active')
@@ -193,13 +195,15 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         const existing = feeObligations.some((fee) => fee.fee_kind === 'monthly_course' && fee.enrollment_id === enrollment.id && fee.due_month === dueMonth)
         return { student_id: enrollment.student_id, student_name: student?.name ?? '', enrollment_id: enrollment.id, amount: Number(course?.base_fee ?? 0), due_month: dueMonth, already_exists: existing }
       })
-      return json(route, { course_id: body.p_course_id, course_name: course?.name ?? '', due_month: dueMonth, monthly_amount: Number(course?.base_fee ?? 0), eligible_count: eligible.length, already_exists_count: eligible.filter((item) => item.already_exists).length, to_create_count: eligible.filter((item) => !item.already_exists).length, students: eligible })
+      return json(route, { course_id: body.p_course_id, course_name: course?.name ?? '', due_month: dueMonth, monthly_amount: Number(course?.base_fee ?? 0), fee_category: feeCategory, external_share: externalShare, eligible_count: eligible.length, already_exists_count: eligible.filter((item) => item.already_exists).length, to_create_count: eligible.filter((item) => !item.already_exists).length, students: eligible })
     }
 
     if (table?.startsWith('rpc/create_monthly_course_obligations') && method === 'POST') {
-      const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string }
+      const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string; p_fee_category?: 'institute' | 'external' | 'shared'; p_external_share?: number }
       const course = courses.find((item) => item.id === body.p_course_id)
       const dueMonth = String(body.p_due_month ?? '').slice(0, 7) + '-01'
+      const feeCategory = body.p_fee_category ?? 'institute'
+      const externalShare = Number(body.p_external_share ?? 0)
       let created = 0
       for (const enrollment of enrollments.filter((item) => item.course_id === body.p_course_id)) {
         const student = students.find((item) => item.id === enrollment.student_id)
@@ -213,8 +217,8 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
           course_name: course?.name ?? '',
           description: `رسوم الدورة الشهرية — ${dueMonth.slice(0, 7)}`,
           amount: Number(course?.base_fee ?? 0),
-          fee_category: 'institute',
-          external_share: 0,
+          fee_category: feeCategory,
+          external_share: externalShare,
           fee_kind: 'monthly_course',
           due_month: dueMonth,
           cancelled_at: null,
@@ -223,7 +227,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         })
         created += 1
       }
-      return json(route, { course_id: body.p_course_id, due_month: dueMonth, created })
+      return json(route, { course_id: body.p_course_id, due_month: dueMonth, created, fee_category: feeCategory, external_share: externalShare })
     }
 
     if (table?.startsWith('rpc/create_enrollment') && method === 'POST') {
