@@ -186,8 +186,6 @@ export function ReceiptSheet() {
       autoPrint: true,
     })
     await reloadWorkspace()
-    const refreshedStudent = useMoneyInStore.getState().activeStudent
-    if (refreshedStudent) selectStudent(refreshedStudent.id)
     useToastStore.getState().show('رُحّل سند القبض بنجاح')
   }
 
@@ -221,7 +219,11 @@ export function ReceiptSheet() {
   return <>
     <ActionSheet title="سند قبض" onClose={closeOverlay}>
       {showError ? <div role="alert" className="mb-4 rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{isEdit ? adminError ?? 'تعذّر حفظ التعديل.' : error ?? 'تعذّر حفظ السند.'}</div> : null}
-      {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={closeOverlay}>إغلاق بعد الطباعة</Button></div> : <form className="space-y-4" noValidate>
+      {loadingEdit ? <p className="py-10 text-center text-sm text-faint">جارٍ تحميل السند…</p> : savedVoucher ? <div className="py-3"><p className="mb-4 text-center text-sm font-semibold text-foreground">تم حفظ السند</p><Button type="button" variant="outline" className="w-full" onClick={() => {
+        const refreshedStudent = useMoneyInStore.getState().activeStudent
+        if (refreshedStudent) selectStudent(refreshedStudent.id)
+        else closeOverlay()
+      }}>إغلاق بعد الطباعة</Button></div> : <form className="space-y-4" noValidate>
         {isEdit ? <Field label="اسم الطالب">{(control) => <Input {...control} value={editStudentName} readOnly />}</Field> : <StudentPicker form={form} students={students} onStudentChange={() => setAmountDraft('')} />}
         {!isEdit && pickedStudentId ? <section className="space-y-3 border-y border-border py-4"><div><div className="text-[13px] font-semibold text-foreground">بنود التحصيل</div></div>
           {studentCourses.filter((course) => course.remaining > 0).map((course) => { const selected = course.enrollmentId ? watchedAllocations.some((item) => item.type === 'course' && item.enrollmentId === course.enrollmentId) : false; return <button key={course.enrollmentId ?? `legacy-${course.courseName}`} type="button" disabled={!course.enrollmentId || selected} onClick={() => addCourseAllocation(course)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-border-strong bg-panel px-4 py-3 text-start disabled:opacity-60"><span className="min-w-0"><span className="block text-sm font-semibold text-foreground">{course.courseName}</span><span className="text-[12px] text-muted-foreground">متبقّي الدورة: {formatNumber(course.remaining)}</span></span><span className="text-[12px] font-medium text-olive">{selected ? 'مضاف' : 'إضافة'}</span></button> })}
