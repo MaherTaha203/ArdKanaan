@@ -38,7 +38,7 @@ export function CourseFormSheet() {
     defaultValues: {
       name: editing?.name ?? '',
       baseFee: editing?.baseFee == null ? '' : String(editing.baseFee),
-      // (baseFee is a string field; '' = no standard fee)
+      // (baseFee is a string field; '' = no monthly price set)
       startDate: editing?.startDate ?? '',
       endDate: editing?.endDate ?? '',
       status: editing?.status ?? 'active',
@@ -77,7 +77,7 @@ export function CourseFormSheet() {
           {(control) => <Input placeholder="مثال: الرياضيات" {...control} {...form.register('name')} />}
         </Field>
 
-        <Field label="الرسوم الأساسية" error={form.formState.errors.baseFee?.message}>
+        <Field label="الرسوم الشهرية الافتراضية" error={form.formState.errors.baseFee?.message}>
           {(control) => (
             <Input
               type="text"
