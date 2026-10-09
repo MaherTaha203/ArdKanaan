@@ -24,10 +24,11 @@ export function formatNumber(value: number | string) {
 // the date parts so the output is always pure Western digits with no locale RTL
 // marks, and the day/month/year order is exactly as configured.
 export function formatDate(value: string, format: DateFormat = getSettings().dateFormat) {
-  const parsedDate = new Date(`${value}T00:00:00`)
+  const normalizedValue = toWesternDigits(value)
+  const parsedDate = new Date(`${normalizedValue}T00:00:00`)
 
   if (Number.isNaN(parsedDate.getTime())) {
-    return value
+    return normalizedValue
   }
 
   const year = String(parsedDate.getFullYear())
@@ -41,10 +42,11 @@ export function formatDate(value: string, format: DateFormat = getSettings().dat
 // date and 24-hour time parts, honoring the same Owner Decision as the helpers
 // above. Date-only strings (YYYY-MM-DD) should use formatDate instead.
 export function formatTimestamp(value: string): { date: string; time: string } {
-  const parsed = new Date(value)
+  const normalizedValue = toWesternDigits(value)
+  const parsed = new Date(normalizedValue)
 
   if (Number.isNaN(parsed.getTime())) {
-    return { date: value, time: '' }
+    return { date: normalizedValue, time: '' }
   }
 
   const date = new Intl.DateTimeFormat('ar-EG', {
