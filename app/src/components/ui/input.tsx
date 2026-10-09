@@ -10,7 +10,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   ref,
 ) {
   const numericInput = type === 'number' || inputMode === 'numeric' || inputMode === 'decimal' || inputMode === 'tel'
-  const handleChange: ChangeEventHandler<HTMLInputElement> | undefined = numericInput
+  const handleChange: ChangeEventHandler<HTMLInputElement> | undefined = type !== 'password'
     ? (event) => {
         const westernDigits = toWesternDigits(event.currentTarget.value)
         const normalized = type === 'number' ? westernDigits.replace(/[^0-9]/g, '') : westernDigits
