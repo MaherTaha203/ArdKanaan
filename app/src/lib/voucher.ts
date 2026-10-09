@@ -6,11 +6,13 @@
 // payments — so the type reads at a glance (voucherRef). The bare number
 // (formatVoucherNo) stays available for contexts that don't want the prefix.
 
+import { toWesternDigits } from '@/lib/numbers'
+
 export type VoucherType = 'receipt' | 'payment'
 
 /** Bare Latin voucher number, e.g. 1040 -> "1040" (no grouping, no prefix). */
 export function formatVoucherNo(voucherNumber: number | string): string {
-  return String(Math.trunc(Number(voucherNumber)))
+  return String(Math.trunc(Number(toWesternDigits(String(voucherNumber)))))
 }
 
 const REF_PREFIX: Record<VoucherType, string> = { receipt: 'R', payment: 'P' }
