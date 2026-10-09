@@ -156,7 +156,7 @@ begin
   if v_course_name is null then raise exception 'COURSE_NOT_FOUND_OR_INACTIVE'; end if;
   if v_amount is null or v_amount <= 0 or v_amount <> trunc(v_amount) then raise exception 'COURSE_MONTHLY_FEE_REQUIRED'; end if;
   v_external := p_external_share;
-  if p_fee_category not in ('institute', 'external', 'shared') or v_external is null
+  if p_fee_category is null or p_fee_category not in ('institute', 'external', 'shared') or v_external is null
      or v_external < 0 or v_external <> trunc(v_external)
      or (p_fee_category = 'institute' and v_external <> 0)
      or (p_fee_category = 'external' and v_external <> v_amount)
@@ -199,7 +199,7 @@ begin
   if v_course_name is null then raise exception 'COURSE_NOT_FOUND_OR_INACTIVE'; end if;
   if v_amount is null or v_amount <= 0 or v_amount <> trunc(v_amount) then raise exception 'COURSE_MONTHLY_FEE_REQUIRED'; end if;
   v_external := p_external_share;
-  if p_fee_category not in ('institute', 'external', 'shared') or v_external is null
+  if p_fee_category is null or p_fee_category not in ('institute', 'external', 'shared') or v_external is null
      or v_external < 0 or v_external <> trunc(v_external)
      or (p_fee_category = 'institute' and v_external <> 0)
      or (p_fee_category = 'external' and v_external <> v_amount)
