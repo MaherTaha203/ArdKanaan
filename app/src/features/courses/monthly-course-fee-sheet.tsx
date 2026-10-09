@@ -25,6 +25,8 @@ type PreviewResult = {
   course_name: string
   due_month: string
   monthly_amount: number
+  fee_category: 'institute' | 'external' | 'shared'
+  external_share: number
   eligible_count: number
   already_exists_count: number
   to_create_count: number
@@ -37,6 +39,8 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
+  const [feeCategory, setFeeCategory] = useState<'institute' | 'external' | 'shared'>('institute')
+  const [externalShare, setExternalShare] = useState('0')
   const [preview, setPreview] = useState<PreviewResult | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,12 +55,20 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
       setError('اختر الشهر المطلوب.')
       return
     }
+    const amount = course.baseFee ?? 0
+    const external = feeCategory === 'institute' ? 0 : feeCategory === 'external' ? amount : Number(externalShare)
+    if (feeCategory === 'shared' && (!/^[0-9]+$/.test(externalShare) || external <= 0 || external >= amount)) {
+      setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من الرسوم الشهرية.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
       const { data, error: rpcError } = await supabase.rpc('preview_monthly_course_obligations', {
         p_course_id: course.id,
         p_due_month: `${month}-01`,
+        p_fee_category: feeCategory,
+        p_external_share: external,
       })
       if (rpcError) throw rpcError
       setPreview(data as PreviewResult)
@@ -64,9 +76,11 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
       const message = cause && typeof cause === 'object' && 'message' in cause ? String((cause as { message: unknown }).message) : ''
       setError(message.includes('COURSE_MONTHLY_FEE_REQUIRED')
         ? 'حدّد رسومًا شهرية صحيحة للدورة أولًا.'
-        : message.includes('COURSE_NOT_FOUND_OR_INACTIVE')
-          ? 'الدورة غير نشطة أو غير موجودة.'
-          : 'تعذّر إعداد معاينة الرسوم الشهرية.')
+        : message.includes('INVALID_MONTHLY_FEE_RECIPIENT_SPLIT')
+          ? 'حصة الجهة المستحقة لا تتوافق مع نوع التوزيع المختار.'
+          : message.includes('COURSE_NOT_FOUND_OR_INACTIVE')
+            ? 'الدورة غير نشطة أو غير موجودة.'
+            : 'تعذّر إعداد معاينة الرسوم الشهرية.')
     } finally {
       setBusy(false)
     }
@@ -75,12 +89,20 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
   async function createFees() {
     const supabase = getSupabaseBrowserClient()
     if (!supabase || !preview || preview.to_create_count === 0) return
+    const amount = course.baseFee ?? 0
+    const external = feeCategory === 'institute' ? 0 : feeCategory === 'external' ? amount : Number(externalShare)
+    if (feeCategory === 'shared' && (!/^[0-9]+$/.test(externalShare) || external <= 0 || external >= amount)) {
+      setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من الرسوم الشهرية.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
       const { data, error: rpcError } = await supabase.rpc('create_monthly_course_obligations', {
         p_course_id: course.id,
         p_due_month: `${month}-01`,
+        p_fee_category: feeCategory,
+        p_external_share: external,
       })
       if (rpcError) throw rpcError
       const result = data as { created?: number }
@@ -105,6 +127,22 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
           شهر الاستحقاق
           <Input className="mt-1.5 figure" type="text" inputMode="numeric" autoComplete="off" placeholder="YYYY-MM" value={month} onChange={(event) => { setMonth(event.target.value); setPreview(null) }} />
         </label>
+        <label className="block text-[13px] font-medium text-muted-foreground">
+          الجهة المستحقة
+          <select className="mt-1.5 h-11 w-full rounded-xl border border-border-strong bg-panel px-3 text-sm text-foreground" value={feeCategory} onChange={(event) => { setFeeCategory(event.target.value as 'institute' | 'external' | 'shared'); setPreview(null) }}>
+            <option value="institute">للمركز / المعهد</option>
+            <option value="external">لجهة خارجية</option>
+            <option value="shared">مشتركة بين المركز وجهة خارجية</option>
+          </select>
+        </label>
+        {feeCategory === 'shared' ? (
+          <label className="block text-[13px] font-medium text-muted-foreground">
+            حصة الجهة الخارجية من كل طالب (بالأرقام الإنجليزية)
+            <Input className="mt-1.5 figure" type="text" inputMode="numeric" autoComplete="off" placeholder="0" value={externalShare} onChange={(event) => { setExternalShare(event.target.value.replace(/[^0-9]/g, '')); setPreview(null) }} />
+          </label>
+        ) : feeCategory === 'external' ? (
+          <p className="text-xs text-muted-foreground">تُسند الرسوم الشهرية كاملة إلى الجهة الخارجية.</p>
+        ) : null}
         <Button type="button" variant="quiet" className="w-full" disabled={busy || !month} onClick={loadPreview}>
           <Eye className="size-4" />
           {busy ? 'جارٍ التحضير…' : 'معاينة الطلاب والاستحقاقات'}
@@ -113,6 +151,8 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
           <section className="space-y-3 rounded-xl border border-border p-3">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <Summary label="الرسوم لكل طالب" value={<Money value={preview.monthly_amount} currency={false} />} />
+              <Summary label="الجهة المستحقة" value={preview.fee_category === 'institute' ? 'المركز / المعهد' : preview.fee_category === 'external' ? 'جهة خارجية' : 'مشتركة'} />
+              <Summary label="حصة الجهة الخارجية" value={<Money value={preview.external_share} currency={false} />} />
               <Summary label="الطلاب المؤهلون" value={String(preview.eligible_count)} />
               <Summary label="استحقاقات موجودة" value={String(preview.already_exists_count)} />
               <Summary label="استحقاقات جديدة" value={String(preview.to_create_count)} />
