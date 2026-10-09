@@ -32,7 +32,7 @@ test('opens the activity log as a read-only workspace', async ({ page }) => {
   await expect(page.getByRole('button', { name: /استعادة|إعادة تفعيل/ })).toHaveCount(0)
 })
 
-test('creates a receipt, reaches the student statement, then opens its print preview', async ({ page }) => {
+test('creates a receipt and opens its saved voucher print preview', async ({ page }) => {
   const handle = await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: '900000000', phone: '0590000000', notes: null }],
     enrollments: [{ id: '11111111-1111-4111-8111-111111111111', student_id: 's-1', course_id: 'c-1', course_name: 'دورة الرياضيات', course_value: 400 }],
@@ -48,11 +48,9 @@ test('creates a receipt, reaches the student statement, then opens its print pre
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect.poll(() => handle.receiptInserts.length).toBe(1)
   expect(handle.receiptInserts[0]).toMatchObject({ amount_received: 400, allocation_mode: true })
-  const statement = page.getByLabel('كشف حساب سارة أحمد')
-  await expect(statement.getByRole('heading', { name: 'كشف الحساب' })).toBeVisible()
-  await expect(page.getByText('دورة الرياضيات').first()).toBeVisible()
-  await page.getByRole('button', { name: 'طباعة الكشف' }).click()
-  await expect(page.getByText('معاينة الطباعة — كشف حساب الطالب')).toBeVisible()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-901')).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 400', { exact: false })).toBeVisible()
 })
 
 
@@ -76,7 +74,8 @@ test('accepts Arabic receipt amounts and saves a partial course payment', async 
   await expect.poll(() => handle.receiptInserts.length).toBe(1)
   expect(handle.receiptInserts[0]).toMatchObject({ amount_received: 150, allocation_mode: true })
   expect(handle.receiptAllocations[0]).toMatchObject({ type: 'course', amount: 150 })
-  await expect(page.getByText('تم حفظ السند')).toBeVisible()
+  await expect(page.getByText('معاينة الطباعة — سند قبض')).toBeVisible()
+  await expect(page.getByText('# R-901')).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'حفظ سند القبض' })).toHaveCount(0)
 })
 
