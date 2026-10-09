@@ -131,8 +131,8 @@ test('prints both a course and a fee allocation after saving one receipt', async
   await dialog.getByRole('button', { name: /رسم امتحان/ }).click()
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect(page.getByText('تم حفظ السند')).toBeVisible()
-  await expect(page.getByText('دورة الرياضيات', { exact: true })).toBeVisible()
-  await expect(page.getByText('رسم امتحان', { exact: true })).toBeVisible()
+  await expect(page.getByText('دورة الرياضيات — 400', { exact: false })).toBeVisible()
+  await expect(page.getByText('رسم امتحان — 100', { exact: false })).toBeVisible()
 })
 
 test('creates a payment, persists it, and opens the payment print preview', async ({ page }) => {
