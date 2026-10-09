@@ -207,10 +207,10 @@ export function EnrollStudentSheet() {
 
         <div className="rounded-xl border border-border bg-highlight px-4 py-3 text-sm text-muted-foreground">
           التسجيل لا ينشئ رسومًا إجمالية على الدورة. تُنشأ الرسوم الشهرية لاحقًا من شاشة الدورة بعد اختيار الشهر ومعاينة الطلاب.
-          {course.baseFee == null || course.baseFee <= 0 ? <span className="mt-1 block text-clay">يجب تحديد رسوم شهرية صحيحة للدورة قبل التسجيل.</span> : null}
+          {course.monthlyFee == null || course.monthlyFee <= 0 ? <span className="mt-1 block text-clay">يجب تحديد رسوم شهرية صحيحة للدورة قبل التسجيل.</span> : null}
         </div>
 
-        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy || course.baseFee == null || course.baseFee <= 0}>
+        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy || course.monthlyFee == null || course.monthlyFee <= 0}>
           <Check className="size-4" />
           {isBusy ? 'جارٍ التسجيل…' : 'تسجيل الطالب'}
         </Button>
