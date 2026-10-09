@@ -12,6 +12,11 @@ describe('formatVoucherNo', () => {
     expect(formatVoucherNo('1000000')).toBe('1000000')
   })
 
+  it('normalizes Arabic-Indic and Persian voucher numbers to Western digits', () => {
+    expect(formatVoucherNo('١٢۳٤')).toBe('1234')
+    expect(voucherRef('receipt', '٠١٥')).toBe('R-015')
+  })
+
   it('truncates any fractional noise to an integer identifier', () => {
     expect(formatVoucherNo(104.9)).toBe('104')
   })
