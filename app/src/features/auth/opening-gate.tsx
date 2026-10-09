@@ -148,7 +148,7 @@ export function OpeningGate() {
                       required
                       value={email}
                       onChange={(event) => {
-                        setEmail(event.target.value)
+                        setEmail(toWesternDigits(event.currentTarget.value))
                         if (error) clearError()
                       }}
                       placeholder="name@example.com"
