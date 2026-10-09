@@ -33,6 +33,8 @@ export type MockFeeObligation = {
   cancelled_at: string | null
   cancel_reason: string | null
   created_at: string
+  fee_kind?: 'additional' | 'monthly_course'
+  due_month?: string | null
 }
 
 export type MockMovement = {
@@ -186,7 +188,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         student_id: String(payload.student_id ?? ''),
         course_id: String(payload.course_id ?? ''),
         course_name: course?.name ?? '',
-        course_value: Number(course?.base_fee ?? 0),
+        course_value: 0,
       }
       enrollments.push(enrollment)
       return json(route, enrollment)
