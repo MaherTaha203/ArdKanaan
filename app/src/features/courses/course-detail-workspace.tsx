@@ -188,11 +188,11 @@ export function CourseDetailWorkspace() {
                       <td className={`figure border-b border-border px-4 py-2.5 text-end font-semibold ${entry.remaining > 0 ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(entry.remaining)}</td>
                       <td className="border-b border-border px-4 py-2.5">
                         <span className="text-[12px] font-medium text-muted-foreground">
-                          {entry.enrollment.courseValue === 0 ? 'الرسوم الشهرية منفصلة' : entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
+                          {entry.enrollment.billingModel === 'monthly' ? 'الرسوم الشهرية منفصلة' : entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
                         </span>
                       </td>
                       <td className="border-b border-border px-4 py-2.5 text-end">
-                        {entry.enrollment.courseValue > 0 ? <Button variant="quiet" size="sm" onClick={() => openEditFee(entry.enrollment.id)}>تعديل الرسوم التاريخية</Button> : <span className="text-xs text-muted-foreground">نظام شهري</span>}
+                        {entry.enrollment.billingModel !== 'monthly' ? <Button variant="quiet" size="sm" onClick={() => openEditFee(entry.enrollment.id)}>تعديل الرسوم التاريخية</Button> : <span className="text-xs text-muted-foreground">نظام شهري</span>}
                       </td>
                     </tr>
                   ))}
