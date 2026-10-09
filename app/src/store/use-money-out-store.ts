@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 import type { PaymentVoucherFormValues } from '@/features/payment-voucher/schema'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { toWesternDigits } from '@/lib/numbers'
 import type { PaymentVoucherLine } from '@/types/domain'
 
 type MoneyOutStore = {
@@ -28,9 +29,9 @@ function normalizePaymentVoucher(row: PaymentVoucherRow): PaymentVoucherLine {
     id: row.id,
     voucherNumber: row.voucher_number,
     voucherDate: row.voucher_date,
-    expenseType: row.expense_type,
+    expenseType: toWesternDigits(row.expense_type),
     amount: Number(row.amount),
-    notes: row.notes ?? '',
+    notes: row.notes == null ? '' : toWesternDigits(row.notes),
   }
 }
 
