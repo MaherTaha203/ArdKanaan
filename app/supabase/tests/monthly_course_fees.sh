@@ -29,7 +29,7 @@ eq() {
   if [ "$2" = "$3" ]; then pass "$1 = $2"; else fail "$1 expected $3, got $2"; fi
 }
 run_file() {
-  run "$PGBIN/psql -h $SOCK -U ${PG_RUNAS:-$USER} -v ON_ERROR_STOP=1 -X -q -d $DB -f $1"
+  run "$PGBIN/psql -h $SOCK -U ${PG_RUNAS:-$USER} -v ON_ERROR_STOP=1 -X -q -t -A -d $DB -f $1"
 }
 runFP() {
   printf '%s;\n' "$1" > "$BASE/query.sql"
@@ -121,7 +121,7 @@ run_file "$BASE/seed.sql"
 
 echo "== Create monthly enrollment through the real owner RPC =="
 run_owner_sql "select public.create_enrollment('{\"student_id\":\"$MONTHLY_STUDENT\",\"course_id\":\"$COURSE\"}'::jsonb);" > "$BASE/enrollment.out"
-if grep -q '"billing_model": "monthly"' "$BASE/enrollment.out" || grep -q '"billing_model": "monthly"' "$BASE/enrollment.out"; then
+if grep -q '"billing_model": "monthly"' "$BASE/enrollment.out"; then
   pass "create_enrollment creates an explicit monthly enrollment"
 else
   fail "create_enrollment did not return monthly billing model"
