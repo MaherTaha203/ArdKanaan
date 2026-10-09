@@ -115,7 +115,7 @@ export const useVoucherAdminStore = create<VoucherAdminStore>((set) => ({
       paymentDate: data.voucher_date as string,
       expenseType: toWesternDigits((data.expense_type as string) ?? ''),
       amount: Number(data.amount),
-      notes: (data.notes as string) ?? '',
+      notes: toWesternDigits((data.notes as string) ?? ''),
     }
   },
 
