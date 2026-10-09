@@ -10,14 +10,16 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textare
   { className, onChange, ...props },
   ref,
 ) {
+  const handleChange: ChangeEventHandler<HTMLTextAreaElement> = (event) => {
+    const normalized = toWesternDigits(event.currentTarget.value)
+    if (normalized !== event.currentTarget.value) event.currentTarget.value = normalized
+    onChange?.(event)
+  }
+
   return (
     <textarea
       ref={ref}
-      onChange={((event) => {
-        const normalized = toWesternDigits(event.currentTarget.value)
-        if (normalized !== event.currentTarget.value) event.currentTarget.value = normalized
-        onChange?.(event)
-      }) as ChangeEventHandler<HTMLTextAreaElement>}
+      onChange={handleChange}
       className={cn(
         'flex min-h-24 w-full rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 text-sm text-foreground outline-none placeholder:text-faint focus:border-olive',
         className,
