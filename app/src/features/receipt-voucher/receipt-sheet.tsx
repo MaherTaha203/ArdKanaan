@@ -151,7 +151,8 @@ export function ReceiptSheet() {
       updateAllocation(0, amount)
       return
     }
-    form.setValue('amountReceived', amount, { shouldValidate: true, shouldDirty: true })
+    if (amount == null) form.resetField('amountReceived')
+    else form.setValue('amountReceived', amount, { shouldValidate: true, shouldDirty: true })
   }
   function removeAllocation(index: number) { setAllocations(watchedAllocations.filter((_, itemIndex) => itemIndex !== index)) }
 
