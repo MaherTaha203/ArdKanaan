@@ -27,7 +27,7 @@ test('owner edits an enrollment fee and the roster reflects the new total', asyn
   const row = page.getByRole('row', { name: /سارة أحمد/ })
   await expect(row).toContainText('300')
 
-  await row.getByRole('button', { name: 'تعديل الرسوم' }).click()
+  await row.getByRole('button', { name: 'تعديل الرسوم التاريخية' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'تعديل رسوم التسجيل' })
   await expect(dialog).toBeVisible()
@@ -53,7 +53,7 @@ test('the confirm action stays disabled until a valid amount and reason are ente
 
   await login(page)
   await openCourseDetail(page)
-  await page.getByRole('row', { name: /سارة أحمد/ }).getByRole('button', { name: 'تعديل الرسوم' }).click()
+  await page.getByRole('row', { name: /سارة أحمد/ }).getByRole('button', { name: 'تعديل الرسوم التاريخية' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'تعديل رسوم التسجيل' })
   const confirm = dialog.getByRole('button', { name: /تأكيد تعديل الرسوم/ })
@@ -87,7 +87,7 @@ test('the collected floor blocks lowering below an active receipt allocation', a
   await login(page)
   await openCourseDetail(page)
   const row = page.getByRole('row', { name: /سارة أحمد/ })
-  await row.getByRole('button', { name: 'تعديل الرسوم' }).click()
+  await row.getByRole('button', { name: 'تعديل الرسوم التاريخية' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'تعديل رسوم التسجيل' })
   await dialog.getByLabel('الرسوم الجديدة').fill('250')
@@ -110,7 +110,7 @@ test('a cancelled receipt allocation is excluded from the collected floor', asyn
   await login(page)
   await openCourseDetail(page)
   const row = page.getByRole('row', { name: /سارة أحمد/ })
-  await row.getByRole('button', { name: 'تعديل الرسوم' }).click()
+  await row.getByRole('button', { name: 'تعديل الرسوم التاريخية' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'تعديل رسوم التسجيل' })
   await dialog.getByLabel('الرسوم الجديدة').fill('80')
