@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 
-import { ArrowRight, Plus } from 'lucide-react'
+import { ArrowRight, CalendarDays, Plus } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { StatusBadge } from '@/features/courses/courses-workspace'
 import { FeeObligationSheet } from '@/features/courses/fee-obligation-sheet'
+import { MonthlyCourseFeeSheet } from '@/features/courses/monthly-course-fee-sheet'
 import { courseRoster, courseStats } from '@/lib/courses'
 import { formatDate, formatNumber } from '@/lib/format'
 import { useShellStore } from '@/store/use-shell-store'
@@ -29,6 +30,7 @@ export function CourseDetailWorkspace() {
   const clearError = useWorkspaceStore((state) => state.clearError)
   const reload = useWorkspaceStore((state) => state.load)
   const [addingFee, setAddingFee] = useState(false)
+  const [generatingMonthlyFees, setGeneratingMonthlyFees] = useState(false)
 
   const course = courses.find((item) => item.id === selectedCourseId) ?? null
 
@@ -78,16 +80,22 @@ export function CourseDetailWorkspace() {
               <StatusBadge status={course.status} />
             </div>
             <div className="flex items-center gap-2">
+              {course.status === 'active' ? (
+                <Button variant="quiet" onClick={() => setGeneratingMonthlyFees(true)}>
+                  <CalendarDays className="size-4" />
+                  رسوم شهرية
+                </Button>
+              ) : null}
               <Button variant="quiet" onClick={() => setAddingFee(true)}>
                 <Plus className="size-4" />
-                إضافة رسوم
+                إضافة رسوم إضافية
               </Button>
               <Button variant="quiet" onClick={() => openEditCourse(course.id)}>تعديل</Button>
             </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[12.5px] text-muted-foreground">
             <span>
-              الرسوم الأساسية{' '}
+              الرسوم الشهرية الافتراضية{' '}
               {course.baseFee == null ? <span className="text-faint">—</span> : <Money value={course.baseFee} currency={false} className="font-semibold text-foreground" />}
             </span>
             {period ? <span className="figure">{period}</span> : null}
@@ -98,24 +106,43 @@ export function CourseDetailWorkspace() {
         {stats ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <SummaryTile label="عدد الطلاب" value={formatNumber(stats.studentCount)} />
-            <SummaryTile label="إجمالي رسوم الدورة" money={stats.totalFees} />
+            <SummaryTile label="رسوم التسجيل التاريخية" money={stats.totalFees} />
             <SummaryTile label="إجمالي المقبوضات" money={stats.totalPaid} tone="text-gold" />
-            <SummaryTile label="إجمالي المستحقّ" money={stats.totalRemaining} tone="text-warn" />
+            <SummaryTile label="المتبقي من التسجيل التاريخي" money={stats.totalRemaining} tone="text-warn" />
           </div>
         ) : null}
 
-        {courseFees.length > 0 ? (
+        {courseFees.some((fee) => fee.feeKind !== 'monthly_course') ? (
           <section className="rounded-2xl border border-border bg-panel">
             <div className="border-b border-border px-5 py-4">
-              <h2 className="text-base font-bold text-foreground">الرسوم المضافة للدورة</h2>
+              <h2 className="text-base font-bold text-foreground">الرسوم الإضافية</h2>
             </div>
             <div className="divide-y divide-border">
-              {courseFees.map((fee) => (
+              {courseFees.filter((fee) => fee.feeKind !== 'monthly_course').map((fee) => (
                 <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 text-[13px]">
                   <span className="min-w-[160px] font-medium text-foreground">{fee.description}</span>
                   <span className="figure font-semibold">{formatNumber(fee.amount)}</span>
                   <span className="text-muted-foreground">{fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span>
                   <span className="text-muted-foreground">{formatNumber(courseFees.filter((item) => item.description === fee.description).length)} استحقاق</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {courseFees.some((fee) => fee.feeKind === 'monthly_course') ? (
+          <section className="rounded-2xl border border-border bg-panel">
+            <div className="border-b border-border px-5 py-4">
+              <h2 className="text-base font-bold text-foreground">الرسوم الشهرية المنشأة</h2>
+              <p className="mt-1 text-xs text-muted-foreground">كل استحقاق مرتبط بشهر محدد، ولا يتكرر عند إعادة إنشاء رسوم الشهر نفسه.</p>
+            </div>
+            <div className="divide-y divide-border">
+              {courseFees.filter((fee) => fee.feeKind === 'monthly_course').sort((a, b) => (b.dueMonth ?? '').localeCompare(a.dueMonth ?? '') || a.description.localeCompare(b.description)).map((fee) => (
+                <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 text-[13px]">
+                  <span className="min-w-[160px] font-medium text-foreground">{fee.dueMonth ?? fee.description}</span>
+                  <span className="figure font-semibold">{formatNumber(fee.amount)}</span>
+                  <span className="text-muted-foreground">{fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span>
+                  <span className="text-muted-foreground">{fee.cancelledAt ? 'ملغى' : 'استحقاق محفوظ'}</span>
                 </div>
               ))}
             </div>
@@ -136,7 +163,7 @@ export function CourseDetailWorkspace() {
                 <thead>
                   <tr className="text-[11px] tracking-wide text-faint">
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الطالب</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">الرسوم</th>
+                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">رسوم التسجيل التاريخية</th>
                     <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المدفوع</th>
                     <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المتبقّي</th>
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الحالة</th>
@@ -164,7 +191,7 @@ export function CourseDetailWorkspace() {
                         </span>
                       </td>
                       <td className="border-b border-border px-4 py-2.5 text-end">
-                        <Button variant="quiet" size="sm" onClick={() => openEditFee(entry.enrollment.id)}>تعديل الرسوم</Button>
+                        {entry.enrollment.courseValue > 0 ? <Button variant="quiet" size="sm" onClick={() => openEditFee(entry.enrollment.id)}>تعديل الرسوم التاريخية</Button> : <span className="text-xs text-muted-foreground">نظام شهري</span>}
                       </td>
                     </tr>
                   ))}
@@ -183,6 +210,7 @@ export function CourseDetailWorkspace() {
         </section>
       </div>
       {addingFee ? <FeeObligationSheet course={course} enrollments={enrollments} students={students} onClose={() => setAddingFee(false)} /> : null}
+      {generatingMonthlyFees ? <MonthlyCourseFeeSheet course={course} onClose={() => setGeneratingMonthlyFees(false)} /> : null}
     </>
   )
 }
