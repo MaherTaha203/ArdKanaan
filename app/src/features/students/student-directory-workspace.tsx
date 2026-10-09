@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
-import { toWesternDigits } from '@/lib/numbers'
 import { Archive, ChevronDown, ChevronLeft, Search, User, UserPlus } from 'lucide-react'
+import { toWesternDigits } from '@/lib/numbers'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
