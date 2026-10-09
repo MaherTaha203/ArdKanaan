@@ -89,7 +89,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
   async function createFees() {
     const supabase = getSupabaseBrowserClient()
     if (!supabase || !preview || preview.to_create_count === 0) return
-    const amount = course.baseFee ?? 0
+    const amount = course.monthlyFee ?? 0
     const external = feeCategory === 'institute' ? 0 : feeCategory === 'external' ? amount : Number(externalShare)
     if (feeCategory === 'shared' && (!/^[0-9]+$/.test(externalShare) || external <= 0 || external >= amount)) {
       setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من الرسوم الشهرية.')
@@ -122,6 +122,9 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
         <p className="text-sm text-muted-foreground">
           تُحتسب الرسوم الشهرية كاملة لكل طالب نشط مسجّل قبل نهاية الشهر المختار. لا تُعدّل هذه العملية رسوم التسجيل التاريخية أو سندات القبض أو التخصيصات.
         </p>
+        {course.monthlyFee == null || course.monthlyFee <= 0 ? (
+          <p role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">حدّد الرسوم الشهرية في إعدادات الدورة أولًا. لن تُستخدم قيمة التسجيل الإجمالية القديمة بدلًا منها.</p>
+        ) : null}
         {error ? <div role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{error}</div> : null}
         <label className="block text-[13px] font-medium text-muted-foreground">
           شهر الاستحقاق
@@ -143,7 +146,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
         ) : feeCategory === 'external' ? (
           <p className="text-xs text-muted-foreground">تُسند الرسوم الشهرية كاملة إلى الجهة الخارجية.</p>
         ) : null}
-        <Button type="button" variant="quiet" className="w-full" disabled={busy || !month} onClick={loadPreview}>
+        <Button type="button" variant="quiet" className="w-full" disabled={busy || !month || course.monthlyFee == null || course.monthlyFee <= 0} onClick={loadPreview}>
           <Eye className="size-4" />
           {busy ? 'جارٍ التحضير…' : 'معاينة الطلاب والاستحقاقات'}
         </Button>
