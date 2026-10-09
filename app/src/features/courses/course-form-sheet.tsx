@@ -17,8 +17,8 @@ import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 // Add or edit a catalog course. Central, RTL, fast — no side drawer, no hover
-// animation. Editing base_fee never changes already-registered students' fees
-// (their enrollment keeps its own snapshot).
+// animation. Legacy base_fee and the new monthly_fee are stored separately; changing
+// either catalog value never mutates existing enrollment snapshots or obligations.
 export function CourseFormSheet() {
   const closeOverlay = useShellStore((state) => state.closeOverlay)
   const editCourseId = useShellStore((state) => state.editCourseId)
@@ -38,7 +38,7 @@ export function CourseFormSheet() {
     defaultValues: {
       name: editing?.name ?? '',
       baseFee: editing?.baseFee == null ? '' : String(editing.baseFee),
-      // (baseFee is a string field; '' = no monthly price set)
+      monthlyFee: editing?.monthlyFee == null ? '' : String(editing.monthlyFee),
       startDate: editing?.startDate ?? '',
       endDate: editing?.endDate ?? '',
       status: editing?.status ?? 'active',
@@ -77,7 +77,7 @@ export function CourseFormSheet() {
           {(control) => <Input placeholder="مثال: الرياضيات" {...control} {...form.register('name')} />}
         </Field>
 
-        <Field label="الرسوم الشهرية الافتراضية" error={form.formState.errors.baseFee?.message}>
+        <Field label="قيمة التسجيل الإجمالية القديمة (للتسجيلات التاريخية)" error={form.formState.errors.baseFee?.message}>
           {(control) => (
             <Input
               type="text"
@@ -86,6 +86,19 @@ export function CourseFormSheet() {
               placeholder="اختياري"
               {...control}
               {...form.register('baseFee')}
+            />
+          )}
+        </Field>
+
+        <Field label="الرسوم الشهرية الافتراضية" error={form.formState.errors.monthlyFee?.message}>
+          {(control) => (
+            <Input
+              type="text"
+              inputMode="numeric"
+              className="figure"
+              placeholder="اختياري"
+              {...control}
+              {...form.register('monthlyFee')}
             />
           )}
         </Field>
