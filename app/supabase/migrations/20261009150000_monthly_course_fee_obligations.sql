@@ -145,7 +145,7 @@ create or replace function public.preview_monthly_course_obligations(
   p_fee_category text default 'institute',
   p_external_share numeric default 0
 )
-returns jsonb language plpgsql security definer set search_path = '' as $
+returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_month date; v_course_name text; v_amount numeric; v_students jsonb; v_external numeric;
 begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
@@ -188,7 +188,7 @@ create or replace function public.create_monthly_course_obligations(
   p_fee_category text default 'institute',
   p_external_share numeric default 0
 )
-returns jsonb language plpgsql security definer set search_path = '' as $
+returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_month date; v_course_name text; v_amount numeric; v_external numeric; v_created int := 0;
 begin
   if not public.is_owner() then raise exception 'OWNER_ONLY'; end if;
