@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatTimestamp } from '@/lib/format'
+import { formatDate, formatNumber, formatTimestamp } from '@/lib/format'
 
 describe('formatTimestamp', () => {
   it('renders date and 24h time parts with Western digits', () => {
@@ -31,5 +31,21 @@ describe('formatTimestamp', () => {
 
     // Assert
     expect(result).toEqual({ date: 'not-a-date', time: '' })
+  })
+})
+
+describe('Western digit display', () => {
+  it('formats numeric amounts using only Western digits', () => {
+    const result = formatNumber(1234567)
+
+    expect(result).toContain('1')
+    expect(result).not.toMatch(/[٠-٩۰-۹]/)
+  })
+
+  it('formats dates using only Western digits', () => {
+    const result = formatDate('2026-10-09')
+
+    expect(result).toBe('09/10/2026')
+    expect(result).not.toMatch(/[٠-٩۰-۹]/)
   })
 })
