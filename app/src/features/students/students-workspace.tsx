@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { Archive, ArchiveRestore, Pencil, Plus, Printer, Search } from 'lucide-react'
+import { Archive, ArchiveRestore, Pencil, Plus, Printer, ReceiptText, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
 import { SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudentsFromSummaries, studentLedger, type StudentAggregate } from '@/lib/aggregate'
+import { aggregateStudentsFromSummaries, studentCourseBreakdown, studentLedger, type StudentAggregate } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import { toWesternDigits } from '@/lib/numbers'
 import { normalizeArabic } from '@/lib/text'
@@ -17,9 +17,15 @@ import './detail-table.css'
 
 const REMAINING_EPSILON = 0.0001
 
-type StudentStatus = 'ok' | 'due' | 'none'
+type StudentStatus = 'ok' | 'due' | 'none' | 'no-obligations'
+type StudentDetailTab = 'receipts' | 'obligations' | 'courses' | 'statement'
 
-function statusOf(item: StudentAggregate): StudentStatus {
+function hasStudentObligations(studentId: string, enrollments: { studentId: string }[], feeObligations: { studentId: string; cancelledAt: string | null }[]): boolean {
+  return enrollments.some((item) => item.studentId === studentId) || feeObligations.some((item) => item.studentId === studentId && !item.cancelledAt)
+}
+
+function statusOf(item: StudentAggregate, hasObligations: boolean): StudentStatus {
+  if (!hasObligations) return 'no-obligations'
   if (item.remaining <= REMAINING_EPSILON) return 'ok'
   if (item.paid <= REMAINING_EPSILON) return 'none'
   return 'due'
@@ -44,9 +50,11 @@ export function StudentsWorkspace() {
   const openEditStudent = useShellStore((state) => state.openEditStudent)
   const openArchive = useShellStore((state) => state.openArchive)
   const openStudentFee = useShellStore((state) => state.openStudentFee)
+  const openReceiveFor = useShellStore((state) => state.openReceiveFor)
 
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
+  const [detailTab, setDetailTab] = useState<StudentDetailTab>('statement')
 
   const aggregates = useMemo(() => aggregateStudentsFromSummaries(students, studentSummaries), [students, studentSummaries])
 
@@ -83,6 +91,20 @@ export function StudentsWorkspace() {
     () => (statementReady && activeId ? studentLedger(activeId, statementLines, enrollments, feeObligations) : { entries: [], totalDebit: 0, totalCredit: 0, balance: 0 }),
     [activeId, statementReady, statementLines, enrollments, feeObligations],
   )
+  const activeHasObligations = Boolean(activeId && hasStudentObligations(activeId, enrollments, feeObligations))
+  const receiptRows = useMemo(() => {
+    const rows = new Map<number, { voucherNumber: number; date: string; amount: number; labels: Set<string> }>()
+    for (const entry of activeLedger.entries) {
+      if (entry.kind !== 'credit' || entry.voucherNumber == null) continue
+      const row = rows.get(entry.voucherNumber) ?? { voucherNumber: entry.voucherNumber, date: entry.date, amount: 0, labels: new Set<string>() }
+      row.amount += entry.credit
+      if (entry.label) row.labels.add(entry.label)
+      rows.set(entry.voucherNumber, row)
+    }
+    return [...rows.values()].sort((a, b) => b.date.localeCompare(a.date) || b.voucherNumber - a.voucherNumber)
+  }, [activeLedger.entries])
+  const obligationRows = useMemo(() => activeLedger.entries.filter((entry) => entry.kind === 'debit'), [activeLedger.entries])
+  const courseRows = useMemo(() => activeId ? studentCourseBreakdown(activeId, statementLines, enrollments) : [], [activeId, statementLines, enrollments])
 
   return (
     <div className="detail-workspace">
@@ -112,7 +134,7 @@ export function StudentsWorkspace() {
           </div>
 
           <div className="border-t border-border-strong">
-            {!loaded ? <div className="p-3"><SkeletonRows rows={6} /></div> : filtered.length > 0 ? filtered.map((item) => <StudentRow key={item.student.id} item={item} active={item.student.id === activeId} onSelect={() => selectStudent(item.student.id)} />) : <p className="px-4 py-8 text-center text-sm text-faint">{students.length === 0 ? 'لا يوجد طلاب بعد.' : 'لا نتائج مطابقة.'}</p>}
+            {!loaded ? <div className="p-3"><SkeletonRows rows={6} /></div> : filtered.length > 0 ? filtered.map((item) => <StudentRow key={item.student.id} item={item} active={item.student.id === activeId} hasObligations={hasStudentObligations(item.student.id, enrollments, feeObligations)} onSelect={() => selectStudent(item.student.id)} />) : <p className="px-4 py-8 text-center text-sm text-faint">{students.length === 0 ? 'لا يوجد طلاب بعد.' : 'لا نتائج مطابقة.'}</p>}
           </div>
         </div>
 
@@ -132,12 +154,18 @@ export function StudentsWorkspace() {
                     {active.student.phone ? <span><span className="text-faint">الهاتف</span> <span className="figure font-semibold text-foreground" dir="ltr">{active.student.phone}</span></span> : null}
                   </div>
                 </div>
-                <div className="flex gap-8"><RecordFigure label="المسدَّد" value={active.paid} tone="ink" /><RecordFigure label="الرصيد المستحق" value={active.remaining} tone="warn" /></div>
+                <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-[680px]">
+                  <RecordCard label="إجمالي المستحقات" value={activeLedger.totalDebit} tone="ink" />
+                  <RecordCard label="إجمالي المقبوض" value={active.paid} tone="ink" />
+                  <RecordCard label="المتبقي" value={active.remaining} tone="warn" />
+                  <RecordCard label="عدد سندات القبض" value={receiptRows.length} tone="ink" />
+                </div>
               </div>
 
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-base font-bold text-foreground">كشف الحساب الجاري</h3>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="default" size="sm" onClick={() => openReceiveFor(active.student.name)}><ReceiptText className="size-4" />سند قبض</Button>
                   <Button variant="quiet" size="sm" onClick={() => openStudentFee(active.student.id)}><Plus className="size-4" />إضافة رسم</Button>
                   <Button variant="quiet" size="sm" onClick={() => openEditStudent(active.student.id)}><Pencil className="size-4" />تعديل بيانات الطالب</Button>
                   {active.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={() => openArchive(active.student.id)}><Archive className="size-4" />أرشفة الطالب</Button> : null}
@@ -146,24 +174,48 @@ export function StudentsWorkspace() {
                 </div>
               </div>
 
-              <div className="detail-table-wrap">
-                <table className="border-collapse text-sm">
-                  <thead><tr className="text-[11.5px] tracking-wide text-faint">
-                    <th className="border-b border-border px-2.5 py-3 text-start font-semibold">التاريخ</th>
-                    <th className="border-b border-border px-2.5 py-3 text-start font-semibold">البيان</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">مدين (عليه)</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">دائن (له)</th>
-                    <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد الجاري</th>
-                  </tr></thead>
-                  <tbody>{statementLoading && statementStudentId === activeId ? <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">جارٍ تحميل الكشف…</td></tr> : activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
-                    <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
-                    <td className="border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
-                    <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
-                    <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.credit > 0 ? 'font-semibold text-gold' : 'text-faint'}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
-                    <td className="figure border-b border-border px-2.5 py-3.5 text-end font-bold text-foreground">{formatNumber(entry.balance)}</td>
-                  </tr>) : <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">لا توجد حركات.</td></tr>}</tbody>
-                </table>
+              <div className="mb-3 flex flex-wrap gap-2 border-b border-border pb-3" role="tablist" aria-label="أقسام ملف الطالب">
+                <DetailTab active={detailTab === 'statement'} onClick={() => setDetailTab('statement')}>كشف الحساب</DetailTab>
+                <DetailTab active={detailTab === 'receipts'} onClick={() => setDetailTab('receipts')}>سندات القبض ({formatNumber(receiptRows.length)})</DetailTab>
+                <DetailTab active={detailTab === 'obligations'} onClick={() => setDetailTab('obligations')}>الالتزامات ({formatNumber(obligationRows.length)})</DetailTab>
+                <DetailTab active={detailTab === 'courses'} onClick={() => setDetailTab('courses')}>الدورات ({formatNumber(courseRows.length)})</DetailTab>
               </div>
+              {!activeHasObligations ? <p className="mb-3 rounded-lg border border-border-strong bg-highlight px-3 py-2.5 text-sm text-muted-foreground">لا توجد التزامات مالية مسجلة لهذا الطالب بعد؛ لا يُصنّف على أنه مسدَّد بالكامل.</p> : null}
+              {detailTab === 'statement' ? (
+                <div className="detail-table-wrap">
+                  <table className="border-collapse text-sm">
+                    <thead><tr className="text-[11.5px] tracking-wide text-faint">
+                      <th className="border-b border-border px-2.5 py-3 text-start font-semibold">التاريخ</th>
+                      <th className="border-b border-border px-2.5 py-3 text-start font-semibold">البيان</th>
+                      <th className="border-b border-border px-2.5 py-3 text-end font-semibold">مدين (عليه)</th>
+                      <th className="border-b border-border px-2.5 py-3 text-end font-semibold">دائن (له)</th>
+                      <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد الجاري</th>
+                    </tr></thead>
+                    <tbody>{statementLoading && statementStudentId === activeId ? <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">جارٍ تحميل الكشف…</td></tr> : activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
+                      <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
+                      <td className="border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
+                      <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
+                      <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.credit > 0 ? 'font-semibold text-gold' : 'text-faint'}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
+                      <td className="figure border-b border-border px-2.5 py-3.5 text-end font-bold text-foreground">{formatNumber(entry.balance)}</td>
+                    </tr>) : <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">لا توجد حركات.</td></tr>}</tbody>
+                  </table>
+                </div>
+              ) : detailTab === 'receipts' ? (
+                <div className="detail-table-wrap"><table className="border-collapse text-sm">
+                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">رقم السند</th><th className="border-b border-border px-2.5 py-3 text-start">التاريخ</th><th className="border-b border-border px-2.5 py-3 text-start">البيان</th><th className="border-b border-border px-2.5 py-3 text-end">المبلغ</th></tr></thead>
+                  <tbody>{receiptRows.length ? receiptRows.map((row) => <tr key={row.voucherNumber}><td className="figure border-b border-border px-2.5 py-3.5">{formatNumber(row.voucherNumber)}</td><td className="figure border-b border-border px-2.5 py-3.5">{formatDate(row.date)}</td><td className="border-b border-border px-2.5 py-3.5">{[...row.labels].join('، ') || 'سند قبض'}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.amount)}</td></tr>) : <tr><td colSpan={4} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد سندات قبض مسجلة.</td></tr>}</tbody>
+                </table></div>
+              ) : detailTab === 'obligations' ? (
+                <div className="detail-table-wrap"><table className="border-collapse text-sm">
+                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">تاريخ الاستحقاق</th><th className="border-b border-border px-2.5 py-3 text-start">البيان</th><th className="border-b border-border px-2.5 py-3 text-end">المبلغ</th></tr></thead>
+                  <tbody>{obligationRows.length ? obligationRows.map((row) => <tr key={row.id}><td className="figure border-b border-border px-2.5 py-3.5">{row.date ? formatDate(row.date) : '—'}</td><td className="border-b border-border px-2.5 py-3.5">{row.label}<span className="text-faint"> · {row.meta}</span></td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.debit)}</td></tr>) : <tr><td colSpan={3} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد التزامات مسجلة.</td></tr>}</tbody>
+                </table></div>
+              ) : (
+                <div className="detail-table-wrap"><table className="border-collapse text-sm">
+                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">الدورة</th><th className="border-b border-border px-2.5 py-3 text-end">قيمة الالتزام</th><th className="border-b border-border px-2.5 py-3 text-end">المقبوض</th><th className="border-b border-border px-2.5 py-3 text-end">المتبقي</th></tr></thead>
+                  <tbody>{courseRows.length ? courseRows.map((row) => <tr key={row.enrollmentId ?? row.courseName}><td className="border-b border-border px-2.5 py-3.5">{row.courseName}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(row.fee)}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(row.paid)}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.remaining)}</td></tr>) : <tr><td colSpan={4} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد دورات مسجلة.</td></tr>}</tbody>
+                </table></div>
+              )}
             </>
           ) : <div className="py-16 text-center text-sm text-faint">{loaded ? 'لا يوجد طلاب.' : 'جارٍ التحميل…'}</div>}
         </section>
@@ -174,9 +226,9 @@ export function StudentsWorkspace() {
   )
 }
 
-function StudentRow({ item, active, onSelect }: { item: StudentAggregate; active: boolean; onSelect: () => void }) {
-  const status = statusOf(item)
-  const statusLabel = status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
+function StudentRow({ item, active, onSelect, hasObligations }: { item: StudentAggregate; active: boolean; onSelect: () => void; hasObligations: boolean }) {
+  const status = statusOf(item, hasObligations)
+  const statusLabel = status === 'no-obligations' ? 'لا توجد التزامات' : status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
   return <div className={`border-b border-border last:border-b-0 ${active ? 'bg-highlight' : ''}`}>
     <button type="button" onClick={onSelect} aria-current={active ? 'true' : undefined} className="flex w-full min-w-0 items-center gap-3 py-2.5 pe-3 ps-4 text-start">
       <span className="grid size-8 flex-none place-items-center rounded-full bg-olive-weak text-[13px] font-bold text-olive">{item.student.name.charAt(0)}</span>
@@ -188,6 +240,10 @@ function StudentRow({ item, active, onSelect }: { item: StudentAggregate; active
   </div>
 }
 
-function RecordFigure({ label, value, tone }: { label: string; value: number; tone: 'ink' | 'warn' }) {
-  return <div><div className="text-[11px] font-medium text-faint">{label}</div><Money value={value} currency={false} className={`text-xl font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} /></div>
+function RecordCard({ label, value, tone }: { label: string; value: number; tone: 'ink' | 'warn' }) {
+  return <div className="rounded-xl border border-border-strong bg-panel px-3 py-3"><div className="mb-1 text-[11px] font-medium text-faint">{label}</div><Money value={value} currency={false} className={`text-lg font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} /></div>
+}
+
+function DetailTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return <button type="button" role="tab" aria-selected={active} onClick={onClick} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${active ? 'border-primary bg-primary text-primary-foreground' : 'border-border-strong bg-panel text-muted-foreground hover:bg-highlight'}`}>{children}</button>
 }
