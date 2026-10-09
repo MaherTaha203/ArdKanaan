@@ -4,8 +4,8 @@ import { z } from 'zod'
 // checks remain authoritative.
 const MAX_SHEKEL_AMOUNT = 1_000_000
 
-// Course catalog form. base_fee is only the DEFAULT proposed at registration and is
-// optional (a course may have no standard fee); dates and notes are optional too.
+// Course catalog form. baseFee remains a legacy total-registration value; monthlyFee
+// is a separate optional price for future monthly obligations.
 export const courseFormSchema = z.object({
   name: z.string().trim().min(1, 'اسم الدورة مطلوب'),
   // Optional whole-shekel default fee, kept as a string so the input stays simple
@@ -15,7 +15,14 @@ export const courseFormSchema = z.object({
     .trim()
     .refine(
       (value) => value === '' || (/^\d+$/.test(value) && Number(value) <= MAX_SHEKEL_AMOUNT),
-      'الرسوم يجب أن تكون عددًا صحيحًا من الشواكل ضمن الحدّ المسموح',
+      'قيمة التسجيل القديمة يجب أن تكون عددًا صحيحًا من الشواكل ضمن الحدّ المسموح',
+    ),
+  monthlyFee: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || (/^\d+$/.test(value) && Number(value) <= MAX_SHEKEL_AMOUNT),
+      'الرسوم الشهرية يجب أن تكون عددًا صحيحًا من الشواكل ضمن الحدّ المسموح',
     ),
   startDate: z.string().trim(),
   endDate: z.string().trim(),
