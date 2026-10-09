@@ -219,7 +219,7 @@ begin
   return jsonb_build_object('course_id', p_course_id, 'due_month', v_month, 'created', v_created,
     'fee_category', p_fee_category, 'external_share', v_external);
 end;
-$;
+$$;
 revoke all on function public.create_monthly_course_obligations(uuid, date, text, numeric) from public, anon;
 grant execute on function public.create_monthly_course_obligations(uuid, date, text, numeric) to authenticated;
 
