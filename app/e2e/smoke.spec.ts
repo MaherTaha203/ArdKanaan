@@ -142,7 +142,7 @@ test('creates a payment, persists it, and opens the payment print preview', asyn
   const dialog = page.getByRole('dialog', { name: 'سند صرف' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('textbox', { name: 'بند المصروف' }).fill('كهرباء')
-  await dialog.getByRole('spinbutton', { name: 'المبلغ المدفوع' }).fill('250')
+  await dialog.getByRole('textbox', { name: 'المبلغ المدفوع' }).fill('250')
   await dialog.getByRole('button', { name: 'حفظ سند الصرف' }).click()
   await expect.poll(() => handle.paymentInserts.length).toBe(1)
   expect(handle.paymentInserts[0]).toMatchObject({ expense_type: 'كهرباء', amount: 250 })
