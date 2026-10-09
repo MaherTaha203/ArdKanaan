@@ -47,7 +47,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
       setError('الاتصال بقاعدة البيانات غير مهيأ بعد.')
       return
     }
-    if (!/^\d{4}-\d{2}$/.test(month)) {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
       setError('اختر الشهر المطلوب.')
       return
     }
