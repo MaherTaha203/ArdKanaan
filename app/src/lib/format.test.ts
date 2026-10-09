@@ -42,6 +42,13 @@ describe('Western digit display', () => {
     expect(result).not.toMatch(/[٠-٩۰-۹]/)
   })
 
+  it('normalizes legacy numeric strings before formatting', () => {
+    const result = formatNumber('١٢۳٤')
+
+    expect(result).toContain('1')
+    expect(result).not.toMatch(/[٠-٩۰-۹]/)
+  })
+
   it('formats dates using only Western digits', () => {
     const result = formatDate('2026-10-09', 'dmy')
 
