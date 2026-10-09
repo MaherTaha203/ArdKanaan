@@ -107,7 +107,7 @@ export function CourseDetailWorkspace() {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <SummaryTile label="عدد الطلاب" value={formatNumber(stats.studentCount)} />
             <SummaryTile label="رسوم التسجيل التاريخية" money={stats.totalFees} />
-            <SummaryTile label="إجمالي المقبوضات" money={stats.totalPaid} tone="text-gold" />
+            <SummaryTile label="المقبوضات التاريخية" money={stats.totalPaid} tone="text-gold" />
             <SummaryTile label="المتبقي من التسجيل التاريخي" money={stats.totalRemaining} tone="text-warn" />
           </div>
         ) : null}
@@ -164,8 +164,8 @@ export function CourseDetailWorkspace() {
                   <tr className="text-[11px] tracking-wide text-faint">
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الطالب</th>
                     <th className="border-b border-border px-4 py-2.5 text-end font-semibold">رسوم التسجيل التاريخية</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المدفوع</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المتبقّي</th>
+                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المدفوع من التسجيل التاريخي</th>
+                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المتبقي من التسجيل التاريخي</th>
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الحالة</th>
                     <th className="border-b border-border px-4 py-2.5 text-end font-semibold"><span className="sr-only">إجراءات</span></th>
                   </tr>
@@ -187,7 +187,7 @@ export function CourseDetailWorkspace() {
                       <td className={`figure border-b border-border px-4 py-2.5 text-end font-semibold ${entry.remaining > 0 ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(entry.remaining)}</td>
                       <td className="border-b border-border px-4 py-2.5">
                         <span className="text-[12px] font-medium text-muted-foreground">
-                          {entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
+                          {entry.enrollment.courseValue === 0 ? 'الرسوم الشهرية منفصلة' : entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
                         </span>
                       </td>
                       <td className="border-b border-border px-4 py-2.5 text-end">
