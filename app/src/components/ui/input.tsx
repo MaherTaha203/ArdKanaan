@@ -9,7 +9,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { className, type, inputMode, dir, pattern, onChange, ...props },
   ref,
 ) {
-  const numericInput = type === 'number' || inputMode === 'numeric' || inputMode === 'decimal'
+  const numericInput = type === 'number' || inputMode === 'numeric' || inputMode === 'decimal' || inputMode === 'tel'
   const handleChange: ChangeEventHandler<HTMLInputElement> | undefined = numericInput
     ? (event) => {
         const westernDigits = toWesternDigits(event.currentTarget.value)
