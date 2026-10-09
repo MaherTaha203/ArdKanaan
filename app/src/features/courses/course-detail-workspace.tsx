@@ -139,7 +139,8 @@ export function CourseDetailWorkspace() {
             <div className="divide-y divide-border">
               {courseFees.filter((fee) => fee.feeKind === 'monthly_course').sort((a, b) => (b.dueMonth ?? '').localeCompare(a.dueMonth ?? '') || a.description.localeCompare(b.description)).map((fee) => (
                 <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 text-[13px]">
-                  <span className="min-w-[160px] font-medium text-foreground">{fee.dueMonth ?? fee.description}</span>
+                  <span className="min-w-[160px] font-medium text-foreground">{students.find((student) => student.id === fee.studentId)?.name ?? '—'}</span>
+                  <span className="text-muted-foreground">{fee.dueMonth ?? fee.description}</span>
                   <span className="figure font-semibold">{formatNumber(fee.amount)}</span>
                   <span className="text-muted-foreground">{fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span>
                   <span className="text-muted-foreground">{fee.cancelledAt ? 'ملغى' : 'استحقاق محفوظ'}</span>
