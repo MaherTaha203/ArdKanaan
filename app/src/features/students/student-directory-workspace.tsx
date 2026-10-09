@@ -70,7 +70,16 @@ export function StudentDirectoryWorkspace() {
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
             <Search aria-hidden className="size-4 flex-none text-faint" />
-            <input type="search" value={query} onChange={(event) => setQuery(toWesternDigits(event.currentTarget.value))} aria-label="البحث عن طالب" placeholder="بالاسم أو الهاتف أو الرقم التعريفي" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(toWesternDigits(event.currentTarget.value))
+              }}
+              aria-label="البحث عن طالب"
+              placeholder="بالاسم أو الهاتف أو الرقم التعريفي"
+              className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
+            />
           </label>
           <Button variant="default" onClick={openAddStudent}>
             <UserPlus className="size-4" />
