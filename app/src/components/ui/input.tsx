@@ -13,7 +13,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const handleChange: ChangeEventHandler<HTMLInputElement> | undefined = type !== 'password' && type !== 'file'
     ? (event) => {
         const westernDigits = toWesternDigits(event.currentTarget.value)
-        const normalized = type === 'number' ? westernDigits.replace(/[^0-9]/g, '') : westernDigits
+        const normalized = type === 'number' ? westernDigits.replace(/[^0-9.-]/g, '') : westernDigits
         if (normalized !== event.currentTarget.value) event.currentTarget.value = normalized
         onChange?.(event)
       }
