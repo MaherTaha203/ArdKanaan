@@ -688,7 +688,7 @@ if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/mon
 else
   fail "monthly enrollment setup failed"; sed 's/^/       /' "$BASE/monthly_setup.out"
 fi
-eq "ADR-0080 new enrollment snapshots are zero" "$(runFP "select count(*) from public.enrollments where course_id='$C4' and course_value=0")" "2"
+eq "ADR-0080 new enrollment snapshots are zero and monthly" "$(runFP "select count(*) from public.enrollments where course_id='$C4' and course_value=0 and billing_model='monthly'")" "2"
 eq "ADR-0080 preview sees two missing October obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.preview_monthly_course_obligations('$C4','2026-10-18')->>'to_create_count'")" "2"
 eq "ADR-0080 first October generation creates two obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-10-18')->>'created'")" "2"
 eq "ADR-0080 retry October generation creates zero duplicates" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-10-01')->>'created'")" "0"
