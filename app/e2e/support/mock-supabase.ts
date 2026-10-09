@@ -195,7 +195,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         const existing = feeObligations.some((fee) => fee.fee_kind === 'monthly_course' && fee.enrollment_id === enrollment.id && fee.due_month === dueMonth)
         return { student_id: enrollment.student_id, student_name: student?.name ?? '', enrollment_id: enrollment.id, amount: Number(course?.monthly_fee ?? 0), due_month: dueMonth, already_exists: existing }
       })
-      return json(route, { course_id: body.p_course_id, course_name: course?.name ?? '', due_month: dueMonth, monthly_amount: Number(course?.base_fee ?? 0), fee_category: feeCategory, external_share: externalShare, eligible_count: eligible.length, already_exists_count: eligible.filter((item) => item.already_exists).length, to_create_count: eligible.filter((item) => !item.already_exists).length, students: eligible })
+      return json(route, { course_id: body.p_course_id, course_name: course?.name ?? '', due_month: dueMonth, monthly_amount: Number(course?.monthly_fee ?? 0), fee_category: feeCategory, external_share: externalShare, eligible_count: eligible.length, already_exists_count: eligible.filter((item) => item.already_exists).length, to_create_count: eligible.filter((item) => !item.already_exists).length, students: eligible })
     }
 
     if (table?.startsWith('rpc/create_monthly_course_obligations') && method === 'POST') {
@@ -216,7 +216,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
           course_id: String(body.p_course_id ?? ''),
           course_name: course?.name ?? '',
           description: `رسوم الدورة الشهرية — ${dueMonth.slice(0, 7)}`,
-          amount: Number(course?.base_fee ?? 0),
+          amount: Number(course?.monthly_fee ?? 0),
           fee_category: feeCategory,
           external_share: externalShare,
           fee_kind: 'monthly_course',
