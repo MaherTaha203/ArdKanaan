@@ -162,7 +162,15 @@ export const useMoneyInStore = create<MoneyInStore>((set, get) => ({
       const posted = postedReceipt as { id?: string; voucher_number?: number; amount_received?: number } | null
       if (!posted?.id || posted.voucher_number == null) throw new Error('INVALID_RECEIPT_POST_RESULT')
 
-      const statementLines = await fetchStatementLines(activeStudent.id)
+      // The receipt RPC has committed successfully at this point. A subsequent
+      // statement refresh is a read-after-write convenience and must not make a
+      // committed receipt look like a failed save if that read temporarily fails.
+      let statementLines = get().statementLines
+      try {
+        statementLines = await fetchStatementLines(activeStudent.id)
+      } catch (refreshError) {
+        console.error('Receipt saved, but statement refresh failed', refreshError)
+      }
       set({ activeStudent, statementLines, currentView: 'student-statement', isSaving: false })
       return {
         id: posted.id,
