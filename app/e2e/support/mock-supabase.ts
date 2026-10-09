@@ -240,7 +240,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         course_id: String(payload.course_id ?? ''),
         course_name: course?.name ?? '',
         course_value: 0,
-        billing_model: 'monthly',
+        billing_model: 'monthly' as const,
       }
       enrollments.push(enrollment)
       return json(route, enrollment)
