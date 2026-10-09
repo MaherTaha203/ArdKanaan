@@ -4,10 +4,8 @@ import type { CourseFormValues, EnrollFormValues } from '@/features/courses/sche
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-// Course catalog administration + student registration. Courses are pure catalog
-// metadata. Registering a student writes an enrollment using the course's pre-defined
-// price as the authoritative financial snapshot; it never asks the receipt to re-enter
-// the course price.
+// Course catalog administration + student registration. base_fee remains the legacy
+// total registration value; monthly_fee is the separate price for future obligations.
 
 const NOT_CONFIGURED = 'الاتصال بقاعدة البيانات غير مهيأ بعد.'
 
@@ -22,9 +20,11 @@ type CourseAdminStore = {
 
 function coursePayload(values: CourseFormValues) {
   const baseFee = values.baseFee === '' ? null : Number(values.baseFee)
+  const monthlyFee = values.monthlyFee === '' ? null : Number(values.monthlyFee)
   return {
     name: values.name.trim(),
     base_fee: baseFee,
+    monthly_fee: monthlyFee,
     start_date: values.startDate.trim() || null,
     end_date: values.endDate.trim() || null,
     status: values.status,
@@ -85,8 +85,8 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
     try {
       const course = useWorkspaceStore.getState().courses.find((item) => item.id === courseId)
       if (!course) throw new Error('COURSE_NOT_FOUND')
-      if (course.baseFee == null) {
-        set({ isBusy: false, error: 'لا يمكن تسجيل الطالب قبل تحديد رسوم الدورة.' })
+      if (course.monthlyFee == null || course.monthlyFee <= 0) {
+        set({ isBusy: false, error: 'لا يمكن تسجيل الطالب قبل تحديد رسوم شهرية صحيحة للدورة.' })
         return false
       }
 

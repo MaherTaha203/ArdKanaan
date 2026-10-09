@@ -14,7 +14,7 @@ import { useShellStore } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 // The courses catalog: a calm list, not an ERP grid. Each row shows the course,
-// how many students are enrolled, its base fee and status — click to open it.
+// how many students are enrolled, its default monthly fee and status — click to open it.
 export function CoursesWorkspace() {
   const courses = useWorkspaceStore((state) => state.courses)
   const enrollments = useWorkspaceStore((state) => state.enrollments)
@@ -83,11 +83,11 @@ export function CoursesWorkspace() {
                     عدد الطلاب <span className="figure font-semibold text-foreground">{formatNumber(stats.studentCount)}</span>
                   </span>
                   <span className="text-[12.5px] text-muted-foreground">
-                    الرسوم الأساسية{' '}
-                    {course.baseFee == null ? (
+                    الرسوم الشهرية{' '}
+                    {course.monthlyFee == null ? (
                       <span className="text-faint">—</span>
                     ) : (
-                      <Money value={course.baseFee} currency={false} className="font-semibold text-foreground" />
+                      <Money value={course.monthlyFee} currency={false} className="font-semibold text-foreground" />
                     )}
                   </span>
                   <StatusBadge status={course.status} />

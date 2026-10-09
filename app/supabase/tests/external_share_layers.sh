@@ -671,6 +671,76 @@ eq "FIN-001 50/50 external total remains exactly 33" "$(runFP "select coalesce(s
 eq "FIN-001 50/50 gross total remains exactly 100" "$(runFP "select coalesce(sum(amount),0)::int from public.receipt_allocations where fee_obligation_id='$FEEW2'")" "100"
 eq "FIN-001 all receipt external shares are whole shekels" "$(runFP "select count(*) from public.receipt_vouchers where external_share <> trunc(external_share)")" "0"
 
+echo "== ADR-0080: monthly course obligations, idempotency, and restore round-trip =="
+C4='00000000-0000-0000-0000-0000000c0004'
+E4='00000000-0000-0000-0000-0000000e0004'
+E5='00000000-0000-0000-0000-0000000e0005'
+cat > "$BASE/monthly_setup.sql" <<SQL
+insert into public.courses (id, name, base_fee, monthly_fee, status)
+values ('$C4', 'دورة شهرية', 700, 250, 'active');
+set request.jwt.claim.sub = '$OWNER';
+select public.create_enrollment('{"student_id":"00000000-0000-0000-0000-0000000a0001","course_id":"$C4"}'::jsonb);
+select public.create_enrollment('{"student_id":"00000000-0000-0000-0000-0000000a0002","course_id":"$C4"}'::jsonb);
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/monthly_setup.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/monthly_setup.sql" >"$BASE/monthly_setup.out" 2>&1; then
+  pass "new enrollments use zero legacy course-value snapshot"
+else
+  fail "monthly enrollment setup failed"; sed 's/^/       /' "$BASE/monthly_setup.out"
+fi
+eq "ADR-0080 new enrollment snapshots are zero and monthly" "$(runFP "select count(*) from public.enrollments where course_id='$C4' and course_value=0 and billing_model='monthly'")" "2"
+eq "ADR-0080 preview sees two missing October obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.preview_monthly_course_obligations('$C4','2026-10-18')->>'to_create_count'")" "2"
+eq "ADR-0080 first October generation creates two obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-10-18')->>'created'")" "2"
+eq "ADR-0080 retry October generation creates zero duplicates" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-10-01')->>'created'")" "0"
+eq "ADR-0080 exactly two October identities exist" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-10-01'")" "2"
+eq "ADR-0080 November is an independent month" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.preview_monthly_course_obligations('$C4','2026-11-29')->>'to_create_count'")" "2"
+eq "ADR-0080 shared November generation creates two obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-11-01','shared',50)->>'created'")" "2"
+eq "ADR-0080 recipient category is independent from monthly fee kind" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-11-01' and fee_category='shared' and external_share=50")" "2"
+eq "ADR-0080 monthly fees use monthly_fee, not legacy base_fee" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and amount=250 and fee_category='institute' and external_share=0")" "2"
+eq "ADR-0080 legacy base_fee is not repurposed" "$(runFP "select count(*) from public.courses where id='$C4' and base_fee=700 and monthly_fee=250")" "1"
+
+# The existing receipt-posting RPC must accept a monthly-course fee allocation
+# exactly like other fee obligations, without treating it as an enrollment total.
+MONTHLY_FEE_ID="$(runFP "select id from public.fee_obligations where course_id='$C4' and student_id='00000000-0000-0000-0000-0000000a0001' and fee_kind='monthly_course' and due_month='2026-10-01'")"
+eq "ADR-0080 monthly fee target exists for receipt" "$( [ -n "$MONTHLY_FEE_ID" ] && echo 1 || echo 0)" "1"
+runFP "set request.jwt.claim.sub='$OWNER'; select public.post_receipt_with_allocations(jsonb_build_object('student_id','00000000-0000-0000-0000-0000000a0001','student_name','طالب أ','voucher_date','2026-10-09','amount_received',250,'payer_name','طالب أ','notes','تحصيل رسم شهري','idempotency_key','99999999-0000-0000-0000-000000000008','allocations',jsonb_build_array(jsonb_build_object('type','fee','fee_obligation_id','$MONTHLY_FEE_ID','amount',250))));"
+eq "ADR-0080 monthly obligation accepts a full receipt allocation" "$(runFP "select count(*) from public.receipt_allocations ra join public.receipt_vouchers rv on rv.id=ra.receipt_voucher_id where ra.fee_obligation_id='$MONTHLY_FEE_ID' and ra.amount=250 and rv.cancelled_at is null")" "1"
+eq "ADR-0080 monthly receipt keeps zero external share for institute fee" "$(runFP "select count(*) from public.receipt_allocations where fee_obligation_id='$MONTHLY_FEE_ID' and external_share=0")" "1"
+eq "ADR-0080 monthly fee remains a zero-total enrollment, not a course receipt" "$(runFP "select count(*) from public.enrollments where course_id='$C4' and student_id='00000000-0000-0000-0000-0000000a0001' and course_value=0 and billing_model='monthly'")" "1"
+
+# Record row counts before the round-trip so preservation is checked
+# against a pre-restore snapshot, not against a self-comparison.
+LEGACY_COUNTS_BEFORE="$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")"
+
+# Build a complete source-of-truth snapshot and round-trip it through the actual
+# owner-only restore RPC. The new fee identity must survive and legacy fields must
+# remain represented by the exact same rows/values.
+cat > "$BASE/monthly_restore.sql" <<SQL
+set request.jwt.claim.sub = '$OWNER';
+with payload as (
+  select jsonb_build_object(
+    'app','ard-kanaan','version',1,'exported_at',timezone('utc',now()),
+    'students',coalesce((select jsonb_agg(to_jsonb(x)) from public.students x),'[]'::jsonb),
+    'courses',coalesce((select jsonb_agg(to_jsonb(x)) from public.courses x),'[]'::jsonb),
+    'enrollments',coalesce((select jsonb_agg(to_jsonb(x)) from public.enrollments x),'[]'::jsonb),
+    'fee_obligations',coalesce((select jsonb_agg(to_jsonb(x)) from public.fee_obligations x),'[]'::jsonb),
+    'receipt_vouchers',coalesce((select jsonb_agg(to_jsonb(x)) from public.receipt_vouchers x),'[]'::jsonb),
+    'receipt_allocations',coalesce((select jsonb_agg(to_jsonb(x)) from public.receipt_allocations x),'[]'::jsonb),
+    'payment_vouchers',coalesce((select jsonb_agg(to_jsonb(x)) from public.payment_vouchers x),'[]'::jsonb)
+  ) as data
+)
+select public.restore_center_data(data, false) from payload;
+SQL
+[ -n "$PG_RUNAS" ] && chown "$PG_RUNAS" "$BASE/monthly_restore.sql"
+if run "$PGBIN/psql -h $SOCK -U $PU -v ON_ERROR_STOP=1 -X -q -d $DB -f $BASE/monthly_restore.sql" >"$BASE/monthly_restore.out" 2>&1; then
+  pass "ADR-0080 backup/restore round-trip completed atomically"
+else
+  fail "ADR-0080 backup/restore round-trip failed"; sed 's/^/       /' "$BASE/monthly_restore.out"
+fi
+eq "ADR-0080 monthly fee kind survives restore" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-10-01'")" "2"
+eq "ADR-0080 distinct monthly price survives restore" "$(runFP "select count(*) from public.courses where id='$C4' and base_fee=700 and monthly_fee=250")" "1"
+eq "ADR-0080 historical enrollments and vouchers remain present after restore" "$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")" "$LEGACY_COUNTS_BEFORE"
+
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
 rm -rf "$BASE"
 echo

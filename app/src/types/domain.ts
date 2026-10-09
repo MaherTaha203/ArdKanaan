@@ -37,7 +37,10 @@ export type CourseStatus = 'active' | 'ended'
 export type Course = {
   id: string
   name: string
+  // Legacy aggregate registration price, retained for historical enrollments only.
   baseFee: number | null
+  // Separate default monthly price for future obligations.
+  monthlyFee?: number | null
   startDate: string | null
   endDate: string | null
   status: CourseStatus
@@ -50,6 +53,9 @@ export type Enrollment = {
   courseId: string
   courseName: string
   courseValue: number
+  // Legacy registrations use the original total-fee snapshot; future registrations
+  // are explicitly marked monthly, even if a legacy free enrollment also has value 0.
+  billingModel?: 'legacy_total' | 'monthly'
   // Enrolment moment — the date the course fee was incurred; used to place the
   // course due chronologically in the running statement. Optional so fixtures and
   // legacy rows without it still typecheck.
@@ -72,6 +78,9 @@ export type FeeObligation = {
   amount: number
   feeCategory: FeeCategory
   externalShare: number
+  // Distinguishes why the obligation exists from feeCategory (who receives it).
+  feeKind?: 'additional' | 'monthly_course'
+  dueMonth?: string | null
   cancelledAt: string | null
   cancelReason: string | null
   createdAt: string

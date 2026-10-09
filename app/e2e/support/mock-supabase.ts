@@ -19,12 +19,14 @@ export type MockEnrollment = {
   course_id: string | null
   course_name: string
   course_value: number
+  billing_model?: 'legacy_total' | 'monthly'
 }
 
 export type MockFeeObligation = {
   id: string
   student_id: string
   course_id: string | null
+  enrollment_id?: string | null
   course_name: string
   description: string
   amount: number
@@ -33,6 +35,8 @@ export type MockFeeObligation = {
   cancelled_at: string | null
   cancel_reason: string | null
   created_at: string
+  fee_kind?: 'additional' | 'monthly_course'
+  due_month?: string | null
 }
 
 export type MockMovement = {
@@ -56,7 +60,7 @@ export type MockReceiptVoucher = {
 
 export type MockOptions = {
   students?: MockStudent[]
-  courses?: Array<{ id: string; name: string; base_fee: number | null; start_date: string | null; end_date: string | null; status: 'active' | 'ended'; notes: string | null }>
+  courses?: Array<{ id: string; name: string; base_fee: number | null; monthly_fee?: number | null; start_date: string | null; end_date: string | null; status: 'active' | 'ended'; notes: string | null }>
   enrollments?: MockEnrollment[]
   feeObligations?: MockFeeObligation[]
   financialMovements?: MockMovement[]
@@ -73,6 +77,7 @@ export type MockHandle = {
   feeObligationInserts: Array<Record<string, unknown>[]>
   receiptAllocations: Array<Record<string, unknown>>
   studentInserts: Array<Record<string, unknown>>
+  courseInserts: Array<Record<string, unknown>>
   studentUpdates: Array<{ id: string | null; body: Record<string, unknown> }>
   cancellations: Array<{ table: 'receipt_vouchers' | 'payment_vouchers'; id: string | null; reason: string }>
   activeMovements: MockMovement[]
@@ -97,7 +102,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
   const initialReceiptVouchers = [...(options.receiptVouchers ?? [])]
   const handle: MockHandle = {
 
-    receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], studentUpdates: [],
+    receiptInserts: initialReceiptVouchers.map((receipt) => ({ ...receipt })), paymentInserts: [], feeObligationInserts: [], receiptAllocations: [...(options.receiptAllocations ?? [])], studentInserts: [], courseInserts: [], studentUpdates: [],
     cancellations: [], activeMovements, cancelledVouchers, auditLog: [], restoreCalls: [], passwordResets: [], passwordUpdates: [],
   }
 
@@ -177,6 +182,55 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, { created: createdRows.length })
     }
 
+    if (table?.startsWith('rpc/preview_monthly_course_obligations') && method === 'POST') {
+      const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string; p_fee_category?: 'institute' | 'external' | 'shared'; p_external_share?: number }
+      const course = courses.find((item) => item.id === body.p_course_id)
+      const dueMonth = String(body.p_due_month ?? '').slice(0, 7) + '-01'
+      const feeCategory = body.p_fee_category ?? 'institute'
+      const externalShare = Number(body.p_external_share ?? 0)
+      const eligible = enrollments.filter((enrollment) => {
+        const student = students.find((item) => item.id === enrollment.student_id)
+        return enrollment.course_id === body.p_course_id && (!student || (student.status ?? 'active') === 'active')
+      }).map((enrollment) => {
+        const student = students.find((item) => item.id === enrollment.student_id)
+        const existing = feeObligations.some((fee) => fee.fee_kind === 'monthly_course' && fee.enrollment_id === enrollment.id && fee.due_month === dueMonth)
+        return { student_id: enrollment.student_id, student_name: student?.name ?? '', enrollment_id: enrollment.id, amount: Number(course?.monthly_fee ?? 0), due_month: dueMonth, already_exists: existing }
+      })
+      return json(route, { course_id: body.p_course_id, course_name: course?.name ?? '', due_month: dueMonth, monthly_amount: Number(course?.monthly_fee ?? 0), fee_category: feeCategory, external_share: externalShare, eligible_count: eligible.length, already_exists_count: eligible.filter((item) => item.already_exists).length, to_create_count: eligible.filter((item) => !item.already_exists).length, students: eligible })
+    }
+
+    if (table?.startsWith('rpc/create_monthly_course_obligations') && method === 'POST') {
+      const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string; p_fee_category?: 'institute' | 'external' | 'shared'; p_external_share?: number }
+      const course = courses.find((item) => item.id === body.p_course_id)
+      const dueMonth = String(body.p_due_month ?? '').slice(0, 7) + '-01'
+      const feeCategory = body.p_fee_category ?? 'institute'
+      const externalShare = Number(body.p_external_share ?? 0)
+      let created = 0
+      for (const enrollment of enrollments.filter((item) => item.course_id === body.p_course_id)) {
+        const student = students.find((item) => item.id === enrollment.student_id)
+        if (student && (student.status ?? 'active') !== 'active') continue
+        if (feeObligations.some((fee) => fee.fee_kind === 'monthly_course' && fee.enrollment_id === enrollment.id && fee.due_month === dueMonth)) continue
+        feeObligations.push({
+          id: `monthly-fee-${feeObligations.length + 1}`,
+          student_id: enrollment.student_id,
+          enrollment_id: enrollment.id,
+          course_id: String(body.p_course_id ?? ''),
+          course_name: course?.name ?? '',
+          description: `رسوم الدورة الشهرية — ${dueMonth.slice(0, 7)}`,
+          amount: Number(course?.monthly_fee ?? 0),
+          fee_category: feeCategory,
+          external_share: externalShare,
+          fee_kind: 'monthly_course',
+          due_month: dueMonth,
+          cancelled_at: null,
+          cancel_reason: null,
+          created_at: new Date().toISOString(),
+        })
+        created += 1
+      }
+      return json(route, { course_id: body.p_course_id, due_month: dueMonth, created, fee_category: feeCategory, external_share: externalShare })
+    }
+
     if (table?.startsWith('rpc/create_enrollment') && method === 'POST') {
       const body = safeJson(request.postData()) as { payload?: Record<string, unknown> }
       const payload = body.payload ?? {}
@@ -186,7 +240,8 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         student_id: String(payload.student_id ?? ''),
         course_id: String(payload.course_id ?? ''),
         course_name: course?.name ?? '',
-        course_value: Number(course?.base_fee ?? 0),
+        course_value: 0,
+        billing_model: 'monthly' as const,
       }
       enrollments.push(enrollment)
       return json(route, enrollment)
@@ -289,6 +344,22 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
 
     if (method === 'POST') {
       const payload = safeJson(request.postData())
+      if (table === 'courses') {
+        const course = payload as Record<string, unknown>
+        const id = `new-course-${courses.length + 1}`
+        handle.courseInserts.push({ ...course })
+        courses.push({
+          id,
+          name: String(course.name ?? ''),
+          base_fee: course.base_fee == null ? null : Number(course.base_fee),
+          monthly_fee: course.monthly_fee == null ? null : Number(course.monthly_fee),
+          start_date: (course.start_date as string | null) ?? null,
+          end_date: (course.end_date as string | null) ?? null,
+          status: course.status === 'ended' ? 'ended' : 'active',
+          notes: (course.notes as string | null) ?? null,
+        })
+        return json(route, { id, ...course }, 201)
+      }
       if (table === 'students') {
         handle.studentInserts.push(payload as Record<string, unknown>)
         const student = payload as Record<string, unknown>
