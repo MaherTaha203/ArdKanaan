@@ -696,6 +696,10 @@ eq "ADR-0080 exactly two October identities exist" "$(runFP "select count(*) fro
 eq "ADR-0080 November is an independent month" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.preview_monthly_course_obligations('$C4','2026-11-29')->>'to_create_count'")" "2"
 eq "ADR-0080 monthly fees snapshot the course price" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and amount=250 and fee_category='institute' and external_share=0")" "2"
 
+# Record historical row counts before the round-trip so preservation is checked
+# against a pre-restore snapshot, not against a self-comparison.
+LEGACY_COUNTS_BEFORE="$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")"
+
 # Build a complete source-of-truth snapshot and round-trip it through the actual
 # owner-only restore RPC. The new fee identity must survive and legacy fields must
 # remain represented by the exact same rows/values.
@@ -722,7 +726,7 @@ else
   fail "ADR-0080 backup/restore round-trip failed"; sed 's/^/       /' "$BASE/monthly_restore.out"
 fi
 eq "ADR-0080 monthly fee kind survives restore" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-10-01'")" "2"
-eq "ADR-0080 historical enrollments and vouchers remain present after restore" "$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")" "$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")"
+eq "ADR-0080 historical enrollments and vouchers remain present after restore" "$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")" "$LEGACY_COUNTS_BEFORE"
 
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
 rm -rf "$BASE"
