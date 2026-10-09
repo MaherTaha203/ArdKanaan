@@ -60,7 +60,7 @@ export type MockReceiptVoucher = {
 
 export type MockOptions = {
   students?: MockStudent[]
-  courses?: Array<{ id: string; name: string; base_fee: number | null; start_date: string | null; end_date: string | null; status: 'active' | 'ended'; notes: string | null }>
+  courses?: Array<{ id: string; name: string; base_fee: number | null; monthly_fee?: number | null; start_date: string | null; end_date: string | null; status: 'active' | 'ended'; notes: string | null }>
   enrollments?: MockEnrollment[]
   feeObligations?: MockFeeObligation[]
   financialMovements?: MockMovement[]
@@ -193,7 +193,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       }).map((enrollment) => {
         const student = students.find((item) => item.id === enrollment.student_id)
         const existing = feeObligations.some((fee) => fee.fee_kind === 'monthly_course' && fee.enrollment_id === enrollment.id && fee.due_month === dueMonth)
-        return { student_id: enrollment.student_id, student_name: student?.name ?? '', enrollment_id: enrollment.id, amount: Number(course?.base_fee ?? 0), due_month: dueMonth, already_exists: existing }
+        return { student_id: enrollment.student_id, student_name: student?.name ?? '', enrollment_id: enrollment.id, amount: Number(course?.monthly_fee ?? 0), due_month: dueMonth, already_exists: existing }
       })
       return json(route, { course_id: body.p_course_id, course_name: course?.name ?? '', due_month: dueMonth, monthly_amount: Number(course?.base_fee ?? 0), fee_category: feeCategory, external_share: externalShare, eligible_count: eligible.length, already_exists_count: eligible.filter((item) => item.already_exists).length, to_create_count: eligible.filter((item) => !item.already_exists).length, students: eligible })
     }
