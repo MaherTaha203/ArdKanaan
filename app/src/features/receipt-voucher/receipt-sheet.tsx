@@ -131,9 +131,20 @@ export function ReceiptSheet() {
   function updateReceiptAmount(rawValue: string) {
     const normalized = normalizeDigits(rawValue)
     const amount = normalized ? Number(normalized) : undefined
+    if (watchedAllocations.length === 1 && amount != null && amount > 0) {
+      const allocation = watchedAllocations[0]
+      const maxRemaining = allocation.type === 'course'
+        ? studentCourses.find((course) => course.enrollmentId === allocation.enrollmentId)?.remaining
+        : studentFees.find((item) => item.fee.id === allocation.feeObligationId)?.remaining
+      if (maxRemaining != null && amount > maxRemaining) {
+        form.setError('amountReceived', { message: `المبلغ لا يمكن أن يتجاوز الذمة المتبقية (${formatNumber(maxRemaining)})` })
+        return
+      }
+      form.clearErrors('amountReceived')
+      updateAllocation(0, amount)
+      return
+    }
     form.setValue('amountReceived', amount as number, { shouldValidate: true, shouldDirty: true })
-    if (watchedAllocations.length !== 1 || amount == null || amount <= 0) return
-    updateAllocation(0, amount)
   }
   function removeAllocation(index: number) { setAllocations(watchedAllocations.filter((_, itemIndex) => itemIndex !== index)) }
 
