@@ -33,13 +33,6 @@ export type CourseFormValues = z.infer<typeof courseFormSchema>
 export const enrollFormSchema = z.object({
   studentId: z.string().trim().min(1, 'اختر الطالب من القائمة'),
   studentName: z.string().trim(),
-  fee: z
-    .string()
-    .trim()
-    .refine(
-      (value) => /^\d+$/.test(value) && Number(value) <= MAX_SHEKEL_AMOUNT,
-      'رسوم التسجيل مطلوبة (عدد صحيح من الشواكل ضمن الحدّ المسموح)',
-    ),
 })
 
 export type EnrollFormValues = z.infer<typeof enrollFormSchema>
