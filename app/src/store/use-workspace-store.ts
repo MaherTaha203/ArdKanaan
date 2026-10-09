@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import { fetchAllRows } from '@/lib/fetch-all'
+import { toWesternDigits } from '@/lib/numbers'
 import type { StudentFinancialSummary } from '@/lib/aggregate'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type {
@@ -41,7 +42,7 @@ type MovementRow = { id: string; movement_type: 'receipt' | 'payment'; voucher_n
 function normalizeStudentStatus(value: string | null | undefined): Student['status'] {
   return value === 'archived' ? 'archived' : value === 'completed' ? 'completed' : 'active'
 }
-function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: row.name, idNumber: row.id_number, phone: row.phone, notes: row.notes, status: normalizeStudentStatus(row.status), archivedAt: row.archived_at ?? null, archiveReason: row.archive_reason ?? null } }
+function normalizeStudent(row: StudentRow): Student { return { id: row.id, name: toWesternDigits(row.name), idNumber: row.id_number == null ? null : toWesternDigits(row.id_number), phone: row.phone == null ? null : toWesternDigits(row.phone), notes: row.notes, status: normalizeStudentStatus(row.status), archivedAt: row.archived_at ?? null, archiveReason: row.archive_reason ?? null } }
 function normalizeStatementLine(row: StatementRow): StudentStatementLine { return { id: row.id, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, studentId: row.student_id, studentName: row.student_name, courseName: row.course_name, courseValue: Number(row.course_value), amountReceived: Number(row.amount_received), remainingBalance: Number(row.remaining_balance), entryType: row.entry_type ?? 'course', feeObligationId: row.fee_obligation_id ?? null, enrollmentId: row.enrollment_id ?? null } }
 function normalizeStudentSummary(row: StudentSummaryRow): StudentFinancialSummary { return { studentId: row.student_id, paid: Number(row.paid), remaining: Number(row.remaining), courses: Number(row.courses), lastActivity: row.last_activity, lineCount: Number(row.line_count), courseNames: row.course_names ?? [] } }
 function normalizeMovement(row: MovementRow): FinancialMovement { return { id: row.id, movementType: row.movement_type, voucherNumber: row.voucher_number, voucherDate: row.voucher_date, amount: Number(row.amount), partyName: row.party_name, context: row.context, externalShare: Number(row.external_share ?? 0) } }
