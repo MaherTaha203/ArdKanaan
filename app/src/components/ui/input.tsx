@@ -1,6 +1,6 @@
 import { forwardRef, type ChangeEventHandler, type InputHTMLAttributes } from 'react'
 
-import { toWesternDigits } from '@/lib/format'
+import { toWesternDigits } from '@/lib/numbers'
 import { cn } from '@/lib/utils'
 
 type InputProps = InputHTMLAttributes<HTMLInputElement>
