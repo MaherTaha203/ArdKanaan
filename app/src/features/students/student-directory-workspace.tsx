@@ -113,6 +113,7 @@ export function StudentDirectoryWorkspace() {
 
         <StudentPreviewPanel
           item={preview}
+          hasObligations={preview ? hasStudentObligations(preview.student.id, enrollments, feeObligations) : false}
           onOpenStatement={() => {
             if (!preview) return
             selectStudent(preview.student.id)
@@ -157,7 +158,7 @@ function DirectoryRow({ item, selected, onSelect, hasObligations }: { item: Stud
   )
 }
 
-function StudentPreviewPanel({ item, onOpenStatement, onArchive, onReceipt }: { item: StudentAggregate | null; onOpenStatement: () => void; onArchive: () => void; onReceipt: () => void }) {
+function StudentPreviewPanel({ item, hasObligations, onOpenStatement, onArchive, onReceipt }: { item: StudentAggregate | null; hasObligations: boolean; onOpenStatement: () => void; onArchive: () => void; onReceipt: () => void }) {
   if (!item) {
     return <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint md:block">اختر طالبًا من القائمة لعرض ملخّص حسابه هنا.</div>
   }
@@ -172,6 +173,7 @@ function StudentPreviewPanel({ item, onOpenStatement, onArchive, onReceipt }: { 
         </div>
       </div>
       <div className="mt-3 text-xs text-faint">{formatNumber(item.courses)} دورة · آخر حركة {item.lastActivity ? formatDate(item.lastActivity) : '—'}</div>
+      {!hasObligations ? <p className="mt-3 rounded-lg border border-border-strong bg-highlight px-3 py-2 text-xs text-muted-foreground">لا توجد التزامات مالية مسجلة؛ لم يُصنّف الطالب على أنه مسدَّد بالكامل.</p> : null}
       <div className="mt-4 flex gap-6 border-t border-border pt-4">
         <div><div className="text-[11px] font-medium text-faint">المسدَّد</div><Money value={item.paid} currency={false} className="text-lg font-semibold text-foreground" /></div>
         <div><div className="text-[11px] font-medium text-faint">الرصيد المستحق</div><Money value={item.remaining} currency={false} className={`text-lg font-semibold ${item.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`} /></div>
