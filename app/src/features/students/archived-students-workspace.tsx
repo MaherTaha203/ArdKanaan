@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 
+import { toWesternDigits } from '@/lib/numbers'
 import { ArchiveRestore, ChevronLeft, Search, User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
@@ -53,7 +54,7 @@ export function ArchivedStudentsWorkspace() {
         <h1 className="editorial text-[clamp(1.2rem,1.9vw,1.45rem)] text-foreground">الطلاب المؤرشفون</h1>
         <label className="flex w-60 max-w-full items-center gap-2 rounded-lg border border-border-strong bg-panel px-3 py-2 focus-within:border-olive">
           <Search aria-hidden className="size-4 flex-none text-faint" />
-          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="البحث في الطلاب المؤرشفين" placeholder="بحث بالاسم" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
+          <input type="search" value={query} onChange={(event) => setQuery(toWesternDigits(event.currentTarget.value)) aria-label="البحث في الطلاب المؤرشفين" placeholder="بحث بالاسم" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint" />
         </label>
       </header>
       <ConfigNotice />
