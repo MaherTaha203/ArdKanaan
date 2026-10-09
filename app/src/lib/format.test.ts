@@ -18,8 +18,8 @@ describe('formatTimestamp', () => {
     expect(stripMarks(date)).toMatch(/^\d{2}\/\d{2}\/\d{4}$/)
     expect(stripMarks(time)).toMatch(/^\d{2}:\d{2}:\d{2}$/)
     // No Arabic-Indic digits (٠-٩) — the Owner Decision mandates Western digits.
-    expect(date).not.toMatch(/[٠-٩]/)
-    expect(time).not.toMatch(/[٠-٩]/)
+    expect(date).not.toMatch(/[٠-٩۰-۹]/)
+    expect(time).not.toMatch(/[٠-٩۰-۹]/)
   })
 
   it('returns the raw value and empty time for an unparseable input', () => {
