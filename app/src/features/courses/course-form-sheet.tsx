@@ -86,6 +86,7 @@ export function CourseFormSheet() {
               placeholder="اختياري"
               {...control}
               {...form.register('baseFee')}
+              onChange={(event) => form.setValue('baseFee', event.target.value.replace(/[^0-9]/g, ''), { shouldValidate: true, shouldDirty: true })}
             />
           )}
         </Field>
@@ -99,6 +100,7 @@ export function CourseFormSheet() {
               placeholder="اختياري"
               {...control}
               {...form.register('monthlyFee')}
+              onChange={(event) => form.setValue('monthlyFee', event.target.value.replace(/[^0-9]/g, ''), { shouldValidate: true, shouldDirty: true })}
             />
           )}
         </Field>
