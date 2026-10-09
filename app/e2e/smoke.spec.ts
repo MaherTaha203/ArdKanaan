@@ -69,6 +69,7 @@ test('accepts Arabic receipt amounts and saves a partial course payment', async 
   await page.getByRole('option', { name: /سارة أحمد/ }).click()
   await dialog.getByRole('button', { name: /دورة الرياضيات/ }).click()
   const amount = dialog.getByRole('textbox', { name: 'المبلغ المقبوض' })
+  await expect(amount).toHaveValue('400')
   await amount.fill('١٥٠')
   await expect(amount).toHaveValue('150')
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
