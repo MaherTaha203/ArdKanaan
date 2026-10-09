@@ -5,6 +5,7 @@ import { ChevronDown, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { fetchAllRows } from '@/lib/fetch-all'
 import { formatTimestamp } from '@/lib/format'
+import { toWesternDigits } from '@/lib/numbers'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 
@@ -203,14 +204,14 @@ export function ActivityWorkspace() {
                     <Fragment key={row.id}>
                       <tr className="border-b border-border align-top last:border-b-0">
                         <td className="px-3 py-2.5">
-                          <div className="font-medium text-foreground">{row.actor_email ?? 'المستخدم'}</div>
+                          <div className="font-medium text-foreground">{toWesternDigits(row.actor_email ?? 'المستخدم')}</div>
                           {row.changed_by ? <div className="figure mt-1 text-[11px] text-muted-foreground" dir="ltr">{row.changed_by}</div> : null}
                         </td>
                         <td className="figure whitespace-nowrap px-3 py-2.5">{date}</td>
                         <td className="figure whitespace-nowrap px-3 py-2.5">{time}</td>
-                        <td className="px-3 py-2.5 text-muted-foreground">{row.source ?? 'النظام'}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground">{toWesternDigits(row.source ?? 'النظام')}</td>
                         <td className="px-3 py-2.5 font-semibold text-foreground">{actionLabel(row.action)}</td>
-                        <td className="max-w-[300px] px-3 py-2.5 text-foreground">{row.description ?? row.label ?? '—'}</td>
+                        <td className="max-w-[300px] px-3 py-2.5 text-foreground">{toWesternDigits(row.description ?? row.label ?? '—')}</td>
                         <td className="px-3 py-2.5">
                           <button
                             type="button"
