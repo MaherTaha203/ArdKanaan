@@ -1,5 +1,16 @@
 begin;
 -- ADR-0080: monthly billing for future enrollments; no historical rows are rewritten.
+-- The explicit model marker avoids mistaking a legitimate legacy zero-price enrollment
+-- for a monthly enrollment. Existing rows default to their original total-fee model.
+alter table public.enrollments
+  add column if not exists billing_model text not null default 'legacy_total';
+alter table public.enrollments
+  add constraint enrollments_billing_model_valid
+  check (billing_model in ('legacy_total', 'monthly'));
+alter table public.enrollments
+  add constraint enrollments_monthly_billing_zero_snapshot
+  check (billing_model <> 'monthly' or course_value = 0);
+
 alter table public.fee_obligations
   add column if not exists fee_kind text not null default 'additional',
   add column if not exists due_month date;
@@ -71,18 +82,23 @@ begin
     select c.name, c.base_fee into v_course_name, v_course_value from public.courses c where c.id = new.course_id;
     if v_course_name is null then raise exception 'COURSE_NOT_FOUND'; end if;
     if v_course_value is null then raise exception 'COURSE_BASE_FEE_REQUIRED'; end if;
+    if new.billing_model not in ('legacy_total', 'monthly') then
+      raise exception 'INVALID_ENROLLMENT_BILLING_MODEL';
+    end if;
     if new.course_name is distinct from v_course_name
-       or (new.course_value <> 0 and new.course_value is distinct from v_course_value) then
+       or (new.billing_model = 'monthly' and new.course_value <> 0)
+       or (new.billing_model = 'legacy_total' and new.course_value is distinct from v_course_value) then
       raise exception 'ENROLLMENT_FINANCIAL_SNAPSHOT_MISMATCH';
     end if;
     return new;
   end if;
   if new.id is distinct from old.id or new.student_id is distinct from old.student_id
      or new.course_id is distinct from old.course_id or new.course_name is distinct from old.course_name
+     or new.billing_model is distinct from old.billing_model
      or new.created_at is distinct from old.created_at then
     raise exception 'ENROLLMENT_FINANCIAL_FIELDS_IMMUTABLE';
   end if;
-  if old.course_value = 0 and new.course_value is distinct from 0 then
+  if old.billing_model = 'monthly' and new.course_value is distinct from 0 then
     raise exception 'MONTHLY_ENROLLMENT_LEGACY_FEE_LOCKED';
   end if;
   if new.course_value is distinct from old.course_value
@@ -114,8 +130,8 @@ begin
   if exists (select 1 from public.enrollments e where e.student_id = p_student_id and e.course_id = p_course_id) then
     raise exception 'ENROLLMENT_ALREADY_EXISTS';
   end if;
-  insert into public.enrollments (student_id, course_id, course_name, course_value)
-    values (p_student_id, p_course_id, v_course_name, 0) returning id into v_id;
+  insert into public.enrollments (student_id, course_id, course_name, course_value, billing_model)
+    values (p_student_id, p_course_id, v_course_name, 0, 'monthly') returning id into v_id;
   return jsonb_build_object('id', v_id, 'student_id', p_student_id, 'course_id', p_course_id,
     'course_name', v_course_name, 'course_value', 0, 'billing_model', 'monthly');
 end;
@@ -268,6 +284,10 @@ begin
     v_course := nullif(e->>'course_id', '')::uuid;
     if v_student is null or v_course is null or nullif(e->>'course_name', '') is null or (e->>'course_value')::numeric is null then
       raise exception 'INVALID_ENROLLMENT_BACKUP';
+    end if;
+    if coalesce(e->>'billing_model', 'legacy_total') not in ('legacy_total', 'monthly')
+       or (coalesce(e->>'billing_model', 'legacy_total') = 'monthly' and (e->>'course_value')::numeric <> 0) then
+      raise exception 'INVALID_ENROLLMENT_BILLING_MODEL_BACKUP';
     end if;
     select c.name, c.base_fee into v_course_name, v_course_value
     from jsonb_array_elements(courses) c0
@@ -465,8 +485,8 @@ begin
   from jsonb_array_elements(payload->'students') src;
   get diagnostics s_out = row_count;
 
-  insert into public.enrollments (id, student_id, course_id, course_name, course_value, created_at, updated_at)
-  select coalesce((src->>'id')::uuid, gen_random_uuid()), (src->>'student_id')::uuid, (src->>'course_id')::uuid, src->>'course_name', (src->>'course_value')::numeric, coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), coalesce((src->>'updated_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(enrollments) src;
+  insert into public.enrollments (id, student_id, course_id, course_name, course_value, billing_model, created_at, updated_at)
+  select coalesce((src->>'id')::uuid, gen_random_uuid()), (src->>'student_id')::uuid, (src->>'course_id')::uuid, src->>'course_name', (src->>'course_value')::numeric, coalesce(nullif(src->>'billing_model', ''), 'legacy_total'), coalesce((src->>'created_at')::timestamptz, timezone('utc', now())), coalesce((src->>'updated_at')::timestamptz, timezone('utc', now())) from jsonb_array_elements(enrollments) src;
   get diagnostics e_out = row_count;
 
   insert into public.fee_obligations (id, student_id, enrollment_id, course_id, course_name, description, amount, fee_category, external_share, cancelled_at, cancel_reason, created_at, fee_kind, due_month)
