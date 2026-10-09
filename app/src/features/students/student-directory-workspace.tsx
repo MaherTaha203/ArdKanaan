@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Archive, ChevronDown, ChevronLeft, Search, User, UserPlus } from 'lucide-react'
+import { Archive, ChevronDown, ChevronLeft, ReceiptText, Search, User, UserPlus } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -15,9 +15,14 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const REMAINING_EPSILON = 0.0001
 
-type StudentStatus = 'ok' | 'due' | 'none'
+type StudentStatus = 'ok' | 'due' | 'none' | 'no-obligations'
 
-function statusOf(item: StudentAggregate): StudentStatus {
+function hasStudentObligations(studentId: string, enrollments: { studentId: string }[], feeObligations: { studentId: string; cancelledAt: string | null }[]): boolean {
+  return enrollments.some((item) => item.studentId === studentId) || feeObligations.some((item) => item.studentId === studentId && !item.cancelledAt)
+}
+
+function statusOf(item: StudentAggregate, hasObligations: boolean): StudentStatus {
+  if (!hasObligations) return 'no-obligations'
   if (item.remaining <= REMAINING_EPSILON) return 'ok'
   if (item.paid <= REMAINING_EPSILON) return 'none'
   return 'due'
@@ -26,6 +31,8 @@ function statusOf(item: StudentAggregate): StudentStatus {
 export function StudentDirectoryWorkspace() {
   const students = useWorkspaceStore((state) => state.students)
   const studentSummaries = useWorkspaceStore((state) => state.studentSummaries)
+  const enrollments = useWorkspaceStore((state) => state.enrollments)
+  const feeObligations = useWorkspaceStore((state) => state.feeObligations)
   const loaded = useWorkspaceStore((state) => state.loaded)
   const error = useWorkspaceStore((state) => state.error)
   const clearError = useWorkspaceStore((state) => state.clearError)
@@ -33,6 +40,7 @@ export function StudentDirectoryWorkspace() {
   const selectStudent = useShellStore((state) => state.selectStudent)
   const openAddStudent = useShellStore((state) => state.openAddStudent)
   const openArchive = useShellStore((state) => state.openArchive)
+  const openReceiveFor = useShellStore((state) => state.openReceiveFor)
 
   const [query, setQuery] = useState('')
   const [previewId, setPreviewId] = useState<string | null>(null)
@@ -95,7 +103,7 @@ export function StudentDirectoryWorkspace() {
           {!loaded ? (
             <div className="p-3"><SkeletonRows rows={8} /></div>
           ) : filtered.length > 0 ? (
-            filtered.map((item) => <DirectoryRow key={item.student.id} item={item} selected={item.student.id === previewId} onSelect={() => setPreviewId(item.student.id)} />)
+            filtered.map((item) => <DirectoryRow key={item.student.id} item={item} selected={item.student.id === previewId} hasObligations={hasStudentObligations(item.student.id, enrollments, feeObligations)} onSelect={() => setPreviewId(item.student.id)} />)
           ) : roster.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-faint">لا يوجد طلاب بعد.</p>
           ) : (
@@ -105,6 +113,7 @@ export function StudentDirectoryWorkspace() {
 
         <StudentPreviewPanel
           item={preview}
+          hasObligations={preview ? hasStudentObligations(preview.student.id, enrollments, feeObligations) : false}
           onOpenStatement={() => {
             if (!preview) return
             selectStudent(preview.student.id)
@@ -113,15 +122,19 @@ export function StudentDirectoryWorkspace() {
             if (!preview) return
             openArchive(preview.student.id)
           }}
+          onReceipt={() => {
+            if (!preview) return
+            openReceiveFor(preview.student.name)
+          }}
         />
       </div>
     </div>
   )
 }
 
-function DirectoryRow({ item, selected, onSelect }: { item: StudentAggregate; selected: boolean; onSelect: () => void }) {
-  const status = statusOf(item)
-  const statusLabel = status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
+function DirectoryRow({ item, selected, onSelect, hasObligations }: { item: StudentAggregate; selected: boolean; onSelect: () => void; hasObligations: boolean }) {
+  const status = statusOf(item, hasObligations)
+  const statusLabel = status === 'no-obligations' ? 'لا توجد التزامات' : status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
   return (
     <div className={`border-b border-border last:border-b-0 ${selected ? 'bg-highlight' : ''}`}>
       <button type="button" onClick={onSelect} aria-pressed={selected} className="flex w-full items-center gap-3 px-4 py-2.5 text-start">
@@ -145,7 +158,7 @@ function DirectoryRow({ item, selected, onSelect }: { item: StudentAggregate; se
   )
 }
 
-function StudentPreviewPanel({ item, onOpenStatement, onArchive }: { item: StudentAggregate | null; onOpenStatement: () => void; onArchive: () => void }) {
+function StudentPreviewPanel({ item, hasObligations, onOpenStatement, onArchive, onReceipt }: { item: StudentAggregate | null; hasObligations: boolean; onOpenStatement: () => void; onArchive: () => void; onReceipt: () => void }) {
   if (!item) {
     return <div className="hidden rounded-xl border border-dashed border-border-strong p-5 text-center text-sm text-faint md:block">اختر طالبًا من القائمة لعرض ملخّص حسابه هنا.</div>
   }
@@ -160,11 +173,13 @@ function StudentPreviewPanel({ item, onOpenStatement, onArchive }: { item: Stude
         </div>
       </div>
       <div className="mt-3 text-xs text-faint">{formatNumber(item.courses)} دورة · آخر حركة {item.lastActivity ? formatDate(item.lastActivity) : '—'}</div>
+      {!hasObligations ? <p className="mt-3 rounded-lg border border-border-strong bg-highlight px-3 py-2 text-xs text-muted-foreground">لا توجد التزامات مالية مسجلة؛ لم يُصنّف الطالب على أنه مسدَّد بالكامل.</p> : null}
       <div className="mt-4 flex gap-6 border-t border-border pt-4">
         <div><div className="text-[11px] font-medium text-faint">المسدَّد</div><Money value={item.paid} currency={false} className="text-lg font-semibold text-foreground" /></div>
         <div><div className="text-[11px] font-medium text-faint">الرصيد المستحق</div><Money value={item.remaining} currency={false} className={`text-lg font-semibold ${item.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`} /></div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button variant="default" size="sm" onClick={onReceipt}><ReceiptText className="size-4" />سند قبض</Button>
         <Button variant="quiet" size="sm" onClick={onOpenStatement}><ChevronLeft className="size-4" />فتح الكشف الكامل</Button>
         {item.student.status === 'active' ? <Button variant="quiet" size="sm" onClick={onArchive}><Archive className="size-4" />أرشفة</Button> : null}
       </div>
