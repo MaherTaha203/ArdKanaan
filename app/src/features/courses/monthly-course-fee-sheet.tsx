@@ -55,7 +55,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
       setError('اختر الشهر المطلوب.')
       return
     }
-    const amount = course.baseFee ?? 0
+    const amount = course.monthlyFee ?? 0
     const external = feeCategory === 'institute' ? 0 : feeCategory === 'external' ? amount : Number(externalShare)
     if (feeCategory === 'shared' && (!/^[0-9]+$/.test(externalShare) || external <= 0 || external >= amount)) {
       setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من الرسوم الشهرية.')
