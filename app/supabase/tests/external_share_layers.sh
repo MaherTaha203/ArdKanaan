@@ -729,6 +729,7 @@ else
   fail "ADR-0080 backup/restore round-trip failed"; sed 's/^/       /' "$BASE/monthly_restore.out"
 fi
 eq "ADR-0080 monthly fee kind survives restore" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-10-01'")" "2"
+eq "ADR-0080 distinct monthly price survives restore" "$(runFP "select count(*) from public.courses where id='$C4' and base_fee=700 and monthly_fee=250")" "1"
 eq "ADR-0080 historical enrollments and vouchers remain present after restore" "$(runFP "select (select count(*) from public.receipt_vouchers)::text || ':' || (select count(*) from public.receipt_allocations)::text || ':' || (select count(*) from public.enrollments where course_value>0)::text")" "$LEGACY_COUNTS_BEFORE"
 
 run "$PGBIN/pg_ctl -D $DATADIR -w stop" >/dev/null 2>&1
