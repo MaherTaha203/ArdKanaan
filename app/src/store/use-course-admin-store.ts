@@ -85,8 +85,8 @@ export const useCourseAdminStore = create<CourseAdminStore>((set) => ({
     try {
       const course = useWorkspaceStore.getState().courses.find((item) => item.id === courseId)
       if (!course) throw new Error('COURSE_NOT_FOUND')
-      if (course.baseFee == null) {
-        set({ isBusy: false, error: 'لا يمكن تسجيل الطالب قبل تحديد رسوم الدورة.' })
+      if (course.baseFee == null || course.baseFee <= 0) {
+        set({ isBusy: false, error: 'لا يمكن تسجيل الطالب قبل تحديد رسوم شهرية صحيحة للدورة.' })
         return false
       }
 
