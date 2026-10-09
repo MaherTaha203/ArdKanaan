@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 
 import { Check, Eye } from 'lucide-react'
 
@@ -137,6 +138,6 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
   )
 }
 
-function Summary({ label, value }: { label: string; value: React.ReactNode }) {
+function Summary({ label, value }: { label: string; value: ReactNode }) {
   return <div className="rounded-lg bg-highlight p-3"><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-semibold text-foreground">{value}</div></div>
 }
