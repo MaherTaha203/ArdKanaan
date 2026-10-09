@@ -129,6 +129,15 @@ export function AppShell() {
         </nav>
 
         <div className="ms-auto flex items-center gap-1.5 md:gap-2">
+          <button
+            type="button"
+            onClick={() => openOverlay('receive')}
+            className="inline-flex items-center gap-1.5 rounded-full bg-olive px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-olive/90 md:px-3.5 md:text-sm"
+            aria-label="إنشاء سند قبض جديد"
+          >
+            <HandCoins className="size-4" />
+            <span>سند قبض</span>
+          </button>
           <GroupNav
             label="النظام"
             icon={SlidersHorizontal}
