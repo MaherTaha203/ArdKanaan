@@ -72,6 +72,9 @@ export type FeeObligation = {
   amount: number
   feeCategory: FeeCategory
   externalShare: number
+  // Distinguishes why the obligation exists from feeCategory (who receives it).
+  feeKind?: 'additional' | 'monthly_course'
+  dueMonth?: string | null
   cancelledAt: string | null
   cancelReason: string | null
   createdAt: string
