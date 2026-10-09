@@ -12,7 +12,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const numericInput = type === 'number' || inputMode === 'numeric' || inputMode === 'decimal'
   const handleChange: ChangeEventHandler<HTMLInputElement> | undefined = numericInput
     ? (event) => {
-        const normalized = toWesternDigits(event.currentTarget.value)
+        const westernDigits = toWesternDigits(event.currentTarget.value)
+        const normalized = type === 'number' ? westernDigits.replace(/[^0-9]/g, '') : westernDigits
         if (normalized !== event.currentTarget.value) event.currentTarget.value = normalized
         onChange?.(event)
       }
