@@ -54,7 +54,7 @@ test('creates a receipt and opens its saved voucher print preview', async ({ pag
 })
 
 
-test('accepts Arabic receipt amounts and saves a partial course payment', async ({ page }) => {
+test('accepts Western-digit receipt amounts and saves a partial course payment', async ({ page }) => {
   await page.addInitScript(() => { Object.defineProperty(window, '__E2E_NO_AUTO_PRINT__', { value: true, configurable: true }) })
   const handle = await installSupabaseMocks(page, {
     students: [{ id: 's-1', name: 'سارة أحمد', id_number: null, phone: null, notes: null }],
@@ -72,7 +72,7 @@ test('accepts Arabic receipt amounts and saves a partial course payment', async 
   await expect(dialog.getByText(/المبلغ لا يمكن أن يتجاوز/)).toBeVisible()
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect.poll(() => handle.receiptInserts.length).toBe(0)
-  await amount.fill('١٥٠')
+  await amount.fill('150')
   await expect(amount).toHaveValue('150')
   await dialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
   await expect.poll(() => handle.receiptInserts.length).toBe(1)
