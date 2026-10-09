@@ -84,10 +84,10 @@ export function CoursesWorkspace() {
                   </span>
                   <span className="text-[12.5px] text-muted-foreground">
                     الرسوم الشهرية{' '}
-                    {course.baseFee == null ? (
+                    {course.monthlyFee == null ? (
                       <span className="text-faint">—</span>
                     ) : (
-                      <Money value={course.baseFee} currency={false} className="font-semibold text-foreground" />
+                      <Money value={course.monthlyFee} currency={false} className="font-semibold text-foreground" />
                     )}
                   </span>
                   <StatusBadge status={course.status} />
