@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { Archive, ArchiveRestore, Pencil, Plus, Printer, ReceiptText, Search } from 'lucide-react'
 
@@ -158,7 +158,7 @@ export function StudentsWorkspace() {
                   <RecordCard label="إجمالي المستحقات" value={activeLedger.totalDebit} tone="ink" />
                   <RecordCard label="إجمالي المقبوض" value={active.paid} tone="ink" />
                   <RecordCard label="المتبقي" value={active.remaining} tone="warn" />
-                  <RecordCard label="عدد سندات القبض" value={receiptRows.length} tone="ink" />
+                  <RecordCard label="عدد سندات القبض" value={receiptRows.length} tone="ink" count />
                 </div>
               </div>
 
@@ -240,10 +240,10 @@ function StudentRow({ item, active, onSelect, hasObligations }: { item: StudentA
   </div>
 }
 
-function RecordCard({ label, value, tone }: { label: string; value: number; tone: 'ink' | 'warn' }) {
-  return <div className="rounded-xl border border-border-strong bg-panel px-3 py-3"><div className="mb-1 text-[11px] font-medium text-faint">{label}</div><Money value={value} currency={false} className={`text-lg font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} /></div>
+function RecordCard({ label, value, tone, count = false }: { label: string; value: number; tone: 'ink' | 'warn'; count?: boolean }) {
+  return <div className="rounded-xl border border-border-strong bg-panel px-3 py-3"><div className="mb-1 text-[11px] font-medium text-faint">{label}</div>{count ? <div className="figure text-lg font-semibold text-foreground">{formatNumber(value)}</div> : <Money value={value} currency={false} className={`text-lg font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} />}</div>
 }
 
-function DetailTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function DetailTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return <button type="button" role="tab" aria-selected={active} onClick={onClick} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${active ? 'border-primary bg-primary text-primary-foreground' : 'border-border-strong bg-panel text-muted-foreground hover:bg-highlight'}`}>{children}</button>
 }
