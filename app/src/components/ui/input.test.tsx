@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
+import '@testing-library/jest-dom/vitest'
 
 import { Input } from '@/components/ui/input'
+
+afterEach(cleanup)
 
 describe('Input numeric digit handling', () => {
   it('shows Western digits immediately for Arabic-Indic and Persian numeric input', () => {
