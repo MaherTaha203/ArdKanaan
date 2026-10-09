@@ -676,8 +676,8 @@ C4='00000000-0000-0000-0000-0000000c0004'
 E4='00000000-0000-0000-0000-0000000e0004'
 E5='00000000-0000-0000-0000-0000000e0005'
 cat > "$BASE/monthly_setup.sql" <<SQL
-insert into public.courses (id, name, base_fee, status)
-values ('$C4', 'دورة شهرية', 250, 'active');
+insert into public.courses (id, name, base_fee, monthly_fee, status)
+values ('$C4', 'دورة شهرية', 700, 250, 'active');
 set request.jwt.claim.sub = '$OWNER';
 select public.create_enrollment('{"student_id":"00000000-0000-0000-0000-0000000a0001","course_id":"$C4"}'::jsonb);
 select public.create_enrollment('{"student_id":"00000000-0000-0000-0000-0000000a0002","course_id":"$C4"}'::jsonb);
@@ -696,7 +696,8 @@ eq "ADR-0080 exactly two October identities exist" "$(runFP "select count(*) fro
 eq "ADR-0080 November is an independent month" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.preview_monthly_course_obligations('$C4','2026-11-29')->>'to_create_count'")" "2"
 eq "ADR-0080 shared November generation creates two obligations" "$(runFP "set request.jwt.claim.sub='$OWNER'; select public.create_monthly_course_obligations('$C4','2026-11-01','shared',50)->>'created'")" "2"
 eq "ADR-0080 recipient category is independent from monthly fee kind" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and due_month='2026-11-01' and fee_category='shared' and external_share=50")" "2"
-eq "ADR-0080 monthly fees snapshot the course price" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and amount=250 and fee_category='institute' and external_share=0")" "2"
+eq "ADR-0080 monthly fees use monthly_fee, not legacy base_fee" "$(runFP "select count(*) from public.fee_obligations where course_id='$C4' and fee_kind='monthly_course' and amount=250 and fee_category='institute' and external_share=0")" "2"
+eq "ADR-0080 legacy base_fee is not repurposed" "$(runFP "select count(*) from public.courses where id='$C4' and base_fee=700 and monthly_fee=250")" "1"
 
 # Record historical row counts before the round-trip so preservation is checked
 # against a pre-restore snapshot, not against a self-comparison.
