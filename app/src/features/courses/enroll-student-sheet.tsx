@@ -18,9 +18,8 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const MAX_SUGGESTIONS = 8
 
-// Register an existing student in a course. The amount shown here comes from the
-// course catalog price and is read-only. The server/store also derives the enrollment
-// snapshot from that same course price, so the client cannot create a different fee.
+// Registering a student creates enrollment identity only. Monthly financial
+// obligations are generated separately for an explicitly selected calendar month.
 export function EnrollStudentSheet() {
   const closeOverlay = useShellStore((state) => state.closeOverlay)
   const enrollCourseId = useShellStore((state) => state.enrollCourseId)
@@ -40,7 +39,6 @@ export function EnrollStudentSheet() {
     defaultValues: {
       studentId: '',
       studentName: '',
-      fee: course?.baseFee != null ? String(course.baseFee) : '',
     },
   })
 
@@ -207,23 +205,12 @@ export function EnrollStudentSheet() {
           </p>
         ) : null}
 
-        <Field label="رسوم الدورة" error={form.formState.errors.fee?.message}>
-          {(control) => (
-            <Input
-              type="text"
-              inputMode="numeric"
-              className="figure"
-              placeholder="0"
-              readOnly
-              {...control}
-              {...form.register('fee')}
-            />
-          )}
-        </Field>
+        <div className="rounded-xl border border-border bg-highlight px-4 py-3 text-sm text-muted-foreground">
+          التسجيل لا ينشئ رسومًا إجمالية على الدورة. تُنشأ الرسوم الشهرية لاحقًا من شاشة الدورة بعد اختيار الشهر ومعاينة الطلاب.
+          {course.baseFee == null || course.baseFee <= 0 ? <span className="mt-1 block text-clay">يجب تحديد رسوم شهرية صحيحة للدورة قبل التسجيل.</span> : null}
+        </div>
 
-        {course.baseFee == null ? <p role="alert" className="text-sm text-clay">لا يمكن تسجيل الطالب قبل تحديد رسوم الدورة.</p> : null}
-
-        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy || course.baseFee == null}>
+        <Button type="submit" size="lg" variant="default" className="w-full" disabled={isBusy || course.baseFee == null || course.baseFee <= 0}>
           <Check className="size-4" />
           {isBusy ? 'جارٍ التسجيل…' : 'تسجيل الطالب'}
         </Button>
