@@ -29,6 +29,7 @@ export type MockFeeObligation = {
   enrollment_id?: string | null
   course_name: string
   description: string
+  notes?: string | null
   amount: number
   fee_category: 'institute' | 'external' | 'shared'
   external_share: number
@@ -169,6 +170,7 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
           course_id: payload.course_id ?? null,
           course_name: enrollment?.course_name ?? courses.find((item) => item.id === payload.course_id)?.name ?? null,
           description: String(payload.description ?? ''),
+          notes: payload.notes == null ? null : String(payload.notes),
           amount: Number(payload.amount ?? 0),
           fee_category: payload.fee_category,
           external_share: Number(payload.external_share ?? 0),

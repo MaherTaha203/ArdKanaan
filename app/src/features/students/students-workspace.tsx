@@ -196,7 +196,7 @@ export function StudentsWorkspace() {
                     </tr></thead>
                     <tbody>{statementLoading && statementStudentId === activeId ? <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">جارٍ تحميل الكشف…</td></tr> : activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
                       <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
-                      <td className="cell-wrap border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span></td>
+                      <td className="cell-wrap border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span>{entry.kind === 'debit' && entry.meta ? <div className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{entry.meta}</div> : null}</td>
                       <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
                       <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.credit > 0 ? 'font-semibold text-gold' : 'text-faint'}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
                       <td className="figure border-b border-border px-2.5 py-3.5 text-end font-bold text-foreground">{formatNumber(entry.balance)}</td>

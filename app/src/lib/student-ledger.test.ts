@@ -21,7 +21,7 @@ describe('studentLedger', () => {
       's-1',
       [courseLine({ id: 'l-1', studentId: 's-1', voucherDate: '2026-01-10', amountReceived: 200, remainingBalance: 300 })],
       [enrollment({ id: 'e-1', studentId: 's-1' })],
-      [fee({ id: 'f-1', studentId: 's-1', description: 'رسوم امتحان', amount: 50 })],
+      [fee({ id: 'f-1', studentId: 's-1', description: 'رسوم امتحان', notes: 'يرجى مراجعة الإدارة', amount: 50 })],
     )
 
     expect(ledger.entries.map((entry) => [entry.date, entry.kind, entry.debit, entry.credit, entry.balance])).toEqual([
@@ -29,8 +29,9 @@ describe('studentLedger', () => {
       ['2026-01-05', 'debit', 50, 0, 550],
       ['2026-01-10', 'credit', 0, 200, 350],
     ])
-    expect(ledger.entries[1].label).toBe('')
-    expect(ledger.entries[1].meta).toBe('')
+    expect(ledger.entries[0].label).toBe('رسوم الدورة — محاسبة')
+    expect(ledger.entries[1].label).toBe('رسوم امتحان')
+    expect(ledger.entries[1].meta).toBe('ملاحظات: يرجى مراجعة الإدارة')
     expect(ledger.entries[2].label).toBe('سند قبض - رقم 1#')
     expect(ledger).toMatchObject({ totalDebit: 550, totalCredit: 200, balance: 350 })
   })
@@ -43,8 +44,19 @@ describe('studentLedger', () => {
       [fee({ id: 'f-1', studentId: 's-1', description: 'ملغى', amount: 40, cancelledAt: '2026-02-01' })],
     )
     expect(ledger.entries).toHaveLength(1)
-    expect(ledger.entries[0]).toMatchObject({ kind: 'debit', label: '', meta: '', debit: 300, balance: 300 })
+    expect(ledger.entries[0]).toMatchObject({ kind: 'debit', label: 'رسوم الدورة — محاسبة', debit: 300, balance: 300 })
     expect(ledger.balance).toBe(ledger.totalDebit - ledger.totalCredit)
+  })
+
+  it('labels monthly course obligations with course and due month', () => {
+    const ledger = studentLedger(
+      's-1',
+      [],
+      [enrollment({ id: 'e-1', studentId: 's-1', courseValue: 0, billingModel: 'monthly' })],
+      [fee({ id: 'f-month', studentId: 's-1', description: 'رسوم الدورة الشهرية — 2026-02', amount: 120, feeKind: 'monthly_course', dueMonth: '2026-02-01', courseName: 'محاسبة' })],
+    )
+    expect(ledger.entries).toHaveLength(1)
+    expect(ledger.entries[0]).toMatchObject({ label: 'الاشتراك الشهري — محاسبة — 2026-02', debit: 120 })
   })
 
   it('orders a course debit before its payment even without an enrolment date', () => {

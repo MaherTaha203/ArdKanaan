@@ -75,6 +75,7 @@ export type FeeObligation = {
   courseId: string | null
   courseName: string | null
   description: string
+  notes?: string | null
   amount: number
   feeCategory: FeeCategory
   externalShare: number
