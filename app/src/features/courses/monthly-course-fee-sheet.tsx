@@ -120,10 +120,10 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
     <ActionSheet title="إنشاء الرسوم الشهرية" eyebrow={course.name} onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          تُحتسب الرسوم الشهرية كاملة لكل طالب نشط مسجّل قبل نهاية الشهر المختار. لا تُعدّل هذه العملية رسوم التسجيل التاريخية أو سندات القبض أو التخصيصات.
+          تُحتسب الرسوم الشهرية للطلاب المؤهلين في الشهر المختار. راجع قائمة الطلاب قبل تأكيد الإنشاء.
         </p>
         {course.monthlyFee == null || course.monthlyFee <= 0 ? (
-          <p role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">حدّد الرسوم الشهرية في إعدادات الدورة أولًا. لن تُستخدم قيمة التسجيل الإجمالية القديمة بدلًا منها.</p>
+          <p role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">حدّد الرسوم الشهرية للدورة أولًا.</p>
         ) : null}
         {error ? <div role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{error}</div> : null}
         <label className="block text-[13px] font-medium text-muted-foreground">
