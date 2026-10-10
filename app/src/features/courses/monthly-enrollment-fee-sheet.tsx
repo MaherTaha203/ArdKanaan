@@ -69,7 +69,12 @@ export function MonthlyEnrollmentFeeSheet() {
       useToastStore.getState().show('تم تعديل الاشتراك الشهري لهذا الطالب')
       closeOverlay()
     } catch (cause) {
-      const message = cause && typeof cause === 'object' && 'message' in cause ? String((cause as { message: unknown }).message) : ''
+      const failure = cause && typeof cause === 'object'
+        ? cause as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown }
+        : {}
+      const message = String(failure.message ?? '')
+      const code = String(failure.code ?? '')
+      const diagnostic = [message, String(failure.details ?? ''), String(failure.hint ?? '')].join(' ').toLowerCase()
       setError(message.includes('OWNER_ONLY')
         ? 'غير مصرّح لك بتعديل رسوم الاشتراك الشهري.'
         : message.includes('MONTHLY_ENROLLMENT_NOT_FOUND')
@@ -78,7 +83,13 @@ export function MonthlyEnrollmentFeeSheet() {
             ? 'أدخل سبب التعديل.'
             : message.includes('INVALID_MONTHLY_FEE_AMOUNT')
               ? 'أدخل مبلغًا صحيحًا موجبًا بالأرقام الإنجليزية ومن دون كسور.'
-              : 'تعذّر حفظ تعديل الاشتراك الشهري. لم تُعدّل الاستحقاقات أو السجلات السابقة.')
+              : ['PGRST202', '42883', 'PGRST204'].includes(code) || diagnostic.includes('update_monthly_enrollment_fee') || diagnostic.includes('schema cache')
+                ? 'إجراء الحفظ غير موجود في قاعدة البيانات المتصلة بالمعاينة. لم يُحفظ السعر ولم تتغير أي استحقاقات. يجب تطبيق ترحيلة قاعدة البيانات المعتمدة ثم إعادة المحاولة.'
+                : message.includes('MONTHLY_ENROLLMENT_FEE_OVERRIDE_RPC_REQUIRED')
+                  ? 'رفضت قاعدة البيانات التعديل المباشر؛ يجب أن يتم الحفظ عبر إجراء تعديل الاشتراك الشهري.'
+                  : message
+                    ? `فشل الحفظ من قاعدة البيانات (${code || 'بدون رمز'}): ${message}. لم تُعدّل الاستحقاقات أو السجلات السابقة.`
+                    : 'تعذّر حفظ تعديل الاشتراك الشهري. لم تُعدّل الاستحقاقات أو السجلات السابقة.')
     } finally {
       setBusy(false)
     }
