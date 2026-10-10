@@ -147,7 +147,8 @@ eq "Second monthly generation creates no duplicate" "$CREATED_RETRY" "0"
 eq "No monthly obligation is created for legacy enrollment" "$(runFP "select count(*) from public.fee_obligations where enrollment_id='00000000-0000-0000-0000-0000000e0004' and fee_kind='monthly_course'")" "0"
 
 echo "== Adjust one student's monthly subscription and recalculate the existing balance =="
-run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'individual rate');" > "$BASE/adjustment.out"
+# Reproduce the original bug: the override is already saved, but the existing obligation still has the old amount.
+run_owner_sql "select set_config('app.monthly_enrollment_fee_editing','on',false); update public.enrollments set monthly_fee_override=180, monthly_fee_override_reason='previously saved rate' where id='$MONTHLY_ENROLLMENT_ID'; select set_config('app.monthly_enrollment_fee_editing','off',false); select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'reconcile existing balance');" > "$BASE/adjustment.out"
 eq "Existing October obligation is repriced in place" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01' and cancelled_at is null")" "180"
 eq "The adjustment RPC reports one updated existing obligation" "$(grep -o '"existing_obligations_updated":[0-9]*' "$BASE/adjustment.out" | tail -1 | cut -d: -f2)" "1"
 eq "No receipt or allocation history was rewritten" "$(runFP "select count(*) from public.receipt_allocations where enrollment_id='$MONTHLY_ENROLLMENT_ID'")" "0"
