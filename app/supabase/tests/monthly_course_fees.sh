@@ -151,12 +151,14 @@ run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_
 eq "Existing October obligation remains at its original amount" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01'")" "250"
 run_owner_sql "select public.create_enrollment('{\\"student_id\\":\\"$OTHER_MONTHLY_STUDENT\\",\\"course_id\\":\\"$COURSE\\"}'::jsonb);" >/dev/null
 OTHER_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$OTHER_MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
-NEXT_PREVIEW="$(run_owner_fp "select ((public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students'->0->>'amount')::int)")"
+NEXT_PREVIEW="$(run_owner_fp "select (select (x->>'amount')::int from jsonb_array_elements(public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students') x where x->>'student_id'='$MONTHLY_STUDENT')")"
 eq "Future preview uses the student's override" "$NEXT_PREVIEW" "180"
+OTHER_PREVIEW="$(run_owner_fp "select (select (x->>'amount')::int from jsonb_array_elements(public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students') x where x->>'student_id'='$OTHER_MONTHLY_STUDENT')")"
+eq "Other student's preview keeps the course default" "$OTHER_PREVIEW" "250"
 NEXT_CREATED="$(run_owner_fp "select (public.create_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->>'created')::int")"
-eq "Future generation creates the overridden monthly amount" "$NEXT_CREATED" "1"
+eq "Future generation creates both monthly obligations" "$NEXT_CREATED" "2"
 eq "New November obligation uses the student's override" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "180"
-eq "Other monthly students retain the course default" "$(runFP "select count(*) from public.enrollments where course_id='$COURSE' and billing_model='monthly' and student_id<>'$MONTHLY_STUDENT' and monthly_fee_override is null")" "0"
+eq "Other monthly student keeps the course default" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$OTHER_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "250"
 
 FEE_ID="$(runFP "select id from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-10-01'")"
 eq "Monthly fee amount is the full configured monthly price" "$(runFP "select amount::int from public.fee_obligations where id='$FEE_ID'")" "250"
