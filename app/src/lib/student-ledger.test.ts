@@ -56,7 +56,7 @@ describe('studentLedger', () => {
       [fee({ id: 'f-month', studentId: 's-1', description: 'رسوم الدورة الشهرية — 2026-02', amount: 120, feeKind: 'monthly_course', dueMonth: '2026-02-01', courseName: 'محاسبة' })],
     )
     expect(ledger.entries).toHaveLength(1)
-    expect(ledger.entries[0]).toMatchObject({ label: 'الاشتراك الشهري — محاسبة — 2026-02-01', debit: 120 })
+    expect(ledger.entries[0]).toMatchObject({ label: 'الاشتراك الشهري — محاسبة — 2026-02', debit: 120 })
   })
 
   it('orders a course debit before its payment even without an enrolment date', () => {
