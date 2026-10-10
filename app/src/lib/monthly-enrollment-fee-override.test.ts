@@ -32,7 +32,7 @@ describe('Per-student monthly subscription fee override', () => {
 
   it('does not rewrite receipts, allocations, or ledger history', () => {
     expect(recalculation).not.toMatch(/update\s+public\.(receipt_vouchers|receipt_allocations|financial_movement_ledger)/i)
-    expect(recalculation).toContain("where fo.fee_kind = 'monthly_course'")
+    expect(recalculation).toContain("and fo.fee_kind = 'monthly_course'")
     expect(recalculation).toContain('fo.cancelled_at is null')
   })
 
