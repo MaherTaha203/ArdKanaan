@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 
-import { BookOpen, ChevronDown, GraduationCap, HandCoins, Home, Landmark, SlidersHorizontal, Wallet } from 'lucide-react'
+import { BookOpen, GraduationCap, HandCoins, Home, Landmark, LogOut, Menu, SlidersHorizontal, Wallet, X } from 'lucide-react'
 
 import { useApplyRootSettings, useIdleLogout } from '@/hooks/use-app-preferences'
 import { ReceiptSheet } from '@/features/receipt-voucher/receipt-sheet'
@@ -23,14 +23,17 @@ import { FinancialReportWorkspace } from '@/features/financial-report/financial-
 import { SettingsWorkspace } from '@/features/settings/settings-workspace'
 import { BackupWorkspace } from '@/features/settings/backup-workspace'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useShellStore, pageSection, type PageKey, type ReportView } from '@/store/use-shell-store'
+import { useShellStore, pageSection, type PageKey, type ReportView, type ShellRoute } from '@/store/use-shell-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import { WindowFrame } from '@/components/shell/window-frame'
-import { TabStrip } from '@/components/shell/tab-strip'
 import { PAGE_META, tabDomId } from '@/components/shell/page-registry'
 
-// Each menu item opens its own named tab, so a menu is a list of PageKeys — navigation
-// happens only from these menus (and the tab strip), never from links inside a page.
+// ── Alternative C — Information-layout shell (two-tier nav) ─────────────────
+// A clean light chrome built for scanning data: a primary section bar + a
+// contextual sub-bar of that section's views, instead of the dark bar with
+// dropdown menus and the browser-tab strip. Pages still persist (the openTabs
+// engine and overlays are unchanged); only the navigation presentation changes.
+
 type MenuItem = { key: PageKey; label: string }
 
 const STUDENT_MENU: MenuItem[] = [
@@ -52,13 +55,24 @@ const SETTINGS_MENU: MenuItem[] = [
   { key: 'settings:activity', label: 'سجل التدقيق' },
 ]
 
-// The report view a report PageKey renders (e.g. 'report:receipts' → 'receipts').
+const PRIMARY: { route: ShellRoute; label: string; icon: ComponentType<{ className?: string }>; defaultKey: PageKey }[] = [
+  { route: 'home', label: 'الرئيسية', icon: Home, defaultKey: 'home' },
+  { route: 'students', label: 'الطلاب', icon: GraduationCap, defaultKey: 'students:directory' },
+  { route: 'courses', label: 'الدورات', icon: BookOpen, defaultKey: 'courses:directory' },
+  { route: 'report', label: 'التقارير المالية', icon: Landmark, defaultKey: 'report:general' },
+  { route: 'settings', label: 'النظام', icon: SlidersHorizontal, defaultKey: 'settings:system' },
+]
+
+const SECTION_VIEWS: Partial<Record<ShellRoute, MenuItem[]>> = {
+  students: STUDENT_MENU,
+  report: REPORT_MENU,
+  settings: SETTINGS_MENU,
+}
+
 function reportViewOf(key: PageKey): ReportView {
   return key.slice('report:'.length) as ReportView
 }
 
-// The page shown inside a tab panel. One PageKey → one page; report views pass their
-// view as a prop. The workspaces themselves are unchanged.
 function PageView({ pageKey }: { pageKey: PageKey }) {
   switch (pageKey) {
     case 'home':
@@ -106,6 +120,8 @@ export function AppShell() {
   const loaded = useWorkspaceStore((state) => state.loaded)
 
   const section = pageSection(activeTab)
+  const views = SECTION_VIEWS[section]
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useApplyRootSettings()
   useIdleLogout(signOut)
@@ -114,55 +130,58 @@ export function AppShell() {
     if (!loaded) void load()
   }, [loaded, load])
 
+  const pickInDrawer = (key: PageKey) => { openTab(key); setDrawerOpen(false) }
+
   return (
     <div className="flex h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 flex flex-none items-center gap-2 border-b border-white/10 bg-[#0f172a] px-4 py-2.5 text-white shadow-[0_10px_28px_-20px_rgba(15,23,42,0.9)] md:gap-4 md:px-8">
-        <button type="button" onClick={() => openTab('home')} className="flex items-baseline gap-2">
-          <span className="editorial text-[19px] text-white">أرض كنعان</span>
+      {/* Primary bar — light, labelled sections. */}
+      <header className="sticky top-0 z-40 flex flex-none items-center gap-2 border-b border-border bg-panel px-3 py-2.5 md:px-6">
+        <button type="button" onClick={() => setDrawerOpen(true)} className="grid size-9 place-items-center rounded-lg text-muted-foreground hover:bg-highlight md:hidden" aria-label="فتح القائمة">
+          <Menu className="size-5" />
         </button>
+        <button type="button" onClick={() => openTab('home')} className="editorial flex-none text-[18px] text-foreground">أرض كنعان</button>
 
-        <nav aria-label="التنقل" className="ms-6 hidden items-center gap-1 md:flex">
-          <NavLink label="الرئيسية" icon={Home} active={activeTab === 'home'} onClick={() => openTab('home')} />
-          <GroupNav label="الطلاب" icon={GraduationCap} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
-          <NavLink label="الدورات" icon={BookOpen} active={section === 'courses'} onClick={() => openTab('courses:directory')} />
-          <ReportNav activeKey={activeTab} onPick={openTab} onNewVoucher={openOverlay} />
+        <nav aria-label="الأقسام" className="ms-4 hidden items-center gap-0.5 md:flex">
+          {PRIMARY.map((item) => {
+            const active = section === item.route
+            return (
+              <button key={item.route} type="button" onClick={() => openTab(item.defaultKey)} aria-current={active ? 'page' : undefined} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${active ? 'bg-highlight text-olive' : 'text-muted-foreground hover:bg-highlight hover:text-foreground'}`}>
+                {item.label}
+              </button>
+            )
+          })}
         </nav>
 
-        <div className="ms-auto flex items-center gap-1.5 md:gap-2">
-          <button
-            type="button"
-            onClick={() => openOverlay('receive')}
-            className="inline-flex items-center gap-1.5 rounded-full bg-olive px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-olive/90 md:px-3.5 md:text-sm"
-            aria-label="إنشاء سند قبض جديد"
-          >
-            <HandCoins className="size-4" />
-            <span>سند قبض</span>
+        <div className="ms-auto flex flex-none items-center gap-1.5 md:gap-2">
+          <button type="button" onClick={() => openOverlay('expense')} className="inline-flex items-center gap-1.5 rounded-full border border-clay/40 bg-clay-weak/50 px-3 py-1.5 text-xs font-semibold text-clay transition-colors hover:bg-clay-weak md:px-3.5 md:text-[13px]" aria-label="إنشاء سند صرف جديد">
+            <Wallet className="size-4" />
+            <span className="hidden sm:inline">سند </span>صرف
           </button>
-          <GroupNav
-            label="النظام"
-            icon={SlidersHorizontal}
-            activeKey={activeTab}
-            items={SETTINGS_MENU}
-            onPick={openTab}
-            menuAlign="end"
-            footer={(close) => (
-              <>
-                <div className="my-1 h-px bg-border" />
-                <button type="button" role="menuitem" onClick={() => { close(); void signOut() }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-semibold text-clay hover:bg-clay-weak">
-                  تسجيل الخروج
-                </button>
-              </>
-            )}
-          />
+          <button type="button" onClick={() => openOverlay('receive')} className="inline-flex items-center gap-1.5 rounded-full bg-olive px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-olive-ink md:px-3.5 md:text-[13px]" aria-label="إنشاء سند قبض جديد">
+            <HandCoins className="size-4" />
+            <span className="hidden sm:inline">سند </span>قبض
+          </button>
+          <button type="button" onClick={() => void signOut()} className="hidden size-9 place-items-center rounded-lg text-muted-foreground hover:bg-clay-weak hover:text-clay md:grid" aria-label="تسجيل الخروج">
+            <LogOut className="size-[18px]" />
+          </button>
         </div>
       </header>
 
-      <TabStrip />
+      {/* Contextual sub-bar — the active section's views. Hidden on the home dashboard. */}
+      {views ? (
+        <div className="flex flex-none items-center gap-1 overflow-x-auto border-b border-border bg-background px-3 py-1.5 md:px-6" role="tablist" aria-label="عرض القسم">
+          {views.map((view) => {
+            const active = activeTab === view.key
+            return (
+              <button key={view.key} type="button" role="tab" aria-selected={active} onClick={() => openTab(view.key)} className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors ${active ? 'bg-olive text-white' : 'text-muted-foreground hover:bg-highlight hover:text-foreground'}`}>
+                {view.label}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
 
       <main className="relative flex-1 overflow-hidden">
-        {/* Home — the permanent first tab. It carries no user input to preserve, so it
-            mounts only while it is the active tab; the other pages are the ones kept
-            mounted for their state. */}
         {activeTab === 'home' ? (
           <section id="panel-home" role="tabpanel" aria-labelledby="tab-home" className="absolute inset-0 overflow-y-auto">
             <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
@@ -171,8 +190,6 @@ export function AppShell() {
           </section>
         ) : null}
 
-        {/* Open pages — each a chrome-free panel filling the content area, kept mounted
-            so its state survives while another tab is active. Only the active one shows. */}
         {openTabs.filter((key) => key !== 'home').map((key) => {
           const domId = tabDomId(key)
           return (
@@ -198,117 +215,42 @@ export function AppShell() {
 
       <Toaster />
 
-      <nav aria-label="التنقل" className="fixed inset-x-0 bottom-0 z-20 flex flex-none items-stretch justify-around border-t border-border bg-panel/95 px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] md:hidden">
-        <MobileNavButton active={activeTab === 'home'} icon={Home} label="الرئيسية" onClick={() => openTab('home')} />
-        <MobileGroupNav label="الطلاب" icon={GraduationCap} activeKey={activeTab} items={STUDENT_MENU} onPick={openTab} />
-        <MobileNavButton active={section === 'courses'} icon={BookOpen} label="الدورات" onClick={() => openTab('courses:directory')} />
-        <MobileGroupNav label="التقرير" icon={Landmark} activeKey={activeTab} items={REPORT_MENU} onPick={openTab} />
-        <MobileNavButton icon={HandCoins} label="قبض" accent onClick={() => openOverlay('receive')} />
-        <MobileNavButton icon={Wallet} label="صرف" onClick={() => openOverlay('expense')} />
-      </nav>
-    </div>
-  )
-}
-
-function NavLink({ label, icon: Icon, active, onClick }: { label: string; icon: ComponentType<{ className?: string }>; active: boolean; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${active ? 'bg-white text-olive' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
-      <Icon className="size-4" />
-      {label}
-    </button>
-  )
-}
-
-function GroupNav({ label, icon: Icon, activeKey, items, onPick, footer, menuAlign = 'start' }: { label: string; icon: ComponentType<{ className?: string }>; activeKey: PageKey; items: MenuItem[]; onPick: (key: PageKey) => void; footer?: (close: () => void) => ReactNode; menuAlign?: 'start' | 'end' }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const sectionActive = items.some((item) => item.key === activeKey)
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false) }
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
-    document.addEventListener('mousedown', onDoc)
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey) }
-  }, [open])
-  return (
-    <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-current={sectionActive ? 'page' : undefined} className={`inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${sectionActive ? 'bg-white text-olive' : open ? 'bg-white/15 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
-        <Icon className="size-4" />
-        {label}
-        <ChevronDown className={`size-4 transition-transform ${open ? '-rotate-180' : ''}`} />
-      </button>
-      {/* The menu drops flush from its button with a small caret bridging the gap, so it
-          reads as one connected surface rather than a detached card. */}
-      {open ? (
-        <div className={`menu-in absolute z-30 mt-1.5 w-52 ${menuAlign === 'end' ? 'end-0' : 'start-0'}`}>
-          <span aria-hidden className={`absolute -top-1.5 size-3 rotate-45 border-l border-t border-border-strong bg-panel ${menuAlign === 'end' ? 'end-6' : 'start-6'}`} />
-          <div role="menu" className="relative overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-[0_20px_44px_-18px_rgba(15,23,42,0.45)]">
-            {items.map((item) => <button key={item.key} type="button" role="menuitemradio" aria-checked={activeKey === item.key} onClick={() => { onPick(item.key); setOpen(false) }} className={`flex w-full px-3.5 py-2 text-start text-sm ${activeKey === item.key ? 'font-semibold text-olive' : 'text-muted-foreground'} hover:bg-highlight`}>{item.label}</button>)}
-            {footer ? footer(() => setOpen(false)) : null}
+      {/* Mobile drawer — the full grouped nav. */}
+      {drawerOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button type="button" aria-label="إغلاق القائمة" onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-[rgba(15,23,42,0.5)]" />
+          <div className="menu-in absolute inset-y-0 end-0 flex w-[17rem] max-w-[85vw] flex-col overflow-y-auto border-s border-border bg-panel">
+            <div className="flex flex-none items-center justify-between gap-2 border-b border-border px-4 py-3.5">
+              <span className="editorial text-[18px] text-foreground">أرض كنعان</span>
+              <button type="button" onClick={() => setDrawerOpen(false)} className="grid size-8 place-items-center rounded-lg text-muted-foreground hover:bg-highlight" aria-label="إغلاق القائمة"><X className="size-5" /></button>
+            </div>
+            <nav aria-label="التنقل" className="flex-1 px-2 py-3">
+              {PRIMARY.map((item) => {
+                const sectionViews = SECTION_VIEWS[item.route]
+                const active = section === item.route
+                return (
+                  <div key={item.route} className="mb-1">
+                    <button type="button" onClick={() => pickInDrawer(item.defaultKey)} className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-start text-sm font-semibold transition-colors ${active ? 'text-olive' : 'text-foreground hover:bg-highlight'}`}>
+                      <item.icon className="size-[18px] flex-none" />
+                      {item.label}
+                    </button>
+                    {sectionViews ? (
+                      <div className="mt-0.5 space-y-0.5 ps-5">
+                        {sectionViews.map((view) => (
+                          <button key={view.key} type="button" onClick={() => pickInDrawer(view.key)} className={`flex w-full rounded-lg px-3 py-2 text-start text-[13px] ${activeTab === view.key ? 'bg-highlight font-semibold text-olive' : 'text-muted-foreground hover:bg-highlight'}`}>{view.label}</button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </nav>
+            <div className="flex-none border-t border-border px-2 py-2">
+              <button type="button" onClick={() => { setDrawerOpen(false); void signOut() }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-start text-sm font-semibold text-clay hover:bg-clay-weak"><LogOut className="size-[18px]" />تسجيل الخروج</button>
+            </div>
           </div>
         </div>
       ) : null}
     </div>
   )
-}
-
-function ReportNav({ activeKey, onPick, onNewVoucher }: { activeKey: PageKey; onPick: (key: PageKey) => void; onNewVoucher: (kind: 'receive' | 'expense') => void }) {
-  return (
-    <GroupNav
-      label="التقارير المالية"
-      icon={Landmark}
-      activeKey={activeKey}
-      items={REPORT_MENU}
-      onPick={onPick}
-      footer={(close) => (
-        <>
-          <div className="my-1 h-px bg-border" />
-          <button type="button" role="menuitem" onClick={() => { close(); onNewVoucher('receive') }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-medium text-foreground hover:bg-highlight">
-            <HandCoins className="size-4 text-olive" />
-            سند قبض
-          </button>
-          <button type="button" role="menuitem" onClick={() => { close(); onNewVoucher('expense') }} className="flex w-full items-center gap-2 px-3.5 py-2 text-start text-sm font-medium text-foreground hover:bg-highlight">
-            <Wallet className="size-4 text-clay" />
-            سند صرف
-          </button>
-        </>
-      )}
-    />
-  )
-}
-
-function MobileGroupNav({ label, icon: Icon, activeKey, items, onPick }: { label: string; icon: ComponentType<{ className?: string }>; activeKey: PageKey; items: MenuItem[]; onPick: (key: PageKey) => void }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const sectionActive = items.some((item) => item.key === activeKey)
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false) }
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
-    document.addEventListener('mousedown', onDoc)
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey) }
-  }, [open])
-  return (
-    <div ref={ref} className="relative flex flex-1 justify-center">
-      {/* Menu is centred on-screen above the bar and width-clamped to the viewport,
-          so a group button near the screen edge never has its menu clipped. */}
-      {open ? <div role="menu" className="menu-fade fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+72px)] z-40 mx-auto w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-border-strong bg-panel py-1 shadow-lg">
-        {items.map((item) => <button key={item.key} type="button" role="menuitemradio" aria-checked={activeKey === item.key} onClick={() => { onPick(item.key); setOpen(false) }} className={`flex w-full px-4 py-3 text-start text-sm ${activeKey === item.key ? 'font-semibold text-olive' : 'text-foreground'}`}>{item.label}</button>)}
-      </div> : null}
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium ${sectionActive ? 'text-olive' : 'text-muted-foreground'}`}>
-        <span className={`grid size-8 place-items-center rounded-full ${sectionActive ? 'bg-olive-weak' : ''}`}><Icon className="size-[18px]" /></span>
-        {label}
-      </button>
-    </div>
-  )
-}
-
-function MobileNavButton({ icon: Icon, label, active, accent, onClick }: { icon: ComponentType<{ className?: string }>; label: string; active?: boolean; accent?: boolean; onClick: () => void }) {
-  const color = accent ? 'text-olive' : active ? 'text-olive' : 'text-muted-foreground'
-  return <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium ${color}`}>
-    <span className={`grid size-8 place-items-center rounded-full ${active || accent ? 'bg-olive-weak' : ''}`}><Icon className="size-[18px]" /></span>
-    {label}
-  </button>
 }
