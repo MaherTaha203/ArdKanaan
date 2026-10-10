@@ -4,9 +4,6 @@ import type { CourseFormValues, EnrollFormValues } from '@/features/courses/sche
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
-// Course catalog administration + student registration. base_fee remains the legacy
-// total registration value; monthly_fee is the separate price for future obligations.
-
 const NOT_CONFIGURED = 'الاتصال بقاعدة البيانات غير مهيأ بعد.'
 
 type CourseAdminStore = {
@@ -19,11 +16,10 @@ type CourseAdminStore = {
 }
 
 function coursePayload(values: CourseFormValues) {
-  const baseFee = values.baseFee === '' ? null : Number(values.baseFee)
   const monthlyFee = values.monthlyFee === '' ? null : Number(values.monthlyFee)
   return {
     name: values.name.trim(),
-    base_fee: baseFee,
+    base_fee: null,
     monthly_fee: monthlyFee,
     start_date: values.startDate.trim() || null,
     end_date: values.endDate.trim() || null,

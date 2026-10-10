@@ -15,7 +15,7 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
   await page.getByRole('button', { name: 'إضافة دورة', exact: true }).first().click()
   const courseDialog = page.getByRole('dialog', { name: 'إضافة دورة' })
   await courseDialog.getByLabel('اسم الدورة').fill('دورة اختبار الرسوم الشهرية')
-  await courseDialog.getByLabel('الرسوم الشهرية الافتراضية').fill('250')
+  await courseDialog.getByLabel('رسوم الدورة').fill('250')
   await courseDialog.getByRole('button', { name: 'إضافة الدورة' }).click()
   await expect(page.getByText('تمت إضافة الدورة بنجاح')).toBeVisible()
   expect(handle.courseInserts).toHaveLength(1)

@@ -18,7 +18,6 @@ export function CourseDetailWorkspace() {
   const navigateCourses = useShellStore((state) => state.navigateCourses)
   const openEnroll = useShellStore((state) => state.openEnroll)
   const openEditCourse = useShellStore((state) => state.openEditCourse)
-  const openEditFee = useShellStore((state) => state.openEditFee)
   const selectStudent = useShellStore((state) => state.selectStudent)
 
   const courses = useWorkspaceStore((state) => state.courses)
@@ -98,12 +97,6 @@ export function CourseDetailWorkspace() {
               الرسوم الشهرية الافتراضية{' '}
               {course.monthlyFee == null ? <span className="text-faint">—</span> : <Money value={course.monthlyFee} currency={false} className="font-semibold text-foreground" />}
             </span>
-            {course.baseFee != null ? (
-              <span>
-                قيمة التسجيل الإجمالية القديمة{' '}
-                <Money value={course.baseFee} currency={false} className="font-semibold text-foreground" />
-              </span>
-            ) : null}
             {period ? <span className="figure">{period}</span> : null}
             {course.notes ? <span>{course.notes}</span> : null}
           </div>
@@ -112,9 +105,6 @@ export function CourseDetailWorkspace() {
         {stats ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <SummaryTile label="عدد الطلاب" value={formatNumber(stats.studentCount)} />
-            <SummaryTile label="رسوم التسجيل التاريخية" money={stats.totalFees} />
-            <SummaryTile label="المقبوضات التاريخية" money={stats.totalPaid} tone="text-gold" />
-            <SummaryTile label="المتبقي من التسجيل التاريخي" money={stats.totalRemaining} tone="text-warn" />
           </div>
         ) : null}
 
@@ -166,15 +156,11 @@ export function CourseDetailWorkspace() {
           </div>
           <div className="overflow-x-auto">
             {roster.length > 0 ? (
-              <table className="w-full min-w-[560px] border-collapse text-sm">
+              <table className="w-full min-w-[320px] border-collapse text-sm">
                 <thead>
                   <tr className="text-[11px] tracking-wide text-faint">
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الطالب</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">رسوم التسجيل التاريخية</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المدفوع من التسجيل التاريخي</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold">المتبقي من التسجيل التاريخي</th>
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الحالة</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold"><span className="sr-only">إجراءات</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,16 +175,8 @@ export function CourseDetailWorkspace() {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="figure border-b border-border px-4 py-2.5 text-end">{formatNumber(entry.fee)}</td>
-                      <td className="figure border-b border-border px-4 py-2.5 text-end text-gold">{formatNumber(entry.paid)}</td>
-                      <td className={`figure border-b border-border px-4 py-2.5 text-end font-semibold ${entry.remaining > 0 ? 'text-warn' : 'text-muted-foreground'}`}>{formatNumber(entry.remaining)}</td>
                       <td className="border-b border-border px-4 py-2.5">
-                        <span className="text-[12px] font-medium text-muted-foreground">
-                          {entry.enrollment.billingModel === 'monthly' ? 'الرسوم الشهرية منفصلة' : entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
-                        </span>
-                      </td>
-                      <td className="border-b border-border px-4 py-2.5 text-end">
-                        {entry.enrollment.billingModel !== 'monthly' ? <Button variant="quiet" size="sm" onClick={() => openEditFee(entry.enrollment.id)}>تعديل الرسوم التاريخية</Button> : <span className="text-xs text-muted-foreground">نظام شهري</span>}
+                        <span className="text-[12px] font-medium text-muted-foreground">مسجّل في الدورة</span>
                       </td>
                     </tr>
                   ))}
