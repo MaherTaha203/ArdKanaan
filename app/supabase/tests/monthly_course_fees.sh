@@ -16,6 +16,7 @@ OWNER='00000000-0000-0000-0000-0000000000aa'
 COURSE='00000000-0000-0000-0000-0000000c0004'
 LEGACY_STUDENT='00000000-0000-0000-0000-0000000a0001'
 MONTHLY_STUDENT='00000000-0000-0000-0000-0000000a0002'
+OTHER_MONTHLY_STUDENT='00000000-0000-0000-0000-0000000a0003'
 FAILED=0
 
 if [ -n "$PG_RUNAS" ]; then
@@ -110,7 +111,8 @@ insert into public.courses (id, name, base_fee, monthly_fee, status)
 values ('$COURSE', 'دورة اختبار الرسوم الشهرية', 500, 250, 'active');
 insert into public.students (id, name, status) values
   ('$LEGACY_STUDENT', 'طالب رسوم تسجيل قديم', 'active'),
-  ('$MONTHLY_STUDENT', 'طالب رسوم شهرية', 'active');
+  ('$MONTHLY_STUDENT', 'طالب رسوم شهرية', 'active'),
+  ('$OTHER_MONTHLY_STUDENT', 'طالب اشتراك آخر', 'active');
 insert into public.enrollments (id, student_id, course_id, course_name, course_value, billing_model)
 values ('00000000-0000-0000-0000-0000000e0004',
         '$LEGACY_STUDENT', '$COURSE', 'دورة اختبار الرسوم الشهرية', 500, 'legacy_total');
@@ -129,6 +131,7 @@ else
 fi
 eq "Exactly one monthly enrollment exists" "$(runFP "select count(*) from public.enrollments where course_id='$COURSE' and billing_model='monthly'")" "1"
 eq "Legacy enrollment remains legacy_total" "$(runFP "select count(*) from public.enrollments where course_id='$COURSE' and billing_model='legacy_total'")" "1"
+MONTHLY_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
 
 echo "== Preview must exclude legacy registration-fee enrollments =="
 PREVIEW_COUNT="$(run_owner_fp "select (public.preview_monthly_course_obligations('$COURSE', date '2099-10-01', 'shared', 50)->>'eligible_count')::int")"
@@ -142,6 +145,20 @@ eq "First monthly generation creates one obligation" "$CREATED" "1"
 CREATED_RETRY="$(run_owner_fp "select (public.create_monthly_course_obligations('$COURSE', date '2099-10-01', 'shared', 50)->>'created')::int")"
 eq "Second monthly generation creates no duplicate" "$CREATED_RETRY" "0"
 eq "No monthly obligation is created for legacy enrollment" "$(runFP "select count(*) from public.fee_obligations where enrollment_id='00000000-0000-0000-0000-0000000e0004' and fee_kind='monthly_course'")" "0"
+
+echo "== Adjust one student's monthly subscription without rewriting history =="
+run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'individual rate');" >/dev/null
+eq "Existing October obligation remains at its original amount" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01'")" "250"
+run_owner_sql "select public.create_enrollment('{\"student_id\":\"$OTHER_MONTHLY_STUDENT\",\"course_id\":\"$COURSE\"}'::jsonb);" >/dev/null
+OTHER_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$OTHER_MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
+NEXT_PREVIEW="$(run_owner_fp "select (select (x->>'amount')::int from jsonb_array_elements(public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students') x where x->>'student_id'='$MONTHLY_STUDENT')")"
+eq "Future preview uses the student's override" "$NEXT_PREVIEW" "180"
+OTHER_PREVIEW="$(run_owner_fp "select (select (x->>'amount')::int from jsonb_array_elements(public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students') x where x->>'student_id'='$OTHER_MONTHLY_STUDENT')")"
+eq "Other student's preview keeps the course default" "$OTHER_PREVIEW" "250"
+NEXT_CREATED="$(run_owner_fp "select (public.create_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->>'created')::int")"
+eq "Future generation creates both monthly obligations" "$NEXT_CREATED" "2"
+eq "New November obligation uses the student's override" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "180"
+eq "Other monthly student keeps the course default" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$OTHER_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "250"
 
 FEE_ID="$(runFP "select id from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-10-01'")"
 eq "Monthly fee amount is the full configured monthly price" "$(runFP "select amount::int from public.fee_obligations where id='$FEE_ID'")" "250"
@@ -173,7 +190,7 @@ if run_file "$BASE/non_owner.sql" > "$BASE/non_owner.out" 2>&1; then
 else
   if grep -q "OWNER_ONLY" "$BASE/non_owner.out"; then pass "non-owner monthly generation rejected"; else fail "non-owner rejected for an unexpected reason"; cat "$BASE/non_owner.out"; fi
 fi
-eq "Unauthorized call created no November obligation" "$(runFP "select count(*) from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "0"
+eq "Non-owner call leaves both existing November obligations unchanged" "$(runFP "select count(*) from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "2"
 
 run "$PGBIN/pg_ctl -D $DATADIR -m fast -w stop" >/dev/null || true
 rm -rf "$BASE"

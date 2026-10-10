@@ -53,3 +53,25 @@ test('monthly fee type and recipient split remain independent', async ({ page })
   await dialog.getByRole('button', { name: /تأكيد إنشاء 2 استحقاق/ }).click()
   await expect(page.getByText('تم إنشاء 2 استحقاق شهري')).toBeVisible()
 });
+
+test('edits the monthly subscription price for one student in one course', async ({ page }) => {
+  await installSupabaseMocks(page, { courses: [COURSE], students: STUDENTS, enrollments: ENROLLMENTS })
+  await login(page)
+  await page.getByRole('button', { name: 'الطلاب', exact: true }).first().click()
+  await page.getByRole('menuitemradio', { name: 'كشف الحساب', exact: true }).click()
+
+  await page.getByLabel('البحث عن طالب').fill('سارة أحمد')
+  await page.getByRole('button', { name: /سارة أحمد/ }).click()
+  await page.getByRole('tab', { name: /الدورات/ }).click()
+  await page.getByRole('button', { name: 'تعديل الاشتراك الشهري' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'تعديل الاشتراك الشهري' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText('سارة أحمد')).toBeVisible()
+  await expect(dialog.getByText('دورة شهرية')).toBeVisible()
+  await dialog.getByLabel(/الاشتراك الشهري الجديد/).fill('180')
+  await dialog.getByLabel(/سبب التعديل/).fill('اتفاق خاص مع الطالب')
+  await dialog.getByRole('button', { name: 'حفظ سعر الاشتراك' }).click()
+
+  await expect(page.getByText('تم تعديل الاشتراك الشهري لهذا الطالب')).toBeVisible()
+})

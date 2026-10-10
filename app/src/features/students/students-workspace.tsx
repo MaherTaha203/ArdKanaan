@@ -50,6 +50,7 @@ export function StudentsWorkspace() {
   const openEditStudent = useShellStore((state) => state.openEditStudent)
   const openArchive = useShellStore((state) => state.openArchive)
   const openStudentFee = useShellStore((state) => state.openStudentFee)
+  const openEditMonthlyFee = useShellStore((state) => state.openEditMonthlyFee)
   const openReceiveFor = useShellStore((state) => state.openReceiveFor)
 
   const [query, setQuery] = useState('')
@@ -215,8 +216,17 @@ export function StudentsWorkspace() {
                 </table></div>
               ) : (
                 <div className="detail-table-wrap"><table className="border-collapse text-sm">
-                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">الدورة</th><th className="border-b border-border px-2.5 py-3 text-end">قيمة الالتزام</th><th className="border-b border-border px-2.5 py-3 text-end">المقبوض</th><th className="border-b border-border px-2.5 py-3 text-end">المتبقي</th></tr></thead>
-                  <tbody>{courseRows.length ? courseRows.map((row) => <tr key={row.enrollmentId ?? row.courseName}><td className="border-b border-border px-2.5 py-3.5">{row.courseName}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(row.fee)}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(row.paid)}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.remaining)}</td></tr>) : <tr><td colSpan={4} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد دورات مسجلة.</td></tr>}</tbody>
+                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">الدورة</th><th className="border-b border-border px-2.5 py-3 text-end">قيمة الالتزام</th><th className="border-b border-border px-2.5 py-3 text-end">المقبوض</th><th className="border-b border-border px-2.5 py-3 text-end">المتبقي</th><th className="border-b border-border px-2.5 py-3 text-start">الإجراء</th></tr></thead>
+                  <tbody>{courseRows.length ? courseRows.map((row) => {
+                    const enrollment = enrollments.find((item) => item.id === row.enrollmentId)
+                    return <tr key={row.enrollmentId ?? row.courseName}>
+                      <td className="border-b border-border px-2.5 py-3.5">{row.courseName}</td>
+                      <td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(row.fee)}</td>
+                      <td className="figure border-b border-border px-2.5 py-3.5 text-end">{formatNumber(row.paid)}</td>
+                      <td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.remaining)}</td>
+                      <td className="border-b border-border px-2.5 py-2.5">{enrollment?.billingModel === 'monthly' && row.enrollmentId ? <Button variant="quiet" size="sm" onClick={() => openEditMonthlyFee(row.enrollmentId!)}><Pencil className="size-4" />تعديل الاشتراك الشهري</Button> : <span className="text-faint">—</span>}</td>
+                    </tr>
+                  }) : <tr><td colSpan={5} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد دورات مسجلة.</td></tr>}</tbody>
                 </table></div>
               )}
             </>

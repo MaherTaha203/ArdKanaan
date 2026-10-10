@@ -12,6 +12,7 @@ import { ArchivedStudentsWorkspace } from '@/features/students/archived-students
 import { CourseFormSheet } from '@/features/courses/course-form-sheet'
 import { EnrollStudentSheet } from '@/features/courses/enroll-student-sheet'
 import { EnrollmentFeeSheet } from '@/features/courses/enrollment-fee-sheet'
+import { MonthlyEnrollmentFeeSheet } from '@/features/courses/monthly-enrollment-fee-sheet'
 import { ActivityWorkspace } from '@/features/activity/activity-workspace'
 import { GlanceWorkspace } from '@/features/glance/glance-workspace'
 import { StudentDirectoryWorkspace } from '@/features/students/student-directory-workspace'
@@ -195,6 +196,7 @@ export function AppShell() {
       {overlay === 'archive' ? <StudentArchiveSheet key={archiveStudentId ?? 'none'} /> : null}
       {overlay === 'student-fee' ? <StudentFeeSheet key={feeStudentId ?? 'none'} /> : null}
       {overlay === 'edit-fee' ? <EnrollmentFeeSheet key={editFeeEnrollmentId ?? 'none'} /> : null}
+      {overlay === 'edit-monthly-fee' ? <MonthlyEnrollmentFeeSheet key={editFeeEnrollmentId ?? 'none'} /> : null}
 
       <Toaster />
 

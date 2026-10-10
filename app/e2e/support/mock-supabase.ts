@@ -20,6 +20,8 @@ export type MockEnrollment = {
   course_name: string
   course_value: number
   billing_model?: 'legacy_total' | 'monthly'
+  monthly_fee_override?: number | null
+  monthly_fee_override_reason?: string | null
 }
 
 export type MockFeeObligation = {
@@ -303,6 +305,30 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
         handle.auditLog.unshift({ id: `audit-${handle.auditLog.length + 1}`, entity: 'enrollment', entity_id: target.id, action: 'fee_adjustment', label: 'تعديل رسوم التسجيل', changed_by: 'u-1', actor_email: 'owner@example.com', changed_at: new Date().toISOString(), source: 'enrollment', description: reason, metadata: { enrollment_id: target.id, student_id: target.student_id, old_amount: oldFee, new_amount: amount, paid: collected } })
       }
       return json(route, { enrollment_id: target.id, fee: amount, paid: collected, remaining: amount - collected, old_fee: oldFee, changed, audit_id: changed ? 'audit-x' : null })
+    }
+
+    // Per-student monthly subscription override: future obligations only.
+    if (table?.startsWith('rpc/update_monthly_enrollment_fee') && method === 'POST') {
+      const payload = safeJson(request.postData()) as { p_enrollment_id?: string; p_amount?: number; p_reason?: string }
+      const target = enrollments.find((item) => item.id === payload.p_enrollment_id)
+      if (!target || target.billing_model !== 'monthly') return json(route, { message: 'MONTHLY_ENROLLMENT_NOT_FOUND' }, 400)
+      const reason = String(payload.p_reason ?? '').trim()
+      if (!reason) return json(route, { message: 'MONTHLY_FEE_ADJUSTMENT_REASON_REQUIRED' }, 400)
+      const amount = Number(payload.p_amount ?? Number.NaN)
+      if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 100000000) return json(route, { message: 'INVALID_MONTHLY_FEE_AMOUNT' }, 400)
+      const course = courses.find((item) => item.id === target.course_id)
+      const oldAmount = target.monthly_fee_override ?? course?.monthly_fee ?? null
+      const changed = target.monthly_fee_override !== amount
+      target.monthly_fee_override = amount
+      target.monthly_fee_override_reason = reason
+      if (changed) handle.auditLog.unshift({
+        id: `audit-${handle.auditLog.length + 1}`, entity: 'enrollment', entity_id: target.id,
+        action: 'monthly_fee_adjustment', label: 'تعديل الاشتراك الشهري للطالب',
+        changed_by: 'u-1', actor_email: 'owner@example.com', changed_at: new Date().toISOString(),
+        source: 'enrollment', description: reason,
+        metadata: { enrollment_id: target.id, student_id: target.student_id, course_id: target.course_id, old_amount: oldAmount, new_amount: amount },
+      })
+      return json(route, { enrollment_id: target.id, monthly_fee: amount, changed, applies_to: 'future_monthly_obligations_only' })
     }
 
     if (method === 'HEAD') {
