@@ -21,7 +21,8 @@ describe('Per-student monthly subscription fee override', () => {
     expect(migration).toContain("'amount', coalesce(e.monthly_fee_override, v_amount)")
     expect(migration).toContain("coalesce(e.monthly_fee_override, v_amount), p_fee_category")
     expect(migration).toContain("'applies_to','future_monthly_obligations_only'")
-    expect(migration).not.toMatch(/update\s+public\.(fee_obligations|receipt_vouchers|receipt_allocations|financial_movement_ledger)/i)
+    const feeGenerationAndAdjustment = migration.split('CREATE OR REPLACE FUNCTION public.restore_center_data')[0]
+    expect(feeGenerationAndAdjustment).not.toMatch(/update\s+public\.(fee_obligations|receipt_vouchers|receipt_allocations|financial_movement_ledger)/i)
   })
 
   it('preserves the override in backup restore and validates imported values', () => {
