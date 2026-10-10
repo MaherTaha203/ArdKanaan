@@ -261,14 +261,14 @@ export function studentLedger(
       .filter((line) => (line.entryType ?? 'course') === 'course' && (course.enrollmentId ? line.enrollmentId === course.enrollmentId : line.courseName === course.courseName))
       .reduce<string>((min, line) => (!min || line.voucherDate < min ? line.voucherDate : min), '')
     const date = dayOf(enrollment?.createdAt) || earliestPayment || ''
-    raw.push({ id: `d-course-${course.enrollmentId ?? course.courseName}`, date, kind: 'debit', label: course.courseName, meta: 'دورة', debit: course.fee, credit: 0, balance: 0, sort: `${date}#0#0` })
+    raw.push({ id: `d-course-${course.enrollmentId ?? course.courseName}`, date, kind: 'debit', label: '', meta: '', debit: course.fee, credit: 0, balance: 0, sort: `${date}#0#0` })
   }
 
   // Fee dues (debits).
   for (const fee of feeObligations) {
     if (fee.studentId !== studentId || fee.cancelledAt) continue
     const date = dayOf(fee.createdAt)
-    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${fee.dueMonth ?? fee.description}` : fee.description, meta: '', debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
+    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: '', meta: '', debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
   }
 
   // Payments (credits): one per receipt allocation line.
