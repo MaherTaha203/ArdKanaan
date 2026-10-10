@@ -273,7 +273,7 @@ export function studentLedger(
 
   // Payments (credits): one per receipt allocation line.
   for (const line of studentLines) {
-    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: `#${line.voucherNumber}`, meta: '', debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
+    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: `سند قبض - رقم ${line.voucherNumber}#`, meta: '', debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
   }
 
   raw.sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : a.id < b.id ? -1 : 1))
