@@ -156,12 +156,11 @@ export function CourseDetailWorkspace() {
           </div>
           <div className="overflow-x-auto">
             {roster.length > 0 ? (
-              <table className="w-full min-w-[560px] border-collapse text-sm">
+              <table className="w-full min-w-[320px] border-collapse text-sm">
                 <thead>
                   <tr className="text-[11px] tracking-wide text-faint">
                     <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الطالب</th>
-                                        <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الحالة</th>
-                    <th className="border-b border-border px-4 py-2.5 text-end font-semibold"><span className="sr-only">إجراءات</span></th>
+                    <th className="border-b border-border px-4 py-2.5 text-start font-semibold">الحالة</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -176,10 +175,8 @@ export function CourseDetailWorkspace() {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
-                                            <td className="border-b border-border px-4 py-2.5">
-                        <span className="text-[12px] font-medium text-muted-foreground">
-                          {entry.enrollment.billingModel === 'monthly' ? 'الرسوم الشهرية منفصلة' : entry.remaining > 0 ? 'عليه مستحقّ' : 'مكتمل السداد'}
-                        </span>
+                      <td className="border-b border-border px-4 py-2.5">
+                        <span className="text-[12px] font-medium text-muted-foreground">مسجّل في الدورة</span>
                       </td>
                     </tr>
                   ))}
