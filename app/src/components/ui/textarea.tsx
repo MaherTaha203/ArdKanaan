@@ -21,7 +21,9 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textare
       ref={ref}
       onChange={handleChange}
       className={cn(
-        'flex min-h-24 w-full rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 text-sm text-foreground outline-none placeholder:text-faint focus:border-olive',
+        // Fixed height with internal scroll (resize-none): a long value never grows
+        // the field or pushes the fields above/below out of view. Unified across the app.
+        'flex h-24 w-full resize-none overflow-y-auto rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 text-sm text-foreground outline-none placeholder:text-faint focus:border-olive',
         className,
       )}
       {...props}

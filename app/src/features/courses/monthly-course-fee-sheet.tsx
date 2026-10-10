@@ -132,7 +132,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
         </label>
         <label className="block text-[13px] font-medium text-muted-foreground">
           الجهة المستحقة
-          <select className="mt-1.5 h-11 w-full rounded-xl border border-border-strong bg-panel px-3 text-sm text-foreground" value={feeCategory} onChange={(event) => { setFeeCategory(event.target.value as 'institute' | 'external' | 'shared'); setPreview(null) }}>
+          <select className="mt-1.5 h-11 w-full rounded-xl border border-border-strong bg-panel px-3.5 text-sm text-foreground outline-none focus:border-olive" value={feeCategory} onChange={(event) => { setFeeCategory(event.target.value as 'institute' | 'external' | 'shared'); setPreview(null) }}>
             <option value="institute">للمركز / المعهد</option>
             <option value="external">لجهة خارجية</option>
             <option value="shared">مشتركة بين المركز وجهة خارجية</option>

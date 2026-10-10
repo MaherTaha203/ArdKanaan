@@ -91,7 +91,7 @@ export function StudentFeeSheet() {
         <label className="block text-[13px] font-medium text-muted-foreground">
           الدورة المرتبطة
           <select
-            className="mt-1.5 w-full rounded-xl border border-border-strong bg-panel px-3 py-2.5 text-sm text-foreground"
+            className="mt-1.5 h-11 w-full rounded-xl border border-border-strong bg-panel px-3.5 text-sm text-foreground outline-none focus:border-olive"
             value={courseId}
             onChange={(event) => setCourseId(event.target.value)}
           >
