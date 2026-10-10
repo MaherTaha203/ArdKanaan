@@ -18,7 +18,7 @@ test('owner previews and confirms monthly course fees without duplicating a mont
   await login(page)
   await page.getByRole('button', { name: 'الدورات', exact: true }).first().click()
   await page.getByRole('button', { name: /دورة شهرية/ }).click()
-  await page.getByRole('button', { name: 'رسوم شهرية' }).click()
+  await page.getByRole('button', { name: 'إنشاء اشتراكات شهرية' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
   await expect(dialog).toBeVisible()
@@ -40,7 +40,7 @@ test('monthly fee type and recipient split remain independent', async ({ page })
   await login(page)
   await page.getByRole('button', { name: 'الدورات', exact: true }).first().click()
   await page.getByRole('button', { name: /دورة شهرية/ }).click()
-  await page.getByRole('button', { name: 'رسوم شهرية' }).click()
+  await page.getByRole('button', { name: 'إنشاء اشتراكات شهرية' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
   await dialog.getByLabel('شهر الاستحقاق').fill('2026-11')
