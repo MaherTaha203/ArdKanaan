@@ -38,15 +38,15 @@ export function StudentStatementPrint({ studentName, courses, entries, totalDebi
     >
       <div className={`grid grid-cols-3 gap-3`}>
         <div className={`rounded-xl border ${HAIR} p-3.5`}>
-          <div className={`text-[11px] ${MUTED}`}>إجمالي المستحق</div>
+          
           <div className={`figure mt-1 text-xl font-semibold ${DEBIT}`}>{formatNumber(totalDebit)}</div>
         </div>
         <div className={`rounded-xl border ${HAIR} p-3.5`}>
-          <div className={`text-[11px] ${MUTED}`}>إجمالي المسدَّد</div>
+          
           <div className={`figure mt-1 text-xl font-semibold ${CREDIT}`}>{formatNumber(totalCredit)}</div>
         </div>
         <div className="rounded-xl border border-[#f0dcc4] bg-[#fbf3ea] p-3.5">
-          <div className={`text-[11px] ${MUTED}`}>الرصيد المستحق</div>
+          
           <div className={`figure mt-1 text-xl font-semibold ${DEBIT}`}>{formatNumber(balance)}</div>
         </div>
       </div>
@@ -67,7 +67,6 @@ export function StudentStatementPrint({ studentName, courses, entries, totalDebi
               <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED} whitespace-nowrap`}>{formatDate(entry.date)}</td>
               <td className={`border-b ${HAIR} px-2 py-2.5`}>
                 <span className="font-semibold">{entry.label}</span>
-                <span className={`${FAINT}`}> · {entry.meta}</span>
               </td>
               <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end ${entry.debit > 0 ? DEBIT + ' font-semibold' : FAINT}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
               <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end ${entry.credit > 0 ? CREDIT + ' font-semibold' : FAINT}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
