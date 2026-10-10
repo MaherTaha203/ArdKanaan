@@ -269,7 +269,7 @@ export function studentLedger(
     if (fee.studentId !== studentId || fee.cancelledAt) continue
     const date = dayOf(fee.createdAt)
     const label = fee.feeKind === 'monthly_course'
-      ? `الاشتراك الشهري — ${fee.courseName ?? 'الدورة'} — ${fee.dueMonth ?? date.slice(0, 7)}`
+      ? `الاشتراك الشهري — ${fee.courseName ?? 'الدورة'} — ${fee.dueMonth?.slice(0, 7) ?? date.slice(0, 7)}`
       : fee.description
     const meta = fee.notes?.trim() ? `ملاحظات: ${fee.notes.trim()}` : (fee.courseName ?? '')
     raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label, meta, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
