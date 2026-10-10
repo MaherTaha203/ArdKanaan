@@ -45,7 +45,7 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
 
   // Generate the explicitly selected month, then verify it is available for receipt.
   await page.getByRole('button', { name: 'إنشاء اشتراكات شهرية', exact: true }).click()
-  const monthlyDialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
+  const monthlyDialog = page.getByRole('dialog', { name: 'إنشاء الاشتراكات الشهرية' })
   await monthlyDialog.getByLabel('شهر الاستحقاق').fill('2026-10')
   await monthlyDialog.getByRole('button', { name: 'معاينة الطلاب والاستحقاقات' }).click()
   await expect(monthlyDialog.getByText('طالب اختبار شهري')).toBeVisible()
