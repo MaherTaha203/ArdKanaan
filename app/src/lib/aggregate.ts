@@ -271,7 +271,8 @@ export function studentLedger(
     const label = fee.feeKind === 'monthly_course'
       ? `الاشتراك الشهري — ${fee.courseName ?? 'الدورة'} — ${fee.dueMonth ?? date.slice(0, 7)}`
       : fee.description
-    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label, meta: fee.courseName ?? '', debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
+    const meta = fee.notes?.trim() ? `ملاحظات: ${fee.notes.trim()}` : (fee.courseName ?? '')
+    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label, meta, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
   }
 
   // Payments (credits): one per receipt allocation line.
