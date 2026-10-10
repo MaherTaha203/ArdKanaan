@@ -271,12 +271,12 @@ export function studentLedger(
   for (const fee of feeObligations) {
     if (fee.studentId !== studentId || fee.cancelledAt) continue
     const date = dayOf(fee.createdAt)
-    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${fee.dueMonth ?? fee.description}` : fee.description, meta: `${fee.courseName ?? 'بدون دورة'} · ${beneficiaryLabel(fee.feeCategory)}`, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
+    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${fee.dueMonth ?? fee.description}` : fee.description, meta: '', debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
   }
 
   // Payments (credits): one per receipt allocation line.
   for (const line of studentLines) {
-    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: 'سند قبض', meta: line.entryType === 'fee' ? `رسم · ${line.courseName}` : line.courseName, debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
+    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: `#${line.voucherNumber}`, meta: '', debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
   }
 
   raw.sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : a.id < b.id ? -1 : 1))
