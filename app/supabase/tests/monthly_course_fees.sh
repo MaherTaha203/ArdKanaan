@@ -149,7 +149,7 @@ eq "No monthly obligation is created for legacy enrollment" "$(runFP "select cou
 echo "== Adjust one student's monthly subscription without rewriting history =="
 run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'individual rate');" >/dev/null
 eq "Existing October obligation remains at its original amount" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01'")" "250"
-run_owner_sql "select public.create_enrollment('{\\"student_id\\":\\"$OTHER_MONTHLY_STUDENT\\",\\"course_id\\":\\"$COURSE\\"}'::jsonb);" >/dev/null
+run_owner_sql "select public.create_enrollment('{\"student_id\":\"$OTHER_MONTHLY_STUDENT\",\"course_id\":\"$COURSE\"}'::jsonb);" >/dev/null
 OTHER_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$OTHER_MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
 NEXT_PREVIEW="$(run_owner_fp "select (select (x->>'amount')::int from jsonb_array_elements(public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students') x where x->>'student_id'='$MONTHLY_STUDENT')")"
 eq "Future preview uses the student's override" "$NEXT_PREVIEW" "180"
