@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { Coins, TriangleAlert } from 'lucide-react'
 
@@ -127,7 +127,7 @@ export function MonthlyEnrollmentFeeSheet() {
   )
 }
 
-function Summary({ label, value }: { label: string; value: React.ReactNode }) {
+function Summary({ label, value }: { label: string; value: ReactNode }) {
   return <div className="rounded-xl border border-border bg-panel px-3 py-2.5">
     <div className="text-[11.5px] text-muted-foreground">{label}</div>
     <div className="mt-1 text-sm font-semibold text-foreground">{value}</div>
