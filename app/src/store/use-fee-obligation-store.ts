@@ -9,6 +9,7 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 type AddFeeInput = {
   studentIds: string[]
   description: string
+  notes?: string
   amount: number
   feeCategory: FeeCategory
   externalShare: number
@@ -74,6 +75,7 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
       const payload: Record<string, unknown> = {
         student_ids: uniqueStudentIds,
         description: input.description.trim(),
+        notes: input.notes?.trim() || null,
         amount: input.amount,
         fee_category: input.feeCategory,
         external_share: input.externalShare,
