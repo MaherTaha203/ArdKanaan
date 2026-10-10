@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL('../../supabase/migrations/20261010192356_student_monthly_fee_override.sql', import.meta.url),
   'utf8',
 )
+const recalculation = readFileSync(
+  new URL('../../supabase/migrations/20261010210000_recalculate_monthly_fee_balances.sql', import.meta.url),
+  'utf8',
+)
 
 describe('Per-student monthly subscription fee override', () => {
   it('stores a per-enrollment override and requires an audited owner-only RPC', () => {
@@ -17,12 +21,19 @@ describe('Per-student monthly subscription fee override', () => {
     expect(migration).toContain('MONTHLY_ENROLLMENT_FEE_OVERRIDE_RPC_REQUIRED')
   })
 
-  it('applies the override only when generating future monthly obligations', () => {
-    expect(migration).toContain("'amount', coalesce(e.monthly_fee_override, v_amount)")
-    expect(migration).toContain("coalesce(e.monthly_fee_override, v_amount), p_fee_category")
-    expect(migration).toContain("'applies_to','future_monthly_obligations_only'")
-    const feeGenerationAndAdjustment = migration.split('CREATE OR REPLACE FUNCTION public.restore_center_data')[0]
-    expect(feeGenerationAndAdjustment).not.toMatch(/update\s+public\.(fee_obligations|receipt_vouchers|receipt_allocations|financial_movement_ledger)/i)
+  it('recalculates existing monthly obligations so balances and statements reflect the new price', () => {
+    expect(recalculation).toContain('set amount = p_amount')
+    expect(recalculation).toContain("current_setting('app.monthly_fee_obligation_editing', true)")
+    expect(recalculation).toContain('MONTHLY_FEE_BELOW_ALREADY_PAID')
+    expect(recalculation).toContain('MONTHLY_FEE_BELOW_EXTERNAL_SHARE')
+    expect(recalculation).toContain('public.record_activity_event')
+    expect(recalculation).toContain("'existing_obligations_updated', v_updated_count")
+  })
+
+  it('does not rewrite receipts, allocations, or ledger history', () => {
+    expect(recalculation).not.toMatch(/update\s+public\.(receipt_vouchers|receipt_allocations|financial_movement_ledger)/i)
+    expect(recalculation).toContain("and fo.fee_kind = 'monthly_course'")
+    expect(recalculation).toContain('fo.cancelled_at is null')
   })
 
   it('preserves the override in backup restore and validates imported values', () => {
