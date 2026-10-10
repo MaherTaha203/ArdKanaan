@@ -4,8 +4,8 @@ import { User } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Money } from '@/components/ui/money'
-import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
-import { aggregateStudents, attentionList, financialTotals, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
+import { SkeletonRows } from '@/components/ui/skeleton'
+import { aggregateStudents, attentionList, movementsNewestFirst, studentCourseBreakdown } from '@/lib/aggregate'
 import { formatDate, formatNumber } from '@/lib/format'
 import type { FinancialMovement } from '@/types/domain'
 import { useSettingsStore } from '@/store/use-settings-store'
@@ -38,7 +38,6 @@ export function GlanceWorkspace() {
   const selectStudent = useShellStore((state) => state.selectStudent)
   const attentionCount = useSettingsStore((state) => state.settings.attentionCount)
 
-  const totals = useMemo(() => financialTotals(movements), [movements])
   const recent = useMemo(() => movementsNewestFirst(movements).slice(0, RECENT_LIMIT), [movements])
   const attention = useMemo(
     () => attentionList(aggregateStudents(students, statementLines, enrollments, feeObligations)).slice(0, attentionCount),
@@ -61,27 +60,10 @@ export function GlanceWorkspace() {
     <div className="space-y-5">
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
-      <header>
+      <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-border pb-4">
         <h1 className="editorial text-[clamp(1.35rem,2.4vw,1.75rem)] text-foreground">مرحبًا بك في أرض كنعان</h1>
+        <div className="text-[13px] text-muted-foreground">اليوم <span className="figure font-semibold text-foreground">{todayLong()}</span></div>
       </header>
-
-      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]">
-        <section aria-label="الرصيد النقديّ للمركز" className="rounded-2xl border border-border bg-panel px-6 py-5">
-          <div className="text-[13px] font-medium text-muted-foreground">الرصيد النقديّ الحالي</div>
-          {!loaded ? <Skeleton className="mt-3 h-11 w-48" /> : <>
-            <Money value={totals.centerNet} className={`mt-2 block text-[40px] font-semibold leading-none ${totals.centerNet < 0 ? 'text-clay' : 'text-foreground'}`} currencyClassName="text-[0.34em]" />
-            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-1 text-[13px] text-muted-foreground">
-              <span>المقبوضات <Money value={totals.instituteRevenue} currency={false} className="font-semibold text-gold" /></span>
-              <span>المدفوعات <Money value={totals.totalOut} currency={false} className="font-semibold text-clay" /></span>
-              {totals.externalHeld > 0 ? <span>لصالح جهات خارجية <Money value={totals.externalHeld} currency={false} className="font-semibold text-foreground" /></span> : null}
-            </div>
-          </>}
-        </section>
-        <section aria-label="تاريخ اليوم" className="rounded-2xl border border-border bg-panel px-6 py-5">
-          <div className="text-[13px] font-medium text-muted-foreground">التاريخ اليوم</div>
-          <div className="figure mt-2 text-2xl font-semibold text-foreground">{todayLong()}</div>
-        </section>
-      </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <section aria-labelledby="recent-heading" className="rounded-2xl border border-border bg-panel">
