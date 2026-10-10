@@ -164,7 +164,9 @@ begin
 
   if p_fee_category = 'shared' and exists (
     select 1 from public.enrollments e
+    join public.students s on s.id = e.student_id
     where e.course_id = p_course_id and e.billing_model = 'monthly'
+      and coalesce(s.status, 'active') = 'active'
       and coalesce(e.monthly_fee_override, v_amount) <= v_external
       and coalesce(e.created_at, now()) < (v_month + interval '1 month')
   ) then raise exception 'INVALID_MONTHLY_FEE_RECIPIENT_SPLIT'; end if;
@@ -236,7 +238,9 @@ begin
 
   if p_fee_category = 'shared' and exists (
     select 1 from public.enrollments e
+    join public.students s on s.id = e.student_id
     where e.course_id = p_course_id and e.billing_model = 'monthly'
+      and coalesce(s.status, 'active') = 'active'
       and coalesce(e.monthly_fee_override, v_amount) <= v_external
       and coalesce(e.created_at, now()) < (v_month + interval '1 month')
   ) then raise exception 'INVALID_MONTHLY_FEE_RECIPIENT_SPLIT'; end if;
