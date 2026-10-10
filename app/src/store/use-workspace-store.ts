@@ -69,6 +69,22 @@ async function loadStudents(supabase: SupabaseClient): Promise<{ data: StudentRo
   return fetchAllRows<StudentRow>((from, to) => supabase.from('students').select('id, name, id_number, phone, notes').order('name', { ascending: true }).range(from, to))
 }
 
+// The per-student monthly override column exists only after its migration is
+// applied. Preview deployments may point at a database that has not received
+// that migration yet, so fall back to the pre-override enrollment projection
+// when PostgREST reports that this specific column is missing.
+async function loadEnrollments(supabase: SupabaseClient): Promise<{ data: EnrollmentRow[]; error: unknown }> {
+  const full = await fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value, billing_model, monthly_fee_override, created_at').range(from, to))
+  if (!full.error) return full
+  const error = full.error as { code?: unknown; message?: unknown; details?: unknown }
+  const errorText = [error.code, error.message, error.details].filter(Boolean).join(' ').toLowerCase()
+  const missingOverrideColumn =
+    (error.code === '42703' || error.code === 'PGRST204' || errorText.includes('column')) &&
+    errorText.includes('monthly_fee_override')
+  if (!missingOverrideColumn) return full
+  return fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value, billing_model, created_at').range(from, to))
+}
+
 // A request can fail with 401 when the access token expires mid-session (e.g. the
 // tab slept past the proactive refresh). That is recoverable: refresh the session
 // and retry once, so a transient expiry never surfaces as a hard load error.
@@ -108,7 +124,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
         const [coursesResult, enrollmentsResult, feesResult] = await Promise.all([
           fetchAllRows<CourseRow>((from, to) => supabase.from('courses').select('id, name, base_fee, monthly_fee, start_date, end_date, status, notes').order('name', { ascending: true }).range(from, to)),
-          fetchAllRows<EnrollmentRow>((from, to) => supabase.from('enrollments').select('id, student_id, course_id, course_name, course_value, billing_model, monthly_fee_override, created_at').range(from, to)),
+          loadEnrollments(supabase),
           fetchAllRows<FeeObligationRow>((from, to) => supabase.from('fee_obligations').select('id, student_id, enrollment_id, course_id, course_name, description, notes, amount, fee_category, external_share, fee_kind, due_month, cancelled_at, cancel_reason, created_at').order('created_at', { ascending: true }).range(from, to)),
         ])
         if (coursesResult.error || enrollmentsResult.error || feesResult.error) console.error('optional workspace load failed', { courses: coursesResult.error, enrollments: enrollmentsResult.error, feeObligations: feesResult.error })
