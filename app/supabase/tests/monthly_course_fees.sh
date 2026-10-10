@@ -129,6 +129,7 @@ else
 fi
 eq "Exactly one monthly enrollment exists" "$(runFP "select count(*) from public.enrollments where course_id='$COURSE' and billing_model='monthly'")" "1"
 eq "Legacy enrollment remains legacy_total" "$(runFP "select count(*) from public.enrollments where course_id='$COURSE' and billing_model='legacy_total'")" "1"
+MONTHLY_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
 
 echo "== Preview must exclude legacy registration-fee enrollments =="
 PREVIEW_COUNT="$(run_owner_fp "select (public.preview_monthly_course_obligations('$COURSE', date '2099-10-01', 'shared', 50)->>'eligible_count')::int")"
@@ -142,6 +143,16 @@ eq "First monthly generation creates one obligation" "$CREATED" "1"
 CREATED_RETRY="$(run_owner_fp "select (public.create_monthly_course_obligations('$COURSE', date '2099-10-01', 'shared', 50)->>'created')::int")"
 eq "Second monthly generation creates no duplicate" "$CREATED_RETRY" "0"
 eq "No monthly obligation is created for legacy enrollment" "$(runFP "select count(*) from public.fee_obligations where enrollment_id='00000000-0000-0000-0000-0000000e0004' and fee_kind='monthly_course'")" "0"
+
+echo "== Adjust one student's monthly subscription without rewriting history =="
+run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'individual rate');" >/dev/null
+eq "Existing October obligation remains at its original amount" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01'")" "250"
+NEXT_PREVIEW="$(run_owner_fp "select ((public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students'->0->>'amount')::int)")"
+eq "Future preview uses the student's override" "$NEXT_PREVIEW" "180"
+NEXT_CREATED="$(run_owner_fp "select (public.create_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->>'created')::int")"
+eq "Future generation creates the overridden monthly amount" "$NEXT_CREATED" "1"
+eq "New November obligation uses the student's override" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "180"
+eq "Other monthly students retain the course default" "$(runFP "select count(*) from public.enrollments where course_id='$COURSE' and billing_model='monthly' and student_id<>'$MONTHLY_STUDENT' and monthly_fee_override is null")" "0"
 
 FEE_ID="$(runFP "select id from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-10-01'")"
 eq "Monthly fee amount is the full configured monthly price" "$(runFP "select amount::int from public.fee_obligations where id='$FEE_ID'")" "250"
