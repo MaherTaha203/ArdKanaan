@@ -58,7 +58,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
     const amount = course.monthlyFee ?? 0
     const external = feeCategory === 'institute' ? 0 : feeCategory === 'external' ? amount : Number(externalShare)
     if (feeCategory === 'shared' && (!/^[0-9]+$/.test(externalShare) || external <= 0 || external >= amount)) {
-      setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من الرسوم الشهرية.')
+      setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من قيمة الاشتراك الشهري.')
       return
     }
     setBusy(true)
@@ -75,12 +75,12 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
     } catch (cause) {
       const message = cause && typeof cause === 'object' && 'message' in cause ? String((cause as { message: unknown }).message) : ''
       setError(message.includes('COURSE_MONTHLY_FEE_REQUIRED')
-        ? 'حدّد رسومًا شهرية صحيحة للدورة أولًا.'
+        ? 'حدّد قيمة صحيحة للاشتراك الشهري للدورة أولًا.'
         : message.includes('INVALID_MONTHLY_FEE_RECIPIENT_SPLIT')
           ? 'حصة الجهة المستحقة لا تتوافق مع نوع التوزيع المختار.'
           : message.includes('COURSE_NOT_FOUND_OR_INACTIVE')
             ? 'الدورة غير نشطة أو غير موجودة.'
-            : 'تعذّر إعداد معاينة الرسوم الشهرية.')
+            : 'تعذّر إعداد معاينة الاشتراكات الشهرية.')
     } finally {
       setBusy(false)
     }
@@ -92,7 +92,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
     const amount = course.monthlyFee ?? 0
     const external = feeCategory === 'institute' ? 0 : feeCategory === 'external' ? amount : Number(externalShare)
     if (feeCategory === 'shared' && (!/^[0-9]+$/.test(externalShare) || external <= 0 || external >= amount)) {
-      setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من الرسوم الشهرية.')
+      setError('في الرسوم المشتركة أدخل حصة الجهة الخارجية بأرقام إنجليزية، كعدد صحيح أكبر من 0 وأقل من قيمة الاشتراك الشهري.')
       return
     }
     setBusy(true)
@@ -117,13 +117,13 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
   }
 
   return (
-    <ActionSheet title="إنشاء الرسوم الشهرية" eyebrow={course.name} onClose={onClose}>
+    <ActionSheet title="إنشاء الاشتراكات الشهرية" eyebrow={course.name} onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          تُحتسب الرسوم الشهرية للطلاب المؤهلين في الشهر المختار. راجع قائمة الطلاب قبل تأكيد الإنشاء.
+          تُحتسب الاشتراكات الشهرية للطلاب المؤهلين في الشهر المختار. راجع قائمة الطلاب قبل تأكيد الإنشاء.
         </p>
         {course.monthlyFee == null || course.monthlyFee <= 0 ? (
-          <p role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">حدّد الرسوم الشهرية للدورة أولًا.</p>
+          <p role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">حدّد قيمة الاشتراك الشهري للدورة أولًا.</p>
         ) : null}
         {error ? <div role="alert" className="rounded-xl border border-clay/25 bg-clay-weak px-4 py-3 text-sm text-clay">{error}</div> : null}
         <label className="block text-[13px] font-medium text-muted-foreground">
@@ -144,7 +144,7 @@ export function MonthlyCourseFeeSheet({ course, onClose }: { course: Course; onC
             <Input className="mt-1.5 figure" type="text" inputMode="numeric" autoComplete="off" placeholder="0" value={externalShare} onChange={(event) => { setExternalShare(event.target.value.replace(/[^0-9]/g, '')); setPreview(null) }} />
           </label>
         ) : feeCategory === 'external' ? (
-          <p className="text-xs text-muted-foreground">تُسند الرسوم الشهرية كاملة إلى الجهة الخارجية.</p>
+          <p className="text-xs text-muted-foreground">تُسند قيمة الاشتراك الشهري كاملة إلى الجهة الخارجية.</p>
         ) : null}
         <Button type="button" variant="quiet" className="w-full" disabled={busy || !month || course.monthlyFee == null || course.monthlyFee <= 0} onClick={loadPreview}>
           <Eye className="size-4" />
