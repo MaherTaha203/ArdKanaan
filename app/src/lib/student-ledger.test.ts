@@ -21,7 +21,7 @@ describe('studentLedger', () => {
       's-1',
       [courseLine({ id: 'l-1', studentId: 's-1', voucherDate: '2026-01-10', amountReceived: 200, remainingBalance: 300 })],
       [enrollment({ id: 'e-1', studentId: 's-1' })],
-      [fee({ id: 'f-1', studentId: 's-1', description: 'رسوم امتحان', amount: 50 })],
+      [fee({ id: 'f-1', studentId: 's-1', description: 'رسوم امتحان', notes: 'يرجى مراجعة الإدارة', amount: 50 })],
     )
 
     expect(ledger.entries.map((entry) => [entry.date, entry.kind, entry.debit, entry.credit, entry.balance])).toEqual([
@@ -31,7 +31,7 @@ describe('studentLedger', () => {
     ])
     expect(ledger.entries[0].label).toBe('رسوم الدورة — محاسبة')
     expect(ledger.entries[1].label).toBe('رسوم امتحان')
-    expect(ledger.entries[1].meta).toBe('')
+    expect(ledger.entries[1].meta).toBe('ملاحظات: يرجى مراجعة الإدارة')
     expect(ledger.entries[2].label).toBe('سند قبض - رقم 1#')
     expect(ledger).toMatchObject({ totalDebit: 550, totalCredit: 200, balance: 350 })
   })
