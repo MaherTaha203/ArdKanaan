@@ -66,7 +66,7 @@ export function StudentStatementPrint({ studentName, courses, entries, totalDebi
             <tr key={entry.id} className={INK}>
               <td className={`figure border-b ${HAIR} px-2 py-2.5 ${MUTED} whitespace-nowrap`}>{formatDate(entry.date)}</td>
               <td className={`border-b ${HAIR} px-2 py-2.5`}>
-                <span className="font-semibold">{entry.label}</span>
+                <span className="font-semibold">{entry.label}</span>{entry.kind === 'debit' && entry.meta ? <div className="mt-1 whitespace-pre-wrap text-[10.5px] text-[#475569]">{entry.meta}</div> : null}
               </td>
               <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end ${entry.debit > 0 ? DEBIT + ' font-semibold' : FAINT}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
               <td className={`figure border-b ${HAIR} px-2 py-2.5 text-end ${entry.credit > 0 ? CREDIT + ' font-semibold' : FAINT}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
