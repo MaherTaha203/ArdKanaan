@@ -1,4 +1,4 @@
-import type { Course, Enrollment, FeeCategory, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type { Course, Enrollment, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
 
 export type StudentFinancialSummary = {
   studentId: string
@@ -212,9 +212,6 @@ function feeRemaining(fee: FeeObligation, paidByFee: Map<string, number>) {
   return Math.max(0, fee.amount - paid)
 }
 
-function beneficiaryLabel(category: FeeCategory): string {
-  return category === 'institute' ? 'للمعهد' : category === 'external' ? 'لجهة خارجية' : 'مشترك'
-}
 const dayOf = (value?: string | null): string => (value ? value.slice(0, 10) : '')
 
 // One line of the running account statement (كشف حساب جاري): a debit (an obligation
