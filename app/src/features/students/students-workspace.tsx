@@ -158,10 +158,10 @@ export function StudentsWorkspace() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:w-[680px] lg:max-w-full">
-                  <RecordCard label="إجمالي المستحقات" value={activeLedger.totalDebit} tone="ink" />
-                  <RecordCard label="إجمالي المقبوض" value={active.paid} tone="ink" />
-                  <RecordCard label="المتبقي" value={active.remaining} tone="warn" />
-                  <RecordCard label="عدد سندات القبض" value={receiptRows.length} tone="ink" count />
+                  <RecordCard label="" value={activeLedger.totalDebit} tone="ink" />
+                  <RecordCard label="" value={active.paid} tone="ink" />
+                  <RecordCard label="" value={active.remaining} tone="warn" />
+                  <RecordCard label="" value={receiptRows.length} tone="ink" count />
                 </div>
               </div>
 
@@ -196,7 +196,7 @@ export function StudentsWorkspace() {
                     </tr></thead>
                     <tbody>{statementLoading && statementStudentId === activeId ? <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">جارٍ تحميل الكشف…</td></tr> : activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
                       <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
-                      <td className="cell-wrap border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
+                      <td className="cell-wrap border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span></td>
                       <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
                       <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.credit > 0 ? 'font-semibold text-gold' : 'text-faint'}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
                       <td className="figure border-b border-border px-2.5 py-3.5 text-end font-bold text-foreground">{formatNumber(entry.balance)}</td>
@@ -211,7 +211,7 @@ export function StudentsWorkspace() {
               ) : detailTab === 'obligations' ? (
                 <div className="detail-table-wrap"><table className="border-collapse text-sm">
                   <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">تاريخ الاستحقاق</th><th className="border-b border-border px-2.5 py-3 text-start">البيان</th><th className="border-b border-border px-2.5 py-3 text-end">المبلغ</th></tr></thead>
-                  <tbody>{obligationRows.length ? obligationRows.map((row) => <tr key={row.id}><td className="figure border-b border-border px-2.5 py-3.5">{row.date ? formatDate(row.date) : '—'}</td><td className="border-b border-border px-2.5 py-3.5">{row.label}<span className="text-faint"> · {row.meta}</span></td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.debit)}</td></tr>) : <tr><td colSpan={3} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد التزامات مسجلة.</td></tr>}</tbody>
+                  <tbody>{obligationRows.length ? obligationRows.map((row) => <tr key={row.id}><td className="figure border-b border-border px-2.5 py-3.5">{row.date ? formatDate(row.date) : '—'}</td><td className="border-b border-border px-2.5 py-3.5">{row.label}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.debit)}</td></tr>) : <tr><td colSpan={3} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد التزامات مسجلة.</td></tr>}</tbody>
                 </table></div>
               ) : (
                 <div className="detail-table-wrap"><table className="border-collapse text-sm">
@@ -244,7 +244,7 @@ function StudentRow({ item, active, onSelect, hasObligations }: { item: StudentA
 }
 
 function RecordCard({ label, value, tone, count = false }: { label: string; value: number; tone: 'ink' | 'warn'; count?: boolean }) {
-  return <div className="rounded-xl border border-border-strong bg-panel px-3 py-3"><div className="mb-1 text-[11px] font-medium text-faint">{label}</div>{count ? <div className="figure text-lg font-semibold text-foreground">{formatNumber(value)}</div> : <Money value={value} currency={false} className={`text-lg font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} />}</div>
+  return <div className="rounded-xl border border-border-strong bg-panel px-3 py-3">{label ? <div className="mb-1 text-[11px] font-medium text-faint">{label}</div> : null}{count ? <div className="figure text-lg font-semibold text-foreground">{formatNumber(value)}</div> : <Money value={value} currency={false} className={`text-lg font-semibold ${tone === 'warn' && value > 0 ? 'text-warn' : 'text-foreground'}`} />}</div>
 }
 
 function DetailTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
