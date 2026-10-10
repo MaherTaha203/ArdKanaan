@@ -41,6 +41,7 @@ export function StudentFeeSheet() {
   }, [courses, enrollments, feeStudentId])
 
   const [description, setDescription] = useState('')
+  const [notes, setNotes] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<FeeCategory>('institute')
   const [externalShare, setExternalShare] = useState('')
@@ -58,6 +59,7 @@ export function StudentFeeSheet() {
       studentIds: [student!.id],
       courseId: courseId || null,
       description,
+      notes,
       amount: amountNumber,
       feeCategory: category,
       externalShare: externalNumber,
@@ -87,6 +89,11 @@ export function StudentFeeSheet() {
             <Input className="mt-1.5 figure" inputMode="numeric" type="number" min="1" step="1" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0" />
           </label>
         </div>
+
+        <label className="block text-[13px] font-medium text-muted-foreground">
+          ملاحظات الرسم (اختياري)
+          <textarea className="mt-1.5 min-h-20 w-full rounded-xl border border-border-strong bg-panel px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-olive" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="أضف أي تفاصيل توضيحية تظهر في كشف الحساب" />
+        </label>
 
         <label className="block text-[13px] font-medium text-muted-foreground">
           الدورة المرتبطة
