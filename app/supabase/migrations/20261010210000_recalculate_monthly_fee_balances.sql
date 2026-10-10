@@ -168,7 +168,12 @@ begin
           end
     where fo.enrollment_id = p_enrollment_id
       and fo.fee_kind = 'monthly_course'
-      and fo.cancelled_at is null;
+      and fo.cancelled_at is null
+      and (
+        fo.amount is distinct from p_amount
+        or (fo.fee_category = 'external' and fo.external_share is distinct from p_amount)
+        or (fo.fee_category = 'institute' and fo.external_share is distinct from 0)
+      );
     get diagnostics v_updated_count = row_count;
     perform set_config('app.monthly_fee_obligation_editing', 'off', true);
 
