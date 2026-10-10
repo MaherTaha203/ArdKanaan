@@ -8,7 +8,7 @@ export type ShellRoute = 'home' | 'students' | 'courses' | 'report' | 'activity'
 export type StudentView = 'directory' | 'statement' | 'archived'
 export type CourseView = 'directory' | 'detail'
 export type SettingsView = 'system' | 'activity' | 'backup'
-export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | 'student-fee' | 'edit-fee' | null
+export type ShellOverlay = 'receive' | 'expense' | 'student' | 'course' | 'enroll' | 'archive' | 'student-fee' | 'edit-fee' | 'edit-monthly-fee' | null
 export type ReportView = 'general' | 'receipts' | 'payments' | 'external'
 
 // Tabbed navigation (UI only). Every page a person can open is its own PageKey — a
@@ -88,6 +88,7 @@ type ShellStore = {
   openArchive: (studentId: string) => void
   openStudentFee: (studentId: string) => void
   openEditFee: (enrollmentId: string) => void
+  openEditMonthlyFee: (enrollmentId: string) => void
   closeOverlay: () => void
 }
 
@@ -156,5 +157,6 @@ export const useShellStore = create<ShellStore>((set) => ({
   openArchive: (studentId) => set({ ...CLEARED, overlay: 'archive', archiveStudentId: studentId }),
   openStudentFee: (studentId) => set({ ...CLEARED, overlay: 'student-fee', feeStudentId: studentId }),
   openEditFee: (enrollmentId) => set({ ...CLEARED, overlay: 'edit-fee', editFeeEnrollmentId: enrollmentId }),
+  openEditMonthlyFee: (enrollmentId) => set({ ...CLEARED, overlay: 'edit-monthly-fee', editFeeEnrollmentId: enrollmentId }),
   closeOverlay: () => set({ ...CLEARED }),
 }))
