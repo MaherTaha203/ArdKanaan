@@ -25,15 +25,16 @@ test('adds a standalone (no-course) fee to a student from the statement', async 
   await expect(dialog).toBeVisible()
 
   await dialog.getByPlaceholder('مثال: رسوم امتحان').fill('رسوم امتحان')
+  await dialog.getByPlaceholder('أضف أي تفاصيل توضيحية تظهر في كشف الحساب').fill('إحضار الهوية عند الامتحان')
   await dialog.getByPlaceholder('0').fill('50')
   // The course select stays on "بدون دورة (رسم مستقل)" — a standalone obligation.
   await dialog.getByRole('button', { name: 'إضافة الرسم', exact: true }).click()
 
   await expect(dialog).toBeHidden()
 
-  // Debit descriptions and secondary course metadata are intentionally hidden
-  // from the statement; the saved amount must still be visible.
-  await expect(page.getByText('رسوم امتحان', { exact: true })).toHaveCount(0)
+  // The saved fee description and note must appear in the running statement.
+  await expect(page.getByText('رسوم امتحان', { exact: true })).toBeVisible()
+  await expect(page.getByText('ملاحظات: إحضار الهوية عند الامتحان', { exact: true })).toBeVisible()
   await expect(page.getByText('بدون دورة', { exact: true })).toHaveCount(0)
   await expect(page.getByText(/50/).last()).toBeVisible()
 })
