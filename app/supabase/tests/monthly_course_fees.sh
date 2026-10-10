@@ -190,7 +190,7 @@ if run_file "$BASE/non_owner.sql" > "$BASE/non_owner.out" 2>&1; then
 else
   if grep -q "OWNER_ONLY" "$BASE/non_owner.out"; then pass "non-owner monthly generation rejected"; else fail "non-owner rejected for an unexpected reason"; cat "$BASE/non_owner.out"; fi
 fi
-eq "Unauthorized call created no November obligation" "$(runFP "select count(*) from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "0"
+eq "Non-owner call leaves both existing November obligations unchanged" "$(runFP "select count(*) from public.fee_obligations where course_id='$COURSE' and fee_kind='monthly_course' and due_month=date '2099-11-01'")" "2"
 
 run "$PGBIN/pg_ctl -D $DATADIR -m fast -w stop" >/dev/null || true
 rm -rf "$BASE"
