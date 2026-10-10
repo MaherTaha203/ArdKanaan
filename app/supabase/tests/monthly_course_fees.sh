@@ -146,11 +146,11 @@ CREATED_RETRY="$(run_owner_fp "select (public.create_monthly_course_obligations(
 eq "Second monthly generation creates no duplicate" "$CREATED_RETRY" "0"
 eq "No monthly obligation is created for legacy enrollment" "$(runFP "select count(*) from public.fee_obligations where enrollment_id='00000000-0000-0000-0000-0000000e0004' and fee_kind='monthly_course'")" "0"
 
-echo "== Adjust one student's monthly subscription and preserve the original obligation =="
+echo "== Adjust one student's monthly subscription and recalculate the existing balance =="
 run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'individual rate');" > "$BASE/adjustment.out"
-eq "Original October obligation remains in history as cancelled at its original amount" "$(runFP "select count(*) from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01' and amount=250 and cancelled_at is not null and cancel_reason like '%individual rate%'")" "1"
-eq "Active October replacement immediately uses the student's new price" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01' and cancelled_at is null")" "180"
-eq "The adjustment RPC reports one repriced unpaid obligation" "$(grep -o '"repriced_unpaid_obligations":[0-9]*' "$BASE/adjustment.out" | tail -1 | cut -d: -f2)" "1"
+eq "Existing October obligation is repriced in place" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01' and cancelled_at is null")" "180"
+eq "The adjustment RPC reports one updated existing obligation" "$(grep -o '"existing_obligations_updated":[0-9]*' "$BASE/adjustment.out" | tail -1 | cut -d: -f2)" "1"
+eq "No receipt or allocation history was rewritten" "$(runFP "select count(*) from public.receipt_allocations where enrollment_id='$MONTHLY_ENROLLMENT_ID'")" "0"
 run_owner_sql "select public.create_enrollment('{\"student_id\":\"$OTHER_MONTHLY_STUDENT\",\"course_id\":\"$COURSE\"}'::jsonb);" >/dev/null
 OTHER_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$OTHER_MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
 NEXT_PREVIEW="$(run_owner_fp "select (select (x->>'amount')::int from jsonb_array_elements(public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students') x where x->>'student_id'='$MONTHLY_STUDENT')")"
@@ -179,7 +179,7 @@ RECEIPT_ID="$(runFP "select id from public.receipt_vouchers where idempotency_ke
 eq "Receipt posted once" "$(runFP "select count(*) from public.receipt_vouchers where idempotency_key='99999999-0000-0000-0000-000000000010'")" "1"
 eq "Receipt allocation settles the monthly fee" "$(runFP "select count(*) from public.receipt_allocations where receipt_voucher_id='$RECEIPT_ID' and fee_obligation_id='$FEE_ID' and amount=180 and external_share=50")" "1"
 eq "Student statement shows full payment and zero balance" "$(runFP "select count(*) from public.student_statement_lines where student_id='$MONTHLY_STUDENT' and fee_obligation_id='$FEE_ID' and amount_received=180 and remaining_balance=0")" "1"
-eq "Financial movements conserve gross, external, and center amounts" "$(runFP "select count(*) from public.financial_movements where id='$RECEIPT_ID' and amount=250 and external_share=50 and amount-external_share=200")" "1"
+eq "Financial movements conserve gross, external, and center amounts" "$(runFP "select count(*) from public.financial_movements where id='$RECEIPT_ID' and amount=180 and external_share=50 and amount-external_share=130")" "1"
 
 echo "== Verify owner-only guard on monthly generation =="
 cat > "$BASE/non_owner.sql" <<SQL
