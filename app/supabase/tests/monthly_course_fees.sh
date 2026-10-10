@@ -148,9 +148,10 @@ eq "No monthly obligation is created for legacy enrollment" "$(runFP "select cou
 
 echo "== Adjust one student's monthly subscription and recalculate the existing balance =="
 # Reproduce the original bug: the override is already saved, but the existing obligation still has the old amount.
-run_owner_sql "select set_config('app.monthly_enrollment_fee_editing','on',false); update public.enrollments set monthly_fee_override=180, monthly_fee_override_reason='previously saved rate' where id='$MONTHLY_ENROLLMENT_ID'; select set_config('app.monthly_enrollment_fee_editing','off',false); select (public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'reconcile existing balance')->>'existing_obligations_updated')::int;" > "$BASE/adjustment.out"
+run_owner_sql "select set_config('app.monthly_enrollment_fee_editing','on',false); update public.enrollments set monthly_fee_override=180, monthly_fee_override_reason='previously saved rate' where id='$MONTHLY_ENROLLMENT_ID'; select set_config('app.monthly_enrollment_fee_editing','off',false);" > /dev/null
+UPDATED_COUNT="$(run_owner_fp "select (public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'reconcile existing balance')->>'existing_obligations_updated')::int")"
 eq "Existing October obligation is repriced in place" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01' and cancelled_at is null")" "180"
-eq "The adjustment RPC reports one updated existing obligation" "$(tr -d '[:space:]' < "$BASE/adjustment.out")" "1"
+eq "The adjustment RPC reports one updated existing obligation" "$UPDATED_COUNT" "1"
 eq "No receipt or allocation history was rewritten" "$(runFP "select count(*) from public.receipt_allocations where enrollment_id='$MONTHLY_ENROLLMENT_ID'")" "0"
 run_owner_sql "select public.create_enrollment('{\"student_id\":\"$OTHER_MONTHLY_STUDENT\",\"course_id\":\"$COURSE\"}'::jsonb);" >/dev/null
 OTHER_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$OTHER_MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
