@@ -20,7 +20,7 @@ test('owner previews and confirms monthly course fees without duplicating a mont
   await page.getByRole('button', { name: /دورة شهرية/ }).click()
   await page.getByRole('button', { name: 'إنشاء اشتراكات شهرية' }).click()
 
-  const dialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
+  const dialog = page.getByRole('dialog', { name: 'إنشاء الاشتراكات الشهرية' })
   await expect(dialog).toBeVisible()
   await dialog.getByLabel('شهر الاستحقاق').fill('2026-10')
   await dialog.getByRole('button', { name: 'معاينة الطلاب والاستحقاقات' }).click()
@@ -42,7 +42,7 @@ test('monthly fee type and recipient split remain independent', async ({ page })
   await page.getByRole('button', { name: /دورة شهرية/ }).click()
   await page.getByRole('button', { name: 'إنشاء اشتراكات شهرية' }).click()
 
-  const dialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
+  const dialog = page.getByRole('dialog', { name: 'إنشاء الاشتراكات الشهرية' })
   await dialog.getByLabel('شهر الاستحقاق').fill('2026-11')
   await dialog.getByLabel('الجهة المستحقة').selectOption('shared')
   await dialog.getByLabel(/حصة الجهة الخارجية/).fill('50')
