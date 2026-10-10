@@ -139,7 +139,19 @@ begin
     raise exception 'MONTHLY_FEE_BELOW_EXTERNAL_SHARE';
   end if;
 
-  if p_amount is distinct from v_old_amount or v_old_override is null then
+  if p_amount is distinct from v_old_amount
+     or v_old_override is null
+     or exists (
+       select 1 from public.fee_obligations fo
+       where fo.enrollment_id = p_enrollment_id
+         and fo.fee_kind = 'monthly_course'
+         and fo.cancelled_at is null
+         and (
+           fo.amount is distinct from p_amount
+           or (fo.fee_category = 'external' and fo.external_share is distinct from p_amount)
+           or (fo.fee_category = 'institute' and fo.external_share is distinct from 0)
+         )
+     ) then
     perform set_config('app.monthly_enrollment_fee_editing', 'on', true);
     update public.enrollments
       set monthly_fee_override = p_amount, monthly_fee_override_reason = v_reason
