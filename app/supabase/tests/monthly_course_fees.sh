@@ -16,6 +16,7 @@ OWNER='00000000-0000-0000-0000-0000000000aa'
 COURSE='00000000-0000-0000-0000-0000000c0004'
 LEGACY_STUDENT='00000000-0000-0000-0000-0000000a0001'
 MONTHLY_STUDENT='00000000-0000-0000-0000-0000000a0002'
+OTHER_MONTHLY_STUDENT='00000000-0000-0000-0000-0000000a0003'
 FAILED=0
 
 if [ -n "$PG_RUNAS" ]; then
@@ -110,7 +111,8 @@ insert into public.courses (id, name, base_fee, monthly_fee, status)
 values ('$COURSE', 'دورة اختبار الرسوم الشهرية', 500, 250, 'active');
 insert into public.students (id, name, status) values
   ('$LEGACY_STUDENT', 'طالب رسوم تسجيل قديم', 'active'),
-  ('$MONTHLY_STUDENT', 'طالب رسوم شهرية', 'active');
+  ('$MONTHLY_STUDENT', 'طالب رسوم شهرية', 'active'),
+  ('$OTHER_MONTHLY_STUDENT', 'طالب اشتراك آخر', 'active');
 insert into public.enrollments (id, student_id, course_id, course_name, course_value, billing_model)
 values ('00000000-0000-0000-0000-0000000e0004',
         '$LEGACY_STUDENT', '$COURSE', 'دورة اختبار الرسوم الشهرية', 500, 'legacy_total');
@@ -147,6 +149,8 @@ eq "No monthly obligation is created for legacy enrollment" "$(runFP "select cou
 echo "== Adjust one student's monthly subscription without rewriting history =="
 run_owner_sql "select public.update_monthly_enrollment_fee('$MONTHLY_ENROLLMENT_ID', 180, 'individual rate');" >/dev/null
 eq "Existing October obligation remains at its original amount" "$(runFP "select amount::int from public.fee_obligations where enrollment_id='$MONTHLY_ENROLLMENT_ID' and fee_kind='monthly_course' and due_month=date '2099-10-01'")" "250"
+run_owner_sql "select public.create_enrollment('{\\"student_id\\":\\"$OTHER_MONTHLY_STUDENT\\",\\"course_id\\":\\"$COURSE\\"}'::jsonb);" >/dev/null
+OTHER_ENROLLMENT_ID="$(runFP "select id from public.enrollments where student_id='$OTHER_MONTHLY_STUDENT' and course_id='$COURSE' and billing_model='monthly'")"
 NEXT_PREVIEW="$(run_owner_fp "select ((public.preview_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->'students'->0->>'amount')::int)")"
 eq "Future preview uses the student's override" "$NEXT_PREVIEW" "180"
 NEXT_CREATED="$(run_owner_fp "select (public.create_monthly_course_obligations('$COURSE', date '2099-11-01', 'shared', 50)->>'created')::int")"
