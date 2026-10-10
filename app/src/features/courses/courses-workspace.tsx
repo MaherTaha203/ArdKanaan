@@ -83,7 +83,7 @@ export function CoursesWorkspace() {
                     عدد الطلاب <span className="figure font-semibold text-foreground">{formatNumber(stats.studentCount)}</span>
                   </span>
                   <span className="text-[12.5px] text-muted-foreground">
-                    الرسوم الشهرية{' '}
+                    الاشتراك الشهري{' '}
                     {course.monthlyFee == null ? (
                       <span className="text-faint">—</span>
                     ) : (
