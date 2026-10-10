@@ -268,7 +268,7 @@ export function studentLedger(
   for (const fee of feeObligations) {
     if (fee.studentId !== studentId || fee.cancelledAt) continue
     const date = dayOf(fee.createdAt)
-    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.description, meta: `${fee.courseName ?? 'بدون دورة'} · ${beneficiaryLabel(fee.feeCategory)}`, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
+    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${fee.dueMonth ?? fee.description}` : fee.description, meta: `${fee.courseName ?? 'بدون دورة'} · ${beneficiaryLabel(fee.feeCategory)}`, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
   }
 
   // Payments (credits): one per receipt allocation line.
