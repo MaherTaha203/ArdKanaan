@@ -256,6 +256,9 @@ export function studentLedger(
   // Course dues (debits): one per course, dated by the enrolment (else the earliest
   // payment on it). Uses the authoritative breakdown so the total reconciles.
   for (const course of studentCourseBreakdown(studentId, studentLines, enrollments)) {
+    // Enrollment identity alone is not a financial movement. Hide zero-value legacy/course rows
+    // from the statement while retaining the enrollment and its underlying records.
+    if (course.fee <= 0) continue
     const enrollment = course.enrollmentId ? enrollmentsById.get(course.enrollmentId) : undefined
     const earliestPayment = studentLines
       .filter((line) => (line.entryType ?? 'course') === 'course' && (course.enrollmentId ? line.enrollmentId === course.enrollmentId : line.courseName === course.courseName))
