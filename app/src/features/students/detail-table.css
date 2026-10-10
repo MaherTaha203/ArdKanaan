@@ -27,6 +27,15 @@
   text-align: end;
 }
 
+/* Under table-fixed, the flexible description column wraps within its track
+   instead of overflowing — so a long statement line never widens the table or
+   shifts the fixed financial columns. Specificity beats the nowrap rule above. */
+.detail-table-wrap th.cell-wrap,
+.detail-table-wrap td.cell-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 900px) {
   .detail-workspace {
     width: 100%;
