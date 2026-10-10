@@ -29,8 +29,9 @@ describe('studentLedger', () => {
       ['2026-01-05', 'debit', 50, 0, 550],
       ['2026-01-10', 'credit', 0, 200, 350],
     ])
-    expect(ledger.entries[1].label).toBe('رسوم امتحان')
-    expect(ledger.entries[1].meta).toContain('بدون دورة')
+    expect(ledger.entries[1].label).toBe('')
+    expect(ledger.entries[1].meta).toBe('')
+    expect(ledger.entries[2].label).toBe('سند قبض - رقم 1#')
     expect(ledger).toMatchObject({ totalDebit: 550, totalCredit: 200, balance: 350 })
   })
 
@@ -42,7 +43,7 @@ describe('studentLedger', () => {
       [fee({ id: 'f-1', studentId: 's-1', description: 'ملغى', amount: 40, cancelledAt: '2026-02-01' })],
     )
     expect(ledger.entries).toHaveLength(1)
-    expect(ledger.entries[0]).toMatchObject({ kind: 'debit', label: 'محاسبة', debit: 300, balance: 300 })
+    expect(ledger.entries[0]).toMatchObject({ kind: 'debit', label: '', meta: '', debit: 300, balance: 300 })
     expect(ledger.balance).toBe(ledger.totalDebit - ledger.totalCredit)
   })
 

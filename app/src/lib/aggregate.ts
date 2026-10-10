@@ -1,4 +1,4 @@
-import type { Course, Enrollment, FeeCategory, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
+import type { Course, Enrollment, FeeObligation, FinancialMovement, Student, StudentStatementLine } from '@/types/domain'
 
 export type StudentFinancialSummary = {
   studentId: string
@@ -212,9 +212,6 @@ function feeRemaining(fee: FeeObligation, paidByFee: Map<string, number>) {
   return Math.max(0, fee.amount - paid)
 }
 
-function beneficiaryLabel(category: FeeCategory): string {
-  return category === 'institute' ? 'للمعهد' : category === 'external' ? 'لجهة خارجية' : 'مشترك'
-}
 const dayOf = (value?: string | null): string => (value ? value.slice(0, 10) : '')
 
 // One line of the running account statement (كشف حساب جاري): a debit (an obligation
@@ -264,19 +261,19 @@ export function studentLedger(
       .filter((line) => (line.entryType ?? 'course') === 'course' && (course.enrollmentId ? line.enrollmentId === course.enrollmentId : line.courseName === course.courseName))
       .reduce<string>((min, line) => (!min || line.voucherDate < min ? line.voucherDate : min), '')
     const date = dayOf(enrollment?.createdAt) || earliestPayment || ''
-    raw.push({ id: `d-course-${course.enrollmentId ?? course.courseName}`, date, kind: 'debit', label: course.courseName, meta: 'دورة', debit: course.fee, credit: 0, balance: 0, sort: `${date}#0#0` })
+    raw.push({ id: `d-course-${course.enrollmentId ?? course.courseName}`, date, kind: 'debit', label: '', meta: '', debit: course.fee, credit: 0, balance: 0, sort: `${date}#0#0` })
   }
 
   // Fee dues (debits).
   for (const fee of feeObligations) {
     if (fee.studentId !== studentId || fee.cancelledAt) continue
     const date = dayOf(fee.createdAt)
-    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: fee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${fee.dueMonth ?? fee.description}` : fee.description, meta: `${fee.courseName ?? 'بدون دورة'} · ${beneficiaryLabel(fee.feeCategory)}`, debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
+    raw.push({ id: `d-fee-${fee.id}`, date, kind: 'debit', label: '', meta: '', debit: fee.amount, credit: 0, balance: 0, sort: `${date}#0#${fee.createdAt ?? ''}` })
   }
 
   // Payments (credits): one per receipt allocation line.
   for (const line of studentLines) {
-    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: 'سند قبض', meta: line.entryType === 'fee' ? `رسم · ${line.courseName}` : line.courseName, debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
+    raw.push({ id: `c-${line.id}`, date: line.voucherDate, kind: 'credit', label: `سند قبض - رقم ${line.voucherNumber}#`, meta: '', debit: 0, credit: line.amountReceived, balance: 0, voucherNumber: line.voucherNumber, sort: `${line.voucherDate}#1#${String(line.voucherNumber).padStart(12, '0')}` })
   }
 
   raw.sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : a.id < b.id ? -1 : 1))

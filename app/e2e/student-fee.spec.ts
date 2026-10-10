@@ -31,7 +31,9 @@ test('adds a standalone (no-course) fee to a student from the statement', async 
 
   await expect(dialog).toBeHidden()
 
-  // The fee now shows on the student, labelled بدون دورة (no course context).
-  await expect(page.getByText('رسوم امتحان')).toBeVisible()
-  await expect(page.getByText('بدون دورة').first()).toBeVisible()
+  // Debit descriptions and secondary course metadata are intentionally hidden
+  // from the statement; the saved amount must still be visible.
+  await expect(page.getByText('رسوم امتحان', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('بدون دورة', { exact: true })).toHaveCount(0)
+  await expect(page.getByText(/50/).last()).toBeVisible()
 })
