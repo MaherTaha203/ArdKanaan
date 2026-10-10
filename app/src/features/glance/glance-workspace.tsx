@@ -50,7 +50,7 @@ export function GlanceWorkspace() {
       const fees = feeObligations.filter((fee) => fee.studentId === item.student.id && !fee.cancelledAt).filter((fee) => {
         const paid = statementLines.filter((line) => line.entryType === 'fee' && line.feeObligationId === fee.id).reduce((sum, line) => sum + line.amountReceived, 0)
         return fee.amount - paid > 0
-      }).map((fee) => fee.description)
+      }).map((fee) => fee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${fee.dueMonth ?? fee.description}` : fee.description)
       map.set(item.student.id, [...courses, ...fees].join('، '))
     }
     return map

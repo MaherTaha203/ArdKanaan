@@ -15,7 +15,7 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
   await page.getByRole('button', { name: 'إضافة دورة', exact: true }).first().click()
   const courseDialog = page.getByRole('dialog', { name: 'إضافة دورة' })
   await courseDialog.getByLabel('اسم الدورة').fill('دورة اختبار الرسوم الشهرية')
-  await courseDialog.getByLabel('رسوم الدورة').fill('250')
+  await courseDialog.getByLabel('الاشتراك الشهري').fill('250')
   await courseDialog.getByRole('button', { name: 'إضافة الدورة' }).click()
   await expect(page.getByText('تمت إضافة الدورة بنجاح')).toBeVisible()
   expect(handle.courseInserts).toHaveLength(1)
@@ -44,8 +44,8 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
   expect(handle.receiptInserts).toHaveLength(0)
 
   // Generate the explicitly selected month, then verify it is available for receipt.
-  await page.getByRole('button', { name: 'رسوم شهرية', exact: true }).click()
-  const monthlyDialog = page.getByRole('dialog', { name: 'إنشاء الرسوم الشهرية' })
+  await page.getByRole('button', { name: 'إنشاء اشتراكات شهرية', exact: true }).click()
+  const monthlyDialog = page.getByRole('dialog', { name: 'إنشاء الاشتراكات الشهرية' })
   await monthlyDialog.getByLabel('شهر الاستحقاق').fill('2026-10')
   await monthlyDialog.getByRole('button', { name: 'معاينة الطلاب والاستحقاقات' }).click()
   await expect(monthlyDialog.getByText('طالب اختبار شهري')).toBeVisible()
@@ -63,7 +63,7 @@ test('creates a monthly course, adds and enrolls a student, then receipts the mo
   const receiptDialog = page.getByRole('dialog', { name: 'سند قبض' })
   await receiptDialog.getByRole('combobox', { name: 'اسم الطالب' }).fill('طالب اختبار شهري')
   await page.getByRole('option', { name: /طالب اختبار شهري/ }).click()
-  await receiptDialog.getByRole('button', { name: /رسوم الدورة الشهرية/ }).click()
+  await receiptDialog.getByRole('button', { name: /الاشتراك الشهري/ }).click()
   await expect(receiptDialog.getByText('250').last()).toBeVisible()
   await receiptDialog.getByRole('button', { name: 'حفظ سند القبض' }).click()
 

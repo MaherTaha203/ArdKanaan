@@ -73,13 +73,13 @@ export function CourseFormSheet() {
           {(control) => <Input placeholder="مثال: الرياضيات" {...control} {...form.register('name')} />}
         </Field>
 
-        <Field label="رسوم الدورة" error={form.formState.errors.monthlyFee?.message}>
+        <Field label="الاشتراك الشهري" error={form.formState.errors.monthlyFee?.message}>
           {(control) => (
             <Input
               type="text"
               inputMode="numeric"
               className="figure"
-              placeholder="أدخل رسوم الدورة بالشيكل"
+              placeholder="أدخل قيمة الاشتراك الشهري بالشيكل"
               {...control}
               {...form.register('monthlyFee')}
               onChange={(event) => form.setValue('monthlyFee', event.target.value.replace(/[^0-9]/g, ''), { shouldValidate: true, shouldDirty: true })}

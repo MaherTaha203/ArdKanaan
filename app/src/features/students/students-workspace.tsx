@@ -141,11 +141,14 @@ export function StudentsWorkspace() {
         <section className="min-w-0 border-y border-border py-6" aria-label={`كشف حساب ${active?.student.name ?? ''}`}>
           {active ? (
             <>
-              <div className="mb-6 flex flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-border pb-6">
+              {/* Stable two-track header: identity in a shrinking (minmax(0,1fr)) track with a
+                  truncating name, record cards pinned in a fixed-width (auto) track — so the
+                  layout never reflows with the student's name length. Stacks on < lg. */}
+              <div className="mb-6 grid gap-x-6 gap-y-4 border-b border-border pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="editorial text-2xl text-foreground">{active.student.name}</h2>
-                    {active.student.status === 'archived' ? <span className="rounded-full border border-border-strong bg-highlight px-2 py-0.5 text-[11px] font-medium text-muted-foreground">مؤرشف</span> : null}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h2 className="editorial min-w-0 flex-1 truncate text-2xl text-foreground" title={active.student.name}>{active.student.name}</h2>
+                    {active.student.status === 'archived' ? <span className="flex-none rounded-full border border-border-strong bg-highlight px-2 py-0.5 text-[11px] font-medium text-muted-foreground">مؤرشف</span> : null}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px]">
                     <span><span className="text-faint">الدورات</span> <span className="figure font-semibold text-foreground">{formatNumber(active.courses)}</span></span>
@@ -154,7 +157,7 @@ export function StudentsWorkspace() {
                     {active.student.phone ? <span><span className="text-faint">الهاتف</span> <span className="figure font-semibold text-foreground" dir="ltr">{active.student.phone}</span></span> : null}
                   </div>
                 </div>
-                <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-[680px]">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:w-[680px] lg:max-w-full">
                   <RecordCard label="إجمالي المستحقات" value={activeLedger.totalDebit} tone="ink" />
                   <RecordCard label="إجمالي المقبوض" value={active.paid} tone="ink" />
                   <RecordCard label="المتبقي" value={active.remaining} tone="warn" />
@@ -183,17 +186,17 @@ export function StudentsWorkspace() {
               {!activeHasObligations ? <p className="mb-3 rounded-lg border border-border-strong bg-highlight px-3 py-2.5 text-sm text-muted-foreground">لا توجد التزامات مالية مسجلة لهذا الطالب بعد؛ لا يُصنّف على أنه مسدَّد بالكامل.</p> : null}
               {detailTab === 'statement' ? (
                 <div className="detail-table-wrap">
-                  <table className="border-collapse text-sm">
+                  <table className="table-fixed border-collapse text-sm">
                     <thead><tr className="text-[11.5px] tracking-wide text-faint">
-                      <th className="border-b border-border px-2.5 py-3 text-start font-semibold">التاريخ</th>
-                      <th className="border-b border-border px-2.5 py-3 text-start font-semibold">البيان</th>
-                      <th className="border-b border-border px-2.5 py-3 text-end font-semibold">مدين (عليه)</th>
-                      <th className="border-b border-border px-2.5 py-3 text-end font-semibold">دائن (له)</th>
-                      <th className="border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد الجاري</th>
+                      <th className="w-[96px] border-b border-border px-2.5 py-3 text-start font-semibold">التاريخ</th>
+                      <th className="cell-wrap border-b border-border px-2.5 py-3 text-start font-semibold">البيان</th>
+                      <th className="w-[116px] border-b border-border px-2.5 py-3 text-end font-semibold">مدين (عليه)</th>
+                      <th className="w-[116px] border-b border-border px-2.5 py-3 text-end font-semibold">دائن (له)</th>
+                      <th className="w-[128px] border-b border-border px-2.5 py-3 text-end font-semibold">الرصيد الجاري</th>
                     </tr></thead>
                     <tbody>{statementLoading && statementStudentId === activeId ? <tr><td colSpan={5} className="px-2.5 py-10 text-center text-sm text-faint">جارٍ تحميل الكشف…</td></tr> : activeLedger.entries.length > 0 ? activeLedger.entries.map((entry) => <tr key={entry.id}>
                       <td className="figure whitespace-nowrap border-b border-border px-2.5 py-3.5 text-muted-foreground">{formatDate(entry.date)}</td>
-                      <td className="border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
+                      <td className="cell-wrap border-b border-border px-2.5 py-3.5"><span className="font-medium text-foreground">{entry.label}</span><span className="text-faint"> · {entry.meta}</span></td>
                       <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.debit > 0 ? 'font-semibold text-warn' : 'text-faint'}`}>{entry.debit > 0 ? formatNumber(entry.debit) : '—'}</td>
                       <td className={`figure border-b border-border px-2.5 py-3.5 text-end ${entry.credit > 0 ? 'font-semibold text-gold' : 'text-faint'}`}>{entry.credit > 0 ? formatNumber(entry.credit) : '—'}</td>
                       <td className="figure border-b border-border px-2.5 py-3.5 text-end font-bold text-foreground">{formatNumber(entry.balance)}</td>

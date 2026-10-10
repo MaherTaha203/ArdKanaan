@@ -82,7 +82,7 @@ export function CourseDetailWorkspace() {
               {course.status === 'active' ? (
                 <Button variant="quiet" onClick={() => setGeneratingMonthlyFees(true)}>
                   <CalendarDays className="size-4" />
-                  رسوم شهرية
+                  إنشاء اشتراكات شهرية
                 </Button>
               ) : null}
               <Button variant="quiet" onClick={() => setAddingFee(true)}>
@@ -94,7 +94,7 @@ export function CourseDetailWorkspace() {
           </div>
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[12.5px] text-muted-foreground">
             <span>
-              الرسوم الشهرية الافتراضية{' '}
+              قيمة الاشتراك الشهري{' '}
               {course.monthlyFee == null ? <span className="text-faint">—</span> : <Money value={course.monthlyFee} currency={false} className="font-semibold text-foreground" />}
             </span>
             {period ? <span className="figure">{period}</span> : null}
@@ -129,14 +129,14 @@ export function CourseDetailWorkspace() {
         {courseFees.some((fee) => fee.feeKind === 'monthly_course') ? (
           <section className="rounded-2xl border border-border bg-panel">
             <div className="border-b border-border px-5 py-4">
-              <h2 className="text-base font-bold text-foreground">الرسوم الشهرية المنشأة</h2>
-              <p className="mt-1 text-xs text-muted-foreground">كل استحقاق مرتبط بشهر محدد، ولا يتكرر عند إعادة إنشاء رسوم الشهر نفسه.</p>
+              <h2 className="text-base font-bold text-foreground">الاشتراكات الشهرية المنشأة</h2>
+              <p className="mt-1 text-xs text-muted-foreground">كل اشتراك مرتبط بشهر محدد، ولا يتكرر عند إعادة إنشاء اشتراكات الشهر نفسه.</p>
             </div>
             <div className="divide-y divide-border">
               {courseFees.filter((fee) => fee.feeKind === 'monthly_course').sort((a, b) => (b.dueMonth ?? '').localeCompare(a.dueMonth ?? '') || a.description.localeCompare(b.description)).map((fee) => (
                 <div key={fee.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 text-[13px]">
                   <span className="min-w-[160px] font-medium text-foreground">{students.find((student) => student.id === fee.studentId)?.name ?? '—'}</span>
-                  <span className="text-muted-foreground">{fee.dueMonth ?? fee.description}</span>
+                  <span className="text-muted-foreground">الاشتراك الشهري — {fee.dueMonth ?? fee.description}</span>
                   <span className="figure font-semibold">{formatNumber(fee.amount)}</span>
                   <span className="text-muted-foreground">{fee.feeCategory === 'institute' ? 'للمعهد' : fee.feeCategory === 'external' ? 'لجهة خارجية' : 'مشترك'}</span>
                   <span className="text-muted-foreground">{fee.cancelledAt ? 'ملغى' : 'استحقاق محفوظ'}</span>

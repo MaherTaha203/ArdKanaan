@@ -92,7 +92,7 @@ export function ReportPeriodSelector({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={toggleOpen}
-        className="h-10 w-full justify-between gap-2 px-2.5"
+        className="h-11 w-full justify-between gap-2 px-2.5"
       >
         <span className="flex min-w-0 items-center gap-2 text-start">
           <CalendarRange className="size-4 flex-none text-olive" />
@@ -139,8 +139,8 @@ export function ReportPeriodSelector({
             </button>
 
             <div className="grid grid-cols-2 gap-2">
-              <SmartDateInput aria-label="بداية الفترة" placeholder="من" value={draftStart} onChange={setDraftStart} className="h-9 w-full" />
-              <SmartDateInput aria-label="نهاية الفترة" placeholder="إلى" value={draftEnd} onChange={(next) => { if (!draftStart || next >= draftStart) setDraftEnd(next) }} className="h-9 w-full" />
+              <SmartDateInput aria-label="بداية الفترة" placeholder="من" value={draftStart} onChange={setDraftStart} className="h-11 w-full" />
+              <SmartDateInput aria-label="نهاية الفترة" placeholder="إلى" value={draftEnd} onChange={(next) => { if (!draftStart || next >= draftStart) setDraftEnd(next) }} className="h-11 w-full" />
             </div>
 
             <div className="mt-2 flex items-center justify-end gap-2">

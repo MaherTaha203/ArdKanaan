@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/use-auth-store'
 const EMBLEM_SRC = `${import.meta.env.BASE_URL}brand/emblem.jpg`
 
 const inputClass =
-  'h-12 w-full rounded-xl border border-border-strong bg-panel px-4 text-[15px] text-foreground outline-none placeholder:text-faint focus:border-olive'
+  'h-11 w-full rounded-xl border border-border-strong bg-panel px-3.5 text-sm text-foreground outline-none placeholder:text-faint focus:border-olive'
 
 export function RecoveryGate() {
   const updatePassword = useAuthStore((state) => state.updatePassword)

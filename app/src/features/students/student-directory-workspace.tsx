@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Archive, ChevronDown, ChevronLeft, ReceiptText, Search, User, UserPlus } from 'lucide-react'
+import { Archive, ChevronLeft, ReceiptText, Search, User, UserPlus } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
 import { Button } from '@/components/ui/button'
@@ -98,8 +98,21 @@ export function StudentDirectoryWorkspace() {
       <ConfigNotice />
       <ErrorNotice message={error} onDismiss={clearError} onRetry={reload} />
 
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="border-t border-border-strong">
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0 border-t border-border-strong">
+          {/* Aligned column header (md+). Each row uses the same responsive grid
+              template, so columns line up across the list without an expandable
+              details row that would grow each row's height. */}
+          {loaded && filtered.length > 0 ? (
+            <div className="hidden items-center gap-x-3 border-b border-border px-4 py-2 text-[11px] font-semibold text-faint md:grid md:grid-cols-[auto_minmax(0,1fr)_8rem_auto_auto] lg:grid-cols-[auto_minmax(0,1fr)_8rem_6rem_7rem_auto]">
+              <span aria-hidden className="size-9" />
+              <span>الطالب</span>
+              <span>الهاتف</span>
+              <span className="hidden lg:block">الرقم التعريفي</span>
+              <span>الحالة</span>
+              <span className="justify-self-end">الرصيد المستحق</span>
+            </div>
+          ) : null}
           {!loaded ? (
             <div className="p-3"><SkeletonRows rows={8} /></div>
           ) : filtered.length > 0 ? (
@@ -137,23 +150,17 @@ function DirectoryRow({ item, selected, onSelect, hasObligations }: { item: Stud
   const statusLabel = status === 'no-obligations' ? 'لا توجد التزامات' : status === 'ok' ? 'مسدَّد بالكامل' : status === 'due' ? 'رصيد مستحق' : 'غير مسدَّد'
   return (
     <div className={`border-b border-border last:border-b-0 ${selected ? 'bg-highlight' : ''}`}>
-      <button type="button" onClick={onSelect} aria-pressed={selected} className="flex w-full items-center gap-3 px-4 py-2.5 text-start">
+      {/* Single aligned row: name stays clear in its own flexible column and
+          truncates rather than sprawling; phone/id reveal as aligned columns on
+          wider screens (md/lg) instead of an expander that adds row height. */}
+      <button type="button" onClick={onSelect} aria-pressed={selected} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-x-3 px-4 py-2.5 text-start md:grid-cols-[auto_minmax(0,1fr)_8rem_auto_auto] lg:grid-cols-[auto_minmax(0,1fr)_8rem_6rem_7rem_auto]">
         <span aria-hidden className="grid size-9 flex-none place-items-center rounded-full bg-olive-weak text-olive"><User className="size-4" /></span>
-        <span className="min-w-0 flex-1 truncate text-sm text-foreground">{item.student.name}</span>
-        <span className="text-xs font-medium text-muted-foreground">{statusLabel}</span>
-        <Money value={item.remaining} currency={false} className={item.remaining > REMAINING_EPSILON ? 'text-sm font-bold text-warn' : 'text-sm font-bold text-foreground'} />
+        <span className="min-w-0 truncate text-sm text-foreground" title={item.student.name}>{item.student.name}</span>
+        <span className="figure hidden truncate text-xs text-muted-foreground md:block" dir="ltr">{item.student.phone || '—'}</span>
+        <span className="figure hidden truncate text-xs text-muted-foreground lg:block" dir="ltr">{item.student.idNumber || '—'}</span>
+        <span className="truncate text-xs font-medium text-muted-foreground">{statusLabel}</span>
+        <Money value={item.remaining} currency={false} className={`justify-self-end text-sm font-bold ${item.remaining > REMAINING_EPSILON ? 'text-warn' : 'text-foreground'}`} />
       </button>
-      <details className="group px-4 pb-2 ps-[3.25rem]">
-        <summary className="flex w-fit cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-olive">
-          <ChevronDown aria-hidden className="size-3 transition-transform group-open:-rotate-180" />
-          التفاصيل
-        </summary>
-        <div className="mt-1 text-xs text-faint">
-          {item.student.phone ? item.student.phone : 'لا يوجد رقم هاتف'}
-          {item.student.idNumber ? ` · ${item.student.idNumber}` : ''}
-          {` · ${formatNumber(item.courses)} دورة`}
-        </div>
-      </details>
     </div>
   )
 }

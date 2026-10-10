@@ -39,7 +39,7 @@ export function VoucherDetailsSheet({ movement, statementLines = [], enrollments
           const isFee = row.allocation_type === 'fee'
           if (isFee) {
             const localFee = feeObligations.find((item) => item.id === row.fee_obligation_id)
-            if (localFee) return { type: 'fee' as const, label: localFee.description, amount: Number(row.amount) }
+            if (localFee) return { type: 'fee' as const, label: localFee.feeKind === 'monthly_course' ? `الاشتراك الشهري — ${localFee.dueMonth ?? localFee.description}` : localFee.description, amount: Number(row.amount) }
             if (row.fee_obligation_id) {
               const feeResult = await supabase
                 .from('fee_obligations')

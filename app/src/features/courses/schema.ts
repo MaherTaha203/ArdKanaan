@@ -9,7 +9,7 @@ export const courseFormSchema = z.object({
     .trim()
     .refine(
       (value) => value === '' || (/^\d+$/.test(value) && Number(value) <= MAX_SHEKEL_AMOUNT),
-      'الرسوم الشهرية يجب أن تكون عددًا صحيحًا من الشواكل ضمن الحدّ المسموح',
+      'قيمة الاشتراك الشهري يجب أن تكون عددًا صحيحًا من الشواكل ضمن الحدّ المسموح',
     ),
   startDate: z.string().trim(),
   endDate: z.string().trim(),
