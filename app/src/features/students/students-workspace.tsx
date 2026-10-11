@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Archive, ArchiveRestore, Pencil, Plus, Printer, ReceiptText, Search } from 'lucide-react'
 
 import { ConfigNotice, ErrorNotice } from '@/components/shell/notices'
+import { CancelFeeSheet, type CancellableFee } from '@/features/students/cancel-fee-sheet'
 import { StudentStatementPrint } from '@/features/print/student-statement-print'
 import { Button } from '@/components/ui/button'
 import { Money } from '@/components/ui/money'
@@ -16,6 +17,9 @@ import { useWorkspaceStore } from '@/store/use-workspace-store'
 import './detail-table.css'
 
 const REMAINING_EPSILON = 0.0001
+// Ledger debit ids are "d-fee-<feeObligationId>" for fee obligations and
+// "d-course-…" for enrolment dues. Only the former are cancellable fee obligations.
+const FEE_ROW_PREFIX = 'd-fee-'
 
 type StudentStatus = 'ok' | 'due' | 'none' | 'no-obligations'
 type StudentDetailTab = 'receipts' | 'obligations' | 'courses' | 'statement'
@@ -55,6 +59,7 @@ export function StudentsWorkspace() {
   const [query, setQuery] = useState('')
   const [printing, setPrinting] = useState(false)
   const [detailTab, setDetailTab] = useState<StudentDetailTab>('statement')
+  const [cancelTarget, setCancelTarget] = useState<CancellableFee | null>(null)
 
   const aggregates = useMemo(() => aggregateStudentsFromSummaries(students, studentSummaries), [students, studentSummaries])
 
@@ -210,8 +215,8 @@ export function StudentsWorkspace() {
                 </table></div>
               ) : detailTab === 'obligations' ? (
                 <div className="detail-table-wrap"><table className="border-collapse text-sm">
-                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">تاريخ الاستحقاق</th><th className="border-b border-border px-2.5 py-3 text-start">البيان</th><th className="border-b border-border px-2.5 py-3 text-end">المبلغ</th></tr></thead>
-                  <tbody>{obligationRows.length ? obligationRows.map((row) => <tr key={row.id}><td className="figure border-b border-border px-2.5 py-3.5">{row.date ? formatDate(row.date) : '—'}</td><td className="border-b border-border px-2.5 py-3.5">{row.label}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.debit)}</td></tr>) : <tr><td colSpan={3} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد التزامات مسجلة.</td></tr>}</tbody>
+                  <thead><tr className="text-[11.5px] text-faint"><th className="border-b border-border px-2.5 py-3 text-start">تاريخ الاستحقاق</th><th className="border-b border-border px-2.5 py-3 text-start">البيان</th><th className="border-b border-border px-2.5 py-3 text-end">المبلغ</th><th className="border-b border-border px-2.5 py-3 text-end"><span className="sr-only">إجراء</span></th></tr></thead>
+                  <tbody>{obligationRows.length ? obligationRows.map((row) => { const isFee = row.id.startsWith(FEE_ROW_PREFIX); return <tr key={row.id}><td className="figure border-b border-border px-2.5 py-3.5">{row.date ? formatDate(row.date) : '—'}</td><td className="border-b border-border px-2.5 py-3.5">{row.label}</td><td className="figure border-b border-border px-2.5 py-3.5 text-end font-semibold">{formatNumber(row.debit)}</td><td className="border-b border-border px-2.5 py-3.5 text-end">{isFee ? <button type="button" onClick={() => setCancelTarget({ id: row.id.slice(FEE_ROW_PREFIX.length), label: row.label, amount: row.debit })} className="rounded-full border border-border-strong px-2.5 py-1 text-[12px] font-semibold text-clay hover:bg-clay-weak">إلغاء</button> : <span className="text-faint">—</span>}</td></tr> }) : <tr><td colSpan={4} className="px-2.5 py-8 text-center text-sm text-faint">لا توجد التزامات مسجلة.</td></tr>}</tbody>
                 </table></div>
               ) : (
                 <div className="detail-table-wrap"><table className="border-collapse text-sm">
@@ -225,6 +230,7 @@ export function StudentsWorkspace() {
       </div>
 
       {printing && active ? <StudentStatementPrint studentName={active.student.name} courses={active.courses} entries={activeLedger.entries} totalDebit={activeLedger.totalDebit} totalCredit={activeLedger.totalCredit} balance={activeLedger.balance} onClose={() => setPrinting(false)} /> : null}
+      {cancelTarget ? <CancelFeeSheet fee={cancelTarget} onClose={() => setCancelTarget(null)} /> : null}
     </div>
   )
 }

@@ -184,6 +184,36 @@ export async function installSupabaseMocks(page: Page, options: MockOptions = {}
       return json(route, { created: createdRows.length })
     }
 
+    // Mirrors cancel_fee_obligation: owner-only (assumed in tests), reason required,
+    // never deletes (sets cancelled_at/cancel_reason), and refuses a fee that already
+    // has collected money.
+    if (table?.startsWith('rpc/cancel_fee_obligation') && method === 'POST') {
+      const body = safeJson(request.postData()) as { p_fee_id?: string; p_reason?: string }
+      const feeId = String(body.p_fee_id ?? '')
+      const reason = String(body.p_reason ?? '').trim()
+      if (!reason) return json(route, { message: 'FEE_CANCELLATION_REASON_REQUIRED' }, 400)
+      const fee = feeObligations.find((item) => item.id === feeId)
+      if (!fee) return json(route, { message: 'FEE_OBLIGATION_NOT_FOUND' }, 400)
+      if (fee.cancelled_at) return json(route, { message: 'FEE_ALREADY_CANCELLED' }, 400)
+      // Mirror the RPC: money counts only on receipts that are not themselves voided,
+      // so a fee whose only receipt was later cancelled is still cancellable.
+      const activeReceiptIds = new Set(
+        handle.receiptInserts
+          .filter((receipt) => !receipt.cancelled_at)
+          .map((receipt) => String(receipt.id ?? '')),
+      )
+      const collected = handle.receiptAllocations
+        .filter((allocation) => String(allocation.fee_obligation_id ?? '') === feeId)
+        .filter((allocation) => activeReceiptIds.has(String(allocation.receipt_voucher_id ?? allocation.receipt_id ?? '')))
+        .reduce((sum, allocation) => sum + Number(allocation.amount ?? 0), 0)
+      if (collected > 0) {
+        return json(route, { message: 'PAID_FEE_REQUIRES_REVERSAL_BEFORE_CANCELLATION' }, 400)
+      }
+      fee.cancelled_at = new Date().toISOString()
+      fee.cancel_reason = reason
+      return json(route, { id: feeId, cancelled: true })
+    }
+
     if (table?.startsWith('rpc/preview_monthly_course_obligations') && method === 'POST') {
       const body = safeJson(request.postData()) as { p_course_id?: string; p_due_month?: string; p_fee_category?: 'institute' | 'external' | 'shared'; p_external_share?: number }
       const course = courses.find((item) => item.id === body.p_course_id)
