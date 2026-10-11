@@ -19,9 +19,14 @@ type AddFeeInput = {
 
 type FeeObligationStore = {
   isSaving: boolean
+  isCancelling: boolean
   error: string | null
   clearError: () => void
   addFeeObligations: (input: AddFeeInput) => Promise<boolean>
+  // BC-005 BR-056: cancel-not-delete, mandatory reason. Every invariant (owner-only,
+  // reason required, no cancellation of a fee with collected money) is enforced by
+  // the accepted cancel_fee_obligation RPC; this is the frontend caller for it.
+  cancelFeeObligation: (feeId: string, reason: string) => Promise<boolean>
 }
 
 // The Supabase RPC surfaces a Postgres error whose message carries the raised
@@ -44,8 +49,21 @@ function feeErrorMessage(error: unknown): string {
   return 'تعذّر إضافة الرسوم. تحقّق من البيانات ثم حاول مرّة أخرى.'
 }
 
+function feeCancelErrorMessage(error: unknown): string {
+  const message = messageOf(error)
+  if (message.includes('OWNER_ONLY')) return 'غير مصرّح لك بإلغاء الرسوم.'
+  if (message.includes('FEE_CANCELLATION_REASON_REQUIRED')) return 'سبب الإلغاء مطلوب.'
+  if (message.includes('FEE_ALREADY_CANCELLED')) return 'هذا الرسم ملغى مسبقًا.'
+  if (message.includes('PAID_FEE_REQUIRES_REVERSAL_BEFORE_CANCELLATION')) {
+    return 'لا يمكن إلغاء رسمٍ حُصِّل عليه مبلغ؛ أبطِل سند القبض المرتبط أولًا ثم أعد المحاولة.'
+  }
+  if (message.includes('FEE_OBLIGATION_NOT_FOUND')) return 'الرسم غير موجود أو حُذف.'
+  return 'تعذّر إلغاء الرسم. تحقّق ثم حاول مرّة أخرى.'
+}
+
 export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
   isSaving: false,
+  isCancelling: false,
   error: null,
   clearError: () => set({ error: null }),
   addFeeObligations: async (input) => {
@@ -94,6 +112,39 @@ export const useFeeObligationStore = create<FeeObligationStore>((set) => ({
     } catch (error) {
       console.error('addFeeObligations failed', error)
       set({ isSaving: false, error: feeErrorMessage(error) })
+      return false
+    }
+  },
+  cancelFeeObligation: async (feeId, reason) => {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) {
+      set({ error: 'الاتصال بقاعدة البيانات غير مهيأ بعد.' })
+      return false
+    }
+    const trimmed = reason.trim()
+    if (!feeId || !trimmed) {
+      set({ error: 'سبب الإلغاء مطلوب.' })
+      return false
+    }
+
+    set({ isCancelling: true, error: null })
+    try {
+      const { error } = await supabase.rpc('cancel_fee_obligation', { p_fee_id: feeId, p_reason: trimmed })
+      if (error) throw error
+
+      // Refresh so the now-cancelled obligation drops out of balances and the statement.
+      // Capture the open statement's student BEFORE load(): load() resets
+      // statementStudentId to null, so reading it afterwards would skip the reload and
+      // blank the whole statement panel. Mirrors addFeeObligations, which reloads by a
+      // captured id.
+      const priorStatementId = useWorkspaceStore.getState().statementStudentId
+      await useWorkspaceStore.getState().load()
+      if (priorStatementId) await useWorkspaceStore.getState().loadStudentStatement(priorStatementId)
+      set({ isCancelling: false })
+      return true
+    } catch (error) {
+      console.error('cancelFeeObligation failed', error)
+      set({ isCancelling: false, error: feeCancelErrorMessage(error) })
       return false
     }
   },
