@@ -1,0 +1,42 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Daily at 09:17 UTC; scheduled runs can be delayed by GitHub.
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keep-alive
+  cancel-in-progress: false
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Execute a harmless database query
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_ANON_KEY}" ]]; then
+            echo "::error::Set SUPABASE_URL and SUPABASE_ANON_KEY in GitHub repository Actions secrets."
+            exit 1
+          fi
+          response="$(curl --fail --silent --show-error --max-time 20 \
+            --request POST "${SUPABASE_URL%/}/rest/v1/rpc/keep_alive" \
+            --header "apikey: ${SUPABASE_ANON_KEY}" \
+            --header "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            --header "Content-Type: application/json" \
+            --data '{}')"
+          if [[ "${response}" != "1" ]]; then
+            echo "::error::Unexpected response from keep_alive RPC."
+            exit 1
+          fi
+          echo "Keep-alive database query succeeded."
